@@ -29,3 +29,11 @@ uv pip install -r r.txt
 ```sh
 python filename.py
 ```
+
+Для запуска обработки детекции(позже переведу это в докер)
+```sh 
+cd detections
+uv venv venv
+uv pip sync r.txt
+python detection.py
+```

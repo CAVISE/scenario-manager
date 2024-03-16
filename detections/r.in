@@ -1,0 +1,10 @@
+torch
+Pillow
+numpy
+opencv-python
+pandas
+requests
+ultralytics
+setuptools
+gitpython
+wheel
