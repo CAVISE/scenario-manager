@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  carla:
+    image: carlasim/carla:0.9.15
+    volumes:
+      - ./output:/home/carla/.config/Epic/CarlaUE4/Saved/
+    command: /bin/bash ./CarlaUE4.sh
+    # command: /bin/bash ./CarlaUE4.sh -quality-level=Low
+    privileged: true
+    environment:
+      - DISPLAY=${DISPLAY}
+    network_mode: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            capabilities: [gpu]

@@ -1,0 +1,7 @@
+carla==0.9.15
+numpy
+pygame
+future
+matplotlib
+open3d
+Pillow
