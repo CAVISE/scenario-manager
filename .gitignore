@@ -2,3 +2,6 @@
 output/Config
 output/Crashes
 **/yolov5s.pt
+_out/
+
+**/*.pyc

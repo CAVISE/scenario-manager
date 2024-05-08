@@ -52,6 +52,7 @@ def get_actor_blueprints(world, filter, generation):
     except:
         print("   Warning! Actor Generation is not valid. No actor will be spawned.")
         return []
+    
 
 def main():
     argparser = argparse.ArgumentParser(
