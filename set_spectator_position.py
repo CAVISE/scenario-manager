@@ -27,3 +27,11 @@ transform = spectator.get_transform()
 location = carla.Location(x=-30, y=15, z=1.5)
 rotation = carla.Rotation(pitch=0, yaw=-180, roll=0)
 spectator.set_transform(carla.Transform(location, rotation))
+
+
+
+
+# Set the spectator with an empty transform
+# spectator.set_transform(carla.Transform())
+
+

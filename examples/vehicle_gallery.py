@@ -32,7 +32,7 @@ def get_transform(vehicle_location, angle, d=6.4):
 
 def main():
     client = carla.Client('localhost', 2000)
-    client.set_timeout(2.0)
+    client.set_timeout(200.0)
     world = client.get_world()
     spectator = world.get_spectator()
     vehicle_blueprints = world.get_blueprint_library().filter('vehicle')
