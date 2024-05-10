@@ -122,6 +122,20 @@ const Scenarios = () => {
             weather: JSON.parse(window.localStorage.getItem('weather')!),
             scenario: JSON.parse(window.localStorage.getItem('scenario')!)
         };
+        
+        const kx = 0.058395855215065;
+        const ky = 0.053634767293709;
+
+        scen.scenario = scen.scenario.map((item) => (
+            { vehicle: item.vehicle, path: item.path.map((point) => (
+                {
+                    x: point.x * kx - 124.13208770751953,
+                    y: 151.98765563964844 - point.y * ky,
+                    z: 0.6
+                }
+            )), active: item.active, color: item.color }
+        ))
+
         let host = "localhost:" + PORT;
         if (scen.scenario_id == null)
             host += "/scenario/add";
