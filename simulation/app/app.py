@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse
+from starlette.middleware.cors import CORSMiddleware
 import uvicorn
 import carla
 
@@ -30,6 +31,14 @@ app.include_router(getters_router, prefix="/getters", tags=["getters"])
 app.include_router(utils_router, prefix="/utils", tags=["utils"])
 app.include_router(scenario_router, prefix="/scenario", tags=["scenario"])
 
+#cors allow all
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 async def react_app():

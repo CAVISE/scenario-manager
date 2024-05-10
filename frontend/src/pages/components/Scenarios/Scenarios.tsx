@@ -12,7 +12,7 @@ const Scenarios = () => {
     const [scenarioName, setScenarioName] = useState("");
 
     const fetchScenarios = () => {
-        const host = "localhost:" + PORT + "/scenario/all";
+        const host = "http://localhost:" + PORT + "/scenario/all";
         fetch(host)
             .then((response) => {
                 console.log(response);
