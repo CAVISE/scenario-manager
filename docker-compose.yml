@@ -17,3 +17,16 @@ services:
           devices:
           - driver: nvidia
             capabilities: [gpu]
+
+
+  
+  redis:
+    image: redis:latest
+    ports:
+      - "6369:6379"
+    networks:
+      - cavise
+
+
+networks:
+  cavise:
