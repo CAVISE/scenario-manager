@@ -1,3 +1,4 @@
+import random
 from fastapi import APIRouter, Request
 
 import carla
@@ -6,41 +7,31 @@ from . import schemas, services
 
 router = APIRouter()
 
-@router.get("/spawnpoints")
-async def get_all_spawnpoints(request: Request):
-    carla_client = request.app.state.client
-    world = carla_client.get_world()
 
-    spawnpoints = world.get_map().get_spawn_points()
-    response = []
-    for i in spawnpoints:
-        location = i.location
-        base = {"x": location.x, 
-                "y": location.y, 
-                "z": location.z}
-        response.append(base)
-    print(response)
-    return response
 
-# @router.get("/layers")
-# async def set_layers(request: Request):
-#     carla_client = request.app.state.client
-#     world = carla_client.get_world()
+@router.get("/layers")
+async def set_layers(layer_name: str, toggle: int, request: Request):
+    client = request.app.state.client
+    world = client.get_world()
+    try:
+        if toggle:
+            exec(f"world.load_map_layer(carla.MapLayer.{layer_name})")
+        else:
+            exec(f"world.unload_map_layer(carla.MapLayer.{layer_name})")
+    except BaseException as _ex:
+        print(_ex)
+    # layers = world.get_map().get_layers()
 
-#     layers = world.get_map().get_layers()
-#     response = []
-#     print(layers)
-#     return layers
+    return "ok"
+    
 
 @router.post("/draw_path")
 async def draw_path_handler(data: schemas.PathSchema, request: Request):
-    carla_client = request.app.state.client
-    world = carla_client.get_world()
+    client = request.app.state.client
+    world = client.get_world()
 
-    await services.draw_path(data.path, world)
+    services.draw_path(data.path, world)
     
-    # spectator = world.get_spectator()
-    # spectator.set_location(point)
     return "ok"
 
 # @router.get("/vehicles")
@@ -58,17 +49,145 @@ async def draw_path_handler(data: schemas.PathSchema, request: Request):
 
 '''
 
-@router.get("/destroy")
-async def destroy_actors(request: Request):
-    carla_client = request.app.state.client
-    world = carla_client.get_world()
+@router.get("/actors/get")
+async def get_actors(request: Request):
+    client = request.app.state.client
+    world = client.get_world()
 
     actors = world.get_actors()
+    response = []
     for i in actors:
-        print(str(i))
-        if "vehicle" in str(i):
+        response.append(str(i))
+    return response
+
+@router.get("/actors/destroy")
+async def destroy_actors(actor_type: str, request: Request):
+    client = request.app.state.client
+    world = client.get_world()
+
+    actors = world.get_actors()
+    print(actors)
+    for i in actors:
+        if actor_type in str(i):
             i.destroy()
     return "ok"
 # 
 
+
+@router.get("/spectator/pos/get")
+async def get_spectator_pos(request: Request):
+    client = request.app.state.client
+    world = client.get_world()
+
+    spectator = world.get_spectator()
+    location = spectator.get_location()
+    response = {"x": location.x, "y": location.y, "z": location.z}
+    return response
+
+
+@router.post("/spectator/pos/set")
+async def set_spectator_pos(data: schemas.TransformSchema, request: Request):
+    client = request.app.state.client
+    world = client.get_world()
+
+    spectator = world.get_spectator()
+    new_transoform = carla.Transform(
+        carla.Location(
+            data.x,
+            data.y, 
+            data.z),
+        carla.Rotation(
+            data.pitch, 
+            data.yaw, 
+            data.roll)
+    )
+    spectator.set_transform(new_transoform)
+    return "ok"
+
+
+
+'''точно центр карты
+{
+  "x": -7,
+  "y": 36,
+  "z": 233,
+  "pitch": -90,
+  "yaw": 0,
+  "roll": 0
+}
+'''
+
+
+'''предположительный центр карты
+{
+    "path": [
+        {  
+            "x": -2.3158950805664062,
+            "y": 36.14118576049805,
+            "z": 230.0
+        },
+        {
+            "x": 117.86033630371094,
+            "y": 151.98765563964844,
+            "z": 1.586620807647705
+        },
+        {
+            "x": -123.13208770751953,
+            "y": -76.73937225341797,
+            "z": 0.9788720607757568
+        }
+    ]
+}
+
+
+'''
+
+@router.get("/spectator/image")
+async def get_spectator_image(request: Request):
+    client = request.app.state.client
+    world = client.get_world()
+
+    spectator = world.get_spectator()
+
+    spectator_transofm = spectator.get_transform()
+    vehicle_blueprints = world.get_blueprint_library().filter('*vehicle*')
+    ego_vehicle = world.spawn_actor(random.choice(vehicle_blueprints), spectator_transofm)
+    camera_bp = world.get_blueprint_library().find('sensor.camera.rgb')
+    camera = world.spawn_actor(camera_bp, attach_to=ego_vehicle)
+
+    import datetime
+    time_hash = datetime.datetime.now().strftime('%m-%d_%H-%M-%S-%f')
+    # camera.listen(lambda image: image.save_to_disk(f"output_{time_hash}.png"))
+    camera.listen(lambda image: image.save_to_disk("output_.png"))
+    return "ok"
+
+
+@router.get("/world/wheather/set")
+async def set_wheather(wheather, request: Request):
+    client = request.app.state.client
+    world = client.get_world()
+
+    await services.weather_setter(world, wheather)
+    return "ok"
+
+# @router.get("/world/wheather/get")
+# async def get_wheather():
+#     wheathers = carla.WeatherParameters
+#     print(wheathers)
+#     return wheathers
+
+
 # 108 122 24 106
+
+
+@router.get("/map/pic")
+async def get_map_pic(request: Request):
+    client = request.app.state.client
+    world = client.get_world()
+
+    map = world.get_map()
+
+
+
+    map.save_to_disk("map.xodr")
+    return "ok"

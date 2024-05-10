@@ -1,89 +1,56 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, BackgroundTasks, Request
 
 import carla
+
+from ..tasks import work
 
 from . import schemas, services
 
 from ..core.config import config
 
+import json
+import datetime
+
 router = APIRouter()
 
 
-@router.post("/scenario")
-async def set_scenario(data: schemas.ScenarioSchema, request: Request):
-    carla_client = request.app.state.client
-    world = carla_client.get_world()
+@router.post("/create")
+async def set_scenario(data: schemas.ScenarioSchema, request: Request, bacground_task: BackgroundTasks):
+    # client = request.app.state.client
+    carla_host = config.CARLA_HOST
+    carla_port = config.CARLA_PORT
+    # world = carla_client.get_world()
+    scenario_id = str(hash(str(data.model_dump()) + str(datetime.datetime.now())))[-10:]
+    data_to_dump = data.model_dump()
+    data_to_dump["scenario_id"] = scenario_id
 
-    actors_data = [x.vehicle for x in data.scenario]
-    actors = []
-    bps = [x for x in world.get_blueprint_library()]
-
-    for i in actors_data:
-        actor_id = "vehicle." + i.brand + "." + i.model
-        # actors.append(world.get_blueprint_library().find(actor_id)) # > VVV
-
-        ###############
-        for j in bps:
-            if actor_id in str(j):
-                actors.append(j)
-                break
-        ###############
-
-    print(str(actors[0]))
-
-    pitch, yaw = services.calculate_pitch_yaw(
-        data.scenario[0].path.path[0], data.scenario[0].path.path[1]
-    )
-    roll = 0
-    tmp_transform = carla.Transform(
-        carla.Location(
-            data.scenario[0].path.path[0].x,
-            data.scenario[0].path.path[0].y,
-            data.scenario[0].path.path[0].z,
-        ),
-        carla.Rotation(pitch, yaw, roll),
-    )
-
-    # tmp_vehicle = world.try_spawn_actor(actors[0], tmp_transform)
-
-    traffic_manager = carla_client.get_trafficmanager()
-    traffic_manager.set_random_device_seed(config.SEED)
-
-    # tmp
-    for i in range(len(data.scenario)):
-        await services.draw_path(data.scenario[i].path.path, world, 50)
-        path = [carla.Location(i.x, i.y, i.z) for i in data.scenario[i].path.path]
-
-        pitch, yaw = services.calculate_pitch_yaw(
-            data.scenario[0].path.path[0], data.scenario[0].path.path[1]
-        )
-        roll = 0
-
-        first_transform = carla.Transform(
-            carla.Location(
-                data.scenario[i].path.path[0].x,
-                data.scenario[i].path.path[0].y,
-                data.scenario[i].path.path[0].z,
-            ),
-            carla.Rotation(pitch, yaw, roll),
-        )
-
-        print([str(x) for x in path])
-        try:
-            vehicle = world.spawn_actor(actors[i], first_transform)
-            print(vehicle)
-            vehicle.set_autopilot(True)
-
-            traffic_manager.update_vehicle_lights(vehicle, True)
-            traffic_manager.random_left_lanechange_percentage(vehicle, 50)
-            traffic_manager.random_right_lanechange_percentage(vehicle, 50)
-            traffic_manager.auto_lane_change(vehicle, True)
-            traffic_manager.set_path(vehicle, path)
-
-        except BaseException as _ex:
-            print(_ex)
-
+    json.dump(data_to_dump, open(f"scenarios/{scenario_id}.json", "w"))
+    
+    # with open(f"{scenario_id}.json", "w") as f:
+        
+    work.do_scenario.delay(carla_host, carla_port, data, scenario_id)
+    print(1)
+    # bacground_task.add_task(work.do_scenario, client, data, scenario_id)
+    print(2)
+    
     return "ok"
+
+@router.get("/all")
+async def get_all_scenarios():
+    import os
+    scenarios = os.listdir("scenarios")
+    print(scenarios)
+    resp = []
+    for i in scenarios:
+        resp.append(json.load(open(f"scenarios/{i}")))
+    return resp
+    # return scenarios
+
+
+@router.get("/{id}")
+async def get_scenario(id: str):
+    return json.load(open(f"scenarios/{id}.json"))
+
 
 
 """
@@ -97,10 +64,10 @@ async def set_scenario(data: schemas.ScenarioSchema, request: Request):
             },
       "path": {
         "path": [
-          {"x": -52.186737060546875, "y": 42.56512451171875, "z": 0.5999999642372131},
-    {"x": -48.565467834472656, "y": 85.6451187133789, "z": 0.5999999642372131},
-    {"x": -52.07392120361328, "y": 100.18904876708984, "z": 0.5999999642372131},
-    {"x": -68.73516845703125, "y": 129.30384826660156, "z": 0.5999999642372131}
+            {"x": -52.186737060546875, "y": 42.56512451171875, "z": 0.5999999642372131},
+            {"x": -48.565467834472656, "y": 85.6451187133789, "z": 0.5999999642372131},
+            {"x": -52.07392120361328, "y": 100.18904876708984, "z": 0.5999999642372131},
+            {"x": -68.73516845703125, "y": 129.30384826660156, "z": 0.5999999642372131}
     
         ]
       }

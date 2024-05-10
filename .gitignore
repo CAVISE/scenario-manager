@@ -5,3 +5,4 @@ output/Crashes
 _out/
 
 **/*.pyc
+simulation/out/

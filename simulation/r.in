@@ -1,8 +1,10 @@
+celery
+flower
+redis
+fastapi
 carla==0.9.15
 numpy
 pygame
 matplotlib
 open3d
 Pillow
-future
-fastapi
