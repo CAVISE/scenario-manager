@@ -24,68 +24,68 @@ const Scenarios = () => {
     }
 
     useEffect(() => {
-        setScenarios([
-            {
-                scenario_id: "123",
-                scenario_name: "Сценарий 1",
-                weather: "WetCloudyNoon",
-                scenario: []
-            },
-            {
-                scenario_id: "nvfjl",
-                scenario_name: "Сценарий 2",
-                weather: "MidRainyNoon",
-                scenario: [
-                    {
-                        vehicle: "audi.a2",
-                        path: [
-                            { x: 200, y: 200, z: 0.6 },
-                            { x: 250, y: 250, z: 0.6 }
-                        ],
-                        active: true,
-                        color: {
-                            r: 100,
-                            g: 255,
-                            b: 255
-                        }
-                    }
-                ]
-            },
-            {
-                scenario_id: "sffef",
-                scenario_name: "Сценарий 3",
-                weather: "CloudyNoon",
-                scenario: [
-                    {
-                        vehicle: "nissan.micra",
-                        path: [
-                            { x: 200, y: 200, z: 0.6 },
-                            { x: 250, y: 250, z: 0.6 }
-                        ],
-                        active: true,
-                        color: {
-                            r: 100,
-                            g: 255,
-                            b: 255
-                        }
-                    },
-                    {
-                        vehicle: "audi.tt",
-                        path: [
-                            { x: 140, y: 200, z: 0.6 },
-                            { x: 340, y: 100, z: 0.6 }
-                        ],
-                        active: true,
-                        color: {
-                            r: 100,
-                            g: 100,
-                            b: 100
-                        }
-                    }
-                ]
-            }
-        ])
-        // fetchScenarios();
+        // setScenarios([
+        //     {
+        //         scenario_id: "123",
+        //         scenario_name: "Сценарий 1",
+        //         weather: "WetCloudyNoon",
+        //         scenario: []
+        //     },
+        //     {
+        //         scenario_id: "nvfjl",
+        //         scenario_name: "Сценарий 2",
+        //         weather: "MidRainyNoon",
+        //         scenario: [
+        //             {
+        //                 vehicle: "audi.a2",
+        //                 path: [
+        //                     { x: 200, y: 200, z: 0.6 },
+        //                     { x: 250, y: 250, z: 0.6 }
+        //                 ],
+        //                 active: true,
+        //                 color: {
+        //                     r: 100,
+        //                     g: 255,
+        //                     b: 255
+        //                 }
+        //             }
+        //         ]
+        //     },
+        //     {
+        //         scenario_id: "sffef",
+        //         scenario_name: "Сценарий 3",
+        //         weather: "CloudyNoon",
+        //         scenario: [
+        //             {
+        //                 vehicle: "nissan.micra",
+        //                 path: [
+        //                     { x: 200, y: 200, z: 0.6 },
+        //                     { x: 250, y: 250, z: 0.6 }
+        //                 ],
+        //                 active: true,
+        //                 color: {
+        //                     r: 100,
+        //                     g: 255,
+        //                     b: 255
+        //                 }
+        //             },
+        //             {
+        //                 vehicle: "audi.tt",
+        //                 path: [
+        //                     { x: 140, y: 200, z: 0.6 },
+        //                     { x: 340, y: 100, z: 0.6 }
+        //                 ],
+        //                 active: true,
+        //                 color: {
+        //                     r: 100,
+        //                     g: 100,
+        //                     b: 100
+        //                 }
+        //             }
+        //         ]
+        //     }
+        // ])
+        fetchScenarios();
 
     }, [setScenarios]);
 
