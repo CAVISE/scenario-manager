@@ -28,9 +28,9 @@ async def set_scenario(data: schemas.ScenarioSchema, request: Request, bacground
     
     # with open(f"{scenario_id}.json", "w") as f:
         
-    work.do_scenario.delay(carla_host, carla_port, data, scenario_id)
+    # work.do_scenario.delay(carla_host, carla_port, data, scenario_id)
     print(1)
-    # bacground_task.add_task(work.do_scenario, client, data, scenario_id)
+    bacground_task.add_task(work.do_scenario, carla_host, carla_port, data, scenario_id)
     print(2)
     
     return "ok"
