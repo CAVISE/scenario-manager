@@ -11,6 +11,7 @@ function App() {
       <Route path="/" element={<StartPage />} />
       <Route path="/params" element={<ParamsPage />} />
       <Route path="/paths" element={<Paths />} />
+      {/* <Route path="/reports" element={} /> */}
     </Routes>
     </main>)
 }
