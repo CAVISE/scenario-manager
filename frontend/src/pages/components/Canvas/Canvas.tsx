@@ -240,7 +240,7 @@ const Canvas = () => {
         setVehicleModels(carsFromCarla.map((item) => (
             item[1] + "." + item[2]
         )))
-    }, [setVehicleModels])
+    }, [])
 
     const handleClick = (e: React.MouseEvent<HTMLImageElement>) => {
         const image = imageRef.current;
@@ -299,19 +299,19 @@ const Canvas = () => {
         )))
     }
 
-    useEffect(() => {
-        console.log(vehicles);
-    }, [vehicles]);
+    // useEffect(() => {
+    //     console.log(vehicles);
+    // }, [vehicles]);
 
     return (
         <div>
             <div className="controls">
                 <div className="buttons">
-                    <Button className="points-button" variant="contained" onClick={handleDeletePoints}>Delete points</Button>
-                    <Button className="points-button" variant="contained" onClick={handleDeleteLast}>Delete last point</Button>
-                    <Button className="points-button" variant="contained" onClick={handleUsePoints}>Use these points</Button>
+                    <Button className="points-button" variant="contained" onClick={handleDeletePoints}>Удалить точки</Button>
+                    <Button className="points-button" variant="contained" onClick={handleDeleteLast}>Удалить последнюю точку</Button>
+                    <Button className="points-button" variant="contained" onClick={handleUsePoints}>Вывести точки в консоль</Button>
                 </div>
-                <Button variant="contained" onClick={handleAddVehicle}>Add vehicle</Button>
+                <Button variant="contained" onClick={handleAddVehicle}>Добавить машину</Button>
                 <div className="vehicles">
                     {vehicles.map((item, index) => (<div className="vehicle">
                         <InputLabel id={String(index) + "-label"}>Model</InputLabel>

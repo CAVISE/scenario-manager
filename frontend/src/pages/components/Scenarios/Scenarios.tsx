@@ -10,6 +10,8 @@ import "./Scenarios.scss"
 const Scenarios = () => {
     const [scenarios, setScenarios] = useState<Scenario[]>([]);
     const [scenarioName, setScenarioName] = useState("");
+    const kx = 0.058395855215065;
+    const ky = 0.053634767293709;
 
     const fetchScenarios = () => {
         const host = "http://localhost:" + PORT + "/scenario/all";
@@ -20,6 +22,27 @@ const Scenarios = () => {
             })
             .then((data) => {
                 setScenarios(data);
+                setScenarios(scenarios.map((item) => (
+                    {
+                        scenario_id: item.scenario_id,
+                        scenario_name: item.scenario_name,
+                        weather: item.weather,
+                        scenario: item.scenario.map((way) => (
+                            {
+                                vehicle: way.vehicle,
+                                active: way.active,
+                                color: way.color,
+                                path: way.path.map((point) => (
+                                    {
+                                        x: Math.round((point.x + 124.13208770751953) / kx),
+                                        y: Math.round((151.98765563964844 - point.y) / ky),
+                                        z: 0.6
+                                    }
+                                ))
+                            }
+                        ))
+                    }
+                )))
             });
     }
 
@@ -122,9 +145,6 @@ const Scenarios = () => {
             weather: JSON.parse(window.localStorage.getItem('weather')!),
             scenario: JSON.parse(window.localStorage.getItem('scenario')!)
         };
-        
-        const kx = 0.058395855215065;
-        const ky = 0.053634767293709;
 
         scen.scenario = scen.scenario.map((item) => (
             { vehicle: item.vehicle, path: item.path.map((point) => (
