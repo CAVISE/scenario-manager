@@ -14,7 +14,7 @@ sensor_list = []
 actors_list = []
 
 
-def has_reached_destination(vehicle, destination, threshold=1.0):
+def has_reached_destination(vehicle, destination, threshold=5.0):
     print("IN IF")
     vehicle_location = vehicle.get_location()
     destination = destination.path[-1]
