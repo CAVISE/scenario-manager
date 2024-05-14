@@ -158,9 +158,9 @@ const Scenarios = () => {
 
         let host = "localhost:" + PORT;
         if (scen.scenario_id == null)
-            host += "/scenario/add";
+            host += "/scenario/create";
         else
-            host += "/scenario/edit/" + String(scen.scenario_id);
+            host += "/scenario/edit";
         const response = await fetch(host, {
             method: 'POST',
             headers: {
