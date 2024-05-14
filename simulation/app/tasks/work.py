@@ -108,7 +108,11 @@ def do_scenario(carla_host, carla_port, data: schemas.ScenarioSchema, scenario_i
             sensor.listen(lambda image: image.save_to_disk(f'out/{sensor_path}/{image.frame}.png'))
             sensor_list.append(sensor)
 
-        while actors_list and world.get_actors():
+        while actors_list:
+            all_actors = world.get_actors()
+            qwe = [i for i in all_actors if "vehicle" in str(i)]
+            if qwe==0:
+                break
             asyncio.sleep(1)
             for i, vehicle in enumerate(actors_list):
                 print("BEFORE IF")
@@ -137,6 +141,6 @@ def do_scenario(carla_host, carla_port, data: schemas.ScenarioSchema, scenario_i
     connection.close()
 
     
-    
+
 
 

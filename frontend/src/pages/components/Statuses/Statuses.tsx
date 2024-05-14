@@ -12,7 +12,7 @@ export const Statuses = () => {
     const [stats, setStats] = useState<Status[]>([]);
 
     useEffect(() => {
-        const host = "localhost:" + PORT + "/scenario/get/all";
+        const host = "http://localhost:" + PORT + "/reports/get/all";
         fetch(host)
             .then((response) => {
                 console.log(response);
