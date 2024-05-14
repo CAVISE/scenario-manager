@@ -1,4 +1,5 @@
 import enum
+import json
 import carla
 import math
 
@@ -27,6 +28,9 @@ async def weather_setter(world, weather: str, intense: int = None):
     world.set_weather(weathers[weather])
 
 
+
+
+
 def calculate_pitch_yaw(point1: schemas.LocationSchema, point2: schemas.LocationSchema):
     dx = point2.x - point1.x
     dy = point2.y - point1.y
@@ -48,3 +52,6 @@ def draw_path(path, world, tm: int = 20):
         world.debug.draw_string(
             point, str(i), life_time=tm, color=carla.Color(255, 0, 0)
         )
+
+def get_scenario(_id):
+    return json.load(open(f"scenarios/{_id}.json"))

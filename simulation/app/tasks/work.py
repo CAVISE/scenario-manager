@@ -1,4 +1,5 @@
 import asyncio
+import sqlite3
 import time
 import carla
 from ..routers import schemas, services
@@ -24,15 +25,14 @@ def has_reached_destination(vehicle, destination, threshold=5.0):
 
     distance = math.dist([vehicle_x, vehicle_y], [destination_x, destination_y])
 
-
-
     print(vehicle_location)
     print(destination)
     print("===================")
     return distance <= threshold
 
 @celery.task
-def do_scenario(carla_host, carla_port, data: schemas.ScenarioSchema, scenario_id):
+def do_scenario(carla_host, carla_port, data: schemas.ScenarioSchema, scenario_id, report_id):
+    print(data)
     client = carla.Client(carla_host, carla_port)
     world = client.get_world()
     actors_data = [x.vehicle for x in data.scenario]
@@ -50,7 +50,6 @@ def do_scenario(carla_host, carla_port, data: schemas.ScenarioSchema, scenario_i
                 break
         ###############
 
-
     pitch, yaw = services.calculate_pitch_yaw(
         data.scenario[0].path[0], data.scenario[0].path[1]
     )
@@ -63,13 +62,9 @@ def do_scenario(carla_host, carla_port, data: schemas.ScenarioSchema, scenario_i
         ),
         carla.Rotation(pitch, yaw, roll),
     )
-
     # tmp_vehicle = world.try_spawn_actor(actors[0], tmp_transform)
-
     traffic_manager = client.get_trafficmanager()
     traffic_manager.set_random_device_seed(config.SEED)
-
-
     # tmp
     for i in range(len(data.scenario)):
         services.draw_path(data.scenario[i].path, world, 50)
@@ -113,7 +108,7 @@ def do_scenario(carla_host, carla_port, data: schemas.ScenarioSchema, scenario_i
             sensor.listen(lambda image: image.save_to_disk(f'out/{sensor_path}/{image.frame}.png'))
             sensor_list.append(sensor)
 
-        while actors_list:
+        while actors_list and world.get_actors():
             asyncio.sleep(1)
             for i, vehicle in enumerate(actors_list):
                 print("BEFORE IF")
@@ -132,7 +127,16 @@ def do_scenario(carla_host, carla_port, data: schemas.ScenarioSchema, scenario_i
             actor.destroy()
         for sensor in sensor_list:
             sensor.destroy()
-    print("123")
+    connection = sqlite3.connect(config.SQLDB_NAME)
+    cursor = connection.cursor()
 
+    query = f"UPDATE {config.SQLDB_TABLE} SET status='true' WHERE id={report_id}"
+
+    cursor.execute(query)
+    connection.commit()
+    connection.close()
+
+    
+    
 
 

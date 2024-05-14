@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import sqlite3
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse
 from starlette.middleware.cors import CORSMiddleware
@@ -8,6 +9,18 @@ import carla
 from .routers.getters import router as getters_router
 from .routers.utils import router as utils_router
 from .routers.scenario import router as scenario_router
+from .routers.reports import router as reports_router
+
+# scenario_id - str, scenario_name - str, status - true|false
+sqlite_schema = """
+CREATE TABLE IF NOT EXISTS reports (
+    id INTEGER PRIMARY KEY,
+    scenario_id TEXT,
+    scenario_name TEXT,
+    status BOOLEAN
+);
+"""
+
 
 
 @asynccontextmanager
@@ -17,6 +30,11 @@ async def lifespan(app: FastAPI):
     # .\CarlaUE4.exe -quality-level=Low
     app.state.client = carla_client
     app.state.client.set_timeout(3.0)
+
+    connection = sqlite3.connect('db.db')
+    cursor = connection.cursor()
+    cursor.execute(sqlite_schema)
+
     yield
 
     # carla_client
@@ -30,6 +48,7 @@ app = FastAPI(lifespan=lifespan)
 app.include_router(getters_router, prefix="/getters", tags=["getters"])
 app.include_router(utils_router, prefix="/utils", tags=["utils"])
 app.include_router(scenario_router, prefix="/scenario", tags=["scenario"])
+app.include_router(reports_router, prefix="/reports", tags=["reports"])
 
 #cors allow all
 app.add_middleware(

@@ -11,5 +11,7 @@ class Config:
     REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
     REDIS_PORT = int(os.getenv("REDIS_PORT", 6369))
 
+    SQLDB_NAME = "db.db"
+    SQLDB_TABLE = "reports"
 
 config = Config()

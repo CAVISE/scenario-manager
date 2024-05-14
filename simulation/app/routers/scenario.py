@@ -1,3 +1,4 @@
+import sqlite3
 from fastapi import APIRouter, BackgroundTasks, Request
 
 import carla
@@ -15,7 +16,9 @@ router = APIRouter()
 
 
 @router.post("/create")
-async def set_scenario(data: schemas.ScenarioSchema, request: Request, bacground_task: BackgroundTasks):
+async def set_scenario(
+    data: schemas.ScenarioSchema, request: Request, bacground_task: BackgroundTasks
+):
     # client = request.app.state.client
     carla_host = config.CARLA_HOST
     carla_port = config.CARLA_PORT
@@ -25,19 +28,56 @@ async def set_scenario(data: schemas.ScenarioSchema, request: Request, bacground
     data_to_dump["scenario_id"] = scenario_id
 
     json.dump(data_to_dump, open(f"scenarios/{scenario_id}.json", "w"))
-    
-    # with open(f"{scenario_id}.json", "w") as f:
-        
-    # work.do_scenario.delay(carla_host, carla_port, data, scenario_id)
-    print(1)
-    bacground_task.add_task(work.do_scenario, carla_host, carla_port, data, scenario_id)
-    print(2)
-    
+
+    # # with open(f"{scenario_id}.json", "w") as f:
+
+    # # work.do_scenario.delay(carla_host, carla_port, data, scenario_id)
+    # print(1)
+    # bacground_task.add_task(work.do_scenario, carla_host, carla_port, data, scenario_id)
+    # print(2)
+
+    return {"scenario_id": scenario_id, "status": "created"}
+
+
+# reports table
+
+"""
+id INTEGER PRIMARY KEY,
+    scenario_id TEXT,
+    scenario_name TEXT,
+    status BOOLEAN
+
+"""
+
+
+@router.get("/run/{_id}")
+async def run_scenario(_id: str, bacground_task: BackgroundTasks, request: Request):
+    carla_host = config.CARLA_HOST
+    carla_port = config.CARLA_PORT
+
+    connection = sqlite3.connect(config.SQLDB_NAME)
+    cursor = connection.cursor()
+
+    scenario = services.get_scenario(_id)
+
+    # я осознаю что это sql инъекция, эта строчка написана в полном здравии и ясном уме
+    query = f"INSERT INTO reports (scenario_id, scenario_name, status) VALUES ('{_id}', '{scenario['scenario_name']}', 'false')"
+
+    inseted_value = cursor.execute(query)
+    connection.commit()
+    connection.close()
+
+    data = json.load(open(f"scenarios/{_id}.json"))
+    data = schemas.ScenarioSchema.parse_obj(data)
+
+    bacground_task.add_task(work.do_scenario, carla_host, carla_port, data, _id, inseted_value.lastrowid)
     return "ok"
+
 
 @router.get("/all")
 async def get_all_scenarios():
     import os
+
     scenarios = os.listdir("scenarios")
     print(scenarios)
     resp = []
@@ -47,10 +87,16 @@ async def get_all_scenarios():
     # return scenarios
 
 
-@router.get("/{id}")
-async def get_scenario(id: str):
-    return json.load(open(f"scenarios/{id}.json"))
+@router.get("/{_id}")
+async def get_scenario(_id: str):
+    return json.load(open(f"scenarios/{_id}.json"))
 
+
+@router.post("/edit")
+async def edit_scenario(data: schemas.ScenarioSchema):
+    scenario_id = data.scenario_id
+    json.dump(data.model_dump(), open(f"scenarios/{scenario_id}.json", "w"))
+    return "ok"
 
 
 """
@@ -79,7 +125,7 @@ async def get_scenario(id: str):
 
 """
 
-'''
+"""
 nums = [21, 105, 48, 52, 104]
 
 
@@ -89,9 +135,9 @@ for i in nums:
     print(qwe, end=",\n")
 
 
-'''
+"""
 
-'''
+"""
 {
   "weather": "string",
   "scenario": [
@@ -117,7 +163,7 @@ for i in nums:
 
 
 
-'''
+"""
 
 
 """
