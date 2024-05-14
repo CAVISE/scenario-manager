@@ -4,6 +4,7 @@ import './App.css'
 import ParamsPage from "./pages/Params"
 import Paths from "./pages/Paths";
 import StartPage from "./pages/StartPage"
+import Reports from "./pages/Reports";
 
 function App() {
   return (<main>
@@ -11,7 +12,7 @@ function App() {
       <Route path="/" element={<StartPage />} />
       <Route path="/params" element={<ParamsPage />} />
       <Route path="/paths" element={<Paths />} />
-      {/* <Route path="/reports" element={} /> */}
+      <Route path="/reports" element={<Reports />} />
     </Routes>
     </main>)
 }
