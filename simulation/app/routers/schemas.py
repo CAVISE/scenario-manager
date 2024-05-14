@@ -31,7 +31,7 @@ class ActorScenario(PathSchema):
 class ScenarioSchema(BaseModel):
     scenario_id: str | None
     scenario_name: Optional[str]
-    map_name: Optional[str]
+    # map_name: Optional[str]
     weather: Optional[str]
     scenario: List[ActorScenario]
 

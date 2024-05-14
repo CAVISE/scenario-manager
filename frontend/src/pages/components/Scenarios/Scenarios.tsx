@@ -22,6 +22,7 @@ const Scenarios = () => {
             })
             .then((data) => {
                 setScenarios(data);
+                console.log(data);
                 setScenarios(scenarios.map((item) => (
                     {
                         scenario_id: item.scenario_id,
@@ -43,6 +44,7 @@ const Scenarios = () => {
                         ))
                     }
                 )))
+                console.log(data);
             });
     }
 
@@ -108,8 +110,62 @@ const Scenarios = () => {
         //         ]
         //     }
         // ])
-        fetchScenarios();
 
+        // fetchScenarios();
+
+        const host = "http://localhost:" + PORT + "/scenario/all";
+        fetch(host)
+            .then((response) => {
+                console.log(response);
+                return response.json();
+            })
+            .then((data) => {
+                setScenarios(data);
+                // console.log(scenarios);
+                // setScenarios(scenarios.map((item) => (
+                //     {
+                //         scenario_id: item.scenario_id,
+                //         scenario_name: item.scenario_name,
+                //         weather: item.weather,
+                //         scenario: item.scenario.map((way) => (
+                //             {
+                //                 vehicle: way.vehicle,
+                //                 active: way.active,
+                //                 color: way.color,
+                //                 path: way.path.map((point) => (
+                //                     {
+                //                         x: Math.round((point.x + 124.13208770751953) / kx),
+                //                         y: Math.round((151.98765563964844 - point.y) / ky),
+                //                         z: 0.6
+                //                     }
+                //                 ))
+                //             }
+                //         ))
+                //     }
+                // )))
+                setScenarios((prevScenarios) => prevScenarios.map((item) => (
+                    {
+                        scenario_id: item.scenario_id,
+                        scenario_name: item.scenario_name,
+                        weather: item.weather,
+                        scenario: item.scenario.map((way) => (
+                            {
+                                vehicle: way.vehicle,
+                                active: way.active,
+                                color: way.color,
+                                path: way.path.map((point) => (
+                                    {
+                                        x: Math.round((point.x + 124.13208770751953) / kx),
+                                        y: Math.round((151.98765563964844 - point.y) / ky),
+                                        z: 0.6
+                                    }
+                                ))
+                            }
+                        ))
+                    }
+                )))
+                console.log(data);
+            });
     }, [setScenarios]);
 
     const handleEdit = (index: number) => {
@@ -156,7 +212,7 @@ const Scenarios = () => {
             )), active: item.active, color: item.color }
         ))
 
-        let host = "localhost:" + PORT;
+        let host = "http://localhost:" + PORT;
         if (scen.scenario_id == null)
             host += "/scenario/create";
         else
@@ -174,7 +230,7 @@ const Scenarios = () => {
     }
 
     const handleRunScenario = (index: number) => {
-        const host = "localhost:" + PORT + "/scenarios/run/" + scenarios[index].scenario_id;
+        const host = "http://localhost:" + PORT + "/scenario/run/" + scenarios[index].scenario_id;
         fetch(host)
             .then((response) => {
                 console.log(response);
@@ -223,6 +279,24 @@ const Scenarios = () => {
                     console.log(JSON.parse(window.localStorage.getItem('scenario_name')!));
                     console.log(JSON.parse(window.localStorage.getItem('weather')!));
                     console.log(JSON.parse(window.localStorage.getItem('scenario')!));
+
+                    const scen: Scenario = {
+                        scenario_id: JSON.parse(window.localStorage.getItem('scenario_id')!),
+                        scenario_name: JSON.parse(window.localStorage.getItem('scenario_name')!),
+                        weather: JSON.parse(window.localStorage.getItem('weather')!),
+                        scenario: JSON.parse(window.localStorage.getItem('scenario')!)
+                    };
+
+                    scen.scenario = scen.scenario.map((item) => (
+                        { vehicle: item.vehicle, path: item.path.map((point) => (
+                            {
+                                x: point.x * kx - 124.13208770751953,
+                                y: 151.98765563964844 - point.y * ky,
+                                z: 0.6
+                            }
+                        )), active: item.active, color: item.color }
+                    ))
+                    console.log(scen.scenario);
                 }}
             >Вывести в консоль хранилище</Button>
             <Button
