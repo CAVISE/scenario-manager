@@ -4,7 +4,7 @@ import math
 
 from . import schemas
 
-wheathers = {
+weathers = {
     "ClearNoon": carla.WeatherParameters.ClearNoon,
     "CloudyNoon": carla.WeatherParameters.CloudyNoon,
     "WetNoon": carla.WeatherParameters.WetNoon,
@@ -24,7 +24,7 @@ wheathers = {
 
 
 async def weather_setter(world, weather: str, intense: int = None):
-    world.set_weather(wheathers[weather])
+    world.set_weather(weathers[weather])
 
 
 def calculate_pitch_yaw(point1: schemas.LocationSchema, point2: schemas.LocationSchema):

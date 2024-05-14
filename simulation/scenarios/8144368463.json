@@ -1,0 +1,1 @@
+{"scenario_name": "test2", "map_name": "string", "weather": "string", "scenario": [{"path": [{"x": -52.186737060546875, "y": 42.56512451171875, "z": 0.5999999642372131}, {"x": -76.92958068847656, "y": 73.47618865966797, "z": 0.5999999642372131}], "vehicle": "audi.a2", "color": {"r": 0, "g": 0, "b": 0}, "active": false}], "scenario_id": "8144368463"}
