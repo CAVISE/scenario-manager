@@ -6,3 +6,4 @@ _out/
 
 **/*.pyc
 simulation/out/
+cache/no_rendering_mode/
