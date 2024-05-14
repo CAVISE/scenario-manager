@@ -26,8 +26,8 @@ export const BottomNavbar = () => {
         />
         <BottomNavigationAction
           component={Link}
-          to="/something"
-          value="/something"
+          to="/reports"
+          value="/reports"
           label="Отчёты"
         />
       </BottomNavigation>
