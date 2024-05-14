@@ -162,12 +162,12 @@ async def get_spectator_image(request: Request):
     return "ok"
 
 
-@router.get("/world/wheather/set")
-async def set_wheather(wheather, request: Request):
+@router.get("/world/weather/set")
+async def set_weather(weather, request: Request):
     client = request.app.state.client
     world = client.get_world()
 
-    await services.weather_setter(world, wheather)
+    await services.weather_setter(world, weather)
     return "ok"
 
 # @router.get("/world/wheather/get")
@@ -180,14 +180,39 @@ async def set_wheather(wheather, request: Request):
 # 108 122 24 106
 
 
-@router.get("/map/pic")
-async def get_map_pic(request: Request):
+
+sensors_list = []
+
+spectator_sensor = None
+image_exist = False
+
+def image_callback(image):
+    global image_exist
+    if image_exist:
+        spectator_sensor.destroy()
+    image.save_to_disk(f'out/maps/{image.frame}.png')
+    image_exist = True
+
+
+@router.get("/map/image")
+async def get_map_image(x: float, y: float, z: float, request: Request):
     client = request.app.state.client
     world = client.get_world()
 
-    map = world.get_map()
+    sensor_bp = world.get_blueprint_library().find("sensor.camera.rgb")
+    sensor_bp.set_attribute("image_size_x", "2500")
+    sensor_bp.set_attribute("image_size_y", "2500")
+    sensor_bp.set_attribute("fov", "10")
 
+    sensor_transform = carla.Transform(
+        carla.Location(x=x, y = y, z=z), carla.Rotation(pitch=-90)
+    )
 
-
-    map.save_to_disk("map.xodr")
-    return "ok"
+    sensor = world.spawn_actor(sensor_bp, sensor_transform)
+    print("Sensor created")
+    sensors_list.append(sensor)
+    global spectator_sensor
+    spectator_sensor = sensor
+    
+    # sensor.listen(lambda image: image.save_to_disk(f'out/maps/{image.frame}.png'))
+    sensor.listen(image_callback)
