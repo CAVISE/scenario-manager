@@ -1,3 +1,4 @@
+import asyncio
 import time
 import carla
 from ..routers import schemas, services
@@ -113,7 +114,7 @@ def do_scenario(carla_host, carla_port, data: schemas.ScenarioSchema, scenario_i
             sensor_list.append(sensor)
 
         while actors_list:
-            time.sleep(1)
+            asyncio.sleep(1)
             for i, vehicle in enumerate(actors_list):
                 print("BEFORE IF")
                 print(vehicle)
