@@ -291,7 +291,7 @@ const Scenarios = () => {
                         { vehicle: item.vehicle, path: item.path.map((point) => (
                             {
                                 x: point.x * kx - 124.13208770751953,
-                                y: 151.98765563964844 - point.y * ky,
+                                y: point.y * ky - 79.5,
                                 z: 0.6
                             }
                         )), active: item.active, color: item.color }
