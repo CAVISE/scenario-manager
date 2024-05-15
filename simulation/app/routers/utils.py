@@ -75,6 +75,23 @@ async def destroy_actors(actor_type: str, request: Request):
     return "ok"
 
 
+@router.get("/stop")
+async def stop(request: Request):
+    client = request.app.state.client
+    world = client.get_world()
+
+    actors = world.get_actors()
+    actors_to_destroy = []
+    print(actors)
+    for i in actors:
+        if ("vehicle" in str(i)) or ("sensor" in str(i)):
+            actors_to_destroy.append(i)
+    for i in actors_to_destroy:
+        i.destroy()
+
+    return actors_to_destroy
+
+
 @router.get("/spectator/pos/get")
 async def get_spectator_pos(request: Request):
     client = request.app.state.client
@@ -152,7 +169,6 @@ async def get_spectator_image(request: Request):
     camera_bp = world.get_blueprint_library().find("sensor.camera.rgb")
     camera = world.spawn_actor(camera_bp, attach_to=ego_vehicle)
 
-
     # camera.listen(lambda image: image.save_to_disk(f"output_{time_hash}.png"))
     camera.listen(lambda image: image.save_to_disk("output_.png"))
     return "ok"
@@ -163,7 +179,7 @@ async def set_weather(weather, request: Request):
     client = request.app.state.client
     world = client.get_world()
 
-    await services.weather_setter(world, weather)
+    services.weather_setter(world, weather)
     return "ok"
 
 
