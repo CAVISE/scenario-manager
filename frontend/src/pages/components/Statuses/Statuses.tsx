@@ -5,7 +5,7 @@ import { List, ListItem, ListItemButton, ListItemText } from "@mui/material";
 interface Status{
     scenario_id: string;
     scenario_name: string;
-    ready: boolean;
+    status: string;
 }
 
 export const Statuses = () => {
@@ -49,7 +49,7 @@ export const Statuses = () => {
                 >
                     <ListItemButton>
                         <ListItemText primary={stat.scenario_name} />
-                        <ListItemText primary={stat.ready ? "Готов" : "Выполняется"} />
+                        <ListItemText primary={stat.status == "true" ? "Готов" : "Выполняется"} />
                     </ListItemButton>
                 </ListItem>
             ))}
