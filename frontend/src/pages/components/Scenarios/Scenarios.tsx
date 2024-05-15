@@ -10,8 +10,8 @@ import "./Scenarios.scss"
 const Scenarios = () => {
     const [scenarios, setScenarios] = useState<Scenario[]>([]);
     const [scenarioName, setScenarioName] = useState("");
-    const kx = 0.091698531266097;
-    const ky = 0.082379948626209;
+    const kx = 0.086087664180445;
+    const ky = 0.087651516713233;
 
     const fetchScenarios = () => {
         const host = "http://localhost:" + PORT + "/scenario/all";
