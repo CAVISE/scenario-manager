@@ -103,7 +103,7 @@ def do_scenario(carla_host, carla_port, data: schemas.ScenarioSchema, scenario_i
         for i in actors_list:
             camera_init_trans = carla.Transform(carla.Location(x=1.6, z=1.7))
             camera_bp = world.get_blueprint_library().find('sensor.camera.rgb')
-            sensor = world.spawn_actor(camera_bp, camera_init_trans, attach_to=i)
+            sensor = world.try_spawn_actor(camera_bp, camera_init_trans, attach_to=i)
             sensor_path = scenario_id + str(len(sensor_list)+1)
             sensor.listen(lambda image: image.save_to_disk(f'out/{sensor_path}/{image.frame}.png'))
             sensor_list.append(sensor)
@@ -131,6 +131,7 @@ def do_scenario(carla_host, carla_port, data: schemas.ScenarioSchema, scenario_i
             actor.destroy()
         for sensor in sensor_list:
             sensor.destroy()
+    print("сценарий ну как бы всё")
     connection = sqlite3.connect(config.SQLDB_NAME)
     cursor = connection.cursor()
 
