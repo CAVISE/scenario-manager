@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import imgSrc from "../assets/map2639x2810.png"
+import imgSrc from "../assets/map2811x2641.png"
 import './Canvas.scss'
 import { Button, InputLabel, MenuItem, Select, SelectChangeEvent, IconButton, TextField } from "@mui/material"
 import Draggable, { DraggableEvent, DraggableData } from "react-draggable"
@@ -474,7 +474,7 @@ const Canvas = () => {
                 className="image-cont"
                 ref={imageRef}
                 // onClick={handleClick}
-                style={{ width: "2639px", height: "2810px" }}
+                style={{ width: "2811px", height: "2641px" }}
             >
                 <img
                     // id="map-img"
