@@ -1,7 +1,5 @@
 from fastapi import APIRouter, Request
 
-import carla
-
 router = APIRouter()
 
 

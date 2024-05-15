@@ -1,16 +1,12 @@
+import datetime
+import json
 import sqlite3
+
 from fastapi import APIRouter, BackgroundTasks, Request
 
-import carla
-
-from ..tasks import work
-
-from . import schemas, services
-
 from ..core.config import config
-
-import json
-import datetime
+from ..tasks import work
+from . import schemas, services
 
 router = APIRouter()
 
@@ -19,34 +15,18 @@ router = APIRouter()
 async def set_scenario(
     data: schemas.ScenarioSchema, request: Request, bacground_task: BackgroundTasks
 ):
-    # client = request.app.state.client
-    carla_host = config.CARLA_HOST
-    carla_port = config.CARLA_PORT
-    # world = carla_client.get_world()
     scenario_id = str(hash(str(data.model_dump()) + str(datetime.datetime.now())))[-10:]
     data_to_dump = data.model_dump()
     data_to_dump["scenario_id"] = scenario_id
-
     json.dump(data_to_dump, open(f"scenarios/{scenario_id}.json", "w"))
-
-    # # with open(f"{scenario_id}.json", "w") as f:
-
-    # # work.do_scenario.delay(carla_host, carla_port, data, scenario_id)
-    # print(1)
-    # bacground_task.add_task(work.do_scenario, carla_host, carla_port, data, scenario_id)
-    # print(2)
-
     return {"scenario_id": scenario_id, "status": "created"}
 
 
-# reports table
-
 """
 id INTEGER PRIMARY KEY,
-    scenario_id TEXT,
-    scenario_name TEXT,
-    status BOOLEAN
-
+scenario_id TEXT,
+scenario_name TEXT,
+status BOOLEAN
 """
 
 
@@ -70,7 +50,9 @@ async def run_scenario(_id: str, bacground_task: BackgroundTasks, request: Reque
     data = json.load(open(f"scenarios/{_id}.json"))
     data = schemas.ScenarioSchema.parse_obj(data)
 
-    bacground_task.add_task(work.do_scenario, carla_host, carla_port, data, _id, inseted_value.lastrowid)
+    bacground_task.add_task(
+        work.do_scenario, carla_host, carla_port, data, _id, inseted_value.lastrowid
+    )
     return "ok"
 
 
