@@ -1,4 +1,3 @@
-import enum
 import json
 import carla
 import math

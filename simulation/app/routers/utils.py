@@ -8,11 +8,10 @@ from . import schemas, services
 router = APIRouter()
 
 
-
 @router.get("/layers")
 async def set_layers(layer_name: str, toggle: int, request: Request):
     client = request.app.state.client
-    world = client.get_world()
+    world = client.get_world()  # noqa: F841
     try:
         if toggle:
             exec(f"world.load_map_layer(carla.MapLayer.{layer_name})")
@@ -23,7 +22,7 @@ async def set_layers(layer_name: str, toggle: int, request: Request):
     # layers = world.get_map().get_layers()
 
     return "ok"
-    
+
 
 @router.post("/draw_path")
 async def draw_path_handler(data: schemas.PathSchema, request: Request):
@@ -31,12 +30,13 @@ async def draw_path_handler(data: schemas.PathSchema, request: Request):
     world = client.get_world()
 
     services.draw_path(data.path, world)
-    
+
     return "ok"
+
 
 # @router.get("/vehicles")
 
-'''
+"""
 {
 "path": [
     {"x": -52.186737060546875, "y": 42.56512451171875, "z": 0.5999999642372131},
@@ -47,7 +47,8 @@ async def draw_path_handler(data: schemas.PathSchema, request: Request):
 }
 
 
-'''
+"""
+
 
 @router.get("/actors/get")
 async def get_actors(request: Request):
@@ -60,6 +61,7 @@ async def get_actors(request: Request):
         response.append(str(i))
     return response
 
+
 @router.get("/actors/destroy")
 async def destroy_actors(actor_type: str, request: Request):
     client = request.app.state.client
@@ -71,7 +73,6 @@ async def destroy_actors(actor_type: str, request: Request):
         if actor_type in str(i):
             i.destroy()
     return "ok"
-# 
 
 
 @router.get("/spectator/pos/get")
@@ -92,21 +93,14 @@ async def set_spectator_pos(data: schemas.TransformSchema, request: Request):
 
     spectator = world.get_spectator()
     new_transoform = carla.Transform(
-        carla.Location(
-            data.x,
-            data.y, 
-            data.z),
-        carla.Rotation(
-            data.pitch, 
-            data.yaw, 
-            data.roll)
+        carla.Location(data.x, data.y, data.z),
+        carla.Rotation(data.pitch, data.yaw, data.roll),
     )
     spectator.set_transform(new_transoform)
     return "ok"
 
 
-
-'''точно центр карты
+"""точно центр карты
 {
   "x": -7,
   "y": 36,
@@ -115,10 +109,10 @@ async def set_spectator_pos(data: schemas.TransformSchema, request: Request):
   "yaw": 0,
   "roll": 0
 }
-'''
+"""
 
 
-'''предположительный центр карты
+"""предположительный центр карты
 {
     "path": [
         {  
@@ -140,7 +134,8 @@ async def set_spectator_pos(data: schemas.TransformSchema, request: Request):
 }
 
 
-'''
+"""
+
 
 @router.get("/spectator/image")
 async def get_spectator_image(request: Request):
@@ -150,13 +145,14 @@ async def get_spectator_image(request: Request):
     spectator = world.get_spectator()
 
     spectator_transofm = spectator.get_transform()
-    vehicle_blueprints = world.get_blueprint_library().filter('*vehicle*')
-    ego_vehicle = world.spawn_actor(random.choice(vehicle_blueprints), spectator_transofm)
-    camera_bp = world.get_blueprint_library().find('sensor.camera.rgb')
+    vehicle_blueprints = world.get_blueprint_library().filter("*vehicle*")
+    ego_vehicle = world.spawn_actor(
+        random.choice(vehicle_blueprints), spectator_transofm
+    )
+    camera_bp = world.get_blueprint_library().find("sensor.camera.rgb")
     camera = world.spawn_actor(camera_bp, attach_to=ego_vehicle)
 
-    import datetime
-    time_hash = datetime.datetime.now().strftime('%m-%d_%H-%M-%S-%f')
+
     # camera.listen(lambda image: image.save_to_disk(f"output_{time_hash}.png"))
     camera.listen(lambda image: image.save_to_disk("output_.png"))
     return "ok"
@@ -170,6 +166,7 @@ async def set_weather(weather, request: Request):
     await services.weather_setter(world, weather)
     return "ok"
 
+
 # @router.get("/world/wheather/get")
 # async def get_wheather():
 #     wheathers = carla.WeatherParameters
@@ -180,17 +177,17 @@ async def set_weather(weather, request: Request):
 # 108 122 24 106
 
 
-
 sensors_list = []
 
 spectator_sensor = None
 image_exist = False
 
+
 def image_callback(image):
     global image_exist
     if image_exist:
         spectator_sensor.destroy()
-    image.save_to_disk(f'out/maps/{image.frame}.png')
+    image.save_to_disk(f"out/maps/{image.frame}.png")
     image_exist = True
 
 
@@ -205,7 +202,7 @@ async def get_map_image(x: float, y: float, z: float, request: Request):
     sensor_bp.set_attribute("fov", "10")
 
     sensor_transform = carla.Transform(
-        carla.Location(x=x, y = y, z=z), carla.Rotation(pitch=-90)
+        carla.Location(x=x, y=y, z=z), carla.Rotation(pitch=-90)
     )
 
     sensor = world.spawn_actor(sensor_bp, sensor_transform)
@@ -213,6 +210,6 @@ async def get_map_image(x: float, y: float, z: float, request: Request):
     sensors_list.append(sensor)
     global spectator_sensor
     spectator_sensor = sensor
-    
+
     # sensor.listen(lambda image: image.save_to_disk(f'out/maps/{image.frame}.png'))
     sensor.listen(image_callback)
