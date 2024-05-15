@@ -1,6 +1,6 @@
-import asyncio
 import math
 import sqlite3
+import time  # noqa: F401
 
 import carla
 from celery import Celery
@@ -28,10 +28,15 @@ def has_reached_destination(vehicle, destination, threshold=7.0):
 def do_scenario(
     carla_host, carla_port, data: schemas.ScenarioSchema, scenario_id, report_id
 ):
+    # data = schemas.ScenarioSchema.model_validate(data)
+
     sensor_list = []
     actors_list = []
     client = carla.Client(carla_host, carla_port)
     world = client.get_world()
+
+    services.weather_setter(world, data.weather)
+
     actors_data = [x.vehicle for x in data.scenario]
     actors = []
     bps = [x for x in world.get_blueprint_library()]
@@ -102,10 +107,9 @@ def do_scenario(
             camera_bp = world.get_blueprint_library().find("sensor.camera.rgb")
             sensor = world.try_spawn_actor(camera_bp, camera_init_trans, attach_to=elem)
             # sensor_path = scenario_id + str(len(sensor_list)+1)
+            spath = f"out/{scenario_id}/{i}/"
             sensor.listen(
-                lambda image: image.save_to_disk(
-                    f"out/{scenario_id}/{i}/{image.frame}.png"
-                )
+                lambda image: image.save_to_disk(spath + f"{image.frame}.png")
             )
             sensor_list.append(sensor)
 
@@ -114,7 +118,7 @@ def do_scenario(
             qwe = [i for i in all_actors if "vehicle" in str(i)]
             if qwe == 0:
                 break
-            asyncio.sleep(1)
+            # time.sleep(1)
             for elem, vehicle in enumerate(actors_list):
                 # print("BEFORE IF")
                 # print(vehicle)
@@ -131,14 +135,15 @@ def do_scenario(
         for actor in actors_list:
             try:
                 actor.destroy()
-            except:
-                pass
+            except Exception as _ex:
+                print(_ex)
         for sensor in sensor_list:
             try:
                 sensor.destroy()
-            except:
-                pass
+            except Exception as _ex:
+                print(_ex)
     print("сценарий завершился")
+
     connection = sqlite3.connect(config.SQLDB_NAME)
     cursor = connection.cursor()
     query = f"UPDATE {config.SQLDB_TABLE} SET status='true' WHERE id={report_id}"

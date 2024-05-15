@@ -16,10 +16,12 @@ class CarSchema(BaseModel):
     brand: str
     model: str
 
+
 class Color(BaseModel):
     r: int = 0
     g: int = 0
     b: int = 0
+
 
 class ActorScenario(PathSchema):
     vehicle: str
