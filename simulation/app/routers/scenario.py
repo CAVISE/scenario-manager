@@ -12,9 +12,7 @@ router = APIRouter()
 
 
 @router.post("/create")
-async def set_scenario(
-    data: schemas.ScenarioSchema, request: Request, bacground_task: BackgroundTasks
-):
+async def set_scenario(data: schemas.ScenarioSchema):
     scenario_id = str(hash(str(data.model_dump()) + str(datetime.datetime.now())))[-10:]
     data_to_dump = data.model_dump()
     data_to_dump["scenario_id"] = scenario_id
@@ -53,6 +51,7 @@ async def run_scenario(_id: str, bacground_task: BackgroundTasks, request: Reque
     bacground_task.add_task(
         work.do_scenario, carla_host, carla_port, data, _id, inseted_value.lastrowid
     )
+    # work.do_scenario.delay(carla_host, carla_port, data, _id, inseted_value.lastrowid) #расскоментировать в случае использования celery
     return "ok"
 
 
