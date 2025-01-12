@@ -9,20 +9,57 @@ var roadmark_outline_lines = null;
 var ground_grid = null;
 var disposable_objs = [];
 var mouse = new THREE.Vector2();
+const raycaster = new THREE.Raycaster();
 var spotlight_info = document.getElementById('spotlight_info');
 var INTERSECTED_LANE_ID = 0xffffffff;
 var INTERSECTED_ROADMARK_ID = 0xffffffff;
 var spotlight_paused = false;
+let isDoubleClickModeActive = false; 
+const addCubeModeButton = document.createElement('button');
+addCubeModeButton.textContent = 'Добавить кубик'; 
+addCubeModeButton.style.position = 'absolute';
+addCubeModeButton.style.top = '100px';
+addCubeModeButton.style.left = '20px';
+document.body.appendChild(addCubeModeButton);
+const deleteCubeModeButton = document.createElement('button');
+deleteCubeModeButton.textContent = 'Удалить последний кубик';
+deleteCubeModeButton.style.position = 'absolute';
+deleteCubeModeButton.style.top = '125px';
+deleteCubeModeButton.style.left = '20px';
+document.body.appendChild(deleteCubeModeButton);
+
+deleteCubeModeButton.addEventListener('click', () => {
+    if (disposable_objs.length > 0) {
+        const lastObj = disposable_objs[disposable_objs.length - 1];
+
+        if (lastObj && !lastObj.isDisposing) { 
+            lastObj.isDisposing = true; 
+            scene.remove(lastObj); 
+            disposable_objs.pop(); 
+            if (lastObj.geometry) lastObj.geometry.dispose(); 
+            if (lastObj.material) lastObj.material.dispose(); 
+        }
+    }
+});
+addCubeModeButton.addEventListener('click', () => {
+    isDoubleClickModeActive = !isDoubleClickModeActive; 
+
+    if (isDoubleClickModeActive) {
+        addCubeModeButton.textContent = 'Режим добавления куба';
+    } else {
+        addCubeModeButton.textContent = 'Добавить куб';
+    }
+});
 
 const COLORS = {
     road : 1.0,
     roadmark : 1.0,
-    lane_outline : 0xae52d4,
+    lane_outline : 0xffffff,
     roadmark_outline : 0xffffff,
     ref_line : 0x69f0ae,
-    background : 0x444444,
-    lane_highlight : 0x0288d1,
-    roadmark_highlight : 0xff0000,
+    background : 0xffffff,
+    lane_highlight : 0xffff00,
+    roadmark_highlight : 0xffff00,
 };
 
 /* event listeners */
@@ -171,8 +208,13 @@ function loadOdrMap(clear_map = true, fit_view = true)
         roadmark_picking_scene.remove(...roadmark_picking_scene.children);
         xyz_scene.remove(...xyz_scene.children);
         st_scene.remove(...st_scene.children);
-        for (let obj of disposable_objs)
-            obj.dispose();
+        for (let obj of disposable_objs) {
+            if (obj.geometry) obj.geometry.dispose();
+            if (obj.material) obj.material.dispose();
+            if (obj.parent) obj.parent.remove(obj);
+        }
+        disposable_objs = []; 
+
     }
 
     /* reflines */
@@ -522,7 +564,11 @@ function onWindowResize()
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
-
+function onDocumentMouseMove(event) {
+    event.preventDefault();
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+}
 function onDocumentMouseMove(event)
 {
     event.preventDefault();
@@ -530,8 +576,7 @@ function onDocumentMouseMove(event)
     mouse.y = event.clientY;
 }
 
-function onDocumentMouseDbClick(e)
-{
+function onDocumentMouseDbClick(event) {
     if (INTERSECTED_LANE_ID != 0xffffffff) {
         const odr_lanes_mesh = road_network_mesh.userData.odr_road_network_mesh.lanes_mesh;
         const lane_vert_idx_interval = odr_lanes_mesh.get_idx_interval_lane(INTERSECTED_LANE_ID);
@@ -541,5 +586,37 @@ function onDocumentMouseDbClick(e)
         const bbox = new THREE.Box3();
         bbox.setFromArray([ vertA, vertB ].flat());
         fitViewToBbox(bbox, false);
+    }
+    if (!isDoubleClickModeActive) {
+        return; 
+    }
+
+    event.preventDefault();
+
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+
+    const intersects = raycaster.intersectObjects([road_network_mesh]);
+
+    if (intersects.length > 0) {
+        const intersectionPoint = intersects[0].point;
+        const intersectionNormal = intersects[0].face.normal.clone().transformDirection(intersects[0].object.matrixWorld);
+
+        const geometry = new THREE.BoxGeometry(3, 3, 3);
+        const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        const cube = new THREE.Mesh(geometry, material);
+        cube.isDisposing = false; 
+
+        cube.position.copy(intersectionPoint);
+        cube.position.z += geometry.parameters.height / 2 + 0.01;
+        cube.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), intersectionNormal);
+
+        scene.add(cube);
+        disposable_objs.push(cube);
+        console.log(disposable_objs)
+        isDoubleClickModeActive = false;
+        addCubeModeButton.textContent = 'Добавить куб';
     }
 }
