@@ -15,18 +15,7 @@ var INTERSECTED_LANE_ID = 0xffffffff;
 var INTERSECTED_ROADMARK_ID = 0xffffffff;
 var spotlight_paused = false;
 let isDoubleClickModeActive = false; 
-const addCubeModeButton = document.createElement('button');
-addCubeModeButton.textContent = 'Добавить кубик'; 
-addCubeModeButton.style.position = 'absolute';
-addCubeModeButton.style.top = '100px';
-addCubeModeButton.style.left = '20px';
-document.body.appendChild(addCubeModeButton);
-const deleteCubeModeButton = document.createElement('button');
-deleteCubeModeButton.textContent = 'Удалить последний кубик';
-deleteCubeModeButton.style.position = 'absolute';
-deleteCubeModeButton.style.top = '125px';
-deleteCubeModeButton.style.left = '20px';
-document.body.appendChild(deleteCubeModeButton);
+
 
 deleteCubeModeButton.addEventListener('click', () => {
     if (disposable_objs.length > 0) {
@@ -457,6 +446,20 @@ function animate()
                         <tr><th>s/t</th><th>[${st_pixel_buffer[0].toFixed(2)}, ${st_pixel_buffer[1].toFixed(2)}]</th>
                         <tr><th>world</th><th>[${xyz_pixel_buffer[0].toFixed(2)}, ${xyz_pixel_buffer[1].toFixed(2)}, ${xyz_pixel_buffer[2].toFixed(2)}]</th></tr>
                     </table>`;
+        }
+        if (INTERSECTED_LANE_ID == 0xffffffff){
+            const addCubeModeButton = document.createElement('button');
+            addCubeModeButton.textContent = 'Добавить кубик'; 
+            addCubeModeButton.style.position = 'absolute';
+            addCubeModeButton.style.top = '100px';
+            addCubeModeButton.style.left = '20px';
+            document.body.appendChild(addCubeModeButton);
+            const deleteCubeModeButton = document.createElement('button');
+            deleteCubeModeButton.textContent = 'Удалить последний кубик';
+            deleteCubeModeButton.style.position = 'absolute';
+            deleteCubeModeButton.style.top = '125px';
+            deleteCubeModeButton.style.left = '20px';
+            document.body.appendChild(deleteCubeModeButton);
         }
     }
 
