@@ -17,6 +17,7 @@ var INTERSECTED_ROADMARK_ID = 0xffffffff;
 var spotlight_paused = false;
 let isAddCubeModeActive = false; 
 let isAddPointModeActive = false;
+let stIntrvl;
 
 const addCubeModeButton = document.createElement('button');
 addCubeModeButton.textContent = 'Добавить куб'; 
@@ -46,11 +47,18 @@ deletePointModeButton.style.top = '100px';
 deletePointModeButton.style.left = '20px';
 document.body.appendChild(deletePointModeButton);
 
+const rotatePosCubeButton = document.createElement('button');
+rotatePosCubeButton.textContent = 'Положительный поворот куба';
+rotatePosCubeButton.style.position = 'absolute';
+rotatePosCubeButton.style.top = '130px';
+rotatePosCubeButton.style.left = '20px';
+document.body.appendChild(rotatePosCubeButton);
+
 addPointModeButton.addEventListener('click', () =>{
     isAddPointModeActive = !isAddPointModeActive;
     isAddCubeModeActive = false; 
     addCubeModeButton.textContent = 'Добавить куб';
-    addPointModeButton.textContent = 'Режим добавления точек OSU'
+    addPointModeButton.textContent = 'Режим добавления точек RSU'
 });
 deleteCubeModeButton.addEventListener('click', () => {
     if (disposable_objs.length > 0) {
@@ -503,6 +511,7 @@ function animate()
             addCubeModeButton.style.display = 'none';
             addPointModeButton.style.display = 'none';
             deletePointModeButton.style.display = 'none';
+            rotatePosCubeButton.style.display = 'none';
             spotlight_info.innerHTML = `
                     <table>
                         <tr><th>road id</th><th>${road_id}</th></tr>
@@ -517,7 +526,7 @@ function animate()
             deleteCubeModeButton.style.display = 'block';
             addPointModeButton.style.display = 'block';
             deletePointModeButton.style.display = 'block';
-
+            rotatePosCubeButton.style.display = 'block';
         }
     }
 
@@ -654,17 +663,18 @@ function onDocumentMouseDbClick(event) {
         const intersectionPoint = intersects[0].point;
         const intersectionNormal = intersects[0].face.normal.clone().transformDirection(intersects[0].object.matrixWorld);
 
-        const geometry = new THREE.BoxGeometry(3, 3, 3);
+        const geometry = new THREE.BoxGeometry(3, 6, 3);
         const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
         const cube = new THREE.Mesh(geometry, material);
         cube.isDisposing = false; 
 
         cube.position.copy(intersectionPoint);
-        cube.position.z += geometry.parameters.height / 2 + 0.01;
+        cube.position.z += geometry.parameters.width / 2 + 0.01;
         cube.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), intersectionNormal);
 
         scene.add(cube);
         disposable_objs.push(cube);
+        console.log(disposable_objs)
         isAddCubeModeActive = false;
         addCubeModeButton.textContent = 'Добавить куб';
     }
@@ -697,5 +707,27 @@ function onDocumentMouseDbClick(event) {
         console.log(points_objs);
         isAddPointModeActive = false;
         addPointModeButton.textContent = 'Установить точку';
+    }
 }
-}
+
+rotatePosCubeButton.addEventListener('mousedown', () => {
+    const lstCb = disposable_objs[disposable_objs.length - 1];
+    stIntrvl = setInterval(()=>{
+        lstCb.rotation.z += Math.PI / 18;
+    }, 100); 
+    
+});
+rotatePosCubeButton.addEventListener('mouseup', () => {
+    clearInterval(stIntrvl);
+});
+// const rotateNegCubeButton = document.createElement('button');
+// rotateNegCubeButton.textContent = 'Отрицательный поворот куба';
+// rotateNegCubeButton.style.position = 'absolute';
+// rotateNegCubeButton.style.top = '160px';
+// rotateNegCubeButton.style.left = '20px';
+// document.body.appendChild(rotateNegCubeButton);
+
+// rotateNegCubeButton.addEventListener('click', () => {
+//     const lstCb = disposable_objs[disposable_objs.length - 1];
+//     lstCb.rotation.z -= Math.PI / 6; 
+// });
