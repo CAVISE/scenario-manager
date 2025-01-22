@@ -8,15 +8,50 @@ var lane_outline_lines = null;
 var roadmark_outline_lines = null;
 var ground_grid = null;
 var disposable_objs = [];
+var points_objs = [];
 var mouse = new THREE.Vector2();
 const raycaster = new THREE.Raycaster();
 var spotlight_info = document.getElementById('spotlight_info');
 var INTERSECTED_LANE_ID = 0xffffffff;
 var INTERSECTED_ROADMARK_ID = 0xffffffff;
 var spotlight_paused = false;
-let isDoubleClickModeActive = false; 
+let isAddCubeModeActive = false; 
+let isAddPointModeActive = false;
 
+const addCubeModeButton = document.createElement('button');
+addCubeModeButton.textContent = 'Добавить куб'; 
+addCubeModeButton.style.position = 'absolute';
+addCubeModeButton.style.top = '10px';
+addCubeModeButton.style.left = '20px';
+document.body.appendChild(addCubeModeButton);
 
+const deleteCubeModeButton = document.createElement('button');
+deleteCubeModeButton.textContent = 'Удалить последний куб';
+deleteCubeModeButton.style.position = 'absolute';
+deleteCubeModeButton.style.top = '40px';
+deleteCubeModeButton.style.left = '20px';
+document.body.appendChild(deleteCubeModeButton);
+
+const addPointModeButton = document.createElement('button');
+addPointModeButton.textContent = 'Установить точку';
+addPointModeButton.style.position = 'absolute';
+addPointModeButton.style.top = '70px';
+addPointModeButton.style.left = '20px';
+document.body.appendChild(addPointModeButton);
+
+const deletePointModeButton = document.createElement('button');
+deletePointModeButton.textContent = 'Удалить последнюю точку';
+deletePointModeButton.style.position = 'absolute';
+deletePointModeButton.style.top = '100px';
+deletePointModeButton.style.left = '20px';
+document.body.appendChild(deletePointModeButton);
+
+addPointModeButton.addEventListener('click', () =>{
+    isAddPointModeActive = !isAddPointModeActive;
+    isAddCubeModeActive = false; 
+    addCubeModeButton.textContent = 'Добавить куб';
+    addPointModeButton.textContent = 'Режим добавления точек OSU'
+});
 deleteCubeModeButton.addEventListener('click', () => {
     if (disposable_objs.length > 0) {
         const lastObj = disposable_objs[disposable_objs.length - 1];
@@ -30,10 +65,24 @@ deleteCubeModeButton.addEventListener('click', () => {
         }
     }
 });
-addCubeModeButton.addEventListener('click', () => {
-    isDoubleClickModeActive = !isDoubleClickModeActive; 
+deletePointModeButton.addEventListener('click', () => {
+    if (points_objs.length > 0) {
+        const lastObj = points_objs[points_objs.length - 1];
 
-    if (isDoubleClickModeActive) {
+        if (lastObj && !lastObj.isDisposing) { 
+            lastObj.isDisposing = true; 
+            scene.remove(lastObj); 
+            points_objs.pop(); 
+            if (lastObj.geometry) lastObj.geometry.dispose(); 
+            if (lastObj.material) lastObj.material.dispose(); 
+        }
+    }
+});
+addCubeModeButton.addEventListener('click', () => {
+    isAddCubeModeActive = !isAddCubeModeActive; 
+    isAddPointModeActive = false;
+    addPointModeButton.textContent = 'Установить точку';
+    if (isAddCubeModeActive) {
         addCubeModeButton.textContent = 'Режим добавления куба';
     } else {
         addCubeModeButton.textContent = 'Добавить куб';
@@ -202,7 +251,13 @@ function loadOdrMap(clear_map = true, fit_view = true)
             if (obj.material) obj.material.dispose();
             if (obj.parent) obj.parent.remove(obj);
         }
+        for (let obj of points_objs){
+            if (obj.geometry) obj.geometry.dispose();
+            if (obj.material) obj.material.dispose();
+            if (obj.parent) obj.parent.remove(obj);
+        }
         disposable_objs = []; 
+        points_objs = [];
 
     }
 
@@ -216,6 +271,7 @@ function loadOdrMap(clear_map = true, fit_view = true)
     refline_lines.visible = PARAMS.ref_line;
     refline_lines.matrixAutoUpdate = false;
     disposable_objs.push(reflines_geom);
+    points_objs.push(reflines_geom);
     scene.add(refline_lines);
 
     /* road network geometry */
@@ -233,6 +289,7 @@ function loadOdrMap(clear_map = true, fit_view = true)
         road_network_geom.attributes.id.array.set(attr_arr, vert_idx_interval[0] * 4);
     }
     disposable_objs.push(road_network_geom);
+    points_objs.push(road_network_geom);
 
     /* road network mesh */
     road_network_mesh = new THREE.Mesh(road_network_geom, road_network_material);
@@ -271,6 +328,7 @@ function loadOdrMap(clear_map = true, fit_view = true)
         roadmarks_geom.attributes.id.array.set(attr_arr, vert_idx_interval[0] * 4);
     }
     disposable_objs.push(roadmarks_geom);
+    points_objs.push(road_network_geom);
 
     /* roadmarks mesh */
     roadmarks_mesh = new THREE.Mesh(roadmarks_geom, roadmarks_material);
@@ -290,6 +348,7 @@ function loadOdrMap(clear_map = true, fit_view = true)
     lane_outline_lines = new THREE.LineSegments(lane_outlines_geom, lane_outlines_material);
     lane_outline_lines.renderOrder = 9;
     disposable_objs.push(lane_outlines_geom);
+    points_objs.push(lane_outlines_geom);
     scene.add(lane_outline_lines);
 
     /* roadmark outline */
@@ -300,6 +359,7 @@ function loadOdrMap(clear_map = true, fit_view = true)
     roadmark_outline_lines.renderOrder = 8;
     roadmark_outline_lines.matrixAutoUpdate = false;
     disposable_objs.push(roadmark_outlines_geom);
+    points_objs.push(road_network_geom);
     roadmark_outline_lines.visible = PARAMS.roadmarks;
     scene.add(roadmark_outline_lines);
 
@@ -318,6 +378,7 @@ function loadOdrMap(clear_map = true, fit_view = true)
     ground_grid.geometry.rotateX(Math.PI / 2);
     ground_grid.position.set(bbox_center_pt.x, bbox_center_pt.y, bbox_reflines.min.z - 0.1);
     disposable_objs.push(ground_grid.geometry);
+    points_objs.push(ground_grid.geometry);
     scene.add(ground_grid);
 
     /* fit light */
@@ -438,6 +499,10 @@ function animate()
             const lanesec_s0 = odr_lanes_mesh.get_lanesec_s0(INTERSECTED_LANE_ID);
             const lane_id = odr_lanes_mesh.get_lane_id(INTERSECTED_LANE_ID);
             odr_lanes_mesh.delete();
+            deleteCubeModeButton.style.display = 'none';
+            addCubeModeButton.style.display = 'none';
+            addPointModeButton.style.display = 'none';
+            deletePointModeButton.style.display = 'none';
             spotlight_info.innerHTML = `
                     <table>
                         <tr><th>road id</th><th>${road_id}</th></tr>
@@ -447,19 +512,12 @@ function animate()
                         <tr><th>world</th><th>[${xyz_pixel_buffer[0].toFixed(2)}, ${xyz_pixel_buffer[1].toFixed(2)}, ${xyz_pixel_buffer[2].toFixed(2)}]</th></tr>
                     </table>`;
         }
-        if (INTERSECTED_LANE_ID == 0xffffffff){
-            const addCubeModeButton = document.createElement('button');
-            addCubeModeButton.textContent = 'Добавить кубик'; 
-            addCubeModeButton.style.position = 'absolute';
-            addCubeModeButton.style.top = '100px';
-            addCubeModeButton.style.left = '20px';
-            document.body.appendChild(addCubeModeButton);
-            const deleteCubeModeButton = document.createElement('button');
-            deleteCubeModeButton.textContent = 'Удалить последний кубик';
-            deleteCubeModeButton.style.position = 'absolute';
-            deleteCubeModeButton.style.top = '125px';
-            deleteCubeModeButton.style.left = '20px';
-            document.body.appendChild(deleteCubeModeButton);
+        else{
+            addCubeModeButton.style.display = 'block';
+            deleteCubeModeButton.style.display = 'block';
+            addPointModeButton.style.display = 'block';
+            deletePointModeButton.style.display = 'block';
+
         }
     }
 
@@ -580,19 +638,8 @@ function onDocumentMouseMove(event)
 }
 
 function onDocumentMouseDbClick(event) {
-    if (INTERSECTED_LANE_ID != 0xffffffff) {
-        const odr_lanes_mesh = road_network_mesh.userData.odr_road_network_mesh.lanes_mesh;
-        const lane_vert_idx_interval = odr_lanes_mesh.get_idx_interval_lane(INTERSECTED_LANE_ID);
-        const vertA = odr_lanes_mesh.vertices.get(lane_vert_idx_interval[0]);
-        const vertB = odr_lanes_mesh.vertices.get(lane_vert_idx_interval[1] - 1);
-        odr_lanes_mesh.delete();
-        const bbox = new THREE.Box3();
-        bbox.setFromArray([ vertA, vertB ].flat());
-        fitViewToBbox(bbox, false);
-    }
-    if (!isDoubleClickModeActive) {
-        return; 
-    }
+    
+    
 
     event.preventDefault();
 
@@ -603,7 +650,7 @@ function onDocumentMouseDbClick(event) {
 
     const intersects = raycaster.intersectObjects([road_network_mesh]);
 
-    if (intersects.length > 0) {
+    if (intersects.length > 0 && isAddCubeModeActive) {
         const intersectionPoint = intersects[0].point;
         const intersectionNormal = intersects[0].face.normal.clone().transformDirection(intersects[0].object.matrixWorld);
 
@@ -618,8 +665,37 @@ function onDocumentMouseDbClick(event) {
 
         scene.add(cube);
         disposable_objs.push(cube);
-        console.log(disposable_objs)
-        isDoubleClickModeActive = false;
+        isAddCubeModeActive = false;
         addCubeModeButton.textContent = 'Добавить куб';
     }
+    if (intersects.length > 0 && isAddPointModeActive) {
+        const intersectionPoint = intersects[0].point;
+        const intersectionNormal = intersects[0].face.normal.clone().transformDirection(intersects[0].object.matrixWorld);
+
+        const geometry = new THREE.BoxGeometry(5, 5, 5);
+        const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        const point = new THREE.Mesh(geometry, material);
+        point.isDisposing = false;
+
+        point.position.copy(intersectionPoint);
+        point.position.z += geometry.parameters.height / 2 + 0.01;
+        point.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), intersectionNormal);
+
+        const iconSize = 4; 
+        const iconGeometry = new THREE.PlaneGeometry(iconSize, iconSize);
+        const iconTexture = new THREE.TextureLoader().load('fonts/globe-solid.svg'); 
+        const iconMaterial = new THREE.MeshBasicMaterial({ map: iconTexture, side: THREE.DoubleSide, transparent: true });
+        const icon = new THREE.Mesh(iconGeometry, iconMaterial);
+
+        icon.position.set(0, 0, geometry.parameters.height / 2); 
+        icon.quaternion.copy(point.quaternion); 
+
+        point.add(icon);
+
+        scene.add(point);
+        points_objs.push(point);
+        console.log(points_objs);
+        isAddPointModeActive = false;
+        addPointModeButton.textContent = 'Установить точку';
+}
 }
