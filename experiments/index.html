@@ -28,8 +28,8 @@
             left: 1em;
         }
     </style>
-    <link rel="stylesheet" href="/lib/notyf.min.css">
-    <link rel="stylesheet" href="/lib/font-awesome.min.css">
+    <link rel="stylesheet" href="./lib/notyf.min.css">
+    <link rel="stylesheet" href="./lib/font-awesome.min.css">
 </head>
 
 <body>
@@ -97,14 +97,23 @@
     </script>
     <!-- <button id="addCubeButton">Добавить куб</button> <div id="ThreeJS"></div> -->
 
-    <script src="./ModuleOpenDrive.js"></script>
+    <script src="./lib/ModuleOpenDrive.js"></script>
     <script src="./lib/three.min.js"></script>
     <script src="./lib/orbitcontrols.min.js"></script>
     <script src="./lib/dat.gui.min.js"></script>
     <script src="./lib/notyf.min.js"></script>
+    <!-- Import Map for ThreeJS addons  -->
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.150.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.150.0/examples/jsm/"
+        }
+      }
+    </script>
     
     <script src="./controls.js"></script>
-    <script src="./main.js"></script>
+    <script type="module" src="./main.js"></script>
 </body>
 
 </html>

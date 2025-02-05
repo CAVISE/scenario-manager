@@ -1,4 +1,6 @@
-/* globals */
+import { TransformControls } from 'three/addons/controls/TransformControls.js';
+
+
 var ModuleOpenDrive = null;
 var OpenDriveMap = null;
 var refline_lines = null;
@@ -19,12 +21,47 @@ let isAddCubeModeActive = false;
 let isAddPointModeActive = false;
 let stIntrvl;
 
+
 const addCubeModeButton = document.createElement('button');
 addCubeModeButton.textContent = 'Добавить куб'; 
 addCubeModeButton.style.position = 'absolute';
 addCubeModeButton.style.top = '10px';
 addCubeModeButton.style.left = '20px';
 document.body.appendChild(addCubeModeButton);
+
+const translateButton = document.createElement('button');
+translateButton.textContent = 'Перемещение';
+translateButton.style.position = 'absolute';
+translateButton.style.top = '160px';
+translateButton.style.left = '20px';
+document.body.appendChild(translateButton);
+
+translateButton.addEventListener('click', () => {
+    transformControls.setMode('translate');
+});
+
+const rotateButton = document.createElement('button');
+rotateButton.textContent = 'Вращение';
+rotateButton.style.position = 'absolute';
+rotateButton.style.top = '190px';
+rotateButton.style.left = '20px';
+document.body.appendChild(rotateButton);
+
+rotateButton.addEventListener('click', () => {
+    transformControls.setMode('rotate');
+});
+
+const scaleButton = document.createElement('button');
+scaleButton.textContent = 'Масштабирование';
+scaleButton.style.position = 'absolute';
+scaleButton.style.top = '220px';
+scaleButton.style.left = '20px';
+document.body.appendChild(scaleButton);
+
+scaleButton.addEventListener('click', () => {
+    transformControls.setMode('scale');
+});
+
 
 const deleteCubeModeButton = document.createElement('button');
 deleteCubeModeButton.textContent = 'Удалить последний куб';
@@ -154,6 +191,15 @@ const roadmark_picking_texture = new THREE.WebGLRenderTarget(1, 1, { type : THRE
 const xyz_texture = new THREE.WebGLRenderTarget(1, 1, { type : THREE.FloatType });
 const st_texture = new THREE.WebGLRenderTarget(1, 1, { type : THREE.FloatType });
 
+/* Rotation control */
+const transformControls = new TransformControls(camera, renderer.domElement);
+scene.add(transformControls);
+
+transformControls.addEventListener('change', () => renderer.render(scene, camera));
+transformControls.addEventListener('dragging-changed', (event) => {
+    controls.enabled = !event.value; // Отключаем стандартные контролы, если объект перетаскивается
+});
+
 /* THREEJS materials */
 const idVertexShader = document.getElementById('idVertexShader').textContent;
 const idFragmentShader = document.getElementById('idFragmentShader').textContent;
@@ -218,6 +264,7 @@ function loadFile(file_text, clear_map)
     ModuleOpenDrive['FS_createDataFile'](".", "data.xodr", file_text, true, true);
     if (OpenDriveMap)
         OpenDriveMap.delete();
+    let odr_map_config;
     odr_map_config = {
         with_lateralProfile : PARAMS.lateralProfile,
         with_laneHeight : PARAMS.laneHeight,
@@ -233,6 +280,7 @@ function reloadOdrMap()
 {
     if (OpenDriveMap)
         OpenDriveMap.delete();
+    let odr_map_config;
     odr_map_config = {
         with_lateralProfile : PARAMS.lateralProfile,
         with_laneHeight : PARAMS.laneHeight,
@@ -615,6 +663,7 @@ function isValid(rgba)
 
 function encodeUInt32(ui32)
 {
+    let rgba;
     rgba = new Float32Array(4);
     rgba[0] = (Math.trunc(ui32) % 256) / 255.;
     rgba[1] = (Math.trunc(ui32 / 256) % 256) / 255.;
@@ -638,12 +687,6 @@ function onDocumentMouseMove(event) {
     event.preventDefault();
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-}
-function onDocumentMouseMove(event)
-{
-    event.preventDefault();
-    mouse.x = event.clientX;
-    mouse.y = event.clientY;
 }
 
 function onDocumentMouseDbClick(event) {
@@ -669,14 +712,18 @@ function onDocumentMouseDbClick(event) {
         cube.isDisposing = false; 
 
         cube.position.copy(intersectionPoint);
-        cube.position.z += geometry.parameters.width / 2 + 0.01;
+        cube.position.z += geometry.parameters.height / 2 + 0.01;
         cube.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), intersectionNormal);
 
         scene.add(cube);
+        transformControls.attach(cube);
         disposable_objs.push(cube);
         console.log(disposable_objs)
         isAddCubeModeActive = false;
         addCubeModeButton.textContent = 'Добавить куб';
+    }
+    else {
+        console.log('Cube not added');
     }
     if (intersects.length > 0 && isAddPointModeActive) {
         const intersectionPoint = intersects[0].point;
@@ -714,8 +761,8 @@ rotatePosCubeButton.addEventListener('mousedown', () => {
     const lstCb = disposable_objs[disposable_objs.length - 1];
     stIntrvl = setInterval(()=>{
         lstCb.rotation.z += Math.PI / 18;
-    }, 100); 
-    
+    }, 100);
+
 });
 rotatePosCubeButton.addEventListener('mouseup', () => {
     clearInterval(stIntrvl);
@@ -729,5 +776,5 @@ rotatePosCubeButton.addEventListener('mouseup', () => {
 
 // rotateNegCubeButton.addEventListener('click', () => {
 //     const lstCb = disposable_objs[disposable_objs.length - 1];
-//     lstCb.rotation.z -= Math.PI / 6; 
+//     lstCb.rotation.z -= Math.PI / 6;
 // });
