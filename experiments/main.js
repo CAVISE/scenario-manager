@@ -1,3 +1,5 @@
+import { TransformControls } from 'three/addons/controls/TransformControls.js';
+
 var ModuleOpenDrive = null;
 var OpenDriveMap = null;
 var refline_lines = null;
@@ -42,8 +44,42 @@ addCubeModeButton.style.top = '10px';
 addCubeModeButton.style.left = '20px';
 document.body.appendChild(addCubeModeButton);
 
+const translateButton = document.createElement('button');
+translateButton.textContent = 'Перемещение';
+translateButton.style.position = 'absolute';
+translateButton.style.top = '160px';
+translateButton.style.left = '20px';
+document.body.appendChild(translateButton);
+
+translateButton.addEventListener('click', () => {
+    transformControls.setMode('translate');
+});
+
+const rotateButton = document.createElement('button');
+rotateButton.textContent = 'Вращение';
+rotateButton.style.position = 'absolute';
+rotateButton.style.top = '190px';
+rotateButton.style.left = '20px';
+document.body.appendChild(rotateButton);
+
+rotateButton.addEventListener('click', () => {
+    transformControls.setMode('rotate');
+});
+
+const scaleButton = document.createElement('button');
+scaleButton.textContent = 'Масштабирование';
+scaleButton.style.position = 'absolute';
+scaleButton.style.top = '220px';
+scaleButton.style.left = '20px';
+document.body.appendChild(scaleButton);
+
+scaleButton.addEventListener('click', () => {
+    transformControls.setMode('scale');
+});
+
+
 const deleteCubeModeButton = document.createElement('button');
-deleteCubeModeButton.textContent = 'Удалить выбранный куб';
+deleteCubeModeButton.textContent = 'Удалить последний куб';
 deleteCubeModeButton.style.position = 'absolute';
 deleteCubeModeButton.style.top = '40px';
 deleteCubeModeButton.style.left = '20px';
@@ -69,13 +105,6 @@ rotatePosCubeButton.style.position = 'absolute';
 rotatePosCubeButton.style.top = '130px';
 rotatePosCubeButton.style.left = '20px';
 document.body.appendChild(rotatePosCubeButton);
-
-const AddPointsButton = document.createElement('button');
-AddPointsButton.textContent = 'Добавить точки для направления';
-AddPointsButton.style.position = 'absolute';
-AddPointsButton.style.top = '160px';
-AddPointsButton.style.left = '20px';
-document.body.appendChild(AddPointsButton);
 
 AddPointsButton.addEventListener('click', ()=>{
     if(pointerIndex >= 0 /*&& selectedCube.material.color.equals(new THREE.Color(0xffff00))*/){
@@ -226,6 +255,15 @@ const roadmark_picking_texture = new THREE.WebGLRenderTarget(1, 1, { type : THRE
 const xyz_texture = new THREE.WebGLRenderTarget(1, 1, { type : THREE.FloatType });
 const st_texture = new THREE.WebGLRenderTarget(1, 1, { type : THREE.FloatType });
 
+/* Rotation control */
+const transformControls = new TransformControls(camera, renderer.domElement);
+scene.add(transformControls);
+
+transformControls.addEventListener('change', () => renderer.render(scene, camera));
+transformControls.addEventListener('dragging-changed', (event) => {
+    controls.enabled = !event.value; // Отключаем стандартные контролы, если объект перетаскивается
+});
+
 /* THREEJS materials */
 const idVertexShader = document.getElementById('idVertexShader').textContent;
 const idFragmentShader = document.getElementById('idFragmentShader').textContent;
@@ -290,6 +328,7 @@ function loadFile(file_text, clear_map)
     ModuleOpenDrive['FS_createDataFile'](".", "data.xodr", file_text, true, true);
     if (OpenDriveMap)
         OpenDriveMap.delete();
+    let odr_map_config;
     odr_map_config = {
         with_lateralProfile : PARAMS.lateralProfile,
         with_laneHeight : PARAMS.laneHeight,
@@ -301,21 +340,18 @@ function loadFile(file_text, clear_map)
     loadOdrMap(clear_map);
 }
 
-function reloadOdrMap() {
-    resetSceneState();  
-    
-    if (OpenDriveMap) {
+function reloadOdrMap()
+{
+    if (OpenDriveMap)
         OpenDriveMap.delete();
-    }
-    
+    let odr_map_config;
     odr_map_config = {
-        with_lateralProfile: PARAMS.lateralProfile,
-        with_laneHeight: PARAMS.laneHeight,
-        with_road_objects: false,
-        center_map: true,
-        abs_z_for_for_local_road_obj_outline: true
+        with_lateralProfile : PARAMS.lateralProfile,
+        with_laneHeight : PARAMS.laneHeight,
+        with_road_objects : false,
+        center_map : true,
+        abs_z_for_for_local_road_obj_outline : true
     };
-    
     OpenDriveMap = new ModuleOpenDrive.OpenDriveMap("./data.xodr", odr_map_config);
     loadOdrMap(true, false);
 }
@@ -371,8 +407,6 @@ function loadOdrMap(clear_map = true, fit_view = true)
     refline_lines.matrixAutoUpdate = false;
     disposable_objs.push(reflines_geom);
     points_objs.push(reflines_geom);
-    circles_objs.push(reflines_geom);
-    temp.push(reflines_geom);
     scene.add(refline_lines);
 
     /* road network geometry */
@@ -391,8 +425,7 @@ function loadOdrMap(clear_map = true, fit_view = true)
     }
     disposable_objs.push(road_network_geom);
     points_objs.push(road_network_geom);
-    circles_objs.push(road_network_geom);
-    temp.push(road_network_geom);
+
     /* road network mesh */
     road_network_mesh = new THREE.Mesh(road_network_geom, road_network_material);
     road_network_mesh.renderOrder = 0;
@@ -431,8 +464,6 @@ function loadOdrMap(clear_map = true, fit_view = true)
     }
     disposable_objs.push(roadmarks_geom);
     points_objs.push(road_network_geom);
-    circles_objs.push(road_network_geom);
-    temp.push(road_network_geom);
 
     /* roadmarks mesh */
     roadmarks_mesh = new THREE.Mesh(roadmarks_geom, roadmarks_material);
@@ -453,8 +484,6 @@ function loadOdrMap(clear_map = true, fit_view = true)
     lane_outline_lines.renderOrder = 9;
     disposable_objs.push(lane_outlines_geom);
     points_objs.push(lane_outlines_geom);
-    circles_objs.push(lane_outlines_geom);
-    temp.push(lane_outlines_geom);
     scene.add(lane_outline_lines);
 
     /* roadmark outline */
@@ -466,8 +495,6 @@ function loadOdrMap(clear_map = true, fit_view = true)
     roadmark_outline_lines.matrixAutoUpdate = false;
     disposable_objs.push(roadmark_outlines_geom);
     points_objs.push(road_network_geom);
-    circles_objs.push(road_network_geom);
-    temp.push(road_network_geom);
     roadmark_outline_lines.visible = PARAMS.roadmarks;
     scene.add(roadmark_outline_lines);
 
@@ -487,8 +514,6 @@ function loadOdrMap(clear_map = true, fit_view = true)
     ground_grid.position.set(bbox_center_pt.x, bbox_center_pt.y, bbox_reflines.min.z - 0.1);
     disposable_objs.push(ground_grid.geometry);
     points_objs.push(ground_grid.geometry);
-    circles_objs.push(ground_grid.geometry);
-    temp.push(ground_grid.geometry);
     scene.add(ground_grid);
 
     /* fit light */
@@ -614,8 +639,6 @@ function animate()
             addPointModeButton.style.display = 'none';
             deletePointModeButton.style.display = 'none';
             rotatePosCubeButton.style.display = 'none';
-            AddPointsButton.style.display = 'none';
-
             spotlight_info.innerHTML = `
                     <table>
                         <tr><th>road id</th><th>${road_id}</th></tr>
@@ -631,7 +654,6 @@ function animate()
             addPointModeButton.style.display = 'block';
             deletePointModeButton.style.display = 'block';
             rotatePosCubeButton.style.display = 'block';
-            AddPointsButton.style.display = 'block';
         }
     }
 
@@ -720,6 +742,7 @@ function isValid(rgba)
 
 function encodeUInt32(ui32)
 {
+    let rgba;
     rgba = new Float32Array(4);
     rgba[0] = (Math.trunc(ui32) % 256) / 255.;
     rgba[1] = (Math.trunc(ui32 / 256) % 256) / 255.;
@@ -743,12 +766,6 @@ function onDocumentMouseMove(event) {
     event.preventDefault();
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-}
-function onDocumentMouseMove(event)
-{
-    event.preventDefault();
-    mouse.x = event.clientX;
-    mouse.y = event.clientY;
 }
 
 function onDocumentMouseDbClick(event) {
@@ -984,5 +1001,3 @@ function connectCirclesWithLines(cubeIndex) {
         cubeCircles[cubeIndex].lines.push(line);
     }
 }
-
-
