@@ -106,6 +106,13 @@ rotatePosCubeButton.style.top = '130px';
 rotatePosCubeButton.style.left = '20px';
 document.body.appendChild(rotatePosCubeButton);
 
+const AddPointsButton = document.createElement('button');
+AddPointsButton.textContent = 'Добавить точки для направления';
+AddPointsButton.style.position = 'absolute';
+AddPointsButton.style.top = '160px';
+AddPointsButton.style.left = '20px';
+document.body.appendChild(AddPointsButton);
+
 AddPointsButton.addEventListener('click', ()=>{
     if(pointerIndex >= 0 /*&& selectedCube.material.color.equals(new THREE.Color(0xffff00))*/){
     isAddedPoints = !isAddedPoints;
