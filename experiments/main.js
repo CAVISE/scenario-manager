@@ -400,7 +400,6 @@ function loadOdrMap(clear_map = true, fit_view = true)
         circles_objs = [];
         cube_objs = [];
         selectedCube = null;
-
     }
 
     /* reflines */
