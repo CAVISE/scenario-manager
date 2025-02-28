@@ -6,6 +6,7 @@ Scenario testing: Single vehicle dring in the customized 2 lane highway map.
 # License: TDG-Attribution-NonCommercial-NoDistrib
 
 import os
+import numpy
 import carla
 
 import opencda.scenario_testing.utils.sim_api as sim_api
@@ -22,9 +23,10 @@ def run_scenario(opt, scenario_params):
     try:
         scenario_params = add_current_time(scenario_params)
         current_path = os.path.dirname(os.path.realpath(__file__))
+        print(current_path)
         xodr_path = os.path.join(
             current_path,
-            '../assets/2lane_freeway_simplified/2lane_freeway_simplified.xodr')
+            'assets/map10/map10.xodr')
 
         # create CAV world
         cav_world = CavWorld(opt.apply_ml)
@@ -35,9 +37,6 @@ def run_scenario(opt, scenario_params):
                                                    xodr_path=xodr_path,
                                                    cav_world=cav_world)
 
-        if opt.record:
-            scenario_manager.client. \
-                start_recorder("single_2lanefree_carla.log", True)
 
         single_cav_list = \
             scenario_manager.create_vehicle_manager(application=['single'],
@@ -51,7 +50,7 @@ def run_scenario(opt, scenario_params):
         # create evaluation manager
         eval_manager = \
             EvaluationManager(scenario_manager.cav_world,
-                              script_name='single_2lanefree_carla',
+                              script_name='map10',
                               current_time=scenario_params['current_time'])
 
         spectator = scenario_manager.world.get_spectator()

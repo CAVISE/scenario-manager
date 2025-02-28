@@ -13,6 +13,7 @@ import sys
 from omegaconf import OmegaConf
 
 
+sys.path.append('..')
 
 def arg_parse():
     # create an argument parser
@@ -59,7 +60,6 @@ def arg_parse_default():
     return opt
 
 def main():
-    scenario = "single_2lanefree_carla"
     # parse the arguments
     opt = arg_parse_default()
     # set the default yaml file
@@ -78,7 +78,7 @@ def main():
 
     # import the testing script
     testing_scenario = importlib.import_module(
-        "opencda.scenario_testing.%s" %  opt.test_scenario)
+        f"scenario-manager.opencda.scenario_testing.{opt.test_scenario}", ".")
     # check if the yaml file for the specific testing scenario exists
     if not os.path.isfile(config_yaml):
         sys.exit(

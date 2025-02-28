@@ -1,6 +1,8 @@
 import subprocess
+import sys
 import time
 import os
+sys.path.append('..')
 
 def main():
     # команда для запуска карлы
@@ -20,12 +22,10 @@ def main():
     
     # время чтоб карла прогрузилась
     time.sleep(10)
-
- 
     try: 
         print("Запуск OpenCDA...")
         opencda_params = [
-            "-t", "single_2lanefree_carla",
+            "-t", "map10",
             "-v", "0.9.14"
         ]
 
