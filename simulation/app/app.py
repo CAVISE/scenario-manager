@@ -2,6 +2,7 @@ import sqlite3
 from contextlib import asynccontextmanager
 
 import carla
+import carla.libcarla
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
@@ -61,7 +62,6 @@ app.add_middleware(
 @app.get("/")
 async def react_app():
     """
-    return static builded react app in current folder with index.html style.css and scripts.js
     """
 
 
