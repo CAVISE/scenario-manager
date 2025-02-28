@@ -13,7 +13,8 @@ router = APIRouter()
 
 @router.post("/create")
 async def set_scenario(data: schemas.ScenarioSchema):
-    scenario_id = str(hash(str(data.model_dump()) + str(datetime.datetime.now())))[-10:]
+    scenario_id = str(hash(str(data.model_dump()) +
+                      str(datetime.datetime.now())))[-10:]
     data_to_dump = data.model_dump()
     data_to_dump["scenario_id"] = scenario_id
     json.dump(data_to_dump, open(f"scenarios/{scenario_id}.json", "w"))

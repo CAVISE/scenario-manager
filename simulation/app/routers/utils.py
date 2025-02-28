@@ -227,5 +227,8 @@ async def get_map_image(x: float, y: float, z: float, request: Request):
     global spectator_sensor
     spectator_sensor = sensor
 
+
+    global image_exist
+    image_exist = False
     # sensor.listen(lambda image: image.save_to_disk(f'out/maps/{image.frame}.png'))
     sensor.listen(image_callback)

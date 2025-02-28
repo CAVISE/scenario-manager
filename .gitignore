@@ -9,3 +9,6 @@ simulation/out/
 cache/no_rendering_mode/
 
 simulation/db.db
+
+external/*
+!external/.keep
