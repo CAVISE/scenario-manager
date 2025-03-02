@@ -9,7 +9,8 @@ import os
 import numpy
 import carla
 
-import opencda.scenario_testing.utils.sim_api as sim_api
+# import opencda.scenario_testing.utils.sim_api as sim_api
+import external.OpenCDA.scenario_testing.utils.sim_api as sim_api
 import opencda.scenario_testing.utils.customized_map_api as map_api
 
 from opencda.core.common.cav_world import CavWorld
