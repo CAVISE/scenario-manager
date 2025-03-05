@@ -44,17 +44,21 @@ def main():
     carla_process = subprocess.Popen([carla_path] + carla_args)
 
     # время чтоб карла прогрузилась
-    time.sleep(10)
+    time.sleep(15)
     try:
         print("Запуск OpenCDA...")
+
+        scenario = "single_2lanefree_carla"
+        # scenario = "map10"
+
         opencda_params = [
-            "-t", "map10",
+            "-t", scenario,
             "-v", "0.9.15"
         ]
 
         print("Запускаем OpenCDA с параметрами:", opencda_params)
 
-        python_path = str | None
+        python_path = ""
         if os.name == "posix":
             python_path = "./external/OpenCDA/venv/bin/python"
         elif os.name == "nt":
@@ -62,10 +66,12 @@ def main():
         else:
             raise Exception("Unsupported OS")
 
+        # current_cwd = os.getcwd()
+        # new_cwd = str(current_cwd) + "/external/OpenCDA"
+
         subprocess.run(
             [python_path, "run_opencda.py"] + opencda_params,
             shell=True,
-            cwd=os.getcwd()
         )
         # opencda_cmd = "python run_opencda.py"
 

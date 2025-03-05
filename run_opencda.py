@@ -13,7 +13,6 @@ import sys
 from omegaconf import OmegaConf
 
 
-sys.path.append('..')
 
 def arg_parse():
     # create an argument parser
@@ -65,11 +64,11 @@ def main():
     # set the default yaml file
     default_yaml = config_yaml = os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
-        'config_yaml/default.yaml')
+        'external_endpoints/config_yaml/default.yaml')
     print(default_yaml)
     # set the yaml file for the specific testing scenario
     config_yaml = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                               'config_yaml/%s.yaml'% opt.test_scenario)
+                               'external_endpoints/config_yaml/%s.yaml'% opt.test_scenario)
     # load the default yaml file and the scenario yaml file as dictionaries
     default_dict = OmegaConf.load(default_yaml)
     scene_dict = OmegaConf.load(config_yaml)
@@ -78,7 +77,7 @@ def main():
 
     # import the testing script
     testing_scenario = importlib.import_module(
-        f"scenario-manager.opencda.scenario_testing.{opt.test_scenario}", ".")
+        f"external_endpoints.opencda.scenario_testing.{opt.test_scenario}", ".")
     # check if the yaml file for the specific testing scenario exists
     if not os.path.isfile(config_yaml):
         sys.exit(

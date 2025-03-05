@@ -8,15 +8,27 @@ Scenario testing: Single vehicle dring in the customized 2 lane highway map.
 import os
 import numpy
 import carla
+import sys
 
 # import opencda.scenario_testing.utils.sim_api as sim_api
-import external.OpenCDA.scenario_testing.utils.sim_api as sim_api
-import opencda.scenario_testing.utils.customized_map_api as map_api
+# import external.OpenCDA.scenario_testing.utils.sim_api as sim_api
 
-from opencda.core.common.cav_world import CavWorld
-from opencda.scenario_testing.evaluations.evaluate_manager import \
+# change cwd
+# current_cwd = os.getcwd()
+# new_cwd = str(current_cwd) + "/external/OpenCDA"
+# os.chdir(new_cwd)
+# print(os.getcwd())
+
+# base_dir = os.path.abspath(os.path.join(os.getcwd(), 'external/OpenCDA'))
+# sys.path.insert(0, base_dir)
+
+
+import external.OpenCDA.opencda.scenario_testing.utils.sim_api as sim_api
+import external.OpenCDA.opencda.scenario_testing.utils.customized_map_api as map_api
+from external.OpenCDA.opencda.core.common.cav_world import CavWorld
+from external.OpenCDA.opencda.scenario_testing.evaluations.evaluate_manager import \
     EvaluationManager
-from opencda.scenario_testing.utils.yaml_utils import \
+from external.OpenCDA.opencda.scenario_testing.utils.yaml_utils import \
     add_current_time
 
 
