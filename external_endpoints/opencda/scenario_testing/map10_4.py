@@ -6,18 +6,18 @@ Scenario testing: Single vehicle dring in the customized 2 lane highway map.
 # License: TDG-Attribution-NonCommercial-NoDistrib
 
 import os
-import numpy
+import sys
+
 import carla
+import numpy
 
-# import opencda.scenario_testing.utils.sim_api as sim_api
-import external.OpenCDA.scenario_testing.utils.sim_api as sim_api
-import opencda.scenario_testing.utils.customized_map_api as map_api
-
-from opencda.core.common.cav_world import CavWorld
-from opencda.scenario_testing.evaluations.evaluate_manager import \
-    EvaluationManager
-from opencda.scenario_testing.utils.yaml_utils import \
-    add_current_time
+import external.OpenCDA.opencda.scenario_testing.utils.customized_map_api as map_api
+import external.OpenCDA.opencda.scenario_testing.utils.sim_api as sim_api
+from external.OpenCDA.opencda.core.common.cav_world import CavWorld
+from external.OpenCDA.opencda.scenario_testing.evaluations.evaluate_manager import (
+    EvaluationManager,
+)
+from external.OpenCDA.opencda.scenario_testing.utils.yaml_utils import add_current_time
 
 
 def run_scenario(opt, scenario_params):
@@ -38,7 +38,6 @@ def run_scenario(opt, scenario_params):
                                                    xodr_path=xodr_path,
                                                    cav_world=cav_world)
 
-
         single_cav_list = \
             scenario_manager.create_vehicle_manager(application=['single'],
                                                     map_helper=map_api.
@@ -51,21 +50,22 @@ def run_scenario(opt, scenario_params):
         # create evaluation manager
         eval_manager = \
             EvaluationManager(scenario_manager.cav_world,
-                              script_name='map10',
+                              script_name='map10_4',
                               current_time=scenario_params['current_time'])
 
         spectator = scenario_manager.world.get_spectator()
         # run steps
         while True:
             scenario_manager.tick()
-            transform = single_cav_list[0].vehicle.get_transform()
-            spectator.set_transform(carla.Transform(
-                transform.location +
-                carla.Location(
-                    z=70),
-                carla.Rotation(
-                    pitch=-
-                    90)))
+            if False:
+                transform = single_cav_list[0].vehicle.get_transform()
+                spectator.set_transform(carla.Transform(
+                    transform.location +
+                    carla.Location(
+                        z=70),
+                    carla.Rotation(
+                        pitch=-
+                        90)))
 
             for i, single_cav in enumerate(single_cav_list):
                 single_cav.update_info()

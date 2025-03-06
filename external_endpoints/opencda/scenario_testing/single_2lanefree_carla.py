@@ -6,16 +6,16 @@ Scenario testing: Single vehicle dring in the customized 2 lane highway map.
 # License: TDG-Attribution-NonCommercial-NoDistrib
 
 import os
+
 import carla
 
-import opencda.scenario_testing.utils.sim_api as sim_api
-import opencda.scenario_testing.utils.customized_map_api as map_api
-
-from opencda.core.common.cav_world import CavWorld
-from opencda.scenario_testing.evaluations.evaluate_manager import \
-    EvaluationManager
-from opencda.scenario_testing.utils.yaml_utils import \
-    add_current_time
+import external.OpenCDA.opencda.scenario_testing.utils.customized_map_api as map_api
+import external.OpenCDA.opencda.scenario_testing.utils.sim_api as sim_api
+from external.OpenCDA.opencda.core.common.cav_world import CavWorld
+from external.OpenCDA.opencda.scenario_testing.evaluations.evaluate_manager import (
+    EvaluationManager,
+)
+from external.OpenCDA.opencda.scenario_testing.utils.yaml_utils import add_current_time
 
 
 def run_scenario(opt, scenario_params):
@@ -24,7 +24,7 @@ def run_scenario(opt, scenario_params):
         current_path = os.path.dirname(os.path.realpath(__file__))
         xodr_path = os.path.join(
             current_path,
-            '../assets/2lane_freeway_simplified/2lane_freeway_simplified.xodr')
+            'assets/2lane_freeway_simplified/2lane_freeway_simplified.xodr')
 
         # create CAV world
         cav_world = CavWorld(opt.apply_ml)
