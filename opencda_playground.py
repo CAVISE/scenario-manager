@@ -2,32 +2,9 @@ import subprocess
 import sys
 import time
 import os
-sys.path.append('..')
 
 
-def stop_carla_windows(proc):
-    # принудительно убивает процесс (CarlaUE4.exe) и все его дочерние процессы на Windows.
-    try:
-        # windows kill carla
-        subprocess.run(
-            ["taskkill", "/F", "/T", "/PID", str(proc.pid)],
-            check=False,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        )
-        # linux kill carla
-        subprocess.run(
-            ["pkill", "-f", "CarlaUE4"],
-            check=False,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        )
-    except Exception as e:
-        print(f"Не удалось остановить процесс CARLA: {e}")
-
-
-def main():
-    # команда для запуска карлы
+def start_carla():
     carla_path = "CarlaUE4"
     carla_args = [
         "-quality-level=Low",
@@ -39,48 +16,64 @@ def main():
         "-fps=20"
     ]
 
-    # запуск карлы
     print("Запуск CARLA...")
     carla_process = subprocess.Popen([carla_path] + carla_args)
-
-    # время чтоб карла прогрузилась
     time.sleep(15)
+    return carla_process
+
+
+def start_opencda(scenario, version="0.9.15"):
+    print("Запуск OpenCDA...")
+    opencda_params = ["-t", scenario, "-v", version]
+
+    print("Запускаем OpenCDA с параметрами:", opencda_params)
+
+    if os.name == "posix":
+        python_path = "./external/OpenCDA/venv/bin/python"
+    elif os.name == "nt":
+        python_path = ".\\external\\OpenCDA\\venv\\Scripts\\python.exe"
+    else:
+        raise Exception("Unsupported OS")
+
+    subprocess.run(
+        [python_path, "run_opencda.py"] + opencda_params,
+        shell=True,
+    )
+
+
+def stop_carla(proc):
     try:
-        print("Запуск OpenCDA...")
+        if os.name == "nt":
+            subprocess.run(
+                ["taskkill", "/F", "/T", "/PID", str(proc.pid)],
+                check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
+        elif os.name == "posix":
+            subprocess.run(
+                ["pkill", "-f", "CarlaUE4"],
+                check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
+    except Exception as e:
+        print(f"Не удалось остановить процесс CARLA: {e}")
 
-        scenario = "single_2lanefree_carla"
+
+def main():
+    carla_process = None
+
+    try:
+        # carla_process = start_carla()
+
+        # scenario = "single_2lanefree_carla"
         # scenario = "map10"
-
-        opencda_params = [
-            "-t", scenario,
-            "-v", "0.9.15"
-        ]
-
-        print("Запускаем OpenCDA с параметрами:", opencda_params)
-
-        python_path = ""
-        if os.name == "posix":
-            python_path = "./external/OpenCDA/venv/bin/python"
-        elif os.name == "nt":
-            python_path = ".\\external\\OpenCDA\\venv\\Scripts\\python.exe"
-        else:
-            raise Exception("Unsupported OS")
-
-        # current_cwd = os.getcwd()
-        # new_cwd = str(current_cwd) + "/external/OpenCDA"
-
-        subprocess.run(
-            [python_path, "run_opencda.py"] + opencda_params,
-            shell=True,
-        )
-        # opencda_cmd = "python run_opencda.py"
-
-        # subprocess.run(opencda_cmd, shell=True, cwd=os.getcwd())
+        # scenario = "map10_2"
+        # scenario = "map10_3"
+        scenario = "map10_4"
+        start_opencda(scenario)
 
     finally:
-        # остановка карлы после сценария (или если с opencda какая то проблема возникла)
-        print("OpenCDA завершён. Останавка CARLA...")
-        stop_carla_windows(carla_process)
+        if carla_process:
+            print("OpenCDA завершён. Остановка CARLA...")
+            stop_carla(carla_process)
 
 
 if __name__ == "__main__":
