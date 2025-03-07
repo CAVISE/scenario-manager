@@ -15,7 +15,7 @@ world:
 
 scenario:
   name: "simple_verification"
-  map: "Town10HD"
+  map: "Town10"
   single_cav_list:
     - name: cav1
       spawn_position: [-35, 138, 0.3, 0, 0, 0]

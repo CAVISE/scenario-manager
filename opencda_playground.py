@@ -22,9 +22,9 @@ def start_carla():
     return carla_process
 
 
-def start_opencda(scenario, version="0.9.15"):
+def start_opencda(scenario, version="0.9.15", map="map10"):
     print("Запуск OpenCDA...")
-    opencda_params = ["-t", scenario, "-v", version]
+    opencda_params = ["-t", scenario, "-v", version, "-m", map]
 
     print("Запускаем OpenCDA с параметрами:", opencda_params)
 
@@ -66,8 +66,8 @@ def main():
         # scenario = "single_2lanefree_carla"
         # scenario = "map10"
         # scenario = "map10_2"
-        # scenario = "map10_3"
-        scenario = "map10_4"
+        scenario = "map10_3"
+        # scenario = "map10_4"
         start_opencda(scenario)
 
     finally:
