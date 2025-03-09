@@ -94,4 +94,4 @@ if __name__ == "__main__":
         [-35, 138, 0.3, 0, 0, 0],
     ]
     create_scenario("simple_verification", "map10", coords, dest)
-    #opencda_playground.start_opencda("simple_verification")
+    opencda_playground.start_opencda("simple_verification", map="map10")

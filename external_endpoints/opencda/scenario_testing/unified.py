@@ -20,7 +20,8 @@ from external.OpenCDA.opencda.scenario_testing.evaluations.evaluate_manager impo
 from external.OpenCDA.opencda.scenario_testing.utils.yaml_utils import add_current_time
 
 
-def run_scenario(opt, scenario_params, map):
+def run_scenario(opt, scenario_params):
+    map = scenario_params["scenario"]["map"]
     try:
         scenario_params = add_current_time(scenario_params)
         current_path = os.path.dirname(os.path.realpath(__file__))

@@ -13,12 +13,11 @@ import sys
 from omegaconf import OmegaConf
 
 
-
 def arg_parse_default():
     # create an argument parser
     parser = argparse.ArgumentParser(description="OpenCDA scenario runner.")
     # add arguments to the parser
-    parser.add_argument('-t', "--test_scenario", type=str, default='single_2lanefree_carla',
+    parser.add_argument('-t', "--test_scenario", type=str, default='simple_verification',
                         help='Define the name of the scenario you want to test. The given name must'
                              'match one of the testing scripts(e.g. single_2lanefree_carla) in '
                              'opencda/scenario_testing/ folder'
@@ -58,7 +57,7 @@ def main():
 
     # import the testing script
     testing_scenario = importlib.import_module(
-        #f"external_endpoints.opencda.scenario_testing.{opt.test_scenario}", ".")
+        # f"external_endpoints.opencda.scenario_testing.{opt.test_scenario}", ".")
         "external_endpoints.opencda.scenario_testing.unified", ".")
     # check if the yaml file for the specific testing scenario exists
     if not os.path.isfile(config_yaml):
@@ -68,7 +67,7 @@ def main():
     # get the function for running the scenario from the testing script
     scenario_runner = getattr(testing_scenario, 'run_scenario')
     # run the scenario testing
-    scenario_runner(opt, scene_dict, opt.map)
+    scenario_runner(opt, scene_dict)
 
 
 if __name__ == '__main__':
