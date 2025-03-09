@@ -1,28 +1,41 @@
 import yaml
 import opencda_playground
 # функция для представления многострочных строк в стиле |-
+
+
 def str_presenter(dumper, data):
     if "\n" in data:
         return dumper.represent_scalar("tag:yaml.org,2002:str", data, style="|-")
     return dumper.represent_scalar("tag:yaml.org,2002:str", data)
 
 # класс-обёртка для списков, которые нужно вывести в одну строку
+
+
 class FlowList(list):
     pass
+
 
 def flowlist_representer(dumper, data):
     return dumper.represent_sequence('tag:yaml.org,2002:seq', data, flow_style=True)
 
+
 yaml.add_representer(str, str_presenter)
 yaml.add_representer(FlowList, flowlist_representer)
 
-## name - любое имя сценария
-## map - карта
-## coord - координата машины в формате [x, y, z, x_rot, y_rot, z_rot], пример [107.0, -12.0, 0.3, 0, 0, 0]
-def create_scenario(name, map, coord):
+# name - любое имя сценария
+# map - карта
+# coord list - координаты машин в формате [x, y, z, x_rot, y_rot, z_rot], пример [107.0, -12.0, 0.3, 0, 0, 0]
+
+
+def create_scenario(name, map, coord, destination):
+    if len(coord) != len(destination):
+        print(f"ERROR: length of coords is not equal to destination (len(coord) = {
+              len(coord)}, len(destination) = {len(destination)})")
+        return 1
     data = {
         "description": (
-            f"Автосгенерированный сценарий {name}, с карты {map}, с координатой машины {coord}\n"
+            f"Автосгенерированный сценарий {name}, с карты {
+                map}, с с количеством машин {len(coord)}\n"
         ),
         "world": {
             "sync_mode": True,
@@ -38,20 +51,6 @@ def create_scenario(name, map, coord):
             "name": name,
             "map": map,
             "single_cav_list": [
-                {
-                    "name": "cav1",
-                    "spawn_position": FlowList(coord),
-                    "destination": FlowList([107.0, -12.0, 0.3, 0, 0, 0]),
-                    "v2x": {
-                        "communication_range": 45
-                    },
-                    "behavior": {
-                        "local_planner": {
-                            "debug_trajectory": True,
-                            "debug": True
-                        }
-                    }
-                }
             ]
         },
         "traffic_manager": {
@@ -63,11 +62,36 @@ def create_scenario(name, map, coord):
             "autopilot": True
         }
     }
-    
+
+    print()
+    for i in range(len(coord)):
+        temp = {
+            "name": f"cav{i}",
+            "spawn_position": FlowList(coord[i]),
+            "destination": FlowList(destination[i]),
+            "v2x": {
+                "communication_range": 45
+            },
+            "behavior": {
+                "local_planner": {
+                    "debug_trajectory": True,
+                    "debug": True
+                }
+            }
+        }
+        data["scenario"]["single_cav_list"].append(temp)
     with open(f"external_endpoints/config_yaml/{name}.yaml", "w", encoding="utf-8") as file:
         yaml.dump(data, file, allow_unicode=True, sort_keys=False)
 
 
 if __name__ == "__main__":
-    create_scenario("simple_verification", "map10", [-35, 138, 0.3, 0, 0, 0])
-    opencda_playground.start_opencda("simple_verification")
+    coords = [
+        [-35, 138, 0.3, 0, 0, 0],
+        [107.0, -12.0, 0.3, 0, 0, 0],
+    ]
+    dest = [
+        [107.0, -12.0, 0.3, 0, 0, 0],
+        [-35, 138, 0.3, 0, 0, 0],
+    ]
+    create_scenario("simple_verification", "map10", coords, dest)
+    #opencda_playground.start_opencda("simple_verification")
