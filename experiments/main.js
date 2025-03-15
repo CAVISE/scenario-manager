@@ -1,6 +1,6 @@
 // import { TransformControls } from 'three/addons/controls/TransformControls.js';
-// import { TransformControls } from 'three/addons/controls/TransformControls.js';
-// import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { TransformControls } from 'three/addons/controls/TransformControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 var PARAMS = {
     load_file: () => {
         const fileInput = document.createElement('input');
@@ -38,50 +38,52 @@ var PARAMS = {
         isAddPointModeActive = false;
         isAddedPoints = false;
     }, 
-    // carModel: (model)=>{},
-    // carColor: ()=>{},
-    deleteCube: () => { 
+    deleteCube: () => {
         isRotating = false;
-        if (pointerIndex >= 0/*&& selectedCube.material.color.equals(new THREE.Color(0xffff00))*/) {
+        if (pointerIndex >= 0) {
             const index = cube_objs.indexOf(selectedCube);
     
             if (index > -1) {
-                if (cubeCircles[index] && cubeCircles[index].lines) {
-                    cubeCircles[index].lines.forEach(line => {
+                if (temp[index] && Array.isArray(temp[index])) {
+                    temp[index].forEach(line => {
                         if (line.parent) scene.remove(line);
                         if (line.geometry) line.geometry.dispose();
                         if (line.material) line.material.dispose();
                     });
-                    cubeCircles[index].lines = []; 
+                    temp.splice(index, 1);
                 }
     
-                if (cubeCircles[index]) {
+                if (cubeCircles[index] && Array.isArray(cubeCircles[index])) {
                     cubeCircles[index].forEach(circle => {
                         if (circle.parent) scene.remove(circle);
                         if (circle.geometry) circle.geometry.dispose();
                         if (circle.material) circle.material.dispose();
                     });
-                    cubeCircles[index] = [];
-                    // console.log(cubeCircles);
+                    cubeCircles.splice(index, 1);
                 }
-                scenarioSettings.color_arr = scenarioSettings.color_arr.filter((_, ind)=>ind!=pointerIndex)
-                scenarioSettings.arr_car = scenarioSettings.arr_car.filter((_, i)=> pointerIndex!=i)
-                cube_objs.splice(index, 1);
-                scene.remove(selectedCube); 
-                Object.keys(cubeCircles).forEach((key) => {
-                    if (key > index) {
-                        cubeCircles[key - 1] = cubeCircles[key];
-                        delete cubeCircles[key];
-                    }
-                });
-            }
-            if (selectedCube.geometry) selectedCube.geometry.dispose();
-            if (selectedCube.material) selectedCube.material.dispose();
     
-            selectedCube = null;
-            pointerIndex = -1;
-            prevIndex = -1;
-            isAddedPoints = false
+                if (aaa[index] && Array.isArray(aaa[index])) {
+                    aaa.splice(index, 1);
+                }
+    
+                if (selectedCube) {
+                    scene.remove(selectedCube);
+                    if (selectedCube.geometry) selectedCube.geometry.dispose();
+                    if (selectedCube.material) selectedCube.material.dispose();
+                }
+    
+                cube_objs.splice(index, 1);
+                xxx.splice(index, 1);
+    
+                scenarioSettings.color_arr.splice(pointerIndex, 1);
+                scenarioSettings.arr_car.splice(pointerIndex, 1);
+    
+                selectedCube = null;
+                pointerIndex = -1;
+                prevIndex = -1;
+                isAddedPoints = false;
+                console.log(xxx, aaa, temp);
+            }
         }
     }, 
     addPoint: () => { 
@@ -94,7 +96,8 @@ var PARAMS = {
         isRotating = false;
         if (points_objs.length > 0) {
             const lastObj = points_objs[points_objs.length - 1];
-    
+            yyy.pop()
+
             if (lastObj && !lastObj.isDisposing) { 
                 lastObj.isDisposing = true; 
                 scene.remove(lastObj); 
@@ -191,7 +194,7 @@ var cube_objs = [];
 var points_arr = [];
 var circles_objs = [];
 var circles_arr = [];
-const cubeCircles = {};
+const cubeCircles = [];
 var mouse = new THREE.Vector2();
 const raycaster = new THREE.Raycaster();
 var spotlight_info = document.getElementById('spotlight_info');
@@ -213,7 +216,10 @@ let currentCar = '';
 let currentColor ='';
 let rotationInterval; 
 let isRotating = false;
-
+let xxx = [{x: -82.25002685501826, y: 78.50328235312159, z: 2.842170943040401e-14}]
+let aaa = [[{x: -111.04339870008958, y: 81.25687140209173, z: 0},{x: -124.13687116589833, y: 81.40780136061142, z: 0}]]
+let yyy = []
+let buildings = []
 const COLORS = {
     road : 1.0,
     roadmark : 1.0,
@@ -786,60 +792,125 @@ function onDocumentMouseDbClick(event) {
 
     const intersects = raycaster.intersectObjects([...cube_objs,...points_arr, road_network_mesh], true);
 
-    if (intersects.length > 0 && isAddCubeModeActive && currentCar && currentColor) {
+    if (intersects.length > 0 && isAddCubeModeActive && currentCar && currentColor && intersects[0].object === road_network_mesh) {
         const intersectionPoint = intersects[0].point;
-        const intersectionNormal = intersects[0].face.normal.clone().transformDirection(intersects[0].object.matrixWorld);
-        console.log(Number('0x'+currentColor))
-        const geometry = new THREE.BoxGeometry(3, 6, 3);
-        const material = new THREE.MeshBasicMaterial({ color:  Number('0x'+currentColor)});
-        const cube = new THREE.Mesh(geometry, material);
-        cube.isDisposing = false; 
-
-        cube.position.copy(intersectionPoint);
-        cube.position.z += geometry.parameters.width / 2 + 0.01;
-        cube.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), intersectionNormal);
-
-        scene.add(cube);
-        cube_objs.push(cube);
-        disposable_objs.push(cube);
-        cubeCircles[cube_objs.indexOf(cube)] = [];
-
-        isAddCubeModeActive = false;
-        console.log(currentCar)
+        // const intersectionNormal = intersects[0].face.normal.clone().transformDirection(intersects[0].object.matrixWorld);
         scenarioSettings.arr_car.push(currentCar)
         scenarioSettings.color_arr.push(Number('0x'+currentColor))
-        console.log(scenarioSettings.color_arr)
+        for (let cube of cube_objs) {
+            if (cube.geometry) cube.geometry.dispose();
+            if (cube.material) cube.material.dispose();
+            scene.remove(cube);
+        }
+        xxx.push(JSON.parse(JSON.stringify(intersectionPoint)))
+        cube_objs = []
+        disposable_objs = []
+        aaa.push([])
+        xxx.map((cube, i)=>{
+            const geometry = new THREE.BoxGeometry(3, 6, 3);
+            const material = new THREE.MeshBasicMaterial({ color:  scenarioSettings.color_arr[i]});
+            cube = new THREE.Mesh(geometry, material);
+            cube.isDisposing = false; 
+            
+            cube.position.set(xxx[i].x, xxx[i].y, xxx[i].z);
+            cube.position.z += geometry.parameters.width / 2 + 0.01;
+            // cube.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), intersectionNormal);
+
+            scene.add(cube);
+            cube_objs.push(cube);
+            disposable_objs.push(cube);
+            
+            isAddCubeModeActive = false;
+        })
     }
-    let intersectedObject = intersects[0].object;
-    if (intersects.length > 0 && isAddPointModeActive && intersectedObject == road_network_mesh) {
+    if (intersects.length > 0 && isAddPointModeActive && intersects[0].object === road_network_mesh) {
         const intersectionPoint = intersects[0].point;
-        const intersectionNormal = intersects[0].face.normal.clone().transformDirection(intersects[0].object.matrixWorld);
+        // const intersectionNormal = intersects[0].face.normal.clone().transformDirection(intersects[0].object.matrixWorld);
+        yyy.push(JSON.parse(JSON.stringify(intersectionPoint)))
+        for (let point of points_arr) {
+            if (point.geometry) point.geometry.dispose();
+            if (point.material) point.material.dispose();
+            scene.remove(point);
+        }
+        yyy.map((point, i)=>{
+            const geometry = new THREE.BoxGeometry(5, 5, 5);
+            const material = new THREE.MeshBasicMaterial({ color: 0x0000ff });
+            point = new THREE.Mesh(geometry, material);
+            point.isDisposing = false;
 
-        const geometry = new THREE.BoxGeometry(5, 5, 5);
-        const material = new THREE.MeshBasicMaterial({ color: 0x0000ff });
-        const point = new THREE.Mesh(geometry, material);
-        point.isDisposing = false;
+            point.position.set(yyy[i].x, yyy[i].y, yyy[i].z);
+            point.position.z += geometry.parameters.height / 2 + 0.01;
+            // point.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), intersectionNormal);
 
-        point.position.copy(intersectionPoint);
-        point.position.z += geometry.parameters.height / 2 + 0.01;
-        point.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), intersectionNormal);
+            const iconSize = 4; 
+            const iconGeometry = new THREE.PlaneGeometry(iconSize, iconSize);
+            const iconTexture = new THREE.TextureLoader().load('./globe-solid.svg'); 
+            const iconMaterial = new THREE.MeshBasicMaterial({ map: iconTexture, side: THREE.DoubleSide, transparent: true });
+            const icon = new THREE.Mesh(iconGeometry, iconMaterial);
 
-        const iconSize = 4; 
-        const iconGeometry = new THREE.PlaneGeometry(iconSize, iconSize);
-        const iconTexture = new THREE.TextureLoader().load('./globe-solid.svg'); 
-        const iconMaterial = new THREE.MeshBasicMaterial({ map: iconTexture, side: THREE.DoubleSide, transparent: true });
-        const icon = new THREE.Mesh(iconGeometry, iconMaterial);
+            icon.position.set(0, 0, geometry.parameters.height / 2); 
+            icon.quaternion.copy(point.quaternion); 
 
-        icon.position.set(0, 0, geometry.parameters.height / 2); 
-        icon.quaternion.copy(point.quaternion); 
+            point.add(icon);
 
-        point.add(icon);
+            scene.add(point);
+            points_objs.push(point);
+            points_arr.push(point);
+            isAddPointModeActive = false;
+        })
+    }
+    else if(isAddPointModeActive && intersects.length === 0){
+        const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0); 
+        const intersectionPoint = new THREE.Vector3();
 
-        scene.add(point);
-        points_objs.push(point);
-        points_arr.push(point);
-        isAddPointModeActive = false;
-        // addPointModeButton.textContent = 'Установить точку';
+        if (raycaster.ray.intersectPlane(plane, intersectionPoint)) {
+
+            yyy.push(JSON.parse(JSON.stringify(intersectionPoint)))
+            yyy.map((point, i)=>{
+                const geometry = new THREE.BoxGeometry(5, 5, 5);
+                const material = new THREE.MeshBasicMaterial({ color: 0x0000ff });
+                point = new THREE.Mesh(geometry, material);
+                point.isDisposing = false;
+
+                point.position.set(yyy[i].x, yyy[i].y, yyy[i].z);
+                point.position.z += geometry.parameters.height / 2 + 0.01;
+                // point.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), intersectionNormal);
+
+                const iconSize = 4; 
+                const iconGeometry = new THREE.PlaneGeometry(iconSize, iconSize);
+                const iconTexture = new THREE.TextureLoader().load('./globe-solid.svg'); 
+                const iconMaterial = new THREE.MeshBasicMaterial({ map: iconTexture, side: THREE.DoubleSide, transparent: true });
+                const icon = new THREE.Mesh(iconGeometry, iconMaterial);
+
+                icon.position.set(0, 0, geometry.parameters.height / 2); 
+                icon.quaternion.copy(point.quaternion); 
+
+                point.add(icon);
+
+                scene.add(point);
+                points_objs.push(point);
+                points_arr.push(point);
+                isAddPointModeActive = false;
+        })
+        }
+    }
+    else if(intersects.length === 0) {
+        const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0); 
+        const intersectionPoint = new THREE.Vector3();
+
+        if (raycaster.ray.intersectPlane(plane, intersectionPoint)) {
+            buildings.push(JSON.parse(JSON.stringify(intersectionPoint)))
+            buildings.map((building, i)=>{
+                const geometry = new THREE.BoxGeometry(25, 25, 50);
+                const material = new THREE.MeshBasicMaterial({ color: 0x0000ff });
+                building = new THREE.Mesh(geometry, material);
+                building.position.set(buildings[i].x, buildings[i].y, buildings[i].z);
+                building.position.z += geometry.parameters.height / 2 + 0.01;
+
+                scene.add(building);
+            })
+            
+        }
     }
 }
 function onDocumentMouseClick(event) {
@@ -874,70 +945,81 @@ function onDocumentMouseClick(event) {
             changeColor();
             prevIndex = pointerIndex;
         }
-    }else if (/*!isAddCubeModeActive && !isAddPointModeActive && */isAddedPoints) {
-        if (pointerIndex >=0 /*&& selectedCube.material.color.equals(new THREE.Color(0xffff00))*/) {
+    }else if (selectedCube) {
+        if (pointerIndex >=0 && isAddedPoints) {
             event.preventDefault();
 
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
             raycaster.setFromCamera(mouse, camera);
-
-            const intersectsRoad = raycaster.intersectObjects([road_network_mesh], true);
-            const intersectsCube = raycaster.intersectObjects(cube_objs, true)
-            const intersectsPoint = raycaster.intersectObjects(points_arr, true)
-
-            if (intersectsRoad.length > 0 && intersectsCube.length === 0 && intersectsPoint.length === 0) {
+            
+            const intersectsRoad = raycaster.intersectObjects([...cube_objs,...points_arr, road_network_mesh], true);
+            if (intersectsRoad.length > 0 && intersectsRoad[0].object === road_network_mesh) {
                 const intersectionRoad = intersectsRoad[0];
-                const intersectionPointRoad = intersectionRoad.point;
-                const intersectionNormalRoad = intersectionRoad.face.normal.clone().transformDirection(intersectionRoad.object.matrixWorld);
-
-                const offsetDistance = 0.5;
-                const offsetVector = intersectionNormalRoad.clone().multiplyScalar(offsetDistance);
-
-                const geometry = new THREE.CircleGeometry(radius, segments);
-                const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
-                const circle = new THREE.Mesh(geometry, material);
-                circle.isDisposing = false;
-
-                circle.position.copy(intersectionPointRoad).add(offsetVector);
-                circle.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), intersectionNormalRoad);
-
-                scene.add(circle);
-
+            
                 const cubeIndex = cube_objs.indexOf(selectedCube);
-                if (!cubeCircles[cubeIndex]) {
-                    cubeCircles[cubeIndex] = [];
+                if (cubeCircles[cubeIndex]) {
+                    cubeCircles[cubeIndex].forEach(circle => {
+                        if (circle.parent) scene.remove(circle);
+                        if (circle.geometry) circle.geometry.dispose();
+                        if (circle.material) circle.material.dispose();
+                    });
+                    cubeCircles[cubeIndex] = []; 
                 }
-                cubeCircles[cubeIndex].push(circle);
-                circles_objs.push(circle);
-                const canvas = document.createElement("canvas");
-                const size = 64;
-                canvas.width = size;
-                canvas.height = size;
+            
+                const intersectionPointRoad = intersectionRoad.point;
+                aaa[cubeIndex].push(JSON.parse(JSON.stringify(intersectionPointRoad)));
+            
+                aaa.forEach((pointsArray, arrIndex) => {
+                    if (!cubeCircles[arrIndex]) {
+                        cubeCircles[arrIndex] = [];
+                    }
+            
+                    pointsArray.forEach((point, pointIndex) => {
+                        const intersectionNormalRoad = intersectionRoad.face.normal.clone().transformDirection(intersectionRoad.object.matrixWorld);
+            
+                        const offsetDistance = 0.5;
+                        const offsetVector = intersectionNormalRoad.clone().multiplyScalar(offsetDistance);
 
-                const context = canvas.getContext("2d");
-                context.fillStyle = "black";
-                context.font = "bold 72px Arial";
-                context.textAlign = "center";
-                context.textBaseline = "middle";
-                context.strokeStyle = "black";
-                context.fillText(cubeCircles[cubeIndex].length.toString(), size / 2, size / 2);
-
-                const texture = new THREE.CanvasTexture(canvas);
-                const spriteMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true });
-                const sprite = new THREE.Sprite(spriteMaterial);
-
-                sprite.scale.set(2, 2, 1);
-                sprite.position.copy(new THREE.Vector3(0, 0, 1));
-
-                circle.add(sprite);
-                // console.log(cubeCircles)
-                connectCirclesWithLines(cubeIndex);
+                        const geometry = new THREE.CircleGeometry(radius, segments);
+                        const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+                        const circle = new THREE.Mesh(geometry, material);
+                        circle.isDisposing = false;
+        
+                        circle.position.set(point.x, point.y, point.z).add(offsetVector);
+                        circle.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), intersectionNormalRoad);
+            
+                        scene.add(circle);
+                        cubeCircles[arrIndex].push(circle);
+            
+                        const canvas = document.createElement("canvas");
+                        const size = 64;
+                        canvas.width = size;
+                        canvas.height = size;
+            
+                        const context = canvas.getContext("2d");
+                        context.fillStyle = "black";
+                        context.font = "bold 72px Arial";
+                        context.textAlign = "center";
+                        context.textBaseline = "middle";
+                        context.strokeStyle = "black";
+                        context.fillText((pointIndex + 1).toString(), size / 2, size / 2);
+        
+                        const texture = new THREE.CanvasTexture(canvas);
+                        const spriteMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true });
+                        const sprite = new THREE.Sprite(spriteMaterial);
+            
+                        sprite.scale.set(2, 2, 1);
+                        sprite.position.copy(new THREE.Vector3(0, 0, 1));
+            
+                        circle.add(sprite);
+                    });
+                    connectCirclesWithLines(arrIndex);
+                });
             }
         }
     }
-
 }
 
 function changeColor (){
@@ -979,42 +1061,54 @@ function loadCar(position, normal) {
       }
     );
   }
-function connectCirclesWithLines(cubeIndex) {
-    if (!cubeCircles[cubeIndex]) return;
-
-    if (!cubeCircles[cubeIndex].lines) {
-        cubeCircles[cubeIndex].lines = []; 
+  function connectCirclesWithLines() {
+    if (temp) {
+        temp.flat().forEach(line => {
+            if (line.parent) scene.remove(line);
+            if (line.geometry) line.geometry.dispose();
+            if (line.material) line.material.dispose();
+        });
     }
 
-    if (cubeCircles[cubeIndex].length > 1) {
-
-        const lastCircleIndex = cubeCircles[cubeIndex].length - 1;
-        const secondLastCircleIndex = lastCircleIndex - 1;
-
-        const start = cubeCircles[cubeIndex][secondLastCircleIndex].position;
-        const end = cubeCircles[cubeIndex][lastCircleIndex].position;
-
-        const points = [start, end];
-        const geometry = new THREE.BufferGeometry().setFromPoints(points);
-        const material = new THREE.LineBasicMaterial({ color: 0x00ff00 });
-        const line = new THREE.Line(geometry, material);
-        line.position.z -= 0.01;
-
-        scene.add(line);
-        temp.push(line);
-        cubeCircles[cubeIndex].lines.push(line); 
-    } else if (cubeCircles[cubeIndex].length === 1) {  
-        const end = cubeCircles[cubeIndex][0].position;
-        const start = cube_objs[cubeIndex].position;
-        const points = [start, end];
-        const geometry = new THREE.BufferGeometry().setFromPoints(points);
-        const material = new THREE.LineBasicMaterial({ color: 0x00ff00 });
-        const line = new THREE.Line(geometry, material);
-        line.position.z -= 0.01;
-        scene.add(line);
-        temp.push(line);
-        cubeCircles[cubeIndex].lines.push(line);
+    if (!temp || temp.length !== xxx.length) {
+        temp = new Array(xxx.length).fill(null).map(() => []);
     }
+
+    function createAndAddLine(start, end, index) {
+        const startVec = new THREE.Vector3(start.x, start.y, start.z);
+        const endVec = new THREE.Vector3(end.x, end.y, end.z);
+
+        const geometry = new THREE.BufferGeometry().setFromPoints([startVec, endVec]);
+        const material = new THREE.LineBasicMaterial({ color: 0x00ff00 });
+        const line = new THREE.Line(geometry, material);
+
+        scene.add(line);
+        temp[index].push(line);
+    }
+
+    aaa.forEach((pointsArray, ind) => {
+        if (ind >= xxx.length) return;
+
+        if (!temp[ind]) temp[ind] = [];
+
+        temp[ind].forEach(line => {
+            if (line.parent) scene.remove(line);
+            if (line.geometry) line.geometry.dispose();
+            if (line.material) line.material.dispose();
+        });
+        temp[ind] = [];
+
+        if (pointsArray.length < 1) return;
+
+        createAndAddLine(xxx[ind], pointsArray[0], ind);
+
+        for (let i = 1; i < pointsArray.length; i++) {
+            createAndAddLine(pointsArray[i - 1], pointsArray[i], ind);
+        }
+    });
+
+    console.log(temp);
+    console.log(xxx);
 }
 const scenarioSettings = {
     scenario_id: "",
@@ -1022,7 +1116,7 @@ const scenarioSettings = {
     vehicle: "car",
     weather: "ClearNoon", 
     arr_car: [], 
-    color_arr: []
+    color_arr: [Number('0x800000')],
   };
   const handleSaveScenario = () => {
     console.log(scenarioSettings.arr_car)
@@ -1096,20 +1190,20 @@ function hideModeLabel() {
     const lbl = document.getElementById('modeLabel');
     if (lbl) lbl.style.display = 'none';
 }
-window.addEventListener('mousedown', onMouseDownAttach);
+// window.addEventListener('mousedown', onMouseDownAttach);
 
-function onMouseDownAttach(event) {
-  if (!PARAMS.isAddCubeModeActive && !PARAMS.isAddPointModeActive) {
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-    raycaster.setFromCamera(mouse, camera);
+// function onMouseDownAttach(event) {
+//   if (!PARAMS.isAddCubeModeActive && !PARAMS.isAddPointModeActive) {
+//     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+//     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+//     raycaster.setFromCamera(mouse, camera);
 
-    const intersects = raycaster.intersectObjects(disposable_objs);
-    if (intersects.length > 0) {
-      transformControls.attach(intersects[0].object);
-    }
-  }
-}
+//     const intersects = raycaster.intersectObjects(disposable_objs);
+//     if (intersects.length > 0) {
+//       transformControls.attach(intersects[0].object);
+//     }
+//   }
+// }
 
 const gui_save_folder = gui.addFolder('Сохранение сценария');
   gui_save_folder.add(scenarioSettings, 'scenario_id').name("ID сценария");
