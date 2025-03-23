@@ -7,6 +7,13 @@ import * as dat from 'dat.gui';
 import { Notyf } from 'notyf';
 import 'notyf/notyf.min.css';
 
+import {
+  encodeUInt32,
+  decodeUInt32,
+  isValid,
+  isRoadObject
+} from '../helpers/editorhelper';
+
 
 declare function libOpenDrive(): Promise<never>;
 
@@ -667,21 +674,7 @@ const Editor = () => {
         std_vec.delete();
       return entries;
     }
-    function isValid(rgba) {
-      return !(rgba[0] == 1 && rgba[1] == 1 && rgba[2] == 1 && rgba[3] == 1);
-    }
-    function encodeUInt32(ui32: number) {
-      let rgba;
-      rgba = new Float32Array(4);
-      rgba[0] = (Math.trunc(ui32) % 256) / 255.;
-      rgba[1] = (Math.trunc(ui32 / 256) % 256) / 255.;
-      rgba[2] = (Math.trunc(ui32 / 256 / 256) % 256) / 255.;
-      rgba[3] = (Math.trunc(ui32 / 256 / 256 / 256) % 256) / 255.;
-      return rgba;
-    }
-    function decodeUInt32(rgba) {
-      return Math.round(rgba[0] * 255) + Math.round(rgba[1] * 255) * 256 + Math.round(rgba[2] * 255) * 256 * 256 + Math.round(rgba[3] * 255) * 256 * 256 * 256;
-    }
+
     function onWindowResize() {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
@@ -799,11 +792,6 @@ const Editor = () => {
         }*/
       }
     }
-
-    function isRoadObject(object) {
-      return object === road_network_mesh || road_network_mesh.children.includes(object);
-    }
-
     function onDocumentMouseClick(event) {
       // Если не в режиме добавления кубов/точек
       if (!isAddCubeModeActive && !isAddPointModeActive && !isAddedPoints) {
