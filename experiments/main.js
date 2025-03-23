@@ -1,82 +1,183 @@
+// import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-
-
 var PARAMS = {
-  load_file: function() { document.getElementById('xodr_file_input').click() },
-  resolution: 0.3,
-  ref_line: true,
-  roadmarks: true,
-  wireframe: false,
-  spotlight: true,
-  fitView: function() { fitViewToObj(refline_lines) },
-  lateralProfile: true,
-  laneHeight: true,
-  reload_map: function() { reloadOdrMap() },
-  view_mode: 'Default',
-  isAddCubeModeActive: false,
-  isAddPointModeActive: false,
-  addCubeMode: function() {
-    this.isAddCubeModeActive = !this.isAddCubeModeActive
-    if (this.isAddCubeModeActive) {
-      showModeLabel()
-      this.isAddPointModeActive = false
-    } else {
-      hideModeLabel()
-    }
-  },
-  deleteCube: function() {
-    if (disposable_objs.length > 0) {
-      const lastObj = disposable_objs[disposable_objs.length - 1]
-      if (lastObj && !lastObj.isDisposing) {
-        lastObj.isDisposing = true
-        scene.remove(lastObj)
-        disposable_objs.pop()
-        if (lastObj.geometry) lastObj.geometry.dispose()
-        if (lastObj.material) lastObj.material.dispose()
-      }
-      if (transformControls.object === lastObj) {
-          transformControls.detach();
+    load_file: () => {
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = '.xodr';
+
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    loadFile(e.target.result, true);
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        fileInput.click();
+    },
+    model: '',
+    color: '',
+    resolution: 0.3,
+    ref_line: true,
+    roadmarks: true,
+    wireframe: false,
+    spotlight: true,
+    fitView: () => { fitViewToObj(refline_lines); },
+    lateralProfile: true,
+    laneHeight: true,
+    reload_map: () => { reloadOdrMap(); },
+    view_mode: 'Default',
+    addCube: () => {
+        isRotating = false;
+        isAddCubeModeActive = true;
+        isAddPointModeActive = false;
+        isAddedPoints = false;
+    },
+    deleteCube: () => {
+        isRotating = false;
+        if (pointerIndex >= 0) {
+            const index = cube_objs.indexOf(selectedCube);
+
+            if (index > -1) {
+                if (temp[index] && Array.isArray(temp[index])) {
+                    temp[index].forEach(line => {
+                        if (line.parent) scene.remove(line);
+                        if (line.geometry) line.geometry.dispose();
+                        if (line.material) line.material.dispose();
+                    });
+                    temp.splice(index, 1);
+                }
+
+                if (cubeCircles[index] && Array.isArray(cubeCircles[index])) {
+                    cubeCircles[index].forEach(circle => {
+                        if (circle.parent) scene.remove(circle);
+                        if (circle.geometry) circle.geometry.dispose();
+                        if (circle.material) circle.material.dispose();
+                    });
+                    cubeCircles.splice(index, 1);
+                }
+
+                if (aaa[index] && Array.isArray(aaa[index])) {
+                    aaa.splice(index, 1);
+                }
+
+                if (selectedCube) {
+                    scene.remove(selectedCube);
+                    if (selectedCube.geometry) selectedCube.geometry.dispose();
+                    if (selectedCube.material) selectedCube.material.dispose();
+                }
+
+                cube_objs.splice(index, 1);
+                xxx.splice(index, 1);
+
+                scenarioSettings.color_arr.splice(pointerIndex, 1);
+                scenarioSettings.arr_car.splice(pointerIndex, 1);
+
+                selectedCube = null;
+                pointerIndex = -1;
+                prevIndex = -1;
+                isAddedPoints = false;
+                console.log(xxx, aaa, temp);
+            }
         }
-        scene.remove(lastObj);
+    },
+    addPoint: () => {
+        isRotating = false;
+        isAddPointModeActive = true;
+        isAddCubeModeActive = false;
+        isAddedPoints = false;
+    },
+    deletePoint: () => {
+        isRotating = false;
+        if (points_objs.length > 0) {
+            const lastObj = points_objs[points_objs.length - 1];
+            yyy.pop()
+
+            if (lastObj && !lastObj.isDisposing) {
+                lastObj.isDisposing = true;
+                scene.remove(lastObj);
+                points_objs.pop();
+                if (lastObj.geometry) lastObj.geometry.dispose();
+                if (lastObj.material) lastObj.material.dispose();
+            }
+        }
+    },
+    rotateCube: () => {
+        // isRotating = !isRotating;
+        selectedCube.rotation.z += Math.PI / 18;
+    },
+    rotatePosCube: function() {
+        if (disposable_objs.length === 0) return
+        const lstCb = disposable_objs[disposable_objs.length - 1]
+        lstCb.rotation.z += Math.PI / 18
+      },
+      translateMode: function() {
+        transformControls.setMode('translate')
+      },
+      rotateMode: function() {
+        transformControls.setMode('rotate')
+      },
+      scaleMode: function() {
+        transformControls.setMode('scale')
+      },
+    addDirectionPoints: () => {
+        isRotating = false;
+        isAddedPoints = !isAddedPoints;
+        isAddCubeModeActive = false;
+        isAddPointModeActive = false;
     }
-  },
-  addPointMode: function() {
-    this.isAddPointModeActive = !this.isAddPointModeActive
-    if (this.isAddPointModeActive) {
-      showModeLabel()
-      this.isAddCubeModeActive = false
-    } else {
-      hideModeLabel()
+};
+
+const gui = new dat.GUI();
+gui.add(PARAMS, 'load_file').name('📁 Load .xodr');
+gui.add(PARAMS, 'resolution', { Low: 1.0, Medium: 0.3, High: 0.02 }).name('📏 Detail').onChange((val) => {
+    loadOdrMap(true, false);
+});
+gui.add(PARAMS, 'spotlight').name("🔦 Spotlight");
+gui.add(PARAMS, 'fitView').name("⟲ Reset Camera");
+
+var gui_view_folder = gui.addFolder('View');
+gui_view_folder.add(PARAMS, 'view_mode', { Default: 'Default', 'Outlines': 'Outlines' }).name("View Mode").onChange((val) => {
+    road_network_mesh.visible = (val === 'Default');
+    roadmarks_mesh.visible = (val === 'Default' && PARAMS.roadmarks);
+});
+gui_view_folder.add(PARAMS, 'ref_line').name("Reference Line").onChange((val) => {
+    refline_lines.visible = val;
+});
+gui_view_folder.add(PARAMS, 'roadmarks').name("Roadmarks").onChange((val) => {
+    roadmarks_mesh.visible = val;
+    roadmark_outline_lines.visible = val;
+    if (PARAMS.view_mode === 'Outlines') {
+        roadmarks_mesh.visible = false;
+        roadmark_outline_lines.visible = false;
     }
-  },
-  deletePoint: function() {
-    if (points_objs.length > 0) {
-      const lastObj = points_objs[points_objs.length - 1]
-      if (lastObj && !lastObj.isDisposing) {
-        lastObj.isDisposing = true
-        scene.remove(lastObj)
-        points_objs.pop()
-        if (lastObj.geometry) lastObj.geometry.dispose()
-        if (lastObj.material) lastObj.material.dispose()
-      }
-    }
-  },
-  rotatePosCube: function() {
-    if (disposable_objs.length === 0) return
-    const lstCb = disposable_objs[disposable_objs.length - 1]
-    lstCb.rotation.z += Math.PI / 18
-  },
-  translateMode: function() {
-    transformControls.setMode('translate')
-  },
-  rotateMode: function() {
-    transformControls.setMode('rotate')
-  },
-  scaleMode: function() {
-    transformControls.setMode('scale')
-  }
-}
+});
+gui_view_folder.add(PARAMS, 'wireframe').name("Wireframe").onChange((val) => {
+    road_network_material.wireframe = val;
+});
+
+var gui_attributes_folder = gui.addFolder('Load Attributes');
+gui_attributes_folder.add(PARAMS, 'lateralProfile').name("Lateral Profile");
+gui_attributes_folder.add(PARAMS, 'laneHeight').name("Lane Height");
+gui_attributes_folder.add(PARAMS, 'reload_map').name("Reload Map");
+
+var gui_controls_folder = gui.addFolder('Controls');
+gui_controls_folder.add(PARAMS, 'addCube').name('Добавить машину');
+gui_controls_folder.add(PARAMS, 'model').name("Имя машины").onChange((val) => currentCar = val);
+gui_controls_folder.add(PARAMS, 'color').name("Цвет машины").onChange((val) => currentColor = val);
+gui_controls_folder.add(PARAMS, 'deleteCube').name('Удалить куб');
+gui_controls_folder.add(PARAMS, 'addPoint').name('Добавить RSU');
+gui_controls_folder.add(PARAMS, 'deletePoint').name('Удалить RSU');
+gui_controls_folder.add(PARAMS, 'rotateCube').name('Вкл поворот куба');
+gui_controls_folder.add(PARAMS, 'translateMode').name('Перемещение');
+gui_controls_folder.add(PARAMS, 'rotateMode').name('Вращение');
+gui_controls_folder.add(PARAMS, 'scaleMode').name('Масштаб');
+gui_controls_folder.add(PARAMS, 'addDirectionPoints').name('Добавить точки');
 
 
 var ModuleOpenDrive = null;
@@ -89,6 +190,11 @@ var roadmark_outline_lines = null;
 var ground_grid = null;
 var disposable_objs = [];
 var points_objs = [];
+var cube_objs = [];
+var points_arr = [];
+var circles_objs = [];
+var circles_arr = [];
+const cubeCircles = [];
 var mouse = new THREE.Vector2();
 const raycaster = new THREE.Raycaster();
 var spotlight_info = document.getElementById('spotlight_info');
@@ -98,149 +204,22 @@ var spotlight_paused = false;
 let isAddCubeModeActive = false;
 let isAddPointModeActive = false;
 let stIntrvl;
-
-
-
-
-
-function loadCar(position, normal) {
-  const loader = new GLTFLoader();
-  loader.load(
-    'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/ToyCar/glTF-Binary/ToyCar.glb',
-    (gltf) => {
-      const car = gltf.scene;
-      car.scale.set(5, 5, 5);
-      car.position.copy(position);
-      car.position.z += 0.01;
-      const up = new THREE.Vector3(0, 0, 1);
-      const quat = new THREE.Quaternion().setFromUnitVectors(up, normal.normalize());
-      car.quaternion.copy(quat);
-      car.traverse((child) => {
-        if (child.isMesh) {
-          child.material.transparent = true;
-          child.material.opacity = 0.5;
-        }
-      });
-      scene.add(car);
-      transformControls.attach(car);
-      disposable_objs.push(car);
-    }
-  );
-}
-
-
-const addCubeModeButton = document.createElement('button');
-addCubeModeButton.textContent = 'Добавить куб';
-addCubeModeButton.style.position = 'absolute';
-addCubeModeButton.style.top = '10px';
-addCubeModeButton.style.left = '20px';
-document.body.appendChild(addCubeModeButton);
-
-const translateButton = document.createElement('button');
-translateButton.textContent = 'Перемещение';
-translateButton.style.position = 'absolute';
-translateButton.style.top = '160px';
-translateButton.style.left = '20px';
-document.body.appendChild(translateButton);
-
-translateButton.addEventListener('click', () => {
-    transformControls.setMode('translate');
-});
-
-const rotateButton = document.createElement('button');
-rotateButton.textContent = 'Вращение';
-rotateButton.style.position = 'absolute';
-rotateButton.style.top = '190px';
-rotateButton.style.left = '20px';
-document.body.appendChild(rotateButton);
-
-rotateButton.addEventListener('click', () => {
-    transformControls.setMode('rotate');
-});
-
-const scaleButton = document.createElement('button');
-scaleButton.textContent = 'Масштабирование';
-scaleButton.style.position = 'absolute';
-scaleButton.style.top = '220px';
-scaleButton.style.left = '20px';
-document.body.appendChild(scaleButton);
-
-scaleButton.addEventListener('click', () => {
-    transformControls.setMode('scale');
-});
-
-
-const deleteCubeModeButton = document.createElement('button');
-deleteCubeModeButton.textContent = 'Удалить последний куб';
-deleteCubeModeButton.style.position = 'absolute';
-deleteCubeModeButton.style.top = '40px';
-deleteCubeModeButton.style.left = '20px';
-document.body.appendChild(deleteCubeModeButton);
-
-const addPointModeButton = document.createElement('button');
-addPointModeButton.textContent = 'Установить точку';
-addPointModeButton.style.position = 'absolute';
-addPointModeButton.style.top = '70px';
-addPointModeButton.style.left = '20px';
-document.body.appendChild(addPointModeButton);
-
-const deletePointModeButton = document.createElement('button');
-deletePointModeButton.textContent = 'Удалить последнюю точку';
-deletePointModeButton.style.position = 'absolute';
-deletePointModeButton.style.top = '100px';
-deletePointModeButton.style.left = '20px';
-document.body.appendChild(deletePointModeButton);
-
-const rotatePosCubeButton = document.createElement('button');
-rotatePosCubeButton.textContent = 'Положительный поворот куба';
-rotatePosCubeButton.style.position = 'absolute';
-rotatePosCubeButton.style.top = '130px';
-rotatePosCubeButton.style.left = '20px';
-document.body.appendChild(rotatePosCubeButton);
-
-addPointModeButton.addEventListener('click', () =>{
-    isAddPointModeActive = !isAddPointModeActive;
-    isAddCubeModeActive = false;
-    addCubeModeButton.textContent = 'Добавить куб';
-    addPointModeButton.textContent = 'Режим добавления точек RSU'
-});
-deleteCubeModeButton.addEventListener('click', () => {
-    if (disposable_objs.length > 0) {
-        const lastObj = disposable_objs[disposable_objs.length - 1];
-
-        if (lastObj && !lastObj.isDisposing) {
-            lastObj.isDisposing = true;
-            scene.remove(lastObj);
-            disposable_objs.pop();
-            if (lastObj.geometry) lastObj.geometry.dispose();
-            if (lastObj.material) lastObj.material.dispose();
-        }
-    }
-});
-deletePointModeButton.addEventListener('click', () => {
-    if (points_objs.length > 0) {
-        const lastObj = points_objs[points_objs.length - 1];
-
-        if (lastObj && !lastObj.isDisposing) {
-            lastObj.isDisposing = true;
-            scene.remove(lastObj);
-            points_objs.pop();
-            if (lastObj.geometry) lastObj.geometry.dispose();
-            if (lastObj.material) lastObj.material.dispose();
-        }
-    }
-});
-addCubeModeButton.addEventListener('click', () => {
-    isAddCubeModeActive = !isAddCubeModeActive;
-    isAddPointModeActive = false;
-    addPointModeButton.textContent = 'Установить точку';
-    if (isAddCubeModeActive) {
-        addCubeModeButton.textContent = 'Режим добавления куба';
-    } else {
-        addCubeModeButton.textContent = 'Добавить куб';
-    }
-});
-
+let pointerIndex = -1;
+let selectedCube = null;
+let prevIndex = -1;
+let isAddedPoints = false;
+const radius = 2;
+const segments = 32;
+var temp = [];
+let ind = 0;
+let currentCar = '';
+let currentColor ='';
+let rotationInterval;
+let isRotating = false;
+let xxx = [{x: -82.25002685501826, y: 78.50328235312159, z: 2.842170943040401e-14}]
+let aaa = [[{x: -111.04339870008958, y: 81.25687140209173, z: 0},{x: -124.13687116589833, y: 81.40780136061142, z: 0}]]
+let yyy = []
+let buildings = []
 const COLORS = {
     road : 1.0,
     roadmark : 1.0,
@@ -256,6 +235,7 @@ const COLORS = {
 window.addEventListener('resize', onWindowResize, false);
 window.addEventListener('mousemove', onDocumentMouseMove, false);
 window.addEventListener('dblclick', onDocumentMouseDbClick, false);
+window.addEventListener('click', onDocumentMouseClick);
 
 /* notifactions */
 const notyf = new Notyf({
@@ -303,9 +283,9 @@ const transformControls = new TransformControls(camera, renderer.domElement);
 scene.add(transformControls);
 
 transformControls.addEventListener('change', () => renderer.render(scene, camera));
-transformControls.addEventListener('dragging-changed', (event) => {
-    controls.enabled = !event.value; // Отключаем стандартные контролы, если объект перетаскивается
-});
+ transformControls.addEventListener('dragging-changed', (event) => {
+     controls.enabled = !event.value; // Отключаем стандартные контролы, если объект перетаскивается
+ });
 
 /* THREEJS materials */
 const idVertexShader = document.getElementById('idVertexShader').textContent;
@@ -419,9 +399,27 @@ function loadOdrMap(clear_map = true, fit_view = true)
             if (obj.material) obj.material.dispose();
             if (obj.parent) obj.parent.remove(obj);
         }
+        for (let obj of circles_objs){
+            if (obj.geometry) obj.geometry.dispose();
+            if (obj.material) obj.material.dispose();
+            if (obj.parent) obj.parent.remove(obj);
+        }
+        for (let obj of temp){
+            if (obj.geometry) obj.geometry.dispose();
+            if (obj.material) obj.material.dispose();
+            if (obj.parent) obj.parent.remove(obj);
+        }
+        temp = [];
         disposable_objs = [];
         points_objs = [];
-
+        circles_arr = [];
+        circles_objs = [];
+        cube_objs = [];
+        selectedCube = null;
+        currentColor ='';
+        currentCar = '';
+        scenarioSettings.arr_car = [];
+        scenarioSettings.color_arr = [];
     }
 
     /* reflines */
@@ -662,11 +660,6 @@ function animate()
             const lanesec_s0 = odr_lanes_mesh.get_lanesec_s0(INTERSECTED_LANE_ID);
             const lane_id = odr_lanes_mesh.get_lane_id(INTERSECTED_LANE_ID);
             odr_lanes_mesh.delete();
-            deleteCubeModeButton.style.display = 'none';
-            addCubeModeButton.style.display = 'none';
-            addPointModeButton.style.display = 'none';
-            deletePointModeButton.style.display = 'none';
-            rotatePosCubeButton.style.display = 'none';
             spotlight_info.innerHTML = `
                     <table>
                         <tr><th>road id</th><th>${road_id}</th></tr>
@@ -675,13 +668,6 @@ function animate()
                         <tr><th>s/t</th><th>[${st_pixel_buffer[0].toFixed(2)}, ${st_pixel_buffer[1].toFixed(2)}]</th>
                         <tr><th>world</th><th>[${xyz_pixel_buffer[0].toFixed(2)}, ${xyz_pixel_buffer[1].toFixed(2)}, ${xyz_pixel_buffer[2].toFixed(2)}]</th></tr>
                     </table>`;
-        }
-        else{
-            addCubeModeButton.style.display = 'block';
-            deleteCubeModeButton.style.display = 'block';
-            addPointModeButton.style.display = 'block';
-            deletePointModeButton.style.display = 'block';
-            rotatePosCubeButton.style.display = 'block';
         }
     }
 
@@ -797,105 +783,320 @@ function onDocumentMouseMove(event) {
 }
 
 function onDocumentMouseDbClick(event) {
-    event.preventDefault()
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
-    raycaster.setFromCamera(mouse, camera)
-    const intersects = raycaster.intersectObjects([road_network_mesh])
-    if (intersects.length > 0) {
-      const intersectionPoint = intersects[0].point
-      const intersectionNormal = intersects[0].face.normal.clone().transformDirection(intersects[0].object.matrixWorld)
-      if (PARAMS.isAddCubeModeActive) {
-        const geometry = new THREE.BoxGeometry(3, 6, 3)
-        const material = new THREE.MeshBasicMaterial({ color: 0xff0000 })
-        const cube = new THREE.Mesh(geometry, material)
-        cube.isDisposing = false
-        cube.position.copy(intersectionPoint)
-        cube.position.z += geometry.parameters.height / 2 + 0.01
-        cube.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), intersectionNormal)
-        scene.add(cube)
-        transformControls.attach(cube)
-        disposable_objs.push(cube)
-      } else if (PARAMS.isAddPointModeActive) {
-        const geometry = new THREE.BoxGeometry(5, 5, 5)
-        const material = new THREE.MeshBasicMaterial({ color: 0xffffff })
-        const point = new THREE.Mesh(geometry, material)
-        point.isDisposing = false
-        point.position.copy(intersectionPoint)
-        point.position.z += geometry.parameters.height / 2 + 0.01
-        point.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), intersectionNormal)
-        const iconSize = 4
-        const iconGeometry = new THREE.PlaneGeometry(iconSize, iconSize)
-        const iconTexture = new THREE.TextureLoader().load('fonts/globe-solid.svg')
-        const iconMaterial = new THREE.MeshBasicMaterial({ map: iconTexture, side: THREE.DoubleSide, transparent: true })
-        const icon = new THREE.Mesh(iconGeometry, iconMaterial)
-        icon.position.set(0, 0, geometry.parameters.height / 2)
-        icon.quaternion.copy(point.quaternion)
-        point.add(icon)
-        scene.add(point)
-        points_objs.push(point)
+    event.preventDefault();
+
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+
+    const intersects = raycaster.intersectObjects([...cube_objs, ...points_arr, road_network_mesh], true);
+
+    if (intersects.length > 0 && isAddCubeModeActive) {
+        const roadIntersections = intersects.filter(inter => inter.object === road_network_mesh);
+        if (roadIntersections.length > 0) {
+            if (!currentCar) currentCar = 'car';
+            if (!currentColor) currentColor = '00ff00';
+
+            const intersectionPoint = roadIntersections[0].point;
+
+            scenarioSettings.arr_car.push(currentCar);
+            scenarioSettings.color_arr.push(Number('0x' + currentColor));
+
+            // Убираем удаление уже добавленных кубов – чтобы их было больше одного
+            // for (let cube of cube_objs) {
+            //     if (cube.geometry) cube.geometry.dispose();
+            //     if (cube.material) cube.material.dispose();
+            //     scene.remove(cube);
+            // }
+
+            const geometry = new THREE.BoxGeometry(3, 6, 3);
+            const material = new THREE.MeshBasicMaterial({ color: scenarioSettings.color_arr[scenarioSettings.color_arr.length - 1] });
+            const cube = new THREE.Mesh(geometry, material);
+            cube.isDisposing = false;
+
+            cube.position.copy(intersectionPoint);
+            cube.position.z += geometry.parameters.width / 2 + 0.01;
+
+            scene.add(cube);
+            cube_objs.push(cube);
+            disposable_objs.push(cube);
+
+            isAddCubeModeActive = false;
+        }
+    }
+}
+
+
+function onDocumentMouseClick(event) {
+    if (!isAddCubeModeActive && !isAddPointModeActive && !isAddedPoints) {
+        event.preventDefault();
+
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+
+        const intersects = raycaster.intersectObjects([...cube_objs]);
+
+        let minDistance = Infinity;
+
+        if (intersects.length > 0) {
+            let intersectionPoint = intersects[0].point;
+            let intersectedObject = intersects[0].object;
+
+            if (intersectedObject === road_network_mesh) {
+                return;
+            }
+
+            for (let i = 0; i < cube_objs.length; i++) {
+                const dist = cube_objs[i].position.distanceTo(intersectionPoint);
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    pointerIndex = i;
+                    selectedCube = cube_objs[i];
+                }
+            }
+            transformControls.attach(selectedCube);
+
+            changeColor();
+            prevIndex = pointerIndex;
+        }
+    }else if (selectedCube) {
+        if (pointerIndex >=0 && isAddedPoints) {
+            event.preventDefault();
+
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+
+            const intersectsRoad = raycaster.intersectObjects([...cube_objs,...points_arr, road_network_mesh], true);
+            if (intersectsRoad.length > 0 && intersectsRoad[0].object === road_network_mesh) {
+                const intersectionRoad = intersectsRoad[0];
+
+                const cubeIndex = cube_objs.indexOf(selectedCube);
+                if (cubeCircles[cubeIndex]) {
+                    cubeCircles[cubeIndex].forEach(circle => {
+                        if (circle.parent) scene.remove(circle);
+                        if (circle.geometry) circle.geometry.dispose();
+                        if (circle.material) circle.material.dispose();
+                    });
+                    cubeCircles[cubeIndex] = [];
+                }
+
+                const intersectionPointRoad = intersectionRoad.point;
+                aaa[cubeIndex].push(JSON.parse(JSON.stringify(intersectionPointRoad)));
+
+                aaa.forEach((pointsArray, arrIndex) => {
+                    if (!cubeCircles[arrIndex]) {
+                        cubeCircles[arrIndex] = [];
+                    }
+
+                    pointsArray.forEach((point, pointIndex) => {
+                        const intersectionNormalRoad = intersectionRoad.face.normal.clone().transformDirection(intersectionRoad.object.matrixWorld);
+
+                        const offsetDistance = 0.5;
+                        const offsetVector = intersectionNormalRoad.clone().multiplyScalar(offsetDistance);
+
+                        const geometry = new THREE.CircleGeometry(radius, segments);
+                        const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+                        const circle = new THREE.Mesh(geometry, material);
+                        circle.isDisposing = false;
+
+                        circle.position.set(point.x, point.y, point.z).add(offsetVector);
+                        circle.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), intersectionNormalRoad);
+
+                        scene.add(circle);
+                        cubeCircles[arrIndex].push(circle);
+
+                        const canvas = document.createElement("canvas");
+                        const size = 64;
+                        canvas.width = size;
+                        canvas.height = size;
+
+                        const context = canvas.getContext("2d");
+                        context.fillStyle = "black";
+                        context.font = "bold 72px Arial";
+                        context.textAlign = "center";
+                        context.textBaseline = "middle";
+                        context.strokeStyle = "black";
+                        context.fillText((pointIndex + 1).toString(), size / 2, size / 2);
+
+                        const texture = new THREE.CanvasTexture(canvas);
+                        const spriteMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true });
+                        const sprite = new THREE.Sprite(spriteMaterial);
+
+                        sprite.scale.set(2, 2, 1);
+                        sprite.position.copy(new THREE.Vector3(0, 0, 1));
+
+                        circle.add(sprite);
+                    });
+                    connectCirclesWithLines(arrIndex);
+                });
+            }
+        }
+    }
+}
+
+function changeColor (){
+    for (let i = 0; i < cube_objs.length; i++) {
+        if (i === pointerIndex && prevIndex!=pointerIndex) {
+            cube_objs[i].material.color.set(0xffff00);
+        }else if (i === pointerIndex && prevIndex==pointerIndex){
+            cube_objs[i].material.color.set(scenarioSettings.color_arr[i]);
+            pointerIndex = -1;
+        }
+         else {
+            cube_objs[i].material.color.set(scenarioSettings.color_arr[i]);
+        }
+        cube_objs[i].material.needsUpdate = true;
+    }
+}
+
+function loadCar(position, normal) {
+    const loader = new GLTFLoader();
+    loader.load(
+      'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/ToyCar/glTF-Binary/ToyCar.glb',
+      (gltf) => {
+        const car = gltf.scene;
+        car.scale.set(5, 5, 5);
+        car.position.copy(position);
+        car.position.z += 0.01;
+        const up = new THREE.Vector3(0, 0, 1);
+        const quat = new THREE.Quaternion().setFromUnitVectors(up, normal.normalize());
+        car.quaternion.copy(quat);
+        car.traverse((child) => {
+          if (child.isMesh) {
+            child.material.transparent = true;
+            child.material.opacity = 0.5;
+          }
+        });
+        scene.add(car);
+        transformControls.attach(car);
+        disposable_objs.push(car);
       }
-    }
+    );
   }
-
-rotatePosCubeButton.addEventListener('mousedown', () => {
-    const lstCb = disposable_objs[disposable_objs.length - 1];
-    stIntrvl = setInterval(()=>{
-        lstCb.rotation.z += Math.PI / 18;
-    }, 100);
-
-});
-rotatePosCubeButton.addEventListener('mouseup', () => {
-    clearInterval(stIntrvl);
-});
-// const rotateNegCubeButton = document.createElement('button');
-// rotateNegCubeButton.textContent = 'Отрицательный поворот куба';
-// rotateNegCubeButton.style.position = 'absolute';
-// rotateNegCubeButton.style.top = '160px';
-// rotateNegCubeButton.style.left = '20px';
-// document.body.appendChild(rotateNegCubeButton);
-
-// rotateNegCubeButton.addEventListener('click', () => {
-//     const lstCb = disposable_objs[disposable_objs.length - 1];
-//     lstCb.rotation.z -= Math.PI / 6;
-// });
-
-const gui = new dat.GUI();
-gui.add(PARAMS, 'load_file').name('📁 Load .xodr');
-gui.add(PARAMS, 'resolution', { Low : 1.0, Medium : 0.3, High : 0.02 }).name('📏  Detail').onChange((val) => {
-    loadOdrMap(true, false);
-});
-gui.add(PARAMS, 'spotlight').name("🔦 Spotlight");
-gui.add(PARAMS, 'fitView').name("⟲ Reset Camera");
-
-var gui_view_folder = gui.addFolder('View');
-gui_view_folder.add(PARAMS, 'view_mode', { Default : 'Default', 'Outlines' : 'Outlines' }).name("View Mode").onChange((val) => {
-    if (val == 'Default') {
-        road_network_mesh.visible = true;
-        roadmarks_mesh.visible = PARAMS.roadmarks;
-    } else if (val == 'Outlines') {
-        road_network_mesh.visible = false;
-        roadmarks_mesh.visible = false;
+  function connectCirclesWithLines() {
+    if (temp) {
+        temp.flat().forEach(line => {
+            if (line.parent) scene.remove(line);
+            if (line.geometry) line.geometry.dispose();
+            if (line.material) line.material.dispose();
+        });
     }
-});
-gui_view_folder.add(PARAMS, 'ref_line').name("Reference Line").onChange((val) => {
-    refline_lines.visible = val;
-});
-gui_view_folder.add(PARAMS, 'roadmarks').name("Roadmarks").onChange((val) => {
-    roadmarks_mesh.visible = val;
-    roadmark_outline_lines.visible = val;
-});
-gui_view_folder.add(PARAMS, 'wireframe').name("Wireframe").onChange((val) => {
-    road_network_material.wireframe = val;
-});
 
-var gui_attributes_folder = gui.addFolder('Load Attributes');
-gui_attributes_folder.add(PARAMS, 'lateralProfile').name("Lateral Profile");
-gui_attributes_folder.add(PARAMS, 'laneHeight').name("Lane Height");
-gui_attributes_folder.add(PARAMS, 'reload_map').name("Reload Map");
+    if (!temp || temp.length !== xxx.length) {
+        temp = new Array(xxx.length).fill(null).map(() => []);
+    }
 
+    function createAndAddLine(start, end, index) {
+        const startVec = new THREE.Vector3(start.x, start.y, start.z);
+        const endVec = new THREE.Vector3(end.x, end.y, end.z);
 
+        const geometry = new THREE.BufferGeometry().setFromPoints([startVec, endVec]);
+        const material = new THREE.LineBasicMaterial({ color: 0x00ff00 });
+        const line = new THREE.Line(geometry, material);
 
+        scene.add(line);
+        temp[index].push(line);
+    }
+
+    aaa.forEach((pointsArray, ind) => {
+        if (ind >= xxx.length) return;
+
+        if (!temp[ind]) temp[ind] = [];
+
+        temp[ind].forEach(line => {
+            if (line.parent) scene.remove(line);
+            if (line.geometry) line.geometry.dispose();
+            if (line.material) line.material.dispose();
+        });
+        temp[ind] = [];
+
+        if (pointsArray.length < 1) return;
+
+        createAndAddLine(xxx[ind], pointsArray[0], ind);
+
+        for (let i = 1; i < pointsArray.length; i++) {
+            createAndAddLine(pointsArray[i - 1], pointsArray[i], ind);
+        }
+    });
+
+    console.log(temp);
+    console.log(xxx);
+}
+const scenarioSettings = {
+    scenario_id: "",
+    scenario_name: "Default Scenario",
+    vehicle: "car",
+    weather: "ClearNoon",
+    arr_car: [],
+    color_arr: [Number('0x800000')],
+  };
+  const handleSaveScenario = () => {
+    console.log(scenarioSettings.arr_car)
+    const scenario = {
+      scenario_id: scenarioSettings.scenario_id || null,
+      scenario_name: scenarioSettings.scenario_name,
+      weather: scenarioSettings.weather,
+      scenario: [
+        {
+          vehicle: scenarioSettings.vehicle,
+          path: cube_objs
+            .filter(obj=> obj.position && obj.position.x !== undefined)
+            .map((obj, index) => ({
+              x: obj.position.x,
+              y: obj.position.y,
+              z: obj.position.z,
+              model: scenarioSettings.arr_car[index],
+              color: scenarioSettings.color_arr[index],
+              rotation: Math.floor(obj.rotation.z * 57.32, 0),
+              selected: pointerIndex == index ? true : false,
+              points: cubeCircles[index] ? cubeCircles[index].map((point, point_id) => ({
+                id: point_id,
+                x: point.position.x,
+                y: point.position.y,
+                z: point.position.z
+              })) : []
+            })),
+        },
+        {
+          vehicle: "RSU",
+          path: points_objs
+            .filter(obj => obj.position && obj.position.x !== undefined)
+            .map(obj => ({
+              x: obj.position.x,
+              y: obj.position.y,
+              z: obj.position.z
+            })),
+          active: false,
+          color: { r: 127, g: 127, b: 127 }
+        }
+      ]
+    };
+
+    console.log(JSON.stringify(scenario, null, 2));
+    //   let host = "http://localhost:" + PORT;
+//   if (!scenario.scenario_id)
+//     host += "/scenario/create";
+//   else
+//     host += "/scenario/edit";
+
+//   console.log("Saving scenario:", JSON.stringify(scenario));
+//   const response = await fetch(host, {
+//     method: 'POST',
+//     headers: { 'Content-Type': 'application/json' },
+//     body: JSON.stringify(scenario)
+//   });
+
+//   if (response.ok) {
+//     console.log("Сценарий успешно сохранён");
+//   } else {
+//     console.error("Ошибка при сохранении сценария");
+//   }
+  };
 
 function showModeLabel() {
     const lbl = document.getElementById('modeLabel');
@@ -906,116 +1107,44 @@ function hideModeLabel() {
     const lbl = document.getElementById('modeLabel');
     if (lbl) lbl.style.display = 'none';
 }
-
-var gui_controls_folder = gui.addFolder('Управление');
-gui_controls_folder.add(PARAMS, 'addCubeMode').name('Добавить куб');
-gui_controls_folder.add(PARAMS, 'deleteCube').name('Удалить_последний куб');
-gui_controls_folder.add(PARAMS, 'addPointMode').name('Установить точку');
-gui_controls_folder.add(PARAMS, 'deletePoint').name('Удалить_последнюю точку');
-gui_controls_folder.add(PARAMS, 'rotatePosCube').name('Поворот куба');
-gui_controls_folder.add(PARAMS, 'translateMode').name('Перемещение');
-gui_controls_folder.add(PARAMS, 'rotateMode').name('Вращение');
-gui_controls_folder.add(PARAMS, 'scaleMode').name('Масштаб');
-
-window.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape' || event.key === 'Esc') {
-    transformControls.detach();
-  }
-});
-
-
 window.addEventListener('mousedown', onMouseDownAttach);
-
-function onMouseDownAttach(event) {
-  if (!PARAMS.isAddCubeModeActive && !PARAMS.isAddPointModeActive) {
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-    raycaster.setFromCamera(mouse, camera);
-
-    const intersects = raycaster.intersectObjects(disposable_objs);
-    if (intersects.length > 0) {
-      transformControls.attach(intersects[0].object);
+window.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+      transformControls.detach();
     }
-  }
-}
-
-const scenarioSettings = {
-  scenario_id: "",
-  scenario_name: "Default Scenario",
-  weather: "ClearNoon"
-};
-
-const handleSaveScenario = async () => {
-  const scenario = {
-    scenario_id: scenarioSettings.scenario_id || null,
-    scenario_name: scenarioSettings.scenario_name,
-    weather: scenarioSettings.weather,
-    scenario: [
-      {
-        vehicle: "chery.tiggo.7",
-        path: disposable_objs
-          .filter(obj => obj.position && obj.position.x !== undefined)
-          .map(obj => ({
-            x: obj.position.x,
-            y: obj.position.y,
-            z: obj.position.z
-          })),
-        active: true,
-        color: { r: 127, g: 12, b: 127 }
-      },
-      {
-        vehicle: "",
-        path: points_objs
-          .filter(obj => obj.position && obj.position.x !== undefined)
-          .map(obj => ({
-            x: obj.position.x,
-            y: obj.position.y,
-            z: obj.position.z
-          })),
-        active: false,
-        color: { r: 127, g: 127, b: 127 }
-      }
-    ]
-  };
-  console.log(scenario)
-  let host = "http://localhost:" + PORT;
-  if (!scenario.scenario_id)
-    host += "/scenario/create";
-  else
-    host += "/scenario/edit";
-
-  console.log("Saving scenario:", JSON.stringify(scenario));
-  const response = await fetch(host, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(scenario)
   });
 
-  if (response.ok) {
-    console.log("Сценарий успешно сохранён");
-  } else {
-    console.error("Ошибка при сохранении сценария");
-  }
-};
+function onMouseDownAttach(event) {
+   if (!PARAMS.isAddCubeModeActive && !PARAMS.isAddPointModeActive) {
+     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+     raycaster.setFromCamera(mouse, camera);
+
+     const intersects = raycaster.intersectObjects(disposable_objs);
+     if (intersects.length > 0) {
+       transformControls.attach(intersects[0].object);
+     }
+   }
+ }
 
 const gui_save_folder = gui.addFolder('Сохранение сценария');
-gui_save_folder.add(scenarioSettings, 'scenario_id').name("ID сценария");
-gui_save_folder.add(scenarioSettings, 'scenario_name').name("Имя сценария");
-gui_save_folder.add(scenarioSettings, 'weather', [
-  "ClearNoon",
-  "CloudyNoon",
-  "WetNoon",
-  "WetCloudyNoon",
-  "SoftRainNoon",
-  "MidRainyNoon",
-  "HardRainNoon",
-  "ClearSunset",
-  "CloudySunset",
-  "WetSunset",
-  "WetCloudySunset",
-  "SoftRainSunset",
-  "MidRainSunset",
-  "HardRainSunset"
-]).name("Погода");
-gui_save_folder.add({ saveScenario: handleSaveScenario }, 'saveScenario').name("Сохранить сценарий");
-
+  gui_save_folder.add(scenarioSettings, 'scenario_id').name("ID сценария");
+  gui_save_folder.add(scenarioSettings, 'scenario_name').name("Имя сценария");
+  gui_save_folder.add(scenarioSettings, 'vehicle').name("Вид транспорта");
+  gui_save_folder.add(scenarioSettings, 'weather', [
+    "ClearNoon",
+    "CloudyNoon",
+    "WetNoon",
+    "WetCloudyNoon",
+    "SoftRainNoon",
+    "MidRainyNoon",
+    "HardRainNoon",
+    "ClearSunset",
+    "CloudySunset",
+    "WetSunset",
+    "WetCloudySunset",
+    "SoftRainSunset",
+    "MidRainSunset",
+    "HardRainSunset"
+  ]).name("Погода");
+  gui_save_folder.add({ saveScenario: handleSaveScenario }, 'saveScenario').name("Сохранить сценарий");
