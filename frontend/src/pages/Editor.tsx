@@ -6,6 +6,8 @@ import { GLTFLoader } from 'three-stdlib';
 import * as dat from 'dat.gui';
 import { Notyf } from 'notyf';
 import 'notyf/notyf.min.css';
+import { HexColorPicker } from 'react-colorful';
+import ReactDOM from 'react-dom';
 
 import {
   encodeUInt32,
@@ -173,7 +175,80 @@ const Editor = () => {
     const gui_controls_folder = gui.addFolder('Controls');
     gui_controls_folder.add(PARAMS, 'addCube').name('Добавить машину');
     gui_controls_folder.add(PARAMS, 'model').name("Имя машины").onChange((val) => currentCar = val);
-    gui_controls_folder.add(PARAMS, 'color').name("Цвет машины").onChange((val) => currentColor = val);
+    
+    let colorPickerRoot;
+    let colorBox;
+    let colorPickerContainer;
+    
+    const colorControlContainer = document.createElement('div');
+    colorControlContainer.className = 'dg color-picker-container';
+    colorControlContainer.style.marginTop = '10px';
+    colorControlContainer.style.marginBottom = '10px';
+    colorControlContainer.style.padding = '0 10px';
+    
+    const colorLabel = document.createElement('div');
+    colorLabel.innerHTML = 'Цвет машины';
+    colorLabel.className = 'property-name';
+    colorLabel.style.float = 'left';
+    colorControlContainer.appendChild(colorLabel);
+    
+    const colorPickerWrapper = document.createElement('div');
+    colorPickerWrapper.style.float = 'right';
+    colorPickerWrapper.style.width = '50%';
+    colorPickerWrapper.style.position = 'relative';
+    colorControlContainer.appendChild(colorPickerWrapper);
+    
+    colorBox = document.createElement('div');
+    colorBox.style.width = '30px';
+    colorBox.style.height = '20px';
+    colorBox.style.backgroundColor = '#00ff00';
+    colorBox.style.cursor = 'pointer';
+    colorBox.style.border = '1px solid #ccc';
+    colorBox.style.float = 'right';
+    colorPickerWrapper.appendChild(colorBox);
+    
+    colorPickerContainer = document.createElement('div');
+    colorPickerContainer.style.position = 'absolute';
+    colorPickerContainer.style.right = '0';
+    colorPickerContainer.style.top = '25px';
+    colorPickerContainer.style.zIndex = '9999';
+    colorPickerContainer.style.display = 'none';
+    colorPickerWrapper.appendChild(colorPickerContainer);
+    
+    const controlsFolder = gui_controls_folder.__ul;
+    controlsFolder.appendChild(colorControlContainer);
+    
+    colorPickerRoot = document.createElement('div');
+    colorPickerContainer.appendChild(colorPickerRoot);
+    
+    ReactDOM.render(
+      React.createElement(HexColorPicker, {
+        color: '#00ff00',
+        onChange: (color) => {
+          currentColor = color.replace('#', '');
+          colorBox.style.backgroundColor = color;
+        }
+      }),
+      colorPickerRoot
+    );
+    
+    const handleColorBoxClick = (e) => {
+      e.stopPropagation();
+      colorPickerContainer.style.display = colorPickerContainer.style.display === 'none' ? 'block' : 'none';
+    };
+    
+    const handleDocumentClick = () => {
+      colorPickerContainer.style.display = 'none';
+    };
+    
+    const handlePickerContainerClick = (e) => {
+      e.stopPropagation();
+    };
+    
+    colorBox.addEventListener('click', handleColorBoxClick);
+    document.addEventListener('click', handleDocumentClick);
+    colorPickerContainer.addEventListener('click', handlePickerContainerClick);
+    
     gui_controls_folder.add(PARAMS, 'deleteCube').name('Удалить куб');
     gui_controls_folder.add(PARAMS, 'addPoint').name('Добавить RSU');
     gui_controls_folder.add(PARAMS, 'deletePoint').name('Удалить RSU');
@@ -1019,6 +1094,19 @@ const Editor = () => {
       window.removeEventListener('mousemove', onDocumentMouseMove);
       window.removeEventListener('dblclick', onDocumentMouseDbClick);
       window.removeEventListener('click', onDocumentMouseClick);
+      
+      if (colorBox) {
+        colorBox.removeEventListener('click', handleColorBoxClick);
+      }
+      document.removeEventListener('click', handleDocumentClick);
+      if (colorPickerContainer) {
+        colorPickerContainer.removeEventListener('click', handlePickerContainerClick);
+      }
+      
+      if (colorPickerRoot) {
+        ReactDOM.unmountComponentAtNode(colorPickerRoot);
+      }
+      
       gui.destroy();
     };
   }, []);
