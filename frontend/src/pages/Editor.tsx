@@ -8,6 +8,7 @@ import { Notyf } from 'notyf';
 import 'notyf/notyf.min.css';
 import { HexColorPicker } from 'react-colorful';
 import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
 import {
   encodeUInt32,
@@ -176,7 +177,6 @@ const Editor = () => {
     gui_controls_folder.add(PARAMS, 'addCube').name('Добавить машину');
     gui_controls_folder.add(PARAMS, 'model').name("Имя машины").onChange((val) => currentCar = val);
     
-    let colorPickerRoot;
     let colorBox;
     let colorPickerContainer;
     
@@ -218,19 +218,20 @@ const Editor = () => {
     const controlsFolder = gui_controls_folder.__ul;
     controlsFolder.appendChild(colorControlContainer);
     
-    colorPickerRoot = document.createElement('div');
-    colorPickerContainer.appendChild(colorPickerRoot);
+    const colorPickerRootElement = document.createElement('div');
+    colorPickerContainer.appendChild(colorPickerRootElement);
     
-    ReactDOM.render(
+    const colorPickerRoot = createRoot(colorPickerRootElement);
+    colorPickerRoot.render(
       React.createElement(HexColorPicker, {
         color: '#00ff00',
         onChange: (color) => {
           currentColor = color.replace('#', '');
           colorBox.style.backgroundColor = color;
         }
-      }),
-      colorPickerRoot
+      })
     );
+
     
     const handleColorBoxClick = (e) => {
       e.stopPropagation();
@@ -1108,7 +1109,7 @@ const Editor = () => {
       }
       
       if (colorPickerRoot) {
-        ReactDOM.unmountComponentAtNode(colorPickerRoot);
+        colorPickerRoot.unmount();
       }
       
       gui.destroy();
