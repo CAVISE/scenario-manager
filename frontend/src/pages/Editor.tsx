@@ -237,8 +237,11 @@ const Editor = () => {
       colorPickerContainer.style.display = colorPickerContainer.style.display === 'none' ? 'block' : 'none';
     };
     
-    const handleDocumentClick = () => {
-      colorPickerContainer.style.display = 'none';
+    const handleDocumentClick = (e) => {
+      console.log('handleDocumentClick triggered', e.target);
+      if (e.target !== colorBox && !colorPickerContainer.contains(e.target)) {
+        colorPickerContainer.style.display = 'none';
+      }
     };
     
     const handlePickerContainerClick = (e) => {
@@ -868,6 +871,7 @@ const Editor = () => {
       }
     }
     function onDocumentMouseClick(event) {
+      console.log('onDocumentMouseClick triggered', event.target);
       // Если не в режиме добавления кубов/точек
       if (!isAddCubeModeActive && !isAddPointModeActive && !isAddedPoints) {
         event.preventDefault();
@@ -881,7 +885,7 @@ const Editor = () => {
         if (intersects.length > 0) {
           const intersectionPoint = intersects[0].point;
 
-          if (isRoadObject(intersects[0].object)) return;
+          if (isRoadObject(intersects[0].object, road_network_mesh)) return;
 
           for (let i = 0; i < cube_objs.length; i++) {
             const dist = cube_objs[i].position.distanceTo(intersectionPoint);
