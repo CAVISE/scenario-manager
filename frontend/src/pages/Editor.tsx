@@ -16,6 +16,7 @@ import {
   isValid,
   isRoadObject
 } from '../helpers/editorhelper';
+import { X } from '@mui/icons-material';
 
 
 declare function libOpenDrive(): Promise<never>;
@@ -261,6 +262,7 @@ const Editor = () => {
     gui_controls_folder.add(PARAMS, 'rotateMode').name('Вращение');
     gui_controls_folder.add(PARAMS, 'scaleMode').name('Масштаб');
     gui_controls_folder.add(PARAMS, 'addDirectionPoints').name('Добавить точки');
+    
     let ModuleOpenDrive = null;
     let OpenDriveMap = null;
     var refline_lines = null;
@@ -297,9 +299,9 @@ const Editor = () => {
     let currentColor = '00ff00';
     let rotationInterval;
     let isRotating = false;
-    const xxx = [{x: -82.25002685501826, y: 78.50328235312159, z: 2.842170943040401e-14}];
-    const aaa = [[{x: -111.04339870008958, y: 81.25687140209173, z: 0}, {x: -124.13687116589833, y: 81.40780136061142, z: 0}]];
-    const yyy = [];
+    let xxx = [];
+    let aaa = [];
+    let yyy = [];
     const buildings = [];
     const COLORS = {
       road: 1.0,
@@ -479,6 +481,9 @@ const Editor = () => {
         selectedCube = null;
         currentColor = '00ff00';
         currentCar = '';
+        yyy = []
+        aaa = []
+        xxx = []
         scenarioSettings.arr_car = [];
         scenarioSettings.color_arr = [];
       }
@@ -786,6 +791,7 @@ const Editor = () => {
         }
         xxx.push(JSON.parse(JSON.stringify(intersectionPoint)));
         cube_objs = [];
+        console.log(xxx)
         disposable_objs = [];
         aaa.push([]);
         xxx.map((cube, i) => {
@@ -903,62 +909,79 @@ const Editor = () => {
         }
       }
 
-      else if (selectedCube && pointerIndex >= 0 && isAddedPoints) {
-        event.preventDefault();
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-        raycaster.setFromCamera(mouse, camera);
-        const intersectsRoad = raycaster.intersectObjects([...cube_objs, ...points_arr, road_network_mesh], true);
+      else if (selectedCube) {
+        if (pointerIndex >=0 && isAddedPoints) {
+            event.preventDefault();
 
-        if (intersectsRoad.length > 0 && intersectsRoad[0].object === road_network_mesh) {
-          const intersectionRoad = intersectsRoad[0];
-          const cubeIndex = cube_objs.indexOf(selectedCube);
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-          if (cubeCircles[cubeIndex]) {
-            cubeCircles[cubeIndex].forEach(circle => {
-              if (circle.parent) scene.remove(circle);
-              if (circle.geometry) circle.geometry.dispose();
-              if (circle.material) circle.material.dispose();
-            });
-            cubeCircles[cubeIndex] = [];
-          }
-          const intersectionPointRoad = intersectionRoad.point;
+            raycaster.setFromCamera(mouse, camera);
 
-          aaa[cubeIndex].push(intersectionPointRoad.clone());
+            const intersectsRoad = raycaster.intersectObjects([...cube_objs,...points_arr, road_network_mesh], true);
+            if (intersectsRoad.length > 0 && intersectsRoad[0].object === road_network_mesh) {
+                const intersectionRoad = intersectsRoad[0];
 
-          aaa[cubeIndex].forEach((pt, ptIndex) => {
-            const intersectionNormalRoad = intersectionRoad.face.normal
-              .clone()
-              .transformDirection(intersectionRoad.object.matrixWorld);
-            const offsetDistance = 0.5;
-            const offsetVector = intersectionNormalRoad.clone().multiplyScalar(offsetDistance);
-            const geometry = new THREE.CircleGeometry(radius, segments);
-            const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
-            const circle = new THREE.Mesh(geometry, material);
-            circle.isDisposing = false;
-            circle.position.copy(pt).add(offsetVector);
-            circle.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), intersectionNormalRoad);
-            scene.add(circle);
-            if (!cubeCircles[cubeIndex]) cubeCircles[cubeIndex] = [];
-            cubeCircles[cubeIndex].push(circle);
+                const cubeIndex = cube_objs.indexOf(selectedCube);
+                if (cubeCircles[cubeIndex]) {
+                    cubeCircles[cubeIndex].forEach(circle => {
+                        if (circle.parent) scene.remove(circle);
+                        if (circle.geometry) circle.geometry.dispose();
+                        if (circle.material) circle.material.dispose();
+                    });
+                    cubeCircles[cubeIndex] = [];
+                }
 
-            const canvas = document.createElement("canvas");
-            const size = 64;
-            canvas.width = size;
-            canvas.height = size;
-            const context = canvas.getContext("2d");
-            context.fillStyle = "black";
-            context.font = "bold 72px Arial";
-            context.textAlign = "center";
-            context.textBaseline = "middle";
-            context.fillText((ptIndex + 1).toString(), size / 2, size / 2);
-            const texture = new THREE.CanvasTexture(canvas);
-            const spriteMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true });
-            const sprite = new THREE.Sprite(spriteMaterial);
-            sprite.scale.set(2, 2, 1);
-            sprite.position.set(0, 0, 1);
-            circle.add(sprite);
-          });
+                const intersectionPointRoad = intersectionRoad.point;
+                aaa[cubeIndex].push(JSON.parse(JSON.stringify(intersectionPointRoad)));
+
+                aaa.forEach((pointsArray, arrIndex) => {
+                    if (!cubeCircles[arrIndex]) {
+                        cubeCircles[arrIndex] = [];
+                    }
+
+                    pointsArray.forEach((point, pointIndex) => {
+                        const intersectionNormalRoad = intersectionRoad.face.normal.clone().transformDirection(intersectionRoad.object.matrixWorld);
+
+                        const offsetDistance = 0.5;
+                        const offsetVector = intersectionNormalRoad.clone().multiplyScalar(offsetDistance);
+
+                        const geometry = new THREE.CircleGeometry(radius, segments);
+                        const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+                        const circle = new THREE.Mesh(geometry, material);
+                        circle.isDisposing = false;
+
+                        circle.position.set(point.x, point.y, point.z).add(offsetVector);
+                        circle.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), intersectionNormalRoad);
+
+                        scene.add(circle);
+                        cubeCircles[arrIndex].push(circle);
+
+                        const canvas = document.createElement("canvas");
+                        const size = 64;
+                        canvas.width = size;
+                        canvas.height = size;
+
+                        const context = canvas.getContext("2d");
+                        context.fillStyle = "black";
+                        context.font = "bold 72px Arial";
+                        context.textAlign = "center";
+                        context.textBaseline = "middle";
+                        context.strokeStyle = "black";
+                        context.fillText((pointIndex + 1).toString(), size / 2, size / 2);
+
+                        const texture = new THREE.CanvasTexture(canvas);
+                        const spriteMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true });
+                        const sprite = new THREE.Sprite(spriteMaterial);
+
+                        sprite.scale.set(2, 2, 1);
+                        sprite.position.copy(new THREE.Vector3(0, 0, 1));
+
+                        circle.add(sprite);
+                    });
+                    connectCirclesWithLines(arrIndex);
+                });
+            }
         }
       }
     }
@@ -1044,10 +1067,12 @@ const Editor = () => {
       vehicle: "car",
       weather: "ClearNoon",
       arr_car: [],
-      color_arr: [Number('0x800000')],
+      color_arr: [],
     };
+    
     const handleSaveScenario = () => {
       console.log(scenarioSettings.arr_car);
+      console.log(cube_objs, xxx)
       const scenario = {
         scenario_id: scenarioSettings.scenario_id || null,
         scenario_name: scenarioSettings.scenario_name,
@@ -1063,11 +1088,11 @@ const Editor = () => {
               color: scenarioSettings.color_arr[index],
               rotation: Math.floor(obj.rotation.z * 57.32, 0),
               selected: pointerIndex == index ? true : false,
-              points: cubeCircles[index] ? cubeCircles[index].map((point, point_id) => ({
+              points: aaa[index] ? aaa[index].map((point, point_id) => ({
                 id: point_id,
-                x: point.position.x,
-                y: point.position.y,
-                z: point.position.z
+                x: point.x,
+                y: point.y,
+                z: point.z
               })) : []
             })),
           },
@@ -1085,6 +1110,27 @@ const Editor = () => {
       };
       console.log(JSON.stringify(scenario, null, 2));
     };
+    const gui_save_folder = gui.addFolder('Сохранение сценария');
+  gui_save_folder.add(scenarioSettings, 'scenario_id').name("ID сценария");
+  gui_save_folder.add(scenarioSettings, 'scenario_name').name("Имя сценария");
+  gui_save_folder.add(scenarioSettings, 'vehicle').name("Вид транспорта");
+  gui_save_folder.add(scenarioSettings, 'weather', [
+    "ClearNoon",
+    "CloudyNoon",
+    "WetNoon",
+    "WetCloudyNoon",
+    "SoftRainNoon",
+    "MidRainyNoon",
+    "HardRainNoon",
+    "ClearSunset",
+    "CloudySunset",
+    "WetSunset",
+    "WetCloudySunset",
+    "SoftRainSunset",
+    "MidRainSunset",
+    "HardRainSunset"
+  ]).name("Погода");
+  gui_save_folder.add({ saveScenario: handleSaveScenario }, 'saveScenario').name("Сохранить сценарий");
     function showModeLabel() {
       const lbl = document.getElementById('modeLabel');
       if (lbl) lbl.style.display = 'block';
@@ -1114,6 +1160,7 @@ const Editor = () => {
       
       gui.destroy();
     };
+    
   }, []);
   return (
     <div>
