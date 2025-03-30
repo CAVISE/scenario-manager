@@ -16,7 +16,7 @@ import {
   isValid,
   isRoadObject
 } from '../helpers/editorhelper';
-import { X } from '@mui/icons-material';
+import { CloseFullscreen, X } from '@mui/icons-material';
 
 
 declare function libOpenDrive(): Promise<never>;
@@ -120,7 +120,10 @@ const Editor = () => {
         }
       },
       rotateCube: () => {
-        selectedCube.rotation.z += Math.PI / 18;
+        console.log(xxx, scenarioSettings.color_arr)
+        loadCube();
+        loadPoints();
+        loadRSU();
       },
       rotatePosCube: function() {
         if (disposable_objs.length === 0) return;
@@ -262,7 +265,15 @@ const Editor = () => {
     gui_controls_folder.add(PARAMS, 'rotateMode').name('Вращение');
     gui_controls_folder.add(PARAMS, 'scaleMode').name('Масштаб');
     gui_controls_folder.add(PARAMS, 'addDirectionPoints').name('Добавить точки');
-    
+    const scenarioSettings = {
+      scenario_id: "",
+      scenario_name: "Default Scenario",
+      vehicle: "car",
+      weather: "ClearNoon",
+      arr_car: [],
+      color_arr: [],
+      // color_arr: ['ffff00'],
+    };
     let ModuleOpenDrive = null;
     let OpenDriveMap = null;
     var refline_lines = null;
@@ -277,6 +288,7 @@ const Editor = () => {
     const points_arr = [];
     let circles_objs = [];
     let circles_arr = [];
+    let isRotating = false
     const cubeCircles = [];
     const mouse = new THREE.Vector2();
     const raycaster = new THREE.Raycaster();
@@ -293,16 +305,230 @@ const Editor = () => {
     let isAddedPoints = false;
     const radius = 2;
     const segments = 32;
+    const testJson = {
+      scenario_id: null,
+      scenario_name: "Default Scenario",
+      weather: "ClearNoon",
+      scenario: [
+        {
+          vehicle: "car",
+          path: [
+            {
+               x : -138.2953869274191,
+               y: 89.05726747592811,
+               z : 1.5100000000000036,
+               model : "car_969",
+               color : 16776960,
+               rotation : 100,
+               selected : true,
+               points : [
+                {
+                   id : 0,
+                   x : -183.2953869274191,
+                   y : 39.05726747592811,
+                   z : 3.552713678800501e-15
+                },
+                {
+                   id : 1,
+                   x : -110.41583864819692,
+                   y : 81.12617116602812,
+                   z : 2.842170943040401e-14
+                },
+                {
+                   id : 2,
+                   x : -101.01518096679271,
+                   y : 89.8920570153185,
+                   z : 1.4210854715202004e-14
+                },
+                {
+                   id : 3,
+                   x : -91.9815356077443,
+                   y : 83.37008105521086,
+                   z : 0
+                },
+                {
+                   id : 4,
+                   x : -86.34099261142265,
+                   y : 75.52155687382901,
+                   z : 0
+                }
+              ]
+            },
+            {
+               x : -61.59939754987944,
+               y : 64.26489443245168,
+               z : 1.5099999999999716,
+               model : "car_969",
+               color : 65280,
+               rotation : 100,
+               selected : false,
+               points : [
+                {
+                   id : 0,
+                   x : -51.38231052279476,
+                   y : 48.75916001158287,
+                   z : 0
+                },
+                {
+                   id : 1,
+                   x : -22.551314885178158,
+                   y : 28.158563255324104,
+                   z : 1.4210854715202004e-14
+                },
+                {
+                   id : 2,
+                   x : -0.006571784489324273,
+                   y : -8.703257833606656,
+                   z : 0
+                },
+                {
+                   id : 3,
+                   x : -35.16420285504605,
+                   y : -35.30851438286045,
+                   z : 0
+                },
+                {
+                   id : 4,
+                   x : -66.71680241731535,
+                   y : -56.74119942736823,
+                   z : -1.4210854715202004e-14
+                },
+                {
+                   id : 5,
+                   x : -80.6171608596112,
+                   y : -71.0627520076352,
+                   z : 0
+                }
+              ]
+            },
+            {
+               x : -134.45953315241658,
+               y : -82.34431733600945,
+               z : 1.51,
+               color : 65280,
+               rotation : 40,
+               selected : false,
+               points : [
+                {
+                   id : 0,
+                   x : -161.64387575504807,
+                   y : -67.5542344183929,
+                   z : -1.4210854715202004e-14
+                },
+                {
+                   id : 1,
+                   x : -178.80492725823115,
+                   y : -51.44939427907591,
+                   z : 0
+                },
+                {
+                   id : 2,
+                   x : -185.18773733089986,
+                   y : -39.028371588591206,
+                   z : 0
+                },
+                {
+                   id : 3,
+                   x : -201.30293133390109,
+                   y : -18.594603622679795,
+                   z : -1.4210854715202004e-14
+                },
+                {
+                   id : 4,
+                   x : -200.94291510048748,
+                   y : -3.70421638084588,
+                   z : 0
+                },
+                {
+                   id : 5,
+                   x : -193.51847531144395,
+                   y : 6.834179272124157,
+                   z : 1.4210854715202004e-14
+                },
+                {
+                   id : 6,
+                   x : -202.29829966731802,
+                   y : 26.19783874891074,
+                   z : 1.4210854715202004e-14
+                }
+              ]
+            }
+          ]
+        },
+        {
+           vehicle : "RSU",
+           path : [
+            {
+               x : -85.96810418078883,
+               y : 106.33895628454718,
+               z : 2.51
+            },
+            {
+               x : -166.1103228735915,
+               y : 29.752668693165518,
+               z : 2.51
+            },
+            {
+               x : -187.56602560247606,
+               y : 62.73386137286441,
+               z : 2.51
+            }
+          ],
+           active : false,
+           color : {
+             r : 127,
+             g : 127,
+             b : 127
+          }
+        }
+      ]
+    }
+    let rotationArr = []
     var temp: any[] = [];
-    const ind = 0;
     let currentCar = '';
     let currentColor = '00ff00';
-    let rotationInterval;
-    let isRotating = false;
-    let xxx = [];
-    let aaa = [];
-    let yyy = [];
-    const buildings = [];
+    // let xxx = [{x: -138.2953869274191, y: 89.05726747592811, z: 3.552713678800501e-15}];
+    // let aaa = [[{x: -183.2953869274191, y: 39.05726747592811, z: 3.552713678800501e-15}, {x: -110.41583864819692, y: 81.12617116602812, z: 2.842170943040401e-14}]];
+    // let yyy = [{x: -85.96810418078883, y: 106.33895628454718, z: 0}];
+    const xxx = [];
+    const aaa = [];
+    const yyy = [];
+
+    for (const item of testJson.scenario) {
+        if (item.vehicle === 'car') {
+            const carPaths = [];
+            const carPoints = [];
+            
+            item.path.forEach(coordinate => {
+                xxx.push({
+                    x: coordinate.x,
+                    y: coordinate.y,
+                    z: coordinate.z
+                });
+                scenarioSettings.color_arr.push(coordinate.color)
+                rotationArr.push(coordinate.rotation)
+                const pointsGroup = [];
+                coordinate.points.forEach(point => {
+                    pointsGroup.push({
+                        x: point.x,
+                        y: point.y,
+                        z: point.z
+                    });
+                });
+                aaa.push(pointsGroup);
+            });
+        }
+        else if (item.vehicle === 'RSU') {
+            item.path.forEach(coordinate => {
+                yyy.push({
+                    x: coordinate.x,
+                    y: coordinate.y,
+                    z: coordinate.z
+                });
+            });
+        }
+    }
+    console.log(xxx,scenarioSettings.color_arr, yyy, aaa, rotationArr)
     const COLORS = {
       road: 1.0,
       roadmark: 1.0,
@@ -794,18 +1020,7 @@ const Editor = () => {
         console.log(xxx)
         disposable_objs = [];
         aaa.push([]);
-        xxx.map((cube, i) => {
-          const geometry = new THREE.BoxGeometry(3, 6, 3);
-          const material = new THREE.MeshBasicMaterial({ color: scenarioSettings.color_arr[i] });
-          cube = new THREE.Mesh(geometry, material);
-          cube.isDisposing = false;
-          cube.position.set(xxx[i].x, xxx[i].y, xxx[i].z);
-          cube.position.z += geometry.parameters.width / 2 + 0.01;
-          scene.add(cube);
-          cube_objs.push(cube);
-          disposable_objs.push(cube);
-          isAddCubeModeActive = false;
-        });
+        loadCube()
       }
       if (intersects.length > 0 && isAddPointModeActive && intersects[0].object === road_network_mesh) {
         const intersectionPoint = intersects[0].point;
@@ -815,51 +1030,13 @@ const Editor = () => {
           if (point.material) point.material.dispose();
           scene.remove(point);
         }
-        yyy.map((point, i) => {
-          const geometry = new THREE.BoxGeometry(5, 5, 5);
-          const material = new THREE.MeshBasicMaterial({ color: 0x0000ff });
-          point = new THREE.Mesh(geometry, material);
-          point.isDisposing = false;
-          point.position.set(yyy[i].x, yyy[i].y, yyy[i].z);
-          point.position.z += geometry.parameters.height / 2 + 0.01;
-          const iconSize = 4;
-          const iconGeometry = new THREE.PlaneGeometry(iconSize, iconSize);
-          const iconTexture = new THREE.TextureLoader().load('./globe-solid.svg');
-          const iconMaterial = new THREE.MeshBasicMaterial({ map: iconTexture, side: THREE.DoubleSide, transparent: true });
-          const icon = new THREE.Mesh(iconGeometry, iconMaterial);
-          icon.position.set(0, 0, geometry.parameters.height / 2);
-          icon.quaternion.copy(point.quaternion);
-          point.add(icon);
-          scene.add(point);
-          points_objs.push(point);
-          points_arr.push(point);
-          isAddPointModeActive = false;
-        });
+        loadRSU();
       } else if (isAddPointModeActive && intersects.length === 0) {
         const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
         const intersectionPoint = new THREE.Vector3();
         if (raycaster.ray.intersectPlane(plane, intersectionPoint)) {
           yyy.push(JSON.parse(JSON.stringify(intersectionPoint)));
-          yyy.map((point, i) => {
-            const geometry = new THREE.BoxGeometry(5, 5, 5);
-            const material = new THREE.MeshBasicMaterial({ color: 0x0000ff });
-            point = new THREE.Mesh(geometry, material);
-            point.isDisposing = false;
-            point.position.set(yyy[i].x, yyy[i].y, yyy[i].z);
-            point.position.z += geometry.parameters.height / 2 + 0.01;
-            const iconSize = 4;
-            const iconGeometry = new THREE.PlaneGeometry(iconSize, iconSize);
-            const iconTexture = new THREE.TextureLoader().load('./globe-solid.svg');
-            const iconMaterial = new THREE.MeshBasicMaterial({ map: iconTexture, side: THREE.DoubleSide, transparent: true });
-            const icon = new THREE.Mesh(iconGeometry, iconMaterial);
-            icon.position.set(0, 0, geometry.parameters.height / 2);
-            icon.quaternion.copy(point.quaternion);
-            point.add(icon);
-            scene.add(point);
-            points_objs.push(point);
-            points_arr.push(point);
-            isAddPointModeActive = false;
-          });
+          loadRSU();
         }
       } else if (intersects.length === 0) {
         /*const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
@@ -935,24 +1112,82 @@ const Editor = () => {
                 const intersectionPointRoad = intersectionRoad.point;
                 aaa[cubeIndex].push(JSON.parse(JSON.stringify(intersectionPointRoad)));
 
-                aaa.forEach((pointsArray, arrIndex) => {
+                loadPoints();
+            }
+        }
+      }
+    }
+
+    function changeColor() {
+      for (let i = 0; i < cube_objs.length; i++) {
+        if (i === pointerIndex && prevIndex != pointerIndex) {
+          cube_objs[i].material.color.set(0xffff00);
+        } else if (i === pointerIndex && prevIndex == pointerIndex) {
+          cube_objs[i].material.color.set(scenarioSettings.color_arr[i]);
+          pointerIndex = -1;
+        } else {
+          cube_objs[i].material.color.set(scenarioSettings.color_arr[i]);
+        }
+        cube_objs[i].material.needsUpdate = true;
+      }
+    }
+    function loadCube(){
+        xxx.map((cube, i) => {
+          const geometry = new THREE.BoxGeometry(3, 6, 3);
+          const material = new THREE.MeshBasicMaterial({ color: scenarioSettings.color_arr[i] });
+          cube = new THREE.Mesh(geometry, material);
+          cube.isDisposing = false;
+          cube.position.set(xxx[i].x, xxx[i].y, xxx[i].z);
+          cube.position.z += geometry.parameters.width / 2 + 0.01;
+          cube.rotation.z += rotationArr[i]/57.32
+          console.log(cube.rotation.z)
+          scene.add(cube);
+          cube_objs.push(cube);
+          disposable_objs.push(cube);
+          isAddCubeModeActive = false;
+        });
+    }
+    function loadRSU(){
+      yyy.map((point, i) => {
+        const geometry = new THREE.BoxGeometry(5, 5, 5);
+        const material = new THREE.MeshBasicMaterial({ color: 0x0000ff });
+        point = new THREE.Mesh(geometry, material);
+        point.isDisposing = false;
+        point.position.set(yyy[i].x, yyy[i].y, yyy[i].z);
+        point.position.z += geometry.parameters.height / 2 + 0.01;
+        const iconSize = 4;
+        const iconGeometry = new THREE.PlaneGeometry(iconSize, iconSize);
+        const iconTexture = new THREE.TextureLoader().load('./globe-solid.svg');
+        const iconMaterial = new THREE.MeshBasicMaterial({ map: iconTexture, side: THREE.DoubleSide, transparent: true });
+        const icon = new THREE.Mesh(iconGeometry, iconMaterial);
+        icon.position.set(0, 0, geometry.parameters.height / 2);
+        icon.quaternion.copy(point.quaternion);
+        point.add(icon);
+        scene.add(point);
+        points_objs.push(point);
+        points_arr.push(point);
+        isAddPointModeActive = false;
+      });
+    }
+    function loadPoints(){
+      aaa.forEach((pointsArray, arrIndex) => {
                     if (!cubeCircles[arrIndex]) {
                         cubeCircles[arrIndex] = [];
                     }
 
                     pointsArray.forEach((point, pointIndex) => {
-                        const intersectionNormalRoad = intersectionRoad.face.normal.clone().transformDirection(intersectionRoad.object.matrixWorld);
+                        // const intersectionNormalRoad = intersectionRoad.face.normal.clone().transformDirection(intersectionRoad.object.matrixWorld);
 
                         const offsetDistance = 0.5;
-                        const offsetVector = intersectionNormalRoad.clone().multiplyScalar(offsetDistance);
+                        // const offsetVector = intersectionNormalRoad.clone().multiplyScalar(offsetDistance);
 
                         const geometry = new THREE.CircleGeometry(radius, segments);
                         const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
                         const circle = new THREE.Mesh(geometry, material);
                         circle.isDisposing = false;
 
-                        circle.position.set(point.x, point.y, point.z).add(offsetVector);
-                        circle.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), intersectionNormalRoad);
+                        circle.position.set(point.x, point.y, point.z)/*.add(offsetVector);*/
+                        // circle.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), intersectionNormalRoad);
 
                         scene.add(circle);
                         cubeCircles[arrIndex].push(circle);
@@ -981,23 +1216,6 @@ const Editor = () => {
                     });
                     connectCirclesWithLines(arrIndex);
                 });
-            }
-        }
-      }
-    }
-
-    function changeColor() {
-      for (let i = 0; i < cube_objs.length; i++) {
-        if (i === pointerIndex && prevIndex != pointerIndex) {
-          cube_objs[i].material.color.set(0xffff00);
-        } else if (i === pointerIndex && prevIndex == pointerIndex) {
-          cube_objs[i].material.color.set(scenarioSettings.color_arr[i]);
-          pointerIndex = -1;
-        } else {
-          cube_objs[i].material.color.set(scenarioSettings.color_arr[i]);
-        }
-        cube_objs[i].material.needsUpdate = true;
-      }
     }
     function loadCar(position, normal) {
       const loader = new GLTFLoader();
@@ -1057,18 +1275,19 @@ const Editor = () => {
         for (let i = 1; i < pointsArray.length; i++) {
           createAndAddLine(pointsArray[i - 1], pointsArray[i], ind);
         }
-        console.log(temp);
-        console.log(xxx);
+        // console.log(temp);
+        // console.log(xxx);
       });
     }
-    const scenarioSettings = {
-      scenario_id: "",
-      scenario_name: "Default Scenario",
-      vehicle: "car",
-      weather: "ClearNoon",
-      arr_car: [],
-      color_arr: [],
-    };
+    // const scenarioSettings = {
+    //   scenario_id: "",
+    //   scenario_name: "Default Scenario",
+    //   vehicle: "car",
+    //   weather: "ClearNoon",
+    //   arr_car: [],
+    //   color_arr: [Number('0xffff00')],
+    //   // color_arr: ['ffff00'],
+    // };
     
     const handleSaveScenario = () => {
       console.log(scenarioSettings.arr_car);
