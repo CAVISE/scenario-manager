@@ -332,159 +332,159 @@ const Editor = () => {
     const radius = 2;
     const segments = 32;
     let scenarioJSON = {
-      scenario_id: "12345678",
-      scenario_name: "Defaults Scenario",
-      weather: "ClearSunset",
-      scenario: [
-        {
-          vehicle: "auto",
-          path: [
-            {
-              x: 68.30898976851341,
-              y: 105.88597310719591,
-              z: 1.51,
-              model: "car_506",
-              color: 13893887,
-              rotation: -128,
-              selected: false,
-              points: [
-                {
-                  id: 0,
-                  x: -47.255976615961245,
-                  y: 170.2094504245961,
-                  z: 6.149758991965847
-                },
-                {
-                  id: 1,
-                  x: -15.51748546190441,
-                  y: 167.310272506059,
-                  z: 7.12621353846918
-                },
-                {
-                  id: 2,
-                  x: -6.642748942421971,
-                  y: 173.0530478790317,
-                  z: 6.322117685683253
-                }
-              ]
-            },
-            {
-              x: -53.988774616721656,
-              y: 186.04231060666964,
-              z: 6.268351928715761,
-              model: "car_506",
-              color: 16747008,
-              rotation: 49,
-              selected: false,
-              points: [
-                {
-                  id: 0,
-                  x: -84.14212850406685,
-                  y: 207.13096742009742,
-                  z: 1.6282641393983113
-                },
-                {
-                  id: 1,
-                  x: -106.30367331250889,
-                  y: 207.28605989217402,
-                  z: -0.270899869553773
-                },
-                {
-                  id: 2,
-                  x: -125.16773869088078,
-                  y: 198.9809452177931,
-                  z: 0
-                }
-              ]
-            },
-            {
-              x: -70.7936162067013,
-              y: 121.66864557228774,
-              z: 1.649953613281243,
-              model: "car_506",
-              color: 65390,
-              rotation: 85,
-              selected: false,
-              points: [
-                {
-                  id: 0,
-                  x: -40.28068330100655,
-                  y: 121.40582226259988,
-                  z: 0.13995361328125
-                },
-                {
-                  id: 1,
-                  x: -2.538057444694658,
-                  y: 120.99734734109192,
-                  z: 0.1399536132812571
-                },
-                {
-                  id: 2,
-                  x: -3.5105546082621473,
-                  y: 96.24718507294673,
-                  z: 0.18317834261497268
-                },
-                {
-                  id: 3,
-                  x: -27.564706089436516,
-                  y: 58.691926738632276,
-                  z: 0.023347962100487507
-                }
-              ]
-            },
-            {
-              x: 134.14660680937857,
-              y: 57.1135765544905,
-              z: 8.744195153284645,
-              model: "car_506",
-              color: 6655,
-              rotation: -10,
-              selected: true,
-              points: [
-                {
-                  id: 0,
-                  x: 132.38503222448895,
-                  y: 31.127402998852986,
-                  z: 5.10700497447624
-                },
-                {
-                  id: 1,
-                  x: 148.23718791901914,
-                  y: -12.955572598703938,
-                  z: 1.020694621800267
-                },
-                {
-                  id: 2,
-                  x: 141.35951345764676,
-                  y: -36.520086531638526,
-                  z: 0.0029090795763195842
-                }
-              ]
-            }
-          ]
-        },
-        {
-          vehicle: "RSU",
-          path: [
-            {
-              x: -127.02781632044562,
-              y: 179.61599314449256,
-              z: 2.510000000000007
-            },
-            {
-              x: -89.16387059405308,
-              y: 165.99639445152195,
-              z: 2.5099999999999927
-            }
-          ],
-          active: false,
-          color: {
-            r: 127,
-            g: 127,
-            b: 127
-          }
-        }
-      ]
+    //   scenario_id: "12345678",
+    //   scenario_name: "Defaults Scenario",
+    //   weather: "ClearSunset",
+    //   scenario: [
+    //     {
+    //       vehicle: "auto",
+    //       path: [
+    //         {
+    //           x: 68.30898976851341,
+    //           y: 105.88597310719591,
+    //           z: 1.51,
+    //           model: "car_506",
+    //           color: 13893887,
+    //           rotation: -128,
+    //           selected: false,
+    //           points: [
+    //             {
+    //               id: 0,
+    //               x: -47.255976615961245,
+    //               y: 170.2094504245961,
+    //               z: 6.149758991965847
+    //             },
+    //             {
+    //               id: 1,
+    //               x: -15.51748546190441,
+    //               y: 167.310272506059,
+    //               z: 7.12621353846918
+    //             },
+    //             {
+    //               id: 2,
+    //               x: -6.642748942421971,
+    //               y: 173.0530478790317,
+    //               z: 6.322117685683253
+    //             }
+    //           ]
+    //         },
+    //         {
+    //           x: -53.988774616721656,
+    //           y: 186.04231060666964,
+    //           z: 6.268351928715761,
+    //           model: "car_506",
+    //           color: 16747008,
+    //           rotation: 49,
+    //           selected: false,
+    //           points: [
+    //             {
+    //               id: 0,
+    //               x: -84.14212850406685,
+    //               y: 207.13096742009742,
+    //               z: 1.6282641393983113
+    //             },
+    //             {
+    //               id: 1,
+    //               x: -106.30367331250889,
+    //               y: 207.28605989217402,
+    //               z: -0.270899869553773
+    //             },
+    //             {
+    //               id: 2,
+    //               x: -125.16773869088078,
+    //               y: 198.9809452177931,
+    //               z: 0
+    //             }
+    //           ]
+    //         },
+    //         {
+    //           x: -70.7936162067013,
+    //           y: 121.66864557228774,
+    //           z: 1.649953613281243,
+    //           model: "car_506",
+    //           color: 65390,
+    //           rotation: 85,
+    //           selected: false,
+    //           points: [
+    //             {
+    //               id: 0,
+    //               x: -40.28068330100655,
+    //               y: 121.40582226259988,
+    //               z: 0.13995361328125
+    //             },
+    //             {
+    //               id: 1,
+    //               x: -2.538057444694658,
+    //               y: 120.99734734109192,
+    //               z: 0.1399536132812571
+    //             },
+    //             {
+    //               id: 2,
+    //               x: -3.5105546082621473,
+    //               y: 96.24718507294673,
+    //               z: 0.18317834261497268
+    //             },
+    //             {
+    //               id: 3,
+    //               x: -27.564706089436516,
+    //               y: 58.691926738632276,
+    //               z: 0.023347962100487507
+    //             }
+    //           ]
+    //         },
+    //         {
+    //           x: 134.14660680937857,
+    //           y: 57.1135765544905,
+    //           z: 8.744195153284645,
+    //           model: "car_506",
+    //           color: 6655,
+    //           rotation: -10,
+    //           selected: true,
+    //           points: [
+    //             {
+    //               id: 0,
+    //               x: 132.38503222448895,
+    //               y: 31.127402998852986,
+    //               z: 5.10700497447624
+    //             },
+    //             {
+    //               id: 1,
+    //               x: 148.23718791901914,
+    //               y: -12.955572598703938,
+    //               z: 1.020694621800267
+    //             },
+    //             {
+    //               id: 2,
+    //               x: 141.35951345764676,
+    //               y: -36.520086531638526,
+    //               z: 0.0029090795763195842
+    //             }
+    //           ]
+    //         }
+    //       ]
+    //     },
+    //     {
+    //       vehicle: "RSU",
+    //       path: [
+    //         {
+    //           x: -127.02781632044562,
+    //           y: 179.61599314449256,
+    //           z: 2.510000000000007
+    //         },
+    //         {
+    //           x: -89.16387059405308,
+    //           y: 165.99639445152195,
+    //           z: 2.5099999999999927
+    //         }
+    //       ],
+    //       active: false,
+    //       color: {
+    //         r: 127,
+    //         g: 127,
+    //         b: 127
+    //       }
+    //     }
+    //   ]
     }
     let rotationArr: any[] = [];
     let temp: any[] = [];
@@ -496,16 +496,16 @@ const Editor = () => {
     let yyy: any[] = [];
     
     const fetchScenarios = async () => {
-      // const host = "http://localhost:" + PORT + "/scenario/" + currentScenarioID;
+      const host = "http://localhost:" + PORT + "/scenario/" + currentScenarioID;
       
-      // try {
-      //   const response = await fetch(host);
-      //   if (!response.ok) {
-      //     throw new Error(`HTTP error! status: ${response.status}`);
-      //   }
+      try {
+        const response = await fetch(host);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         
-      //   const scenarioJSON = await response.json();
-      //   console.log(scenarioJSON);
+        const scenarioJSON = await response.json();
+        console.log(scenarioJSON);
     
         if (!scenarioJSON.scenario) {
           return;
@@ -545,10 +545,10 @@ const Editor = () => {
           }
         }
     
-        // console.log(scenarioJSON, xxx, aaa, yyy);
-      // } catch (error) {
-      //   console.error(error);
-      // }
+        console.log(scenarioJSON, xxx, aaa, yyy);
+      } catch (error) {
+        console.error(error);
+      }
     };
     
     
@@ -1405,23 +1405,23 @@ const Editor = () => {
         ]
       };
       console.log(JSON.stringify(scenario, null, 2));
-      // let host = "http://localhost:" + PORT;
-      // if (!scenario.scenario_id)
-      //   host += "/scenario/create";
-      // else
-      //   host += "/scenario/edit";
+      let host = "http://localhost:" + PORT;
+      if (!scenario.scenario_id)
+        host += "/scenario/create";
+      else
+        host += "/scenario/edit";
 
-      // const response = await fetch(host, {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(scenario)
-      // });
+      const response = await fetch(host, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(scenario)
+      });
 
-      // if (response.ok) {
-      //   console.log("Сценарий успешно сохранён");
-      // } else {
-      //   console.error("Ошибка при сохранении сценария");
-      // }
+      if (response.ok) {
+        console.log("Сценарий успешно сохранён");
+      } else {
+        console.error("Ошибка при сохранении сценария");
+      }
     };
     const gui_save_folder = gui.addFolder('Сохранение сценария');
   gui_save_folder.add(scenarioSettings, 'scenario_id').name("ID сценария");
