@@ -1142,24 +1142,7 @@ const Editor = () => {
           yyy.push(JSON.parse(JSON.stringify(intersectionPoint)));
           loadRSU();
         }
-      } else if (intersects.length === 0) {
-        /*const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-        const intersectionPoint = new THREE.Vector3();
-        if (raycaster.ray.intersectPlane(plane, intersectionPoint)) {
-          buildings.push(JSON.parse(JSON.stringify(intersectionPoint)));
-          buildings.map((building, i) => {
-            const geometry = new THREE.BoxGeometry(25, 25, 50);
-            const material = new THREE.MeshBasicMaterial({ color: 0x0000ff });
-            building = new THREE.Mesh(geometry, material);
-            building.position.set(buildings[i].x, buildings[i].y, buildings[i].z);
-            building.position.z += geometry.parameters.height / 2 + 0.01;
-            scene.add(building);
-          });
-        }*/
-      }
-    }
-    function onDocumentMouseDbClick(event) {
-      if (!isAddCubeModeActive && !isAddPointModeActive && !isAddedPoints) {
+      }if (!isAddCubeModeActive && !isAddPointModeActive && !isAddedPoints) {
         event.preventDefault();
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -1209,8 +1192,24 @@ const Editor = () => {
           }
         }
       }
-
-      else if (selectedCube) {
+       else if (intersects.length === 0) {
+        /*const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+        const intersectionPoint = new THREE.Vector3();
+        if (raycaster.ray.intersectPlane(plane, intersectionPoint)) {
+          buildings.push(JSON.parse(JSON.stringify(intersectionPoint)));
+          buildings.map((building, i) => {
+            const geometry = new THREE.BoxGeometry(25, 25, 50);
+            const material = new THREE.MeshBasicMaterial({ color: 0x0000ff });
+            building = new THREE.Mesh(geometry, material);
+            building.position.set(buildings[i].x, buildings[i].y, buildings[i].z);
+            building.position.z += geometry.parameters.height / 2 + 0.01;
+            scene.add(building);
+          });
+        }*/
+      }
+    }
+    function onDocumentMouseDbClick(event) {
+      if (selectedCube) {
         if (pointerIndex >=0 && isAddedPoints) {
             event.preventDefault();
 
