@@ -144,10 +144,11 @@ const Editor = () => {
         }
       },
       addPoint: () => {
+        isAddedPoints = false;
         isRotating = false;
         isAddPointModeActive = true;
         isAddCubeModeActive = false;
-        isAddedPoints = false;
+        console.log('sfsfsffs')
       },
       deletePoint: () => {
         isRotating = false;
@@ -1113,43 +1114,14 @@ const Editor = () => {
         loadCube()
         loadPoints()
       }
-      if (intersects.length > 0 && isAddPointModeActive && intersects[0].object === road_network_mesh) {
-        
-        
-        const intersectionPoint = intersects[0].point;
-        yyy.push(JSON.parse(JSON.stringify(intersectionPoint)));
-        for (const point of points_arr) {
-          if (point.geometry) point.geometry.dispose();
-          if (point.material) point.material.dispose();
-          scene.remove(point);
-        }
-        loadRSU();
-      } else if (isAddPointModeActive && intersects.length === 0) {
-        for (const obj of points_objs) {
-          if (obj.geometry) obj.geometry.dispose();
-          if (obj.material) obj.material.dispose();
-          if (obj.parent) obj.parent.remove(obj);
-          scene.remove(obj);
-        }
-        for (const point of points_arr) {
-          if (point.geometry) point.geometry.dispose();
-          if (point.material) point.material.dispose();
-          scene.remove(point);
-        }
-        const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-        const intersectionPoint = new THREE.Vector3();
-        if (raycaster.ray.intersectPlane(plane, intersectionPoint)) {
-          yyy.push(JSON.parse(JSON.stringify(intersectionPoint)));
-          loadRSU();
-        }
-      }if (!isAddCubeModeActive && !isAddPointModeActive && !isAddedPoints) {
+      if (!isAddCubeModeActive && !isAddPointModeActive && !isAddedPoints) {
         event.preventDefault();
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
 
-        const clickableObjects = [...cube_objs, ...cubeCircles.flat()];
-        const intersects = raycaster.intersectObjects(clickableObjects);
+        // const clickableObjects = [...cube_objs, ...cubeCircles.flat()];
+        const intersects = raycaster.intersectObjects([...cube_objs, ...cubeCircles.flat(), ...points_arr]);
         
         if (intersects.length > 0) {
           const intersectedObject = intersects[0].object;
@@ -1209,6 +1181,41 @@ const Editor = () => {
       }
     }
     function onDocumentMouseDbClick(event) {
+      const intersects = raycaster.intersectObjects([...cube_objs, ...cubeCircles.flat(), ...points_arr]);
+
+      if (intersects.length > 0 && isAddPointModeActive && intersects[0].object === road_network_mesh) {
+        console.log(111111)
+        
+        const intersectionPoint = intersects[0].point;
+        yyy.push(JSON.parse(JSON.stringify(intersectionPoint)));
+        console.log(yyy)
+        for (const point of points_arr) {
+          if (point.geometry) point.geometry.dispose();
+          if (point.material) point.material.dispose();
+          scene.remove(point);
+        }
+        loadRSU();
+      } else if (isAddPointModeActive && intersects.length === 0) {
+        console.log(234567)
+        for (const obj of points_objs) {
+          if (obj.geometry) obj.geometry.dispose();
+          if (obj.material) obj.material.dispose();
+          if (obj.parent) obj.parent.remove(obj);
+          scene.remove(obj);
+        }
+        for (const point of points_arr) {
+          if (point.geometry) point.geometry.dispose();
+          if (point.material) point.material.dispose();
+          scene.remove(point);
+        }
+        const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+        const intersectionPoint = new THREE.Vector3();
+        if (raycaster.ray.intersectPlane(plane, intersectionPoint)) {
+          yyy.push(JSON.parse(JSON.stringify(intersectionPoint)));
+          console.log(yyy)
+          loadRSU();
+        }
+      }
       if (selectedCube) {
         if (pointerIndex >=0 && isAddedPoints) {
             event.preventDefault();
