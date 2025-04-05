@@ -101,6 +101,7 @@ const Editor = () => {
               if (selectedCube.geometry) selectedCube.geometry.dispose();
               if (selectedCube.material) selectedCube.material.dispose();
             }
+            
             cube_objs.splice(index, 1);
             xxx.splice(index, 1);
             scenarioSettings.color_arr.splice(pointerIndex, 1);
@@ -113,6 +114,32 @@ const Editor = () => {
             isAddedPoints = false;
             transformControls.detach();
             // console.log(xxx, aaa, temp, yyy, cubeCircles);
+          }
+        }if (selectedPoint) {
+          let cubeIndex = -1;
+          let pointIndex = -1;
+          
+          cubeCircles.some((points, cIndex) => {
+            const pIndex = points.indexOf(selectedPoint);
+            if (pIndex !== -1) {
+              cubeIndex = cIndex;
+              pointIndex = pIndex;
+              return true;
+            }
+            return false;
+          });
+        
+          if (cubeIndex !== -1 && pointIndex !== -1) {
+            scene.remove(selectedPoint);
+            if (selectedPoint.geometry) selectedPoint.geometry.dispose();
+            if (selectedPoint.material) selectedPoint.material.dispose();
+        
+            cubeCircles[cubeIndex].splice(pointIndex, 1);
+            aaa[cubeIndex].splice(pointIndex, 1);
+        
+            selectedPoint = null;
+            transformControls.detach()
+            loadPoints()
           }
         }
       },
@@ -157,18 +184,23 @@ const Editor = () => {
       },
       translateMode: function() {
         transformControls.setMode('translate');
+        isAddedPoints = false
       },
       rotateMode: function() {
         transformControls.setMode('rotate');
+        isAddedPoints = false
       },
       scaleMode: function() {
         transformControls.setMode('scale');
+        isAddedPoints = false
       },
       addDirectionPoints: () => {
+        if(selectedCube){
         isRotating = false;
         isAddedPoints = !isAddedPoints;
         isAddCubeModeActive = false;
         isAddPointModeActive = false;
+        }
       }
     };
     const gui = new dat.GUI();
@@ -327,6 +359,7 @@ const Editor = () => {
     let stIntrvl;
     let pointerIndex = -1;
     let selectedCube: THREE.Object3D<THREE.Object3DEventMap> | null = null;
+    let selectedPoint: THREE.Object3D<THREE.Object3DEventMap> | null = null;
     let prevIndex = -1;
     let isAddedPoints = false;
     const radius = 2;
@@ -600,6 +633,7 @@ const Editor = () => {
         }        
         loadPoints()
         selectedCube = null;
+        isAddedPoints = false;
       }
     });
 
@@ -1051,7 +1085,7 @@ const Editor = () => {
       mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
     }
-    function onDocumentMouseDbClick(event) {
+    function onDocumentMouseClick(event) {
       event.preventDefault();
       mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -1124,35 +1158,55 @@ const Editor = () => {
         }*/
       }
     }
-    function onDocumentMouseClick(event) {
-      // console.log('onDocumentMouseClick triggered', event.target);
-      // Если не в режиме добавления кубов/точек
+    function onDocumentMouseDbClick(event) {
       if (!isAddCubeModeActive && !isAddPointModeActive && !isAddedPoints) {
         event.preventDefault();
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
 
-
-        const intersects = raycaster.intersectObjects([...cube_objs]);
-        let minDistance = Infinity;
+        const clickableObjects = [...cube_objs, ...cubeCircles.flat()];
+        const intersects = raycaster.intersectObjects(clickableObjects);
+        
         if (intersects.length > 0) {
+          const intersectedObject = intersects[0].object;
+      
+          if (isRoadObject(intersectedObject, road_network_mesh)) return;
+      
           const intersectionPoint = intersects[0].point;
-
-          if (isRoadObject(intersects[0].object, road_network_mesh)) return;
-
-          for (let i = 0; i < cube_objs.length; i++) {
-            const dist = cube_objs[i].position.distanceTo(intersectionPoint);
-            if (dist < minDistance) {
-              minDistance = dist;
-              pointerIndex = i;
-              selectedCube = cube_objs[i];
+          let minDistance = Infinity;
+      
+          if (cube_objs.includes(intersectedObject)) {
+            for (let i = 0; i < cube_objs.length; i++) {
+              const dist = cube_objs[i].position.distanceTo(intersectionPoint);
+              if (dist < minDistance) {
+                minDistance = dist;
+                pointerIndex = i;
+                selectedCube = cube_objs[i];
+                selectedPoint = null; 
+              }
+            }
+            if (selectedCube) {
+              transformControls.attach(selectedCube);
+              prevIndex = pointerIndex;
+            }
+          } 
+          else if (cubeCircles.flat().includes(intersectedObject)) {
+            for (let i = 0; i < cubeCircles.flat().length; i++) {
+              const circle = cubeCircles.flat()[i];
+              if (!circle) continue;
+              
+              const dist = circle.position.distanceTo(intersectionPoint);
+              if (dist < minDistance) {
+                minDistance = dist;
+                selectedPoint = circle;
+                selectedCube = null; 
+              }
+            }
+            if (selectedPoint) {
+              transformControls.attach(selectedPoint);
             }
           }
-
-          transformControls.attach(selectedCube);
-          //changeColor();
-          prevIndex = pointerIndex;
         }
       }
 
@@ -1165,7 +1219,7 @@ const Editor = () => {
 
             raycaster.setFromCamera(mouse, camera);
 
-            const intersectsRoad = raycaster.intersectObjects([...cube_objs,...points_arr, road_network_mesh], true);
+            const intersectsRoad = raycaster.intersectObjects([...cube_objs,...cubeCircles.flat(),...points_arr, road_network_mesh], true);
             if (intersectsRoad.length > 0 && intersectsRoad[0].object === road_network_mesh) {
                 const intersectionRoad = intersectsRoad[0];
 
@@ -1178,7 +1232,7 @@ const Editor = () => {
                     });
                     cubeCircles[cubeIndex] = [];
                 }
-
+                console.log(cubeCircles)
                 const intersectionPointRoad = intersectionRoad.point;
                 aaa[cubeIndex].push(JSON.parse(JSON.stringify(intersectionPointRoad)));
 
@@ -1254,7 +1308,26 @@ const Editor = () => {
     }
     function loadPoints(){
       // const intersectsRoad = raycaster.intersectObjects([...cube_objs,...points_arr, road_network_mesh], true);
+      if(cubeCircles){
+      aaa.forEach((_, index)=>{
+        aaa[index].forEach((_, i)=>{
+          if(cubeCircles[index][i]){
+            aaa[index][i] = JSON.parse(JSON.stringify(cubeCircles[index][i].position))
+          }
+        })
+      })
+    }
 
+      cubeCircles.forEach((circleArray, index) => {
+        if (circleArray) {
+          circleArray.forEach(circle => {
+            if (circle.parent) scene.remove(circle);
+            if (circle.geometry) circle.geometry.dispose();
+            if (circle.material) circle.material.dispose();
+          });
+          cubeCircles[index] = []; 
+        }
+      });
       aaa.forEach((pointsArray, arrIndex) => {
                     if (!cubeCircles[arrIndex]) {
                         cubeCircles[arrIndex] = [];
