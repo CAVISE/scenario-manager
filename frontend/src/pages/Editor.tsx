@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { MapControls } from 'three-stdlib';
 import { TransformControls } from 'three-stdlib';
@@ -7,9 +7,11 @@ import * as dat from 'dat.gui';
 import { Notyf } from 'notyf';
 import 'notyf/notyf.min.css';
 import { HexColorPicker } from 'react-colorful';
-import ReactDOM from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import { PORT } from "../VARS";
+import SpeedDialTooltipOpen from './components/Butt.tsx'
+import RightPanel from "./components/Panel.tsx"
+import { useEditorStore } from '../store/useEditorStore';
 
 import {
   encodeUInt32,
@@ -17,12 +19,106 @@ import {
   isValid,
   isRoadObject
 } from '../helpers/editorhelper';
-import { CloseFullscreen, X } from '@mui/icons-material';
 
 
 declare function libOpenDrive(): Promise<never>;
 
 const Editor = () => {
+  // — Zustand store
+  const cars         = useEditorStore(s => s.cars);
+  const selectedId   = useEditorStore(s => s.selectedId);
+  const addCar       = useEditorStore(s => s.addCar);
+  const updateCar    = useEditorStore(s => s.updateCar);
+  const selectObject = useEditorStore(s => s.selectObject);
+  const carMeshes = useRef<THREE.Mesh[]>([]);
+  const transformControlsRef = useRef<TransformControls | null>(null);
+
+
+
+  const [selectedObject, setSelectedObject] = useState(null);
+  const sceneRef = useRef<THREE.Scene>();
+
+  const [sceneGraph, setSceneGraph] = useState(null);
+
+  const updateSceneGraph = useCallback(() => {
+    const scene = sceneRef.current;
+    if (!scene) return;
+
+    const visited = new Set<string>();
+    function traverse(obj: THREE.Object3D) {
+      if (visited.has(obj.uuid)) return null;
+      visited.add(obj.uuid);
+
+      const children = obj.children
+        .map(traverse)
+        .filter(node => node !== null);
+
+      const isCar   = obj.userData.type === 'car';
+      const isPoint = obj.userData.type === 'point';
+      if (!isCar && !isPoint && children.length === 0) {
+        return null;
+      }
+
+      return {
+        id:   obj.uuid,
+        name: isCar
+               ? `Car ${obj.uuid.slice(-4)}`
+               : isPoint
+                 ? `Point ${obj.uuid.slice(-4)}`
+                 : obj.name || obj.type,
+        children
+      };
+    }
+
+    setSceneGraph(traverse(scene));
+  }, []);
+
+  const actionsRef = useRef({
+    addCube: () => {},
+    addPoint: () => {}
+  });
+  const [actionsReady, setActionsReady] = useState(false);
+  const handleAddCube = useCallback(() => {
+    console.log('handleAddCube clicked');
+    if (actionsRef.current.addCube) {
+      actionsRef.current.addCube();
+    }
+  }, []);
+
+  const handleAddPoint = useCallback(() => {
+    console.log('handleAddPoint clicked');
+    if (actionsRef.current.addPoint) {
+      actionsRef.current.addPoint();
+    }
+  }, []);
+
+  useEffect(() => {
+    console.log("Selected Object updated:", selectedObject);
+  }, [selectedObject]);
+
+  useEffect(() => {
+    const scene = sceneRef.current!;
+    carMeshes.current.forEach(m => {
+      scene.remove(m);
+      m.geometry.dispose();
+      (m.material as THREE.Material).dispose();
+    });
+    carMeshes.current = [];
+
+    cars.forEach(car => {
+      const geo = new THREE.BoxGeometry(3, 6, 3);
+      const mat = new THREE.MeshBasicMaterial({ color: `#${car.color}` });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(car.x, car.y, car.z);
+      mesh.userData.type = 'car';
+      mesh.userData.id = car.id;        // <-- главное!
+      scene.add(mesh);
+      carMeshes.current.push(mesh);
+    });
+  }, [cars]);
+
+
+
   useEffect(() => {
     const PARAMS = {
       load_file: () => {
@@ -57,12 +153,12 @@ const Editor = () => {
       reload_map: () => { reloadOdrMap(); },
       view_mode: 'Default',
       addCube: () => {
-        // console.log(rotationArr)
+        console.log("Add Cube")
         isRotating = false;
         isAddCubeModeActive = true;
         isAddPointModeActive = false;
         isAddedPoints = false;
-        transformControls.detach();
+        transformControlsRef.current!.detach();
         selectedCube = null
         if(cube_objs.length){
           for(let i = 0; i < cube_objs.length; i++){
@@ -112,8 +208,7 @@ const Editor = () => {
             pointerIndex = -1;
             prevIndex = -1;
             isAddedPoints = false;
-            transformControls.detach();
-            // console.log(xxx, aaa, temp, yyy, cubeCircles);
+            transformControlsRef.current!.detach();
           }
         }if (selectedPoint) {
           let cubeIndex = -1;
@@ -138,7 +233,7 @@ const Editor = () => {
             aaa[cubeIndex].splice(pointIndex, 1);
         
             selectedPoint = null;
-            transformControls.detach()
+            transformControlsRef.current!.detach()
             loadPoints()
           }
         }
@@ -165,13 +260,13 @@ const Editor = () => {
         }
       },
       loadScenario: () => {
-        // console.log(xxx, scenarioSettings.color_arr)
         if (currentScenarioID){
           fetchScenarios();
           setTimeout(() => {
-          loadCube();
+          //loadCube();
           loadPoints();
           loadRSU();
+
         }, 1000);
         scenarioSettings.scenario_id = currentScenarioID;
         }else{
@@ -184,15 +279,15 @@ const Editor = () => {
         lstCb.rotation.z += Math.PI / 18;
       },
       translateMode: function() {
-        transformControls.setMode('translate');
+        transformControlsRef.current!.setMode('translate');
         isAddedPoints = false
       },
       rotateMode: function() {
-        transformControls.setMode('rotate');
+        transformControlsRef.current!.setMode('rotate');
         isAddedPoints = false
       },
       scaleMode: function() {
-        transformControls.setMode('scale');
+        transformControlsRef.current!.setMode('scale');
         isAddedPoints = false
       },
       addDirectionPoints: () => {
@@ -204,6 +299,10 @@ const Editor = () => {
         }
       }
     };
+
+    actionsRef.current.addCube = PARAMS.addCube;
+    actionsRef.current.addPoint = PARAMS.addPoint;
+    setActionsReady(true);
     const gui = new dat.GUI();
 
     gui.add(PARAMS, 'load_file').name('📁 Load .xodr');
@@ -301,7 +400,6 @@ const Editor = () => {
     };
     
     const handleDocumentClick = (e) => {
-      // console.log('handleDocumentClick triggered', e.target);
       if (e.target !== colorBox && !colorPickerContainer.contains(e.target)) {
         colorPickerContainer.style.display = 'none';
       }
@@ -331,7 +429,6 @@ const Editor = () => {
       weather: "ClearNoon",
       arr_car: [],
       color_arr: [],
-      // color_arr: ['ffff00'],
     };
     let ModuleOpenDrive = null;
     let OpenDriveMap = null;
@@ -589,8 +686,7 @@ const Editor = () => {
     // let xxx = [{x: -138.2953869274191, y: 89.05726747592811, z: 3.552713678800501e-15}];
     // let aaa = [[{x: -183.2953869274191, y: 39.05726747592811, z: 3.552713678800501e-15}, {x: -110.41583864819692, y: 81.12617116602812, z: 2.842170943040401e-14}]];
     // let yyy = [{x: -85.96810418078883, y: 106.33895628454718, z: 0}];
-    
-    // console.log(xxx,scenarioSettings.color_arr, yyy, aaa, rotationArr)
+
     const COLORS = {
       road: 1.0,
       roadmark: 1.0,
@@ -615,17 +711,21 @@ const Editor = () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.getElementById('ThreeJS').appendChild(renderer.domElement);
     const scene = new THREE.Scene();
+    sceneRef.current = scene;
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100000);
     const transformControls = new TransformControls(camera, renderer.domElement);
     scene.add(transformControls);
+    transformControlsRef.current = transformControls;
+    updateSceneGraph();
 
-    transformControls.addEventListener('change', () => renderer.render(scene, camera));
-    transformControls.addEventListener('dragging-changed', (event) => {
+    transformControlsRef.current!.addEventListener('change', () => renderer.render(scene, camera));
+    transformControlsRef.current!.addEventListener('dragging-changed', (event) => {
       controls.enabled = !event.value;
     });
     window.addEventListener('keydown', (event) => {
       if (event.key === 'Escape') {
-        transformControls.detach();
+        setSelectedObject(null)
+        transformControlsRef.current!.detach();
         if(cube_objs.length){
           for(let i = 0; i < cube_objs.length; i++){
               xxx[i] = JSON.parse(JSON.stringify(cube_objs[i].position))       
@@ -786,7 +886,7 @@ const Editor = () => {
           temp.length = 0; 
         }
         // console.log(aaa, yyy, xxx, temp, cubeCircles)
-        transformControls.detach();
+        transformControlsRef.current!.detach();
         temp = [];
         disposable_objs = [];
         points_objs = [];
@@ -1086,7 +1186,96 @@ const Editor = () => {
       mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
     }
-    function onDocumentMouseClick(event) {
+    function onDocumentMouseClick(event: MouseEvent) {
+      event.preventDefault();
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+
+      if (!currentCar) {
+        currentCar = 'car_' + Math.floor(Math.random() * 1000);
+      }
+
+      const intersects = raycaster.intersectObjects(
+        [...cube_objs, ...points_arr, road_network_mesh],
+        true
+      );
+
+      if (
+        intersects.length > 0 &&
+        isAddCubeModeActive &&
+        currentCar &&
+        currentColor &&
+        intersects[0].object === road_network_mesh
+      ) {
+        const pt = intersects[0].point;
+        addCar(pt.x, pt.y, pt.z, currentCar, currentColor);
+        isAddCubeModeActive = false;
+        scenarioSettings.arr_car.push(currentCar);
+        scenarioSettings.color_arr.push(Number('0x' + currentColor));
+        for (const cube of cube_objs) {
+          if (cube.geometry) cube.geometry.dispose();
+          if (cube.material) (cube.material as THREE.Material).dispose();
+          scene.remove(cube);
+        }
+        xxx.push(JSON.parse(JSON.stringify(pt)));
+        aaa.push([]);
+        loadPoints();
+        return;
+      }
+
+      const carHit = raycaster.intersectObjects(carMeshes.current, true);
+      if (carHit.length > 0) {
+        const mesh = carHit[0].object as THREE.Mesh;
+        selectObject(mesh.userData.id);
+        transformControlsRef.current!.attach(mesh);
+        return;
+      }
+
+      if (isAddPointModeActive) {
+        const pointHits = raycaster.intersectObject(road_network_mesh, true);
+        if (pointHits.length > 0) {
+          const pt = pointHits[0].point;
+          addPoint(pt.x, pt.y, pt.z);
+          isAddPointModeActive = false;
+          return;
+        }
+      }
+
+      const intersects2 = raycaster.intersectObjects(
+        [...cube_objs, ...cubeCircles.flat(), ...points_arr],
+        true
+      );
+
+      if (intersects2.length > 0) {
+        const obj = intersects2[0].object;
+        if (cubeCircles.flat().includes(obj)) {
+          let minDistance = Infinity;
+          for (let i = 0; i < cubeCircles.flat().length; i++) {
+            const circle = cubeCircles.flat()[i];
+            const dist = circle.position.distanceTo(intersects2[0].point);
+            if (dist < minDistance) {
+              minDistance = dist;
+              selectedPoint = circle;
+              selectedCube = null;
+            }
+          }
+          if (selectedPoint) {
+            transformControlsRef.current!.attach(selectedPoint);
+            setSelectedObject({
+              type: 'point',
+              position: {
+                x: selectedPoint.position.x,
+                y: selectedPoint.position.y,
+                z: selectedPoint.position.z
+              }
+            });
+          }
+        }
+      }
+    }
+    
+    function ONONonDocumentMouseClick(event) {
       event.preventDefault();
       mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -1098,6 +1287,16 @@ const Editor = () => {
       const intersects = raycaster.intersectObjects([...cube_objs, ...points_arr, road_network_mesh], true);
       if (intersects.length > 0 && isAddCubeModeActive && currentCar && currentColor && intersects[0].object === road_network_mesh) {
         const intersectionPoint = intersects[0].point;
+        addCar(
+          intersectionPoint.x,
+          intersectionPoint.y,
+          intersectionPoint.z,
+          currentCar,
+          currentColor
+        );
+
+        isAddCubeModeActive = false;
+
         scenarioSettings.arr_car.push(currentCar);
         scenarioSettings.color_arr.push(Number('0x' + currentColor));
         // @ts-ignore
@@ -1107,9 +1306,6 @@ const Editor = () => {
           scene.remove(cube);
         }
         xxx.push(JSON.parse(JSON.stringify(intersectionPoint)));
-        // cube_objs = [];
-        // console.log(xxx)
-        // disposable_objs = [];
         aaa.push([]);
         loadCube()
         loadPoints()
@@ -1120,7 +1316,6 @@ const Editor = () => {
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
 
-        // const clickableObjects = [...cube_objs, ...cubeCircles.flat()];
         const intersects = raycaster.intersectObjects([...cube_objs, ...cubeCircles.flat(), ...points_arr]);
         
         if (intersects.length > 0) {
@@ -1130,7 +1325,7 @@ const Editor = () => {
       
           const intersectionPoint = intersects[0].point;
           let minDistance = Infinity;
-      
+          /*
           if (cube_objs.includes(intersectedObject)) {
             for (let i = 0; i < cube_objs.length; i++) {
               const dist = cube_objs[i].position.distanceTo(intersectionPoint);
@@ -1144,8 +1339,34 @@ const Editor = () => {
             if (selectedCube) {
               transformControls.attach(selectedCube);
               prevIndex = pointerIndex;
+              console.log("Попытка")
+              console.log(selectedCube)
+              setSelectedObject({
+                type: 'car',
+                index: pointerIndex,
+                position: {
+                  x: selectedCube.position.x,
+                  y: selectedCube.position.y,
+                  z: selectedCube.position.z
+                },
+                color: scenarioSettings.color_arr[pointerIndex],
+                model: scenarioSettings.arr_car[pointerIndex]
+              });
+
+
+
+
             }
           } 
+          */
+
+          const carHit = raycaster.intersectObjects(carMeshes.current, true);
+          if (carHit.length > 0) {
+            const mesh = carHit[0].object as THREE.Mesh;
+            selectObject(mesh.userData.id);
+            transformControlsRef.current!.attach(mesh);
+            return;  // and stop further processing
+          }
           else if (cubeCircles.flat().includes(intersectedObject)) {
             for (let i = 0; i < cubeCircles.flat().length; i++) {
               const circle = cubeCircles.flat()[i];
@@ -1159,7 +1380,15 @@ const Editor = () => {
               }
             }
             if (selectedPoint) {
-              transformControls.attach(selectedPoint);
+              transformControlsRef.current!.attach(selectedPoint);
+              setSelectedObject({
+                type: 'point',
+                position: {
+                  x: selectedPoint.position.x,
+                  y: selectedPoint.position.y,
+                  z: selectedPoint.position.z
+                },
+              });
             }
           }
         }
@@ -1180,6 +1409,7 @@ const Editor = () => {
         }*/
       }
     }
+
     function onDocumentMouseDbClick(event) {
       const intersects = raycaster.intersectObjects([...cube_objs, ...cubeCircles.flat(), ...points_arr]);
 
@@ -1187,6 +1417,12 @@ const Editor = () => {
         console.log(111111)
         
         const intersectionPoint = intersects[0].point;
+        addPoint(
+          intersectionPoint.x,
+          intersectionPoint.y,
+          intersectionPoint.z
+        );
+
         yyy.push(JSON.parse(JSON.stringify(intersectionPoint)));
         console.log(yyy)
         for (const point of points_arr) {
@@ -1272,10 +1508,11 @@ const Editor = () => {
       if (isAddCubeModeActive)rotationArr.push(0)
       cube_objs = [];
       disposable_objs = []; 
-      xxx.map((cube, i) => {
+      /*xxx.map((cube, i) => {
           const geometry = new THREE.BoxGeometry(3, 6, 3);
           const material = new THREE.MeshBasicMaterial({ color: scenarioSettings.color_arr[i] });
           cube = new THREE.Mesh(geometry, material);
+          cube.userData.type = 'car';
           cube.isDisposing = false;
           cube.position.set(xxx[i].x, xxx[i].y, xxx[i].z);
           if(i === xxx.length - 1)cube.position.z += geometry.parameters.width / 2 + 0.01;
@@ -1286,7 +1523,8 @@ const Editor = () => {
           cube_objs.push(cube);
           disposable_objs.push(cube);
           isAddCubeModeActive = false;
-        });
+        });*/
+      updateSceneGraph();
     }
     function loadRSU(){
       points_arr = []
@@ -1295,6 +1533,7 @@ const Editor = () => {
         const geometry = new THREE.BoxGeometry(5, 5, 5);
         const material = new THREE.MeshBasicMaterial({ color: 0x0000ff });
         point = new THREE.Mesh(geometry, material);
+        point.userData.type = 'point';
         point.isDisposing = false;
         point.position.set(yyy[i].x, yyy[i].y, yyy[i].z);
         point.position.z += geometry.parameters.height / 2 + 0.01;
@@ -1311,9 +1550,9 @@ const Editor = () => {
         points_arr.push(point);
       });
       isAddPointModeActive = false;
+      updateSceneGraph();
     }
     function loadPoints(){
-      // const intersectsRoad = raycaster.intersectObjects([...cube_objs,...points_arr, road_network_mesh], true);
       if(cubeCircles){
       aaa.forEach((_, index)=>{
         aaa[index].forEach((_, i)=>{
@@ -1338,21 +1577,14 @@ const Editor = () => {
                     if (!cubeCircles[arrIndex]) {
                         cubeCircles[arrIndex] = [];
                     }
-                    // const intersectionRoad = intersectsRoad[0];
 
                     pointsArray.forEach((point, pointIndex) => {
-                        // const intersectionNormalRoad = intersectionRoad.face.normal.clone().transformDirection(intersectionRoad.object.matrixWorld);
-
-                        // const offsetDistance = 0.5;
-                        // const offsetVector = intersectionNormalRoad.clone().multiplyScalar(offsetDistance);
-
                         const geometry = new THREE.CircleGeometry(radius, segments);
                         const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
                         const circle = new THREE.Mesh(geometry, material);
                         circle.isDisposing = false;
 
                         circle.position.set(point.x, point.y, point.z)/*.add(offsetVector)*/;
-                        // circle.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), intersectionNormalRoad);
 
                         scene.add(circle);
                         cubeCircles[arrIndex].push(circle);
@@ -1401,7 +1633,7 @@ const Editor = () => {
             }
           });
           scene.add(car);
-          transformControls.attach(car);
+          transformControlsRef.current!.attach(car);
           disposable_objs.push(car);
         }
       );
@@ -1440,14 +1672,10 @@ const Editor = () => {
         for (let i = 1; i < pointsArray.length; i++) {
           createAndAddLine(pointsArray[i - 1], pointsArray[i], ind);
         }
-        // console.log(temp);
-        // console.log(xxx);
       });
     }
     
     async function handleSaveScenario (){
-      // console.log(scenarioSettings.arr_car);
-      // console.log(cube_objs, xxx)
       const scenario = {
         scenario_id: scenarioSettings.scenario_id || null,
         scenario_name: scenarioSettings.scenario_name,
@@ -1458,7 +1686,7 @@ const Editor = () => {
             path: cube_objs.filter(obj => obj.position && obj.position.x !== undefined).map((obj, index) => ({
               x: obj.position.x,
               y: obj.position.y,
-              z: obj.position.z,
+                z: obj.position.z,
               model: scenarioSettings.arr_car[index],
               color: scenarioSettings.color_arr[index],
               rotation: Math.floor(obj.rotation.z * 57.32, 0),
@@ -1553,7 +1781,19 @@ const Editor = () => {
       gui.destroy();
     };
     
-  }, []);
+  }, [updateSceneGraph]);
+
+  useEffect(() => {
+    if (!selectedId) {
+      transformControlsRef.current!.detach();
+      return;
+    }
+    const mesh = carMeshes.current.find(m => m.userData.id === selectedId);
+    if (mesh) {
+      transformControlsRef.current!.attach(mesh);
+    }
+  }, [selectedId]);
+
   return (
     <div>
       <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden'/*, marginTop: '75px'*/}}>
@@ -1613,6 +1853,17 @@ const Editor = () => {
           </a>
         </div>
       </div>
+      <RightPanel
+        sceneGraph={sceneGraph}
+        onDetach={() => transformControlsRef.current?.detach()}
+
+      />
+      {actionsReady && (
+        <SpeedDialTooltipOpen
+          onAddCar={handleAddCube}
+          onAddPoint={handleAddPoint}
+        />
+      )}
     </div>
   );
 };
