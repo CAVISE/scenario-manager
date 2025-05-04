@@ -69,6 +69,11 @@ export default function RightPanel({ sceneGraph, onDetach }: RightPanelProps) {
     updateCar(car.id, { color: hex.replace('#', '') });
   };
 
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onDetach();
+    updateCar(car.id, { model: e.target.value });
+  };
+
   return (
     <Drawer
       variant="permanent"
@@ -137,6 +142,15 @@ export default function RightPanel({ sceneGraph, onDetach }: RightPanelProps) {
               }}
             />
           </Box>
+          <TextField
+            label="Имя машины"
+            type="text"
+            value={car.model || ''}
+            onChange={handleNameChange}
+            fullWidth
+            sx={{ mb: 2 }}
+          />
+
         </Stack>
       </Box>
     </Drawer>
