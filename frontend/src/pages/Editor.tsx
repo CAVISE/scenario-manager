@@ -60,7 +60,10 @@ const Editor = () => {
       }
 
       return {
-        id:   obj.uuid,
+        //id:   obj.uuid,
+        id: obj.userData.type === 'car' && obj.userData.id
+          ? obj.userData.id
+          : obj.uuid,
         name: isCar
                ? `Car ${obj.uuid.slice(-4)}`
                : isPoint

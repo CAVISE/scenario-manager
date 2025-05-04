@@ -16,6 +16,7 @@ import { TreeItem }      from '@mui/x-tree-view/TreeItem';
 import { HexColorPicker } from 'react-colorful';
 import { useEditorStore } from '../../store/useEditorStore';
 
+
 type RightPanelProps = {
   sceneGraph: { id: string; name: string; children: any[] } | null;
   onDetach: () => void;
@@ -23,10 +24,10 @@ type RightPanelProps = {
 
 export default function RightPanel({ sceneGraph, onDetach }: RightPanelProps) {
   const selectedId = useEditorStore(s => s.selectedId);
+  const selectObject = useEditorStore(s => s.selectObject);
   const cars       = useEditorStore(s => s.cars);
   const updateCar  = useEditorStore(s => s.updateCar);
 
-  // Найдём текущую выбранную машинку
   const car = cars.find(c => c.id === selectedId) || null;
 
   const renderTreeItem = useCallback((node: any) => (
@@ -88,7 +89,14 @@ export default function RightPanel({ sceneGraph, onDetach }: RightPanelProps) {
           </AccordionSummary>
           <AccordionDetails>
             {sceneGraph ? (
-              <SimpleTreeView defaultExpandedItems={[sceneGraph.id]}>
+              <SimpleTreeView
+                defaultExpandedItems={[sceneGraph.id]}
+                selectedItems={selectedId ? [selectedId] : []}
+                onItemClick={(event, itemId) => {
+                  selectObject(itemId);
+                  onDetach();
+                }}
+              >
                 {renderTreeItem(sceneGraph)}
               </SimpleTreeView>
             ) : (
