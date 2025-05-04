@@ -12,6 +12,12 @@ import { PORT } from "../VARS";
 import SpeedDialTooltipOpen from './components/Butt.tsx'
 import RightPanel from "./components/Panel.tsx"
 import { useEditorStore } from '../store/useEditorStore';
+// icons for transform control
+import { IconButton } from '@mui/material';
+import OpenWithIcon from '@mui/icons-material/OpenWith';
+import RotateRightIcon from '@mui/icons-material/RotateRight';
+import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
+
 
 import {
   encodeUInt32,
@@ -32,6 +38,14 @@ const Editor = () => {
   const selectObject = useEditorStore(s => s.selectObject);
   const carMeshes = useRef<THREE.Mesh[]>([]);
   const transformControlsRef = useRef<TransformControls | null>(null);
+
+  const [transformMode, setTransformMode] = useState<'translate'|'rotate'|'scale'>('translate');
+  const handleSetMode = useCallback((mode: 'translate'|'rotate'|'scale') => {
+    if (transformControlsRef.current) {
+      transformControlsRef.current.setMode(mode);
+      setTransformMode(mode);
+    }
+  }, []);
 
 
 
@@ -1857,6 +1871,43 @@ const Editor = () => {
           </a>
         </div>
       </div>
+      {/* Toolbar для TransformControls */}
+      <div style={{
+        position: 'absolute',
+        top: 10,
+        left: 10,
+        display: 'flex',
+        flexDirection: 'column',
+        background: 'rgba(255,255,255,0.8)',
+        borderRadius: 4,
+        padding: 4,
+        zIndex: 10
+      }}>
+        <IconButton
+          size="small"
+          color={transformMode === 'translate' ? 'primary' : 'default'}
+          onClick={() => handleSetMode('translate')}
+        >
+          <OpenWithIcon fontSize="small" />
+        </IconButton>
+        <IconButton
+          size="small"
+          color={transformMode === 'rotate' ? 'primary' : 'default'}
+          onClick={() => handleSetMode('rotate')}
+        >
+          <RotateRightIcon fontSize="small" />
+        </IconButton>
+        <IconButton
+          size="small"
+          color={transformMode === 'scale' ? 'primary' : 'default'}
+          onClick={() => handleSetMode('scale')}
+        >
+          <ZoomOutMapIcon fontSize="small" />
+        </IconButton>
+      </div>
+      
+
+
       <RightPanel
         sceneGraph={sceneGraph}
         onDetach={() => transformControlsRef.current?.detach()}

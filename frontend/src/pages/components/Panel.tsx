@@ -114,63 +114,70 @@ export default function RightPanel({ sceneGraph, onDetach }: RightPanelProps) {
 
         <Divider sx={{ my: 2 }} />
 
+        <Accordion defaultExpanded sx={{ mt: 2 }}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography>Свойства</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
         {/* Координаты */}
-        <Stack spacing={2}>
-          {(['x','y','z'] as const).map(axis => (
+          <Stack spacing={2}>
+            {(['x','y','z'] as const).map(axis => (
+              <TextField
+                key={axis}
+                label={`Позиция ${axis.toUpperCase()}`}
+                type="number"
+                value={car[axis].toFixed(3)}
+                onChange={handleNumField(axis)}
+                fullWidth
+              />
+            ))}
+
+            {/* Color picker */}
+            <Box>
+              <Typography gutterBottom>Цвет</Typography>
+              <HexColorPicker
+                color={`#${car.color}`}
+                onChange={handleColorChange}
+              />
+              <Box
+                sx={{
+                  mt: 1,
+                  width: 36,
+                  height: 14,
+                  backgroundColor: `#${car.color}`,
+                  border: '1px solid #ccc'
+                }}
+              />
+            </Box>
             <TextField
-              key={axis}
-              label={`Позиция ${axis.toUpperCase()}`}
-              type="number"
-              value={car[axis].toFixed(3)}
-              onChange={handleNumField(axis)}
+              label="Имя машины"
+              type="text"
+              value={car.model || ''}
+              onChange={handleNameChange}
               fullWidth
-            />
-          ))}
-
-          {/* Color picker */}
-          <Box>
-            <Typography gutterBottom>Цвет</Typography>
-            <HexColorPicker
-              color={`#${car.color}`}
-              onChange={handleColorChange}
-            />
-            <Box
-              sx={{
-                mt: 1,
-                width: 36,
-                height: 14,
-                backgroundColor: `#${car.color}`,
-                border: '1px solid #ccc'
-              }}
-            />
-          </Box>
-          <TextField
-            label="Имя машины"
-            type="text"
-            value={car.model || ''}
-            onChange={handleNameChange}
-            fullWidth
-            sx={{ mb: 2 }}
-          />
-
-            <Typography gutterBottom>Размер</Typography>
-            <Slider
-              value={currentScale}
-              min={0.1}
-              max={5}
-              step={0.1}
-              valueLabelDisplay="auto"
-              onChange={(_, newValue) => {
-                if (typeof newValue === 'number' && car) {
-                  onDetach();
-                  updateCar(car.id, { scale: newValue });
-                }
-              }}
-              aria-label="Масштаб машины"
+              sx={{ mb: 2 }}
             />
 
+              <Typography gutterBottom>Размер</Typography>
+              <Slider
+                value={currentScale}
+                min={0.1}
+                max={5}
+                step={0.1}
+                valueLabelDisplay="auto"
+                onChange={(_, newValue) => {
+                  if (typeof newValue === 'number' && car) {
+                    onDetach();
+                    updateCar(car.id, { scale: newValue });
+                  }
+                }}
+                aria-label="Масштаб машины"
+              />
 
-        </Stack>
+
+          </Stack>
+        </AccordionDetails>
+        </Accordion>
       </Box>
     </Drawer>
   );

@@ -8,6 +8,7 @@ export type Car = {
   z: number;
   color: string;
   model: string;
+  scale: number;
 };
 
 export type Point = {
@@ -40,7 +41,7 @@ export const useEditorStore = create<EditorState>(set => ({
 
   addCar: (x, y, z, model, color) =>
     set(s => ({
-      cars: [...s.cars, { id: nanoid(), x, y, z, model, color }],
+      cars: [...s.cars, { id: nanoid(), x, y, z, model, color, scale: 1 }],
     })),
 
   updateCar: (id, props) =>
