@@ -113,6 +113,7 @@ const Editor = () => {
       const mat = new THREE.MeshBasicMaterial({ color: `#${car.color}` });
       const mesh = new THREE.Mesh(geo, mat);
       mesh.position.set(car.x, car.y, car.z);
+      mesh.scale.set(car.scale, car.scale, car.scale);
       mesh.userData.type = 'car';
       mesh.userData.id = car.id;        // <-- главное!
       scene.add(mesh);

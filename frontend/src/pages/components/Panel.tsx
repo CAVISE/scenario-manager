@@ -8,6 +8,7 @@ import {
   AccordionSummary,
   AccordionDetails,
   Divider,
+  Slider,
   Stack
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -29,6 +30,7 @@ export default function RightPanel({ sceneGraph, onDetach }: RightPanelProps) {
   const updateCar  = useEditorStore(s => s.updateCar);
 
   const car = cars.find(c => c.id === selectedId) || null;
+  const currentScale = car?.scale ?? 1;
 
   const renderTreeItem = useCallback((node: any) => (
     <TreeItem key={node.id} itemId={node.id} label={node.name}>
@@ -150,6 +152,23 @@ export default function RightPanel({ sceneGraph, onDetach }: RightPanelProps) {
             fullWidth
             sx={{ mb: 2 }}
           />
+
+            <Typography gutterBottom>Размер</Typography>
+            <Slider
+              value={currentScale}
+              min={0.1}
+              max={5}
+              step={0.1}
+              valueLabelDisplay="auto"
+              onChange={(_, newValue) => {
+                if (typeof newValue === 'number' && car) {
+                  onDetach();
+                  updateCar(car.id, { scale: newValue });
+                }
+              }}
+              aria-label="Масштаб машины"
+            />
+
 
         </Stack>
       </Box>
