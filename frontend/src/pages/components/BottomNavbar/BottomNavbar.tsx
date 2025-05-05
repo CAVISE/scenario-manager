@@ -24,12 +24,12 @@ export const BottomNavbar = () => {
           value="/params"
           label="Параметры"
         />
-        <BottomNavigationAction
+        {/* <BottomNavigationAction
           component={Link}
           to="/paths"
           value="/paths"
           label="Выбор путей"
-        />
+        /> */}
         <BottomNavigationAction
           component={Link}
           to="/reports"

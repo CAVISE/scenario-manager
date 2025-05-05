@@ -10,6 +10,7 @@ import { HexColorPicker } from 'react-colorful';
 import ReactDOM from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import { PORT } from "../VARS";
+import type { Object3D, Scene, Mesh, Line } from 'three';
 
 import {
   encodeUInt32,
@@ -17,10 +18,11 @@ import {
   isValid,
   isRoadObject
 } from '../helpers/editorhelper';
-import { CloseFullscreen, X } from '@mui/icons-material';
+import { CloseFullscreen, Scale, X } from '@mui/icons-material';
+import { json } from 'stream/consumers';
 
 
-declare function libOpenDrive(): Promise<never>;
+declare function libOpenDrive(): Promise<any>;
 
 const Editor = () => {
   useEffect(() => {
@@ -29,12 +31,12 @@ const Editor = () => {
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
         fileInput.accept = '.xodr';
-        fileInput.addEventListener('change', (event) => {
-          const file = event.target.files[0];
+        fileInput.addEventListener('change', (event: Event) => {
+          const file = event.target?.files[0];
           if (file) {
             const reader = new FileReader();
             reader.onload = (e) => {
-              loadFile(e.target.result, true);
+              loadFile(e.target?.result, true);
             };
             reader.readAsText(file);
           }
@@ -68,6 +70,7 @@ const Editor = () => {
           for(let i = 0; i < cube_objs.length; i++){
               xxx[i] = JSON.parse(JSON.stringify(cube_objs[i].position))       
               rotationArr[i] = cube_objs[i].rotation.z
+              sizeArr[i] = JSON.parse(JSON.stringify(cube_objs[i].scale))
             }
         }        
         loadPoints()
@@ -107,6 +110,7 @@ const Editor = () => {
             scenarioSettings.color_arr.splice(pointerIndex, 1);
             scenarioSettings.arr_car.splice(pointerIndex, 1);
             rotationArr.splice(pointerIndex, 1);
+            sizeArr.splice(pointerIndex, 1)
 
             selectedCube = null;
             pointerIndex = -1;
@@ -148,7 +152,6 @@ const Editor = () => {
         isRotating = false;
         isAddPointModeActive = true;
         isAddCubeModeActive = false;
-        console.log('sfsfsffs')
       },
       deletePoint: () => {
         isRotating = false;
@@ -172,6 +175,7 @@ const Editor = () => {
           loadCube();
           loadPoints();
           loadRSU();
+          pointerIndex != -1 && transformControls.attach(cube_objs[pointerIndex])
         }, 1000);
         scenarioSettings.scenario_id = currentScenarioID;
         }else{
@@ -324,7 +328,15 @@ const Editor = () => {
     gui_controls_folder.add(PARAMS, 'rotateMode').name('Вращение');
     gui_controls_folder.add(PARAMS, 'scaleMode').name('Масштаб');
     gui_controls_folder.add(PARAMS, 'addDirectionPoints').name('Добавить точки');
-    const scenarioSettings = {
+    interface ScenarioSettings {
+      scenario_id: string;
+      scenario_name: string;
+      vehicle: string;
+      weather: string;
+      arr_car: string[];
+      color_arr: number[];
+    }
+    const scenarioSettings: ScenarioSettings = {
       scenario_id: "",
       scenario_name: "Default Scenario",
       vehicle: "car",
@@ -334,38 +346,37 @@ const Editor = () => {
       // color_arr: ['ffff00'],
     };
     let ModuleOpenDrive = null;
-    let OpenDriveMap = null;
-    var refline_lines = null;
+    let OpenDriveMap: { delete: () => void; x_offs: number; y_offs: number; } | null = null;
+    var refline_lines: THREE.Object3D<THREE.Object3DEventMap> | null = null;
     var road_network_mesh = null;
     var roadmarks_mesh = null;
-    let lane_outline_lines = null;
-    var roadmark_outline_lines = null;
-    let ground_grid = null;
-    var disposable_objs: any[] = [];
-    var points_objs: any[] = [];
-    var cube_objs: any[] = [];
-    let points_arr: any[] = [];
-    let circles_objs: any[] = [];
-    let circles_arr = [];
-    let isRotating = false
-    let cubeCircles: any[] = [];
+    let lane_outline_lines: THREE.Object3D<THREE.Object3DEventMap> | null = null;
+    var roadmark_outline_lines: THREE.Object3D<THREE.Object3DEventMap> = null;
+    let ground_grid: THREE.Object3D<THREE.Object3DEventMap> | null = null;
+    var disposable_objs: THREE.Mesh[] = [];
+    var points_objs: THREE.Object3D<THREE.Object3DEventMap>[] = [];
+    var cube_objs: THREE.Mesh[] = [];
+    let points_arr: THREE.Mesh[] = [];
+    let circles_objs: THREE.Mesh[]= [];
+    // let circles_arr = [];
+    let isRotating: boolean = false
+    let cubeCircles: THREE.Mesh[] = [];
     const mouse = new THREE.Vector2();
     const raycaster = new THREE.Raycaster();
     const spotlight_info = document.getElementById('spotlight_info');
-    let INTERSECTED_LANE_ID = 0xffffffff;
-    let INTERSECTED_ROADMARK_ID = 0xffffffff;
-    let spotlight_paused = false;
-    let isAddCubeModeActive = false;
-    let isAddPointModeActive = false;
-    let stIntrvl;
-    let pointerIndex = -1;
+    let INTERSECTED_LANE_ID: number = 0xffffffff;
+    let INTERSECTED_ROADMARK_ID: number = 0xffffffff;
+    let spotlight_paused: boolean = false;
+    let isAddCubeModeActive: boolean = false;
+    let isAddPointModeActive: boolean = false;
+    let pointerIndex: number = -1;
     let selectedCube: THREE.Object3D<THREE.Object3DEventMap> | null = null;
     let selectedPoint: THREE.Object3D<THREE.Object3DEventMap> | null = null;
-    let prevIndex = -1;
-    let isAddedPoints = false;
-    const radius = 2;
-    const segments = 32;
-    let scenarioJSON = {
+    let prevIndex: number = -1;
+    let isAddedPoints: boolean = false;
+    const radius: number = 2;
+    const segments: number = 32;
+    // let scenarioJSON = {
     //   scenario_id: "12345678",
     //   scenario_name: "Defaults Scenario",
     //   weather: "ClearSunset",
@@ -519,15 +530,26 @@ const Editor = () => {
     //       }
     //     }
     //   ]
+    // }
+    interface Coordinates{
+      x: number,
+      y: number, 
+      z: number
     }
-    let rotationArr: any[] = [];
-    let temp: any[] = [];
-    let currentCar = '';
-    let currentColor = '00ff00';
-    let currentScenarioID = '';
-    let xxx: any[] = [];
-    let aaa: any[] = [];
-    let yyy: any[] = [];
+    interface Size{ 
+      x: number,
+      y: number,
+      z: number
+      }
+    let rotationArr: number[] = [];
+    let temp: THREE.Object3D<THREE.Object3DEventMap>[] = [];
+    let currentCar: string = '';
+    let currentColor: string = '00ff00';
+    let currentScenarioID: string= '';
+    let xxx: Coordinates[] = [];
+    let aaa: Coordinates[][] = [];
+    let yyy: Coordinates[] = [];
+    let sizeArr: Size[] = [];
     
     const fetchScenarios = async () => {
       const host = "http://localhost:" + PORT + "/scenario/" + currentScenarioID;
@@ -547,7 +569,7 @@ const Editor = () => {
         reloadOdrMap()
         for (const item of scenarioJSON.scenario) {
           if (item.vehicle !== 'RSU') {
-            item.path?.forEach((coordinate: { x: any; y: any; z: any; color: any; rotation: any; points: any[]; }) => {
+            item.path?.forEach((coordinate: { x: number; y: number; z: number; color: number; rotation: number; points: any[]; scale: Size, selected: boolean}, i: number) => {
               xxx.push({
                 x: coordinate.x,
                 y: coordinate.y,
@@ -556,7 +578,8 @@ const Editor = () => {
     
               if (coordinate.color) scenarioSettings?.color_arr?.push(coordinate.color);
               if (coordinate.rotation) rotationArr.push(coordinate.rotation / 57.32);
-    
+              if(coordinate.scale)sizeArr.push(coordinate.scale)
+              if(coordinate.selected)pointerIndex = i
               const pointsGroup: any[] = [];
               coordinate.points?.forEach(point => {
                 pointsGroup.push({
@@ -569,7 +592,7 @@ const Editor = () => {
             });
           } 
           else if (item.vehicle === 'RSU') {
-            item.path?.forEach((coordinate: { x: any; y: any; z: any; }) => {
+            item.path?.forEach((coordinate: { x: number; y: number; z: number; }) => {
               yyy.push({
                 x: coordinate.x,
                 y: coordinate.y,
@@ -613,7 +636,7 @@ const Editor = () => {
     const renderer = new THREE.WebGLRenderer({ antialias: true, sortObjects: false });
     renderer.shadowMap.enabled = true;
     renderer.setSize(window.innerWidth, window.innerHeight);
-    document.getElementById('ThreeJS').appendChild(renderer.domElement);
+    document.getElementById('ThreeJS')?.appendChild(renderer.domElement);
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100000);
     const transformControls = new TransformControls(camera, renderer.domElement);
@@ -630,6 +653,7 @@ const Editor = () => {
           for(let i = 0; i < cube_objs.length; i++){
               xxx[i] = JSON.parse(JSON.stringify(cube_objs[i].position))       
               rotationArr[i] = cube_objs[i].rotation.z
+              sizeArr[i] = JSON.parse(JSON.stringify(cube_objs[i].scale))
             }
         }        
         loadPoints()
@@ -659,12 +683,12 @@ const Editor = () => {
     const roadmark_picking_texture = new THREE.WebGLRenderTarget(1, 1, { type: THREE.FloatType });
     const xyz_texture = new THREE.WebGLRenderTarget(1, 1, { type: THREE.FloatType });
     const st_texture = new THREE.WebGLRenderTarget(1, 1, { type: THREE.FloatType });
-    const idVertexShader = document.getElementById('idVertexShader').textContent;
-    const idFragmentShader = document.getElementById('idFragmentShader').textContent;
-    const xyzVertexShader = document.getElementById('xyzVertexShader').textContent;
-    const xyzFragmentShader = document.getElementById('xyzFragmentShader').textContent;
-    const stVertexShader = document.getElementById('stVertexShader').textContent;
-    const stFragmentShader = document.getElementById('stFragmentShader').textContent;
+    const idVertexShader = document.getElementById('idVertexShader')?.textContent ?? '';;
+    const idFragmentShader = document.getElementById('idFragmentShader')?.textContent ?? '';;
+    const xyzVertexShader = document.getElementById('xyzVertexShader')?.textContent ?? '';;
+    const xyzFragmentShader = document.getElementById('xyzFragmentShader')?.textContent ?? '';
+    const stVertexShader = document.getElementById('stVertexShader')?.textContent ?? '';;
+    const stFragmentShader = document.getElementById('stFragmentShader')?.textContent ?? '';;
     const refline_material = new THREE.LineBasicMaterial({
       color: COLORS.ref_line,
     });
@@ -749,48 +773,66 @@ const Editor = () => {
         roadmark_picking_scene.remove(...roadmark_picking_scene.children);
         xyz_scene.remove(...xyz_scene.children);
         st_scene.remove(...st_scene.children);
-        for (const obj of disposable_objs) {
+        interface DisposableObject {
+          geometry?: { dispose: () => void } | null;
+          material?: { dispose: () => void } | null;
+          parent?: { remove: (obj: any) => void } | null;
+      }
+      
+      for (const obj of disposable_objs as DisposableObject[]) {
+          if (obj.geometry) obj.geometry.dispose();
+          if (obj.material) obj.material.dispose();
+          if (obj.parent) obj.parent.remove(obj);
+      }
+        for (const obj of points_objs as DisposableObject[]) {
+          if (obj?.geometry) obj.geometry.dispose();
+          if (obj.material) obj.material.dispose();
+          if (obj.parent) obj.parent.remove(obj);
+        }
+        for (const obj of circles_objs as DisposableObject[]) {
           if (obj.geometry) obj.geometry.dispose();
           if (obj.material) obj.material.dispose();
           if (obj.parent) obj.parent.remove(obj);
         }
-        for (const obj of points_objs) {
-          if (obj.geometry) obj.geometry.dispose();
-          if (obj.material) obj.material.dispose();
-          if (obj.parent) obj.parent.remove(obj);
-        }
-        for (const obj of circles_objs) {
-          if (obj.geometry) obj.geometry.dispose();
-          if (obj.material) obj.material.dispose();
-          if (obj.parent) obj.parent.remove(obj);
-        }
-        for (const obj of temp) {
+        for (const obj of temp as DisposableObject[]) {
           if (obj.geometry) obj.geometry.dispose();
           if (obj.material) obj.material.dispose();
           if (obj.parent) obj.parent.remove(obj);
         }
         if (cubeCircles) {
-          cubeCircles.flat().forEach(circle => {
-            if (circle.parent) scene.remove(circle);
+          cubeCircles.flat().forEach((circle: Mesh) => {
+            if (circle.parent) (circle.parent as Object3D).remove(circle);
             if (circle.geometry) circle.geometry.dispose();
-            if (circle.material) circle.material.dispose();
+            if (circle.material) {
+              if (Array.isArray(circle.material)) {
+                circle.material.forEach(mat => mat.dispose());
+              } else {
+                circle.material.dispose();
+              }
+            }
           });
-          cubeCircles.length = 0; 
+          cubeCircles.length = 0;
         }
+        
         if (temp) {
-          temp.flat().forEach(line => {
-            if (line.parent) scene.remove(line);
+          temp.flat().forEach((line: Line) => {
+            if (line.parent) (line.parent as Object3D).remove(line);
             if (line.geometry) line.geometry.dispose();
-            if (line.material) line.material.dispose();
+            if (line.material) {
+              if (Array.isArray(line.material)) {
+                line.material.forEach(mat => mat.dispose());
+              } else {
+                line.material.dispose();
+              }
+            }
           });
-          temp.length = 0; 
+          temp.length = 0;
         }
         // console.log(aaa, yyy, xxx, temp, cubeCircles)
         transformControls.detach();
         temp = [];
         disposable_objs = [];
         points_objs = [];
-        circles_arr = [];
         circles_objs = [];
         cube_objs = [];
         selectedCube = null;
@@ -865,7 +907,7 @@ const Editor = () => {
       const roadmark_picking_mesh = new THREE.Mesh(roadmarks_geom, id_material);
       roadmark_picking_mesh.matrixAutoUpdate = false;
       roadmark_picking_scene.add(roadmark_picking_mesh);
-      const lane_outlines_geom = new THREE.BufferGeometry();
+      const lane_outlines_geom : THREE.BufferGeometry = new THREE.BufferGeometry();
       lane_outlines_geom.setAttribute('position', road_network_geom.attributes.position);
       lane_outlines_geom.setIndex(getStdVecEntries(odr_lanes_mesh.get_lane_outline_indices(), true));
       lane_outline_lines = new THREE.LineSegments(lane_outlines_geom, lane_outlines_material);
@@ -1081,12 +1123,12 @@ const Editor = () => {
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
-    function onDocumentMouseMove(event) {
+    function onDocumentMouseMove(event: MouseEvent) {
       event.preventDefault();
       mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
     }
-    function onDocumentMouseClick(event) {
+    function onDocumentMouseClick(event: MouseEvent) {
       event.preventDefault();
       mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -1180,11 +1222,10 @@ const Editor = () => {
         }*/
       }
     }
-    function onDocumentMouseDbClick(event) {
+    function onDocumentMouseDbClick(event: MouseEvent) {
       const intersects = raycaster.intersectObjects([...cube_objs, ...cubeCircles.flat(), ...points_arr]);
 
       if (intersects.length > 0 && isAddPointModeActive && intersects[0].object === road_network_mesh) {
-        console.log(111111)
         
         const intersectionPoint = intersects[0].point;
         yyy.push(JSON.parse(JSON.stringify(intersectionPoint)));
@@ -1196,7 +1237,6 @@ const Editor = () => {
         }
         loadRSU();
       } else if (isAddPointModeActive && intersects.length === 0) {
-        console.log(234567)
         for (const obj of points_objs) {
           if (obj.geometry) obj.geometry.dispose();
           if (obj.material) obj.material.dispose();
@@ -1248,30 +1288,31 @@ const Editor = () => {
       }
     }
 
-    function changeColor() {
-      for (let i = 0; i < cube_objs.length; i++) {
-        if (i === pointerIndex && prevIndex != pointerIndex) {
-          cube_objs[i].material.color.set(0xffff00);
-        } else if (i === pointerIndex && prevIndex == pointerIndex) {
-          cube_objs[i].material.color.set(scenarioSettings.color_arr[i]);
-          pointerIndex = -1;
-        } else {
-          cube_objs[i].material.color.set(scenarioSettings.color_arr[i]);
-        }
-        cube_objs[i].material.needsUpdate = true;
-      }
-    }
+    // function changeColor() {
+    //   for (let i = 0; i < cube_objs.length; i++) {
+    //     if (i === pointerIndex && prevIndex != pointerIndex) {
+    //       cube_objs[i].material.color.set(0xffff00);
+    //     } else if (i === pointerIndex && prevIndex == pointerIndex) {
+    //       cube_objs[i].material.color.set(scenarioSettings.color_arr[i]);
+    //       pointerIndex = -1;
+    //     } else {
+    //       cube_objs[i].material.color.set(scenarioSettings.color_arr[i]);
+    //     }
+    //     cube_objs[i].material.needsUpdate = true;
+    //   }
+    // }
     function loadCube(){
-
       if(cube_objs.length){
         for(let i = 0; i < cube_objs.length; i++){
             xxx[i] = JSON.parse(JSON.stringify(cube_objs[i].position))       
             rotationArr[i] = cube_objs[i].rotation.z
+            sizeArr[i] = JSON.parse(JSON.stringify(cube_objs[i].scale))
           }
       }
-      if (isAddCubeModeActive)rotationArr.push(0)
+      if (isAddCubeModeActive)rotationArr.push(0);sizeArr.push({x: 1, y: 1, z: 1})
       cube_objs = [];
       disposable_objs = []; 
+
       xxx.map((cube, i) => {
           const geometry = new THREE.BoxGeometry(3, 6, 3);
           const material = new THREE.MeshBasicMaterial({ color: scenarioSettings.color_arr[i] });
@@ -1282,12 +1323,101 @@ const Editor = () => {
           if (rotationArr[i]!=0){
             cube.rotation.z += rotationArr[i]
           }
+          if(sizeArr[i]!=0)cube.scale.set(sizeArr[i].x, sizeArr[i].y, sizeArr[i].z)
           scene.add(cube);
           cube_objs.push(cube);
           disposable_objs.push(cube);
           isAddCubeModeActive = false;
         });
     }
+    // function loadCube() {
+    //   // Сохраняем текущие позиции и параметры кубов
+    //   if (cube_objs.length) {
+    //     for (let i = 0; i < cube_objs.length; i++) {
+    //       xxx[i] = JSON.parse(JSON.stringify(cube_objs[i].position));
+    //       rotationArr[i] = cube_objs[i].rotation.z;
+    //       sizeArr[i] = JSON.parse(JSON.stringify(cube_objs[i].scale));
+    //     }
+    //   }
+    
+    //   // Добавляем параметры для нового куба, если нужно
+    //   if (isAddCubeModeActive) {
+    //     rotationArr.push(0);
+    //     sizeArr.push({x: 1, y: 1, z: 1});
+    //   }
+    
+    //   // Очищаем предыдущие объекты
+    //   cube_objs.forEach(cube => {
+    //     scene.remove(cube);
+    //     if (cube.geometry) cube.geometry.dispose();
+    //     if (cube.material) cube.material.dispose();
+    //   });
+    //   cube_objs = [];
+    //   disposable_objs = [];
+    
+    //   const loader = new GLTFLoader();
+    
+    //   // Загружаем модель машины для каждой позиции
+    //   xxx.forEach((pos, i) => {
+    //     loader.load(
+    //       'frontend/src/pages/models/scene.gltf', // Путь к модели
+    //       (gltf) => {
+    //         const car = gltf.scene;
+            
+    //         // Настройка позиции
+    //         car.position.set(pos.x, pos.y, pos.z);
+    //         if (i === xxx.length - 1) car.position.z += 1.5; // Небольшое смещение вверх для новых машин
+            
+    //         // Настройка поворота
+    //         if (rotationArr[i] !== 0) {
+    //           car.rotation.z = rotationArr[i];
+    //         }
+            
+    //         // Настройка масштаба
+    //         const scale = sizeArr[i] || {x: 1, y: 1, z: 1};
+    //         car.scale.set(scale.x, scale.y, scale.z);
+            
+    //         // Настройка цвета
+    //         if (scenarioSettings.color_arr[i]) {
+    //           car.traverse((child) => {
+    //             if (child.isMesh) {
+    //               child.material = new THREE.MeshBasicMaterial({ 
+    //                 color: new THREE.Color(scenarioSettings.color_arr[i]),
+    //                 transparent: true,
+    //                 opacity: 0.8
+    //               });
+    //             }
+    //           });
+    //         }
+    
+    //         scene.add(car);
+    //         cube_objs.push(car);
+    //         disposable_objs.push(car);
+    //       },
+    //       undefined,
+    //       (error) => {
+    //         console.error('Error loading car model:', error);
+            
+    //         // Fallback - создаем куб, если модель не загрузилась
+    //         const geometry = new THREE.BoxGeometry(3, 6, 3);
+    //         const material = new THREE.MeshBasicMaterial({ 
+    //           color: scenarioSettings.color_arr[i] || 0xff0000
+    //         });
+    //         const cube = new THREE.Mesh(geometry, material);
+    //         cube.position.set(pos.x, pos.y, pos.z);
+    //         if (i === xxx.length - 1) cube.position.z += geometry.parameters.width / 2 + 0.01;
+    //         if (rotationArr[i] !== 0) cube.rotation.z = rotationArr[i];
+    //         if (sizeArr[i]) cube.scale.set(sizeArr[i].x, sizeArr[i].y, sizeArr[i].z);
+            
+    //         scene.add(cube);
+    //         cube_objs.push(cube);
+    //         disposable_objs.push(cube);
+    //       }
+    //     );
+    //   });
+    
+    //   isAddCubeModeActive = false;
+    // }
     function loadRSU(){
       points_arr = []
       points_objs = []
@@ -1448,6 +1578,7 @@ const Editor = () => {
     async function handleSaveScenario (){
       // console.log(scenarioSettings.arr_car);
       // console.log(cube_objs, xxx)
+      console.log(temp)
       const scenario = {
         scenario_id: scenarioSettings.scenario_id || null,
         scenario_name: scenarioSettings.scenario_name,
@@ -1461,7 +1592,8 @@ const Editor = () => {
               z: obj.position.z,
               model: scenarioSettings.arr_car[index],
               color: scenarioSettings.color_arr[index],
-              rotation: Math.floor(obj.rotation.z * 57.32, 0),
+              scale: JSON.parse(JSON.stringify(obj.scale)),
+              rotation: Math.floor(obj.rotation.z * 57.32),
               selected: pointerIndex == index ? true : false,
               points: aaa[index] ? aaa[index].map((point, point_id) => ({
                 id: point_id,
@@ -1613,6 +1745,7 @@ const Editor = () => {
           </a>
         </div>
       </div>
+      
     </div>
   );
 };
