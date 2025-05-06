@@ -14,6 +14,7 @@
     "@emotion/styled": "^11.11.5",
     "@mui/icons-material": "^5.15.17",
     "@mui/material": "^5.15.17",
+    "@mui/x-tree-view": "^8.0.0-beta.3",
     "@reduxjs/toolkit": "^2.6.1",
     "dat.gui": "^0.7.9",
     "notyf": "^3.10.0",
@@ -25,7 +26,8 @@
     "react-redux": "^9.2.0",
     "react-router-dom": "^6.22.0",
     "three": "^0.174.0",
-    "three-stdlib": "^2.35.14"
+    "three-stdlib": "^2.35.14",
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@types/dat.gui": "^0.7.13",

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import * as dat from 'dat.gui'
 import * as THREE from 'three'
 
