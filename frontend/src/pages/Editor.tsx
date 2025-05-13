@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { MapControls } from 'three-stdlib';
 import { TransformControls } from 'three-stdlib';
+import { OBJLoader } from 'three-stdlib';
 import { GLTFLoader } from 'three-stdlib';
 import * as dat from 'dat.gui';
 import { Notyf } from 'notyf';
@@ -13,11 +14,15 @@ import SpeedDialTooltipOpen from './components/Butt.tsx'
 import RightPanel from "./components/Panel.tsx"
 import { useEditorStore } from '../store/useEditorStore';
 // icons for transform control
-import { IconButton } from '@mui/material';
+import { IconButton, Menu, MenuItem, Button, Tooltip, Modal, Box, Typography } from '@mui/material';
 import OpenWithIcon from '@mui/icons-material/OpenWith';
 import RotateRightIcon from '@mui/icons-material/RotateRight';
 import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
-
+import FolderIcon from '@mui/icons-material/Folder';
+import SaveIcon from '@mui/icons-material/Save';
+import MenuIcon from '@mui/icons-material/Menu';
+import AssessmentIcon from '@mui/icons-material/Assessment';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow'; // Новая иконка для запуска симуляции
 
 import {
   encodeUInt32,
@@ -26,6 +31,7 @@ import {
   isRoadObject
 } from '../helpers/editorhelper';
 
+import TelemetryModal from "../components/TelemetryModal";
 
 declare function libOpenDrive(): Promise<any>;
 
@@ -47,6 +53,9 @@ const Editor = () => {
     }
   }, []);
 
+
+  const carModelRef = useRef<THREE.Object3D>();
+  const loaderRef   = useRef(new OBJLoader());
 
 
   const [selectedObject, setSelectedObject] = useState(null);
@@ -122,24 +131,78 @@ const Editor = () => {
   }, [selectedObject]);
 
   useEffect(() => {
+    loaderRef.current.load(
+      '/Car.obj',
+      (obj) => {
+        carModelRef.current = obj;
+      },
+      undefined,
+      (err) => console.error('OBJ load error:', err)
+    );
+  }, []);
+
+  useEffect(() => {
     const scene = sceneRef.current!;
-    carMeshes.current.forEach(m => {
-      scene.remove(m);
-      m.geometry.dispose();
-      (m.material as THREE.Material).dispose();
+    //carMeshes.current.forEach(m => {
+      //scene.remove(m);
+      //m.geometry.dispose();
+      //(m.material as THREE.Material).dispose();
+    //});
+    //carMeshes.current = [];
+    carMeshes.current.forEach(obj => {
+      // удаляем из сцены
+      scene.remove(obj);
+      // проходим по всем дочерним мешам и корректно их чистим
+      obj.traverse(child => {
+        if ((child as THREE.Mesh).isMesh) {
+          const mesh = child as THREE.Mesh;
+          mesh.geometry.dispose();
+          if (Array.isArray(mesh.material)) {
+            mesh.material.forEach(m => m.dispose());
+          } else {
+            mesh.material.dispose();
+          }
+        }
+      });
     });
     carMeshes.current = [];
 
+
     cars.forEach(car => {
-      const geo = new THREE.BoxGeometry(3, 6, 3);
-      const mat = new THREE.MeshBasicMaterial({ color: `#${car.color}` });
-      const mesh = new THREE.Mesh(geo, mat);
-      mesh.position.set(car.x, car.y, car.z);
-      mesh.scale.set(car.scale, car.scale, car.scale);
-      mesh.userData.type = 'car';
-      mesh.userData.id = car.id;        // <-- главное!
-      scene.add(mesh);
-      carMeshes.current.push(mesh);
+      if (!carModelRef.current) return;           // ждём загрузки
+
+      const instance = carModelRef.current.clone(true);
+      // сохраняем id/type на корневом объекте
+      instance.userData = { type: 'car', id: car.id };
+      // и дублируем его на каждом меше, чтобы raycaster.find() их ловил
+      instance.traverse(child => {
+        if ((child as THREE.Mesh).isMesh) {
+          child.userData = { ...instance.userData };
+          // Устанавливаем цвет материала меша
+          const mesh = child as THREE.Mesh;
+          if (Array.isArray(mesh.material)) {
+            mesh.material.forEach(mat => {
+              if (mat instanceof THREE.MeshPhongMaterial || 
+                  mat instanceof THREE.MeshBasicMaterial || 
+                  mat instanceof THREE.MeshStandardMaterial) {
+                mat.color.set(`#${car.color}`);
+              }
+            });
+          } else if (mesh.material instanceof THREE.MeshPhongMaterial || 
+                    mesh.material instanceof THREE.MeshBasicMaterial || 
+                    mesh.material instanceof THREE.MeshStandardMaterial) {
+            mesh.material.color.set(`#${car.color}`);
+          }
+        }
+      });
+      instance.position.set(car.x, car.y, car.z);
+      instance.scale.set(car.scale, car.scale, car.scale);
+      scene.add(instance);
+      carMeshes.current.push(instance);
+
+      // Удаляем дублирование добавления в сцену и в массив
+      // scene.add(instance);
+      // carMeshes.current.push(instance);
     });
   }, [cars]);
 
@@ -772,8 +835,11 @@ const Editor = () => {
     });
     window.addEventListener('keydown', (event) => {
       if (event.key === 'Escape') {
-        setSelectedObject(null)
-        transformControlsRef.current!.detach();
+        setSelectedObject(null);
+        // transformControlsRef.current!.detach();
+        // Сбрасываем выбранный объект в хранилище
+        // selectObject(null);
+        detachTransformControls(); // Используем нашу функцию
         if(cube_objs.length){
           for(let i = 0; i < cube_objs.length; i++){
               xxx[i] = JSON.parse(JSON.stringify(cube_objs[i].position))       
@@ -781,7 +847,7 @@ const Editor = () => {
               sizeArr[i] = JSON.parse(JSON.stringify(cube_objs[i].scale))
             }
         }        
-        loadPoints()
+        loadPoints();
         selectedCube = null;
         isAddedPoints = false;
       }
@@ -1276,10 +1342,13 @@ const Editor = () => {
         intersects[0].object === road_network_mesh
       ) {
         const pt = intersects[0].point;
-        addCar(pt.x, pt.y, pt.z, currentCar, currentColor);
+        // Создаем машину и получаем ID
+        const newCarId = addCar(pt.x, pt.y, pt.z, currentCar, currentColor);
         isAddCubeModeActive = false;
         scenarioSettings.arr_car.push(currentCar);
         scenarioSettings.color_arr.push(Number('0x' + currentColor));
+        
+        // Остальная логика после создания машины
         for (const cube of cube_objs) {
           if (cube.geometry) cube.geometry.dispose();
           if (cube.material) (cube.material as THREE.Material).dispose();
@@ -1943,12 +2012,74 @@ const Editor = () => {
       transformControlsRef.current!.detach();
       return;
     }
+    
+    // Находим меш с соответствующим ID
     const mesh = carMeshes.current.find(m => m.userData.id === selectedId);
     
     if (mesh) {
+      // Привязываем transform control к найденному объекту
       transformControlsRef.current!.attach(mesh);
+      
+      // Обновляем материал объекта, если его цвет был изменен
+      const selectedCar = cars.find(c => c.id === selectedId);
+      if (selectedCar) {
+        mesh.traverse(child => {
+          if ((child as THREE.Mesh).isMesh) {
+            const meshChild = child as THREE.Mesh;
+            if (Array.isArray(meshChild.material)) {
+              meshChild.material.forEach(mat => {
+                if (mat.hasOwnProperty('color')) {
+                  (mat as any).color.set(`#${selectedCar.color}`);
+                }
+              });
+            } else if (meshChild.material.hasOwnProperty('color')) {
+              (meshChild.material as any).color.set(`#${selectedCar.color}`);
+            }
+          }
+        });
+      }
     }
-  }, [selectedId]);
+  }, [selectedId, cars]);
+
+  const [fileMenuAnchor, setFileMenuAnchor] = useState<null | HTMLElement>(null);
+  const [telemetryModalOpen, setTelemetryModalOpen] = useState(false);
+  const [simulationConfirmOpen, setSimulationConfirmOpen] = useState(false); // Новое состояние
+  
+  const handleFileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setFileMenuAnchor(event.currentTarget);
+  };
+  const handleFileMenuClose = () => {
+    setFileMenuAnchor(null);
+  };
+  
+  const handleOpenTelemetryModal = () => {
+    setTelemetryModalOpen(true);
+    handleFileMenuClose();
+  };
+
+  const handleOpenSimulationConfirm = () => {
+    setSimulationConfirmOpen(true);
+    handleFileMenuClose();
+  };
+
+  const handleCloseSimulationConfirm = () => {
+    setSimulationConfirmOpen(false);
+  };
+
+  // Функция для запуска симуляции
+  const handleStartSimulation = () => {
+    // Здесь будет логика для отправки запроса на сервер
+    console.log('Запуск симуляции');
+    
+    // Закрываем модальное окно после запуска
+    setSimulationConfirmOpen(false);
+  };
+
+  // Функция для отсоединения transform control и сброса выбранного объекта
+  const detachTransformControls = () => {
+    transformControlsRef.current?.detach();
+    selectObject(null); // Очищаем выбранный объект в хранилище
+  };
 
   return (
     <div>
@@ -2009,10 +2140,66 @@ const Editor = () => {
           </a>
         </div>
       </div>
-      {/* Toolbar для TransformControls */}
+
+      {/* Панель инструментов */}
       <div style={{
         position: 'absolute',
         top: 10,
+        left: 10,
+        display: 'flex',
+        gap: 10,
+        alignItems: 'start',
+        zIndex: 10
+      }}>
+        {/* Меню Файл */}
+        <div style={{
+          background: 'rgba(255,255,255,0.8)',
+          borderRadius: 4,
+          padding: 4,
+        }}>
+          <Tooltip title="Файл">
+            <IconButton
+              size="small"
+              onClick={handleFileMenuOpen}
+            >
+              <MenuIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Menu
+            anchorEl={fileMenuAnchor}
+            open={Boolean(fileMenuAnchor)}
+            onClose={handleFileMenuClose}
+          >
+            <MenuItem onClick={() => {
+              document.getElementById('xodr_file_input')?.click();
+              handleFileMenuClose();
+            }}>
+              <FolderIcon fontSize="small" style={{ marginRight: 8 }} />
+              Открыть...
+            </MenuItem>
+            <MenuItem onClick={() => {
+              handleSaveScenario();
+              handleFileMenuClose();
+            }}>
+              <SaveIcon fontSize="small" style={{ marginRight: 8 }} />
+              Сохранить
+            </MenuItem>
+            <MenuItem onClick={handleOpenSimulationConfirm}>
+              <PlayArrowIcon fontSize="small" style={{ marginRight: 8 }} />
+              Запустить симуляцию
+            </MenuItem>
+            <MenuItem onClick={handleOpenTelemetryModal}>
+              <AssessmentIcon fontSize="small" style={{ marginRight: 8 }} />
+              Результаты
+            </MenuItem>
+          </Menu>
+        </div>
+      </div>
+
+      {/* Инструменты трансформации */}
+      <div style={{
+        position: 'absolute',
+        top: 50,
         left: 10,
         display: 'flex',
         flexDirection: 'column',
@@ -2044,13 +2231,11 @@ const Editor = () => {
           <ZoomOutMapIcon fontSize="small" />
         </IconButton>
       </div>
-      
 
-
+      {/* Обновляем использование RightPanel */}
       <RightPanel
         sceneGraph={sceneGraph}
-        onDetach={() => transformControlsRef.current?.detach()}
-
+        onDetach={detachTransformControls}
       />
       {actionsReady && (
         <SpeedDialTooltipOpen
@@ -2059,6 +2244,47 @@ const Editor = () => {
           onAddpoints={handleAddPoints}
         />
       )}
+      
+      <TelemetryModal 
+        open={telemetryModalOpen} 
+        onClose={() => setTelemetryModalOpen(false)} 
+      />
+      <Modal
+        open={simulationConfirmOpen}
+        onClose={handleCloseSimulationConfirm}
+        aria-labelledby="simulation-confirm-title"
+        aria-describedby="simulation-confirm-description"
+      >
+        <Box sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 400,
+          bgcolor: 'background.paper',
+          border: '1px solid #ccc',
+          boxShadow: 24,
+          p: 4,
+          textAlign: 'center'
+        }}>
+          <Typography id="simulation-confirm-title" variant="h6" component="h2" gutterBottom>
+            Подтверждение
+          </Typography>
+          <Typography id="simulation-confirm-description" sx={{ mt: 2, mb: 3 }}>
+            Вы уверены, что хотите запустить симуляции?
+          </Typography>
+          <Button 
+            variant="contained" 
+            onClick={handleStartSimulation}
+            sx={{ 
+              bgcolor: 'error.main', 
+              '&:hover': { bgcolor: 'error.dark' } 
+            }}
+          >
+            Запустить
+          </Button>
+        </Box>
+      </Modal>
     </div>
   );
 };

@@ -1,22 +1,26 @@
 import React, { useCallback } from 'react';
 import {
   Box,
-  Drawer,
+  Drawer
+} from '@mui/material';
+import {
   Typography,
-  TextField,
   Accordion,
-  AccordionSummary,
   AccordionDetails,
+  AccordionSummary,
   Divider,
   Slider,
-  Stack
-} from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+  Stack,
+  Input,
+  FormLabel,
+  FormControl,
+  Grid
+} from '@mui/joy';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { SimpleTreeView } from '@mui/x-tree-view/SimpleTreeView';
 import { TreeItem }      from '@mui/x-tree-view/TreeItem';
 import { HexColorPicker } from 'react-colorful';
 import { useEditorStore } from '../../store/useEditorStore';
-
 
 type RightPanelProps = {
   sceneGraph: { id: string; name: string; children: any[] } | null;
@@ -51,8 +55,8 @@ export default function RightPanel({ sceneGraph, onDetach }: RightPanelProps) {
         }}
       >
         <Box sx={{ p: 2 }}>
-          <Typography variant="h6">Настройки</Typography>
-          <Typography sx={{ mt: 2 }}>Нет выбранного объекта</Typography>
+          <Typography level="h4">Настройки</Typography>
+          <Typography level="body-md" sx={{ mt: 2 }}>Нет выбранного объекта</Typography>
         </Box>
       </Drawer>
     );
@@ -68,7 +72,9 @@ export default function RightPanel({ sceneGraph, onDetach }: RightPanelProps) {
   const handleColorChange = (hex: string) => {
     onDetach();
     // react-colorful отдаёт со "#"
-    updateCar(car.id, { color: hex.replace('#', '') });
+    const hexValue = hex.replace('#', '');
+    console.log(`Updating car color to: ${hexValue}`);
+    updateCar(car.id, { color: hexValue });
   };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -87,17 +93,18 @@ export default function RightPanel({ sceneGraph, onDetach }: RightPanelProps) {
       }}
     >
       <Box sx={{ p: 2 }}>
-        <Typography variant="h6" gutterBottom>Настройки</Typography>
+        <Typography level="h4" gutterBottom>Настройки</Typography>
 
         {/* Сцена */}
         <Accordion>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography>Объекты</Typography>
+          <AccordionSummary indicator={<KeyboardArrowDownIcon />}>
+            <Typography level="title-md">Объекты</Typography>
           </AccordionSummary>
           <AccordionDetails>
             {sceneGraph ? (
               <SimpleTreeView
                 defaultExpandedItems={[sceneGraph.id]}
+                // @ts-ignore (SimpleTreeView ожидает string, но нам нужен string[])
                 selectedItems={selectedId ? [selectedId] : []}
                 onItemClick={(event, itemId) => {
                   selectObject(itemId);
@@ -107,76 +114,96 @@ export default function RightPanel({ sceneGraph, onDetach }: RightPanelProps) {
                 {renderTreeItem(sceneGraph)}
               </SimpleTreeView>
             ) : (
-              <Typography>Сцена пуста или загружается...</Typography>
+              <Typography level="body-md">Сцена пуста или загружается...</Typography>
             )}
           </AccordionDetails>
         </Accordion>
 
         <Divider sx={{ my: 2 }} />
 
-        <Accordion defaultExpanded sx={{ mt: 2 }}>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography>Свойства</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-        {/* Координаты */}
-          <Stack spacing={2}>
-            {(['x','y','z'] as const).map(axis => (
-              <TextField
-                key={axis}
-                label={`Позиция ${axis.toUpperCase()}`}
-                type="number"
-                value={car[axis].toFixed(3)}
-                onChange={handleNumField(axis)}
-                fullWidth
-              />
-            ))}
+        <Accordion defaultExpanded>
+          <AccordionSummary indicator={<KeyboardArrowDownIcon />}>
+            <Typography level="title-md">Свойства</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Stack spacing={2}>
+              {/* Имя машины - первое поле */}
+              <FormControl>
+                <FormLabel>Имя машины</FormLabel>
+                {/* @ts-ignore */}
+                <Input
+                  slotProps={{
+                    input: {
+                      value: car.model || '',
+                      onChange: handleNameChange
+                    }
+                  }}
+                />
+              </FormControl>
 
-            {/* Color picker */}
-            <Box>
-              <Typography gutterBottom>Цвет</Typography>
-              <HexColorPicker
-                color={`#${car.color}`}
-                onChange={handleColorChange}
-              />
-              <Box
-                sx={{
-                  mt: 1,
-                  width: 36,
-                  height: 14,
-                  backgroundColor: `#${car.color}`,
-                  border: '1px solid #ccc'
-                }}
-              />
-            </Box>
-            <TextField
-              label="Имя машины"
-              type="text"
-              value={car.model || ''}
-              onChange={handleNameChange}
-              fullWidth
-              sx={{ mb: 2 }}
-            />
+              {/* Координаты X, Y, Z на одной линии */}
+              <FormLabel>Позиция</FormLabel>
+              <Grid container spacing={1}>
+                {(['x','y','z'] as const).map(axis => (
+                  <Grid xs={4} key={axis}>
+                    <FormControl>
+                      <FormLabel sx={{ fontSize: 'xs', mb: 0.5 }}>{axis.toUpperCase()}</FormLabel>
+                      {/* @ts-ignore */}
+                      <Input
+                        size="sm"
+                        type="number"
+                        slotProps={{
+                          input: {
+                            value: car[axis].toFixed(3),
+                            onChange: handleNumField(axis)
+                          }
+                        }}
+                      />
+                    </FormControl>
+                  </Grid>
+                ))}
+              </Grid>
 
-              <Typography gutterBottom>Размер</Typography>
-              <Slider
-                value={currentScale}
-                min={0.1}
-                max={5}
-                step={0.1}
-                valueLabelDisplay="auto"
-                onChange={(_, newValue) => {
-                  if (typeof newValue === 'number' && car) {
-                    onDetach();
-                    updateCar(car.id, { scale: newValue });
-                  }
-                }}
-                aria-label="Масштаб машины"
-              />
+              <FormControl>
+                <FormLabel>Размер</FormLabel>
+                <Slider
+                  value={currentScale}
+                  min={0.1}
+                  max={5}
+                  step={0.1}
+                  valueLabelDisplay="auto"
+                  onChange={(_, newValue) => {
+                    if (typeof newValue === 'number' && car) {
+                      onDetach();
+                      updateCar(car.id, { scale: newValue });
+                    }
+                  }}
+                  aria-label="Масштаб машины"
+                />
+              </FormControl>
 
-
-          </Stack>
-        </AccordionDetails>
+              {/* Color picker */}
+              <FormControl>
+                <FormLabel>Цвет</FormLabel>
+                <HexColorPicker
+                  color={`#${car.color}`}
+                  onChange={handleColorChange}
+                />
+                <Box
+                  sx={{
+                    mt: 1,
+                    width: 36,
+                    height: 14,
+                    backgroundColor: `#${car.color}`,
+                    border: '1px solid #ccc'
+                  }}
+                />
+                <Typography level="body-sm" sx={{ mt: 0.5, color: 'neutral.500' }}>
+                  Текущий цвет: #{car.color}
+                </Typography>
+              </FormControl>
+            </Stack>
+          </AccordionDetails>
         </Accordion>
       </Box>
     </Drawer>

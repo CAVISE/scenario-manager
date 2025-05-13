@@ -23,7 +23,7 @@ type EditorState = {
   points: Point[];
   selectedId: string | null;
 
-  addCar: (x: number, y: number, z: number, model: string, color: string) => void;
+  addCar: (x: number, y: number, z: number, model: string, color: string) => string;
   updateCar: (id: string, props: Partial<Omit<Car, 'id'>>) => void;
   removeCar: (id: string) => void;
 
@@ -39,10 +39,14 @@ export const useEditorStore = create<EditorState>(set => ({
   points: [],
   selectedId: null,
 
-  addCar: (x, y, z, model, color) =>
+  addCar: (x, y, z, model, color) => {
+    const id = nanoid();
     set(s => ({
-      cars: [...s.cars, { id: nanoid(), x, y, z, model, color, scale: 1 }],
-    })),
+      cars: [...s.cars, { id, x, y, z, model, color, scale: 1 }],
+      selectedId: id
+    }));
+    return id;
+  },
 
   updateCar: (id, props) =>
     set(s => ({
