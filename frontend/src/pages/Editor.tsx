@@ -134,6 +134,7 @@ const Editor = () => {
     loaderRef.current.load(
       '/Car.obj',
       (obj) => {
+        obj.rotation.x = Math.PI / 2; //чтобы машина стояла на земле а не в смотрела в небо
         carModelRef.current = obj;
       },
       undefined,
