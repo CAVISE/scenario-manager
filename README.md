@@ -78,3 +78,14 @@ docker compose up
 
 Если симулятор запущен, то пишем в корне папки ./simulation -  ```python main.py```
 
+
+
+docker build -t carla:idle .
+
+xhost +local:root
+sudo docker run --privileged --gpus all --net host -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix --name carla_idle carla:idle
+docker exec -it carla_idle bash
+
+# внутри контейнера
+./CarlaUE4.sh -quality-level=Low
+./CarlaUE4.sh -quality-level=Low -RenderOffScreen

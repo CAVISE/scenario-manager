@@ -1,6 +1,5 @@
 import yaml
 import opencda_playground
-# функция для представления многострочных строк в стиле |-
 
 
 def str_presenter(dumper, data):
@@ -8,7 +7,6 @@ def str_presenter(dumper, data):
         return dumper.represent_scalar("tag:yaml.org,2002:str", data, style="|-")
     return dumper.represent_scalar("tag:yaml.org,2002:str", data)
 
-# класс-обёртка для списков, которые нужно вывести в одну строку
 
 
 class FlowList(list):
@@ -22,20 +20,15 @@ def flowlist_representer(dumper, data):
 yaml.add_representer(str, str_presenter)
 yaml.add_representer(FlowList, flowlist_representer)
 
-# name - любое имя сценария
-# map - карта
-# coord list - координаты машин в формате [x, y, z, x_rot, y_rot, z_rot], пример [107.0, -12.0, 0.3, 0, 0, 0]
 
 
 def create_scenario(name, map, coord, destination):
     if len(coord) != len(destination):
-        print(f"ERROR: length of coords is not equal to destination (len(coord) = {
-              len(coord)}, len(destination) = {len(destination)})")
+        print(f"ERROR: length of coords is not equal to destination (len(coord) = {len(coord)}, len(destination) = {len(destination)})")
         return 1
     data = {
         "description": (
-            f"Автосгенерированный сценарий {name}, с карты {
-                map}, с с количеством машин {len(coord)}\n"
+            f"Автосгенерированный сценарий {name}, с карты {map}, с с количеством машин {len(coord)}\n"
         ),
         "world": {
             "sync_mode": True,

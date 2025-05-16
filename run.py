@@ -26,7 +26,7 @@ def start_opencda(scenario, map):
     print("Запуск OpenCDA...")
     opencda_params = ["-t", scenario, "-v", version, "-m", map]
 
-    _program = "run_opencda.py"
+    _program = "runner.py"
 
     if os.name == "posix":
         python_path = f"venv/bin/python {_program}"
@@ -66,11 +66,11 @@ def main():
     try:
         # carla_process = start_carla()
 
-        # scenario = "single_2lanefree_carla"
+        scenario = "single_2lanefree_carla"
         # scenario = "map10"
         # scenario = "map10_2"
         # scenario = "map10_3"
-        scenario = "map10_4"
+        # scenario = "map10_4"
         start_opencda(scenario, "map10")
 
     finally:

@@ -26,7 +26,7 @@ except ModuleNotFoundError as error:
 try:
     yaml = importlib.import_module('yaml')
 except ModuleNotFoundError as error:
-    print('how did you think I would work with yaml, if you have no yaml package installed?')
+    print('no yaml package installed')
     print('install it: https://pypi.org/project/pyaml')
     sys.exit(errno.EPERM)
 
