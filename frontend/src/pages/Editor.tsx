@@ -23,7 +23,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import MenuIcon from '@mui/icons-material/Menu';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'; // Новая иконка для запуска симуляции
-
+let ind = 0;
 import {
   encodeUInt32,
   decodeUInt32,
@@ -1610,8 +1610,8 @@ const Editor = () => {
           loadRSU();
         }
       }
-      if (pointerIndex!=-1) {
-        console.log(pointerIndex, isAddedPoints)
+      if (ind!=-1) {
+        console.log(pointerIndex, ind)
         if (pointerIndex >=0 && isAddedPoints) {
           console.log(33234)
             event.preventDefault();
@@ -1642,7 +1642,7 @@ const Editor = () => {
                   )
                 );
                 console.log(xxx,aaa, pointerIndex)
-                aaa[pointerIndex===0 ? 0: xxx.length - 1].push(JSON.parse(JSON.stringify(intersectionPointRoad)));
+                aaa[ind].push(JSON.parse(JSON.stringify(intersectionPointRoad)));
                 console.log(aaa)
                 loadPoints();
             }
@@ -2067,8 +2067,14 @@ const Editor = () => {
     }
     
     // Находим меш с соответствующим ID
-    const mesh = carMeshes.current.find(m => m.userData.id === selectedId);
-    console.log(carMeshes, selectedId)
+    const mesh = carMeshes.current.find((m, index) => {
+        if (m.userData.id === selectedId) {
+          ind = index;
+          return true;
+        }
+        return false;
+    });
+
     if (mesh) {
       // Привязываем transform control к найденному объекту
       transformControlsRef.current!.attach(mesh);
