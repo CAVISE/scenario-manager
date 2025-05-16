@@ -12,3 +12,6 @@ epic:
 
 opencda:
 	$(PYTHON_EXEC) opencda_playground.py
+
+dev:
+	$(PYTHON_EXEC) -m fastapi dev --port 1234
