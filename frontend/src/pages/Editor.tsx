@@ -257,7 +257,7 @@ const Editor = () => {
               sizeArr[i] = JSON.parse(JSON.stringify(cube_objs[i].scale))
             }
         }        
-        loadPoints()
+        // loadPoints()
       },
       deleteCube: () => {
         isRotating = false;
@@ -299,7 +299,7 @@ const Editor = () => {
             selectedCube = null;
             pointerIndex = -1;
             prevIndex = -1;
-            isAddedPoints = false;
+            // isAddedPoints = false;
             transformControlsRef.current!.detach();
           }
         }if (selectedPoint) {
@@ -331,7 +331,7 @@ const Editor = () => {
         }
       },
       addPoint: () => {
-        isAddedPoints = false;
+        // isAddedPoints = false;
         isRotating = false;
         isAddPointModeActive = true;
         isAddCubeModeActive = false;
@@ -371,23 +371,25 @@ const Editor = () => {
       },
       translateMode: function() {
         transformControlsRef.current!.setMode('translate');
-        isAddedPoints = false
+        // isAddedPoints = false
       },
       rotateMode: function() {
         transformControlsRef.current!.setMode('rotate');
-        isAddedPoints = false
+        // isAddedPoints = false
       },
       scaleMode: function() {
         transformControlsRef.current!.setMode('scale');
-        isAddedPoints = false
+        // isAddedPoints = false
       },
       addDirectionPoints: () => {
-        console.log(selectedObject)
-        if(selectedId){
+        console.log(pointerIndex)
+        if(pointerIndex!=-1){
         isRotating = false;
-        isAddedPoints = !isAddedPoints;
+        isAddedPoints = true;
         isAddCubeModeActive = false;
         isAddPointModeActive = false;
+        console.log(pointerIndex, )
+        loadPoints()
         }
       }
     };
@@ -765,7 +767,7 @@ const Editor = () => {
               if (coordinate.color) scenarioSettings?.color_arr?.push(coordinate.color);
               if (coordinate.rotation) rotationArr.push(coordinate.rotation / 57.32);
               if(coordinate.scale)sizeArr.push(coordinate.scale)
-              if(coordinate.selected)pointerIndex = i
+              // if(coordinate.selected)pointerIndex = i
               const pointsGroup: any[] = [];
               coordinate.points?.forEach(point => {
                 pointsGroup.push({
@@ -1329,12 +1331,29 @@ const Editor = () => {
       if (!currentCar) {
         currentCar = 'car_' + Math.floor(Math.random() * 1000);
       }
-
+      cube_objs = [];
+      disposable_objs = []; 
+      xxx.map((cube, i) => {
+          const geometry = new THREE.BoxGeometry(3, 6, 3);
+          const material = new THREE.MeshBasicMaterial({ color: scenarioSettings.color_arr[i] });
+          cube = new THREE.Mesh(geometry, material);
+          cube.userData.type = 'car';
+          cube.isDisposing = false;
+          cube.position.set(xxx[i].x, xxx[i].y, xxx[i].z);
+          if(i === xxx.length - 1)cube.position.z += geometry.parameters.width / 2 + 0.01;
+            if (rotationArr[i]!=0){
+              cube.rotation.z += rotationArr[i]
+            }
+            // if(sizeArr[i]!=0)cube.scale.set(sizeArr[i].x, sizeArr[i].y, sizeArr[i].z)
+            scene.add(cube);
+            cube_objs.push(cube);
+            disposable_objs.push(cube);
+        })
       const intersects = raycaster.intersectObjects(
         [...cube_objs, ...points_arr, road_network_mesh],
         true
       );
-
+      console.log(xxx, cube_objs)
       if (
         intersects.length > 0 &&
         isAddCubeModeActive &&
@@ -1345,6 +1364,7 @@ const Editor = () => {
         const pt = intersects[0].point;
         // Создаем машину и получаем ID
         const newCarId = addCar(pt.x, pt.y, pt.z, currentCar, currentColor);
+        
         isAddCubeModeActive = false;
         scenarioSettings.arr_car.push(currentCar);
         scenarioSettings.color_arr.push(Number('0x' + currentColor));
@@ -1356,6 +1376,8 @@ const Editor = () => {
           scene.remove(cube);
         }
         xxx.push(JSON.parse(JSON.stringify(pt)));
+        pointerIndex = xxx.length - 1
+        console.log(pointerIndex)
         aaa.push([]);
         loadPoints();
         return;
@@ -1548,6 +1570,7 @@ const Editor = () => {
     }
 
     function onDocumentMouseDbClick(event) {
+      console.log(344324)
       const intersects = raycaster.intersectObjects([...cube_objs, ...cubeCircles.flat(), ...points_arr]);
 
       if (intersects.length > 0 && isAddPointModeActive && intersects[0].object === road_network_mesh) {
@@ -1587,8 +1610,10 @@ const Editor = () => {
           loadRSU();
         }
       }
-      if (selectedCube) {
+      if (pointerIndex!=-1) {
+        console.log(pointerIndex, isAddedPoints)
         if (pointerIndex >=0 && isAddedPoints) {
+          console.log(33234)
             event.preventDefault();
 
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -1601,18 +1626,24 @@ const Editor = () => {
                 const intersectionRoad = intersectsRoad[0];
 
                 const cubeIndex = cube_objs.indexOf(selectedCube);
-                if (cubeCircles[cubeIndex]) {
-                    cubeCircles[cubeIndex].forEach(circle => {
+                if (cubeCircles[pointerIndex]) {
+                    cubeCircles[pointerIndex].forEach(circle => {
                         if (circle.parent) scene.remove(circle);
                         if (circle.geometry) circle.geometry.dispose();
                         if (circle.material) circle.material.dispose();
                     });
-                    cubeCircles[cubeIndex] = [];
+                    cubeCircles[pointerIndex] = [];
                 }
                 console.log(cubeCircles)
                 const intersectionPointRoad = intersectionRoad.point;
-                aaa[cubeIndex].push(JSON.parse(JSON.stringify(intersectionPointRoad)));
-
+                xxx = xxx.filter((obj, index, self) =>
+                  index === self.findIndex((t) => 
+                    t.x === obj.x && t.y === obj.y && t.z === obj.z
+                  )
+                );
+                console.log(xxx,aaa, pointerIndex)
+                aaa[pointerIndex===0 ? 0: xxx.length - 1].push(JSON.parse(JSON.stringify(intersectionPointRoad)));
+                console.log(aaa)
                 loadPoints();
             }
         }
@@ -1643,7 +1674,7 @@ const Editor = () => {
       if (isAddCubeModeActive)rotationArr.push(0);sizeArr.push({x: 1, y: 1, z: 1})
       cube_objs = [];
       disposable_objs = []; 
-      /*xxx.map((cube, i) => {
+      xxx.map((cube, i) => {
           const geometry = new THREE.BoxGeometry(3, 6, 3);
           const material = new THREE.MeshBasicMaterial({ color: scenarioSettings.color_arr[i] });
           cube = new THREE.Mesh(geometry, material);
@@ -1659,8 +1690,8 @@ const Editor = () => {
           cube_objs.push(cube);
           disposable_objs.push(cube);
           isAddCubeModeActive = false;
-        });*/
-      updateSceneGraph();
+        });
+      // updateSceneGraph();
     }
     // function loadCube() {
     //   // Сохраняем текущие позиции и параметры кубов
@@ -1777,15 +1808,7 @@ const Editor = () => {
       updateSceneGraph();
     }
     function loadPoints(){
-      if(cubeCircles){
-      aaa.forEach((_, index)=>{
-        aaa[index].forEach((_, i)=>{
-          if(cubeCircles[index][i]){
-            aaa[index][i] = JSON.parse(JSON.stringify(cubeCircles[index][i].position))
-          }
-        })
-      })
-    }
+      
 
       cubeCircles.forEach((circleArray, index) => {
         if (circleArray) {
@@ -1797,7 +1820,36 @@ const Editor = () => {
           cubeCircles[index] = []; 
         }
       });
+      xxx.map((cube, i) => {
+          const geometry = new THREE.BoxGeometry(3, 6, 3);
+          const material = new THREE.MeshBasicMaterial({ color: scenarioSettings.color_arr[i] });
+          cube = new THREE.Mesh(geometry, material);
+          cube.userData.type = 'car';
+          cube.isDisposing = false;
+          cube.position.set(xxx[i].x, xxx[i].y, xxx[i].z);
+          if(i === xxx.length - 1)cube.position.z += geometry.parameters.width / 2 + 0.01;
+          if (rotationArr[i]!=0){
+            cube.rotation.z += rotationArr[i]
+          }
+          // if(sizeArr[i]!=0)cube.scale.set(sizeArr[i].x, sizeArr[i].y, sizeArr[i].z)
+          scene.add(cube);
+          cube_objs.push(cube);
+          disposable_objs.push(cube);
+          isAddCubeModeActive = false;
+        });
+      if(cube_objs){
+        
+      aaa.forEach((_, index)=>{
+        aaa[index].forEach((_, i)=>{
+          if(cubeCircles[index][i]){
+            aaa[index][i] = JSON.parse(JSON.stringify(cubeCircles[index][i].position))
+          }
+        })
+      })
+    }
+    // console.log(xxx, cube_objs, aaa, cubeCircles)
       aaa.forEach((pointsArray, arrIndex) => {
+        console.log(aaa)
                     if (!cubeCircles[arrIndex]) {
                         cubeCircles[arrIndex] = [];
                     }
@@ -2016,7 +2068,7 @@ const Editor = () => {
     
     // Находим меш с соответствующим ID
     const mesh = carMeshes.current.find(m => m.userData.id === selectedId);
-    
+    console.log(carMeshes, selectedId)
     if (mesh) {
       // Привязываем transform control к найденному объекту
       transformControlsRef.current!.attach(mesh);
