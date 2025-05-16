@@ -6,9 +6,7 @@ import {
   Tab, 
   IconButton, 
   Typography,
-  Grid,
-  Chip,
-  Tooltip
+  Grid
 } from '@mui/material';
 import { 
   Card,
@@ -56,14 +54,6 @@ const TitleContainer = styled(Box)({
   display: 'flex',
   alignItems: 'center',
   gap: '12px'
-});
-
-const DemoChip = styled(Chip)({
-  backgroundColor: '#FFA726', // Оранжевый цвет
-  color: '#FFFFFF',
-  fontWeight: 'bold',
-  fontSize: '0.7rem',
-  height: '24px'
 });
 
 const ImageCard = styled(Card)({
@@ -206,9 +196,6 @@ const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
               <Typography variant="h5" component="h2">
                 Результаты
               </Typography>
-              <Tooltip title="Отображаются демонстрационные данные">
-                <DemoChip label="DEMO" size="small" />
-              </Tooltip>
             </TitleContainer>
             <IconButton onClick={onClose} size="small" aria-label="close">
               <CloseIcon />

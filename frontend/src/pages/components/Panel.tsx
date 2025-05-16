@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import {
   Box,
   Drawer
@@ -14,8 +14,7 @@ import {
   Input,
   FormLabel,
   FormControl,
-  Grid,
-  FormHelperText
+  Grid
 } from '@mui/joy';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { SimpleTreeView } from '@mui/x-tree-view/SimpleTreeView';
@@ -36,16 +35,6 @@ export default function RightPanel({ sceneGraph, onDetach }: RightPanelProps) {
 
   const car = cars.find(c => c.id === selectedId) || null;
   const currentScale = car?.scale ?? 1;
-
-  const [nameError, setNameError] = useState<string | null>(null);
-  const [nameValue, setNameValue] = useState('');
-
-  useEffect(() => {
-    if (car) {
-      setNameValue(car.model || '');
-      setNameError(null);
-    }
-  }, [car]);
 
   const renderTreeItem = useCallback((node: any) => (
     <TreeItem key={node.id} itemId={node.id} label={node.name}>
@@ -75,29 +64,22 @@ export default function RightPanel({ sceneGraph, onDetach }: RightPanelProps) {
 
   // Хэлпер для полей x/y/z
   const handleNumField = (axis: 'x' | 'y' | 'z') => (e: React.ChangeEvent<HTMLInputElement>) => {
+    onDetach();
     updateCar(car.id, { [axis]: parseFloat(e.target.value) });
   };
 
+  // Цвет picker
   const handleColorChange = (hex: string) => {
+    onDetach();
+    // react-colorful отдаёт со "#"
     const hexValue = hex.replace('#', '');
     console.log(`Updating car color to: ${hexValue}`);
     updateCar(car.id, { color: hexValue });
   };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newName = e.target.value;
-    setNameValue(newName);
-
-    // Проверяем на уникальность
-    const isDuplicate = cars.some(c => c.id !== car.id && c.model === newName);
-
-    if (isDuplicate) {
-      setNameError('Имя машины должно быть уникальным');
-    } else {
-      setNameError(null);
-      // Обновляем только если имя уникально
-      updateCar(car.id, { model: newName });
-    }
+    onDetach();
+    updateCar(car.id, { model: e.target.value });
   };
 
   return (
@@ -146,25 +128,17 @@ export default function RightPanel({ sceneGraph, onDetach }: RightPanelProps) {
           <AccordionDetails>
             <Stack spacing={2}>
               {/* Имя машины - первое поле */}
-              <FormControl error={!!nameError}>
+              <FormControl>
                 <FormLabel>Имя машины</FormLabel>
                 {/* @ts-ignore */}
                 <Input
-                  color={nameError ? "danger" : "neutral"}
                   slotProps={{
                     input: {
-                      value: nameValue,
+                      value: car.model || '',
                       onChange: handleNameChange
                     }
                   }}
                 />
-                {nameError && (
-                  <FormHelperText>
-                    <Typography level="body-xs" color="danger">
-                      {nameError}
-                    </Typography>
-                  </FormHelperText>
-                )}
               </FormControl>
 
               {/* Координаты X, Y, Z на одной линии */}
@@ -200,6 +174,7 @@ export default function RightPanel({ sceneGraph, onDetach }: RightPanelProps) {
                   valueLabelDisplay="auto"
                   onChange={(_, newValue) => {
                     if (typeof newValue === 'number' && car) {
+                      onDetach();
                       updateCar(car.id, { scale: newValue });
                     }
                   }}

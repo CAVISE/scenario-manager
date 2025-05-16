@@ -35,6 +35,13 @@ import TelemetryModal from "../components/TelemetryModal";
 
 declare function libOpenDrive(): Promise<any>;
 
+// Расширяем тип глобального объекта window
+declare global {
+  interface Window {
+    PARAMS: any;
+  }
+}
+
 const Editor = () => {
   // — Zustand store
   const cars         = useEditorStore(s => s.cars);
@@ -131,6 +138,44 @@ const Editor = () => {
   }, [selectedObject]);
 
   useEffect(() => {
+    // Обработчик для скрытого input элемента загрузки файла
+    const fileInput = document.getElementById('xodr_file_input') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.accept = '.xodr';
+      fileInput.addEventListener('change', (event) => {
+        const target = event.target as HTMLInputElement;
+        const file = target.files?.[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            if (typeof e.target?.result === 'string') {
+              // Загружаем файл и обновляем карту
+              if (ModuleOpenDrive) {
+                if (OpenDriveMap)
+                  OpenDriveMap.delete();
+                
+                ModuleOpenDrive['FS_unlink']('./data.xodr');
+                ModuleOpenDrive['FS_createDataFile'](".", "data.xodr", e.target.result, true, true);
+                
+                let odr_map_config = {
+                  with_lateralProfile: PARAMS.lateralProfile,
+                  with_laneHeight: PARAMS.laneHeight,
+                  with_road_objects: false,
+                  center_map: true,
+                  abs_z_for_for_local_road_obj_outline: true
+                };
+                
+                OpenDriveMap = new ModuleOpenDrive.OpenDriveMap("./data.xodr", odr_map_config);
+                loadOdrMap(true, true);
+              }
+            }
+          };
+          reader.readAsText(file);
+        }
+      });
+    }
+
+    // Загрузка модели автомобиля
     loaderRef.current.load(
       '/Car.obj',
       (obj) => {
@@ -181,72 +226,29 @@ const Editor = () => {
           child.userData = { ...instance.userData };
           // Устанавливаем цвет материала меша
           const mesh = child as THREE.Mesh;
-          
-          // Создаём новые материалы для каждой машины вместо использования общего материала
           if (Array.isArray(mesh.material)) {
-            // Для массива материалов
-            mesh.material = mesh.material.map(mat => {
-              // Создаём новый материал того же типа, что и оригинальный
-              let newMaterial;
-              if (mat instanceof THREE.MeshPhongMaterial) {
-                newMaterial = new THREE.MeshPhongMaterial().copy(mat);
-              } else if (mat instanceof THREE.MeshBasicMaterial) {
-                newMaterial = new THREE.MeshBasicMaterial().copy(mat);
-              } else if (mat instanceof THREE.MeshStandardMaterial) {
-                newMaterial = new THREE.MeshStandardMaterial().copy(mat);
-              } else {
-                // Если тип не распознан, просто клонируем
-                newMaterial = mat.clone();
+            mesh.material.forEach(mat => {
+              if (mat instanceof THREE.MeshPhongMaterial || 
+                  mat instanceof THREE.MeshBasicMaterial || 
+                  mat instanceof THREE.MeshStandardMaterial) {
+                mat.color.set(`#${car.color}`);
               }
-              // Устанавливаем цвет из хранилища
-              newMaterial.color.set(`#${car.color}`);
-              return newMaterial;
             });
-          } else {
-            // Для одиночного материала
-            let newMaterial;
-            if (mesh.material instanceof THREE.MeshPhongMaterial) {
-              newMaterial = new THREE.MeshPhongMaterial().copy(mesh.material);
-            } else if (mesh.material instanceof THREE.MeshBasicMaterial) {
-              newMaterial = new THREE.MeshBasicMaterial().copy(mesh.material);
-            } else if (mesh.material instanceof THREE.MeshStandardMaterial) {
-              newMaterial = new THREE.MeshStandardMaterial().copy(mesh.material);
-            } else {
-              // Если тип не распознан, просто клонируем
-              newMaterial = mesh.material.clone();
-            }
-            // Устанавливаем цвет из хранилища
-            newMaterial.color.set(`#${car.color}`);
-            mesh.material = newMaterial;
+          } else if (mesh.material instanceof THREE.MeshPhongMaterial || 
+                    mesh.material instanceof THREE.MeshBasicMaterial || 
+                    mesh.material instanceof THREE.MeshStandardMaterial) {
+            mesh.material.color.set(`#${car.color}`);
           }
         }
       });
-      
-      // Добавляем текстовую метку с именем машины для лучшей идентификации
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      canvas.width = 256;
-      canvas.height = 64;
-      ctx.fillStyle = 'white';
-      ctx.font = 'bold 32px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText(car.model, 128, 32);
-      
-      const texture = new THREE.CanvasTexture(canvas);
-      const labelMaterial = new THREE.SpriteMaterial({ 
-        map: texture,
-        transparent: true 
-      });
-      const label = new THREE.Sprite(labelMaterial);
-      label.position.set(0, 0, 3); // Позиционируем над объектом
-      label.scale.set(5, 1.25, 1);
-      
-      instance.add(label);
-      
       instance.position.set(car.x, car.y, car.z);
       instance.scale.set(car.scale, car.scale, car.scale);
       scene.add(instance);
       carMeshes.current.push(instance);
+
+      // Удаляем дублирование добавления в сцену и в массив
+      // scene.add(instance);
+      // carMeshes.current.push(instance);
     });
   }, [cars]);
 
@@ -576,6 +578,9 @@ const Editor = () => {
       arr_car: [],
       color_arr: [],
     };
+    
+    // Экспортируем PARAMS в глобальный контекст, чтобы к нему был доступ из кнопки меню
+    window.PARAMS = PARAMS;
     let ModuleOpenDrive = null;
     let OpenDriveMap: { delete: () => void; x_offs: number; y_offs: number; } | null = null;
     var refline_lines: THREE.Object3D<THREE.Object3DEventMap> | null = null;
@@ -1372,16 +1377,7 @@ const Editor = () => {
       raycaster.setFromCamera(mouse, camera);
 
       if (!currentCar) {
-        // Генерируем уникальное имя с учетом существующих имен машин
-        let counter = 1;
-        let uniqueName = `car_${counter}`;
-        // Перебираем счетчик, пока не найдем имя, которого нет в списке
-        while (cars.some(c => c.model === uniqueName) || 
-               scenarioSettings.arr_car.includes(uniqueName)) {
-          counter++;
-          uniqueName = `car_${counter}`;
-        }
-        currentCar = uniqueName;
+        currentCar = 'car_' + Math.floor(Math.random() * 1000);
       }
       cube_objs = [];
       disposable_objs = []; 
@@ -2140,17 +2136,11 @@ const Editor = () => {
             if (Array.isArray(meshChild.material)) {
               meshChild.material.forEach(mat => {
                 if (mat.hasOwnProperty('color')) {
-                  // Устанавливаем цвет в существующий материал
                   (mat as any).color.set(`#${selectedCar.color}`);
-                  // Убеждаемся, что материал обновится в рендере
-                  mat.needsUpdate = true;
                 }
               });
             } else if (meshChild.material.hasOwnProperty('color')) {
-              // Устанавливаем цвет в существующий материал
               (meshChild.material as any).color.set(`#${selectedCar.color}`);
-              // Убеждаемся, что материал обновится в рендере
-              meshChild.material.needsUpdate = true;
             }
           }
         });
@@ -2185,8 +2175,54 @@ const Editor = () => {
 
   // Функция для запуска симуляции
   const handleStartSimulation = () => {
-    // Здесь будет логика для отправки запроса на сервер
-    console.log('Запуск симуляции');
+    // Хардкодированный сценарий для отправки на сервер
+    const hardcodedScenario = {
+      "scenario_id": "9959781287",
+      "scenario_name": "\u0441\u0446\u0435\u043d\u0430\u0440\u0438\u0439 1",
+      "weather": "HardRainNoon",
+      "scenario": [
+        {
+          "path": [
+            {
+              "x": -35,
+              "y": 138,
+              "z": 0.3
+            },
+            {
+              "x": 107,
+              "y": -12,
+              "z": 0.3
+            }
+          ],
+          "vehicle": "mercedes.coupe_2020",
+          "color": {
+            "r": 127,
+            "g": 127,
+            "b": 127
+          },
+          "active": false
+        }
+      ]
+    };
+
+    // Отправляем POST-запрос на сервер
+    fetch("http://localhost:" + PORT + "/api/start_opencda", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(hardcodedScenario)
+    })
+    .then(response => {
+      if (response.ok) {
+        console.log('Симуляция успешно запущена');
+      } else {
+        console.error('Ошибка при запуске симуляции');
+      }
+    })
+    .catch(error => {
+      console.error('Ошибка при отправке запроса:', error);
+    });
     
     // Закрываем модальное окно после запуска
     setSimulationConfirmOpen(false);
@@ -2197,6 +2233,49 @@ const Editor = () => {
     transformControlsRef.current?.detach();
     selectObject(null); // Очищаем выбранный объект в хранилище
   };
+
+  // Обработчик для скрытого input элемента загрузки файла
+  useEffect(() => {
+    const fileInput = document.getElementById('xodr_file_input') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.accept = '.xodr';
+      fileInput.addEventListener('change', (event) => {
+        const target = event.target as HTMLInputElement;
+        const file = target.files?.[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            if (typeof e.target?.result === 'string') {
+              // Загружаем файл и обновляем карту
+              if (ModuleOpenDrive) {
+                if (OpenDriveMap)
+                  OpenDriveMap.delete();
+                
+                ModuleOpenDrive['FS_unlink']('./data.xodr');
+                ModuleOpenDrive['FS_createDataFile'](".", "data.xodr", e.target.result, true, true);
+                
+                let odr_map_config = {
+                  with_lateralProfile: PARAMS.lateralProfile,
+                  with_laneHeight: PARAMS.laneHeight,
+                  with_road_objects: false,
+                  center_map: true,
+                  abs_z_for_for_local_road_obj_outline: true
+                };
+                
+                OpenDriveMap = new ModuleOpenDrive.OpenDriveMap("./data.xodr", odr_map_config);
+                loadOdrMap(true, true);
+              }
+            }
+          };
+          reader.readAsText(file);
+        }
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (carModelRef.current) return;           // ждём загрузки
+  }, [carModelRef.current]);
 
   return (
     <div>
@@ -2288,6 +2367,7 @@ const Editor = () => {
             onClose={handleFileMenuClose}
           >
             <MenuItem onClick={() => {
+              // Используем существующую функцию загрузки файла - вызываем клик на скрытом input
               document.getElementById('xodr_file_input')?.click();
               handleFileMenuClose();
             }}>

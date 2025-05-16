@@ -41,22 +41,10 @@ export const useEditorStore = create<EditorState>(set => ({
 
   addCar: (x, y, z, model, color) => {
     const id = nanoid();
-
-    set(state => {
-      let uniqueModel = model;
-      let counter = 1;
-
-      while (state.cars.some(c => c.model === uniqueModel)) {
-        uniqueModel = `${model}_${counter}`;
-        counter++;
-      }
-
-      return {
-        cars: [...state.cars, { id, x, y, z, model: uniqueModel, color, scale: 1 }],
-        selectedId: id
-      };
-    });
-
+    set(s => ({
+      cars: [...s.cars, { id, x, y, z, model, color, scale: 1 }],
+      selectedId: id
+    }));
     return id;
   },
 
