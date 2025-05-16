@@ -181,29 +181,72 @@ const Editor = () => {
           child.userData = { ...instance.userData };
           // Устанавливаем цвет материала меша
           const mesh = child as THREE.Mesh;
+          
+          // Создаём новые материалы для каждой машины вместо использования общего материала
           if (Array.isArray(mesh.material)) {
-            mesh.material.forEach(mat => {
-              if (mat instanceof THREE.MeshPhongMaterial || 
-                  mat instanceof THREE.MeshBasicMaterial || 
-                  mat instanceof THREE.MeshStandardMaterial) {
-                mat.color.set(`#${car.color}`);
+            // Для массива материалов
+            mesh.material = mesh.material.map(mat => {
+              // Создаём новый материал того же типа, что и оригинальный
+              let newMaterial;
+              if (mat instanceof THREE.MeshPhongMaterial) {
+                newMaterial = new THREE.MeshPhongMaterial().copy(mat);
+              } else if (mat instanceof THREE.MeshBasicMaterial) {
+                newMaterial = new THREE.MeshBasicMaterial().copy(mat);
+              } else if (mat instanceof THREE.MeshStandardMaterial) {
+                newMaterial = new THREE.MeshStandardMaterial().copy(mat);
+              } else {
+                // Если тип не распознан, просто клонируем
+                newMaterial = mat.clone();
               }
+              // Устанавливаем цвет из хранилища
+              newMaterial.color.set(`#${car.color}`);
+              return newMaterial;
             });
-          } else if (mesh.material instanceof THREE.MeshPhongMaterial || 
-                    mesh.material instanceof THREE.MeshBasicMaterial || 
-                    mesh.material instanceof THREE.MeshStandardMaterial) {
-            mesh.material.color.set(`#${car.color}`);
+          } else {
+            // Для одиночного материала
+            let newMaterial;
+            if (mesh.material instanceof THREE.MeshPhongMaterial) {
+              newMaterial = new THREE.MeshPhongMaterial().copy(mesh.material);
+            } else if (mesh.material instanceof THREE.MeshBasicMaterial) {
+              newMaterial = new THREE.MeshBasicMaterial().copy(mesh.material);
+            } else if (mesh.material instanceof THREE.MeshStandardMaterial) {
+              newMaterial = new THREE.MeshStandardMaterial().copy(mesh.material);
+            } else {
+              // Если тип не распознан, просто клонируем
+              newMaterial = mesh.material.clone();
+            }
+            // Устанавливаем цвет из хранилища
+            newMaterial.color.set(`#${car.color}`);
+            mesh.material = newMaterial;
           }
         }
       });
+      
+      // Добавляем текстовую метку с именем машины для лучшей идентификации
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 256;
+      canvas.height = 64;
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 32px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(car.model, 128, 32);
+      
+      const texture = new THREE.CanvasTexture(canvas);
+      const labelMaterial = new THREE.SpriteMaterial({ 
+        map: texture,
+        transparent: true 
+      });
+      const label = new THREE.Sprite(labelMaterial);
+      label.position.set(0, 0, 3); // Позиционируем над объектом
+      label.scale.set(5, 1.25, 1);
+      
+      instance.add(label);
+      
       instance.position.set(car.x, car.y, car.z);
       instance.scale.set(car.scale, car.scale, car.scale);
       scene.add(instance);
       carMeshes.current.push(instance);
-
-      // Удаляем дублирование добавления в сцену и в массив
-      // scene.add(instance);
-      // carMeshes.current.push(instance);
     });
   }, [cars]);
 
@@ -1329,7 +1372,16 @@ const Editor = () => {
       raycaster.setFromCamera(mouse, camera);
 
       if (!currentCar) {
-        currentCar = 'car_' + Math.floor(Math.random() * 1000);
+        // Генерируем уникальное имя с учетом существующих имен машин
+        let counter = 1;
+        let uniqueName = `car_${counter}`;
+        // Перебираем счетчик, пока не найдем имя, которого нет в списке
+        while (cars.some(c => c.model === uniqueName) || 
+               scenarioSettings.arr_car.includes(uniqueName)) {
+          counter++;
+          uniqueName = `car_${counter}`;
+        }
+        currentCar = uniqueName;
       }
       cube_objs = [];
       disposable_objs = []; 
@@ -2088,11 +2140,17 @@ const Editor = () => {
             if (Array.isArray(meshChild.material)) {
               meshChild.material.forEach(mat => {
                 if (mat.hasOwnProperty('color')) {
+                  // Устанавливаем цвет в существующий материал
                   (mat as any).color.set(`#${selectedCar.color}`);
+                  // Убеждаемся, что материал обновится в рендере
+                  mat.needsUpdate = true;
                 }
               });
             } else if (meshChild.material.hasOwnProperty('color')) {
+              // Устанавливаем цвет в существующий материал
               (meshChild.material as any).color.set(`#${selectedCar.color}`);
+              // Убеждаемся, что материал обновится в рендере
+              meshChild.material.needsUpdate = true;
             }
           }
         });
