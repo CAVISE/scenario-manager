@@ -343,7 +343,7 @@ const Canvas = () => {
                             <IconButton
                                 id={String(index)}
                                 onClick={() => {
-                                    setVehicles(vehicles.filter((veh, it) => index != it))
+                                    setVehicles(vehicles.filter((_, it) => index != it))
                                 }}
                             >
                                 <Delete />
