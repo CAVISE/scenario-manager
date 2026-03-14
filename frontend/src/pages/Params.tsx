@@ -1,6 +1,7 @@
 import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from "@mui/material";
 import { BottomNavbar } from "./components/BottomNavbar/BottomNavbar"
 import { useEffect, useState } from "react"
+import { useEditorStore } from "../store/useEditorStore";
 // import { defWorld } from "../types/Scenario";
 // import SelectVariants from "./components/Inputs/SelectVariants";
 // import InputNumber from "./components/Inputs/InputNumber";
@@ -9,7 +10,7 @@ import { useEffect, useState } from "react"
 const ParamsPage = () => {
     // const [world, setWorld] = useState(defWorld);
     const [weather, setWeather] = useState("ClearNoon");
-
+    const updateScenario = useEditorStore(state => state.updateScenario);
     useEffect(() => {
         const wthr = JSON.parse(window.localStorage.getItem('weather')!);
         setWeather(wthr);
@@ -21,6 +22,7 @@ const ParamsPage = () => {
 
     const handleWeatherChange = (event: SelectChangeEvent) => {
         setWeather(event.target.value);
+        updateScenario({ weather: event.target.value });
     }
 
     return (<div>

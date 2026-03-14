@@ -14,21 +14,15 @@ export const BottomNavbar = () => {
         />
         <BottomNavigationAction
           component={Link}
+          to="/editor"
+          value="/editor"
+          label="Карта"
+        />
+        <BottomNavigationAction
+          component={Link}
           to="/params"
           value="/params"
           label="Параметры"
-        />
-        <BottomNavigationAction
-          component={Link}
-          to="/paths"
-          value="/paths"
-          label="Выбор путей"
-        />
-        <BottomNavigationAction
-          component={Link}
-          to="/reports"
-          value="/reports"
-          label="Отчёты"
         />
       </BottomNavigation>
     );
