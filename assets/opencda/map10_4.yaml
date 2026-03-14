@@ -1,7 +1,5 @@
 description: |-
-  РАБОЧИЙ СЦЕНАРИЙ
-  успешный(практически) сценарий движения трех автопилотов из точки А в точку Б
-  хоть и указан background_vehicles, но их нет
+  
 
 scenario:
   name: "multi_actor_scenario"

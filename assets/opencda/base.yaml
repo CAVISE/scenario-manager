@@ -1,5 +1,5 @@
 description: |-
-  БАЗОВЫЙ СЦЕНАРИЙ
+  Base Scenario
 
 world:
   sync_mode: true

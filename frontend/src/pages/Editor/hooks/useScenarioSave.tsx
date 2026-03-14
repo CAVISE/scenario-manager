@@ -31,6 +31,7 @@ export function useScenarioSave() {
             scale:    car.scale,
             rotation: Math.floor((car.rotation ?? 0) * 57.32),
             selected: car.id === s.selectedId,
+            speed: car.speed,
             points:   s.points.filter(p => p.carId === car.id).map((p, i) => ({ id: i, x: p.x, y: p.y, z: p.z })),
             lidars:   s.lidars.filter(l => l.carId === car.id).map(l => ({
               x: l.x, y: l.y, z: l.z,
@@ -42,10 +43,35 @@ export function useScenarioSave() {
         {
           vehicle: 'RSU',
           path: s.RSUs.map(r => ({
-            x: r.x, y: r.y, z: r.z,
-            tx_power: r.tx_power, frequency: r.frequency,
-            range: r.range, protocol: r.protocol,
+            id: r.id,
+            name: r.name,
+
+            x: r.x,
+            y: r.y,
+            z: r.z,
+
+            tx_power: r.tx_power,
+            frequency: r.frequency,
+            range: r.range,
+
+            protocol: r.protocol,
+            network_protocol: r.network_protocol,
+
             script: r.script || null,
+
+            antenna_type: r.antenna_type,
+            antenna_height: r.antenna_height,
+            antenna_gain: r.antenna_gain,
+            polarization: r.polarization,
+
+            mimo_rows: r.mimo_rows,
+            mimo_columns: r.mimo_columns,
+            element_spacing: r.element_spacing,
+
+            azimuth: r.azimuth,
+            tilt: r.tilt,
+
+            cam_interval: r.cam_interval
           })),
         },
         {
@@ -54,7 +80,7 @@ export function useScenarioSave() {
         },
       ],
     };
-
+    console.log(JSON.stringify(scenario, null,2))
     try {
       const res = await fetch(`http://localhost:${PORT}/scenario`, {
         method: 'POST',
@@ -64,7 +90,7 @@ export function useScenarioSave() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
     } catch (err) {
       console.error(err);
-      alert('Не удалось сохранить сценарий.');
+      alert('Failed to save scenario.');
     }
   };
 

@@ -299,19 +299,13 @@ const Canvas = () => {
         )))
     }
 
-    // useEffect(() => {
-    //     console.log(vehicles);
-    // }, [vehicles]);
-
     return (
         <div>
             <div className="controls">
                 <div className="buttons">
-                    <Button className="points-button" variant="contained" onClick={handleDeletePoints}>Удалить точки</Button>
-                    <Button className="points-button" variant="contained" onClick={handleDeleteLast}>Удалить последнюю точку</Button>
-                    <Button className="points-button" variant="contained" onClick={handleUsePoints}>Вывести точки в консоль</Button>
+                    <Button className="points-button" variant="contained" onClick={handleDeletePoints}>Delete waypoints</Button>
                 </div>
-                <Button variant="contained" onClick={handleAddVehicle}>Добавить машину</Button>
+                <Button variant="contained" onClick={handleAddVehicle}>Add car</Button>
                 <div className="vehicles">
                     {vehicles.map((item, index) => (<div className="vehicle">
                         <InputLabel id={String(index) + "-label"}>Model</InputLabel>

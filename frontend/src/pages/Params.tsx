@@ -28,9 +28,9 @@ const ParamsPage = () => {
     return (<div>
         <BottomNavbar />
         <div>
-            <h3>Параметры мира:</h3>
+            <h3>World parameters:</h3>
             <FormControl fullWidth margin="normal">
-                <InputLabel id={"wthr-label"}>Погода</InputLabel>
+                <InputLabel id={"wthr-label"}>Weather</InputLabel>
                 <Select
                     labelId={"wthr-label"}
                     id="wthr"

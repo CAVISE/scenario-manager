@@ -15,7 +15,7 @@ def start_carla():
         "-fps=20"
     ]
 
-    print("Запуск CARLA...")
+    print("Launch CARLA...")
     carla_process = subprocess.Popen([carla_path] + carla_args)
     time.sleep(15)
     return carla_process
@@ -23,7 +23,7 @@ def start_carla():
 
 def start_opencda(scenario, map):
     version = "0.9.15"
-    print("Запуск OpenCDA...")
+    print("Launch OpenCDA...")
     opencda_params = ["-t", scenario, "-v", version, "-m", map]
 
     _program = "run_opencda.py"
@@ -57,25 +57,19 @@ def stop_carla(proc):
                 check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
             )
     except Exception as e:
-        print(f"Не удалось остановить процесс CARLA: {e}")
+        print(f"Failed to stop process CARLA: {e}")
 
 
 def main():
     carla_process = None
 
     try:
-        # carla_process = start_carla()
-
-        # scenario = "single_2lanefree_carla"
-        # scenario = "map10"
-        # scenario = "map10_2"
-        # scenario = "map10_3"
         scenario = "map10_4"
         start_opencda(scenario, "map10")
 
     finally:
         if carla_process:
-            print("OpenCDA завершён. Остановка CARLA...")
+            print("OpenCDA is complete. Stop CARLA...")
             stop_carla(carla_process)
 
 

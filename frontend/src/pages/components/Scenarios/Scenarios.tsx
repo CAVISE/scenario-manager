@@ -62,7 +62,6 @@ const Scenarios = () => {
             })),
         }));
 
-        // Сохранить обратно в localStorage
         window.localStorage.setItem('scenario', JSON.stringify(scen.scenario));
     };
 
@@ -77,7 +76,7 @@ const Scenarios = () => {
                                 className="scenario-button"
                                 variant="contained"
                                 onClick={() => handleEdit(index)}
-                            >Редактировать</Button>
+                            >Refactor</Button>
                         </div>
                     </div>
                 ))}
@@ -87,11 +86,11 @@ const Scenarios = () => {
                     className="scenario-button"
                     variant="contained"
                     onClick={handleCreateNewScenario}
-                >Новый сценарий</Button>
+                >New scenario</Button>
                 <TextField
                     className="scenario-button"
                     variant="outlined"
-                    label="Имя сценария"
+                    label="scenario name"
                     onChange={handleChangeName}
                     value={scenarioName}
                 />
@@ -99,7 +98,7 @@ const Scenarios = () => {
                     className="scenario-button"
                     variant="outlined"
                     onClick={handleSaveScenario}
-                >Сохранить сценарий</Button>
+                >Save scenario</Button>
             </div>
             <div/>
         </div>

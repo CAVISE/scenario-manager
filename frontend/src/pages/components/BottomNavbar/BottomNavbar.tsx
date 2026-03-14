@@ -10,19 +10,19 @@ export const BottomNavbar = () => {
           component={Link}
           to="/"
           value="/"
-          label="Сценарии"
+          label="Scenarios"
         />
         <BottomNavigationAction
           component={Link}
           to="/editor"
           value="/editor"
-          label="Карта"
+          label="Editor-map"
         />
         <BottomNavigationAction
           component={Link}
           to="/params"
           value="/params"
-          label="Параметры"
+          label="Parameters"
         />
       </BottomNavigation>
     );

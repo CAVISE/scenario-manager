@@ -166,7 +166,7 @@ export function useThreeScene(opts: UseThreeSceneOptions): UseThreeSceneResult {
       } catch (err) {
         console.error(err);
         setStep('done');
-        setError?.(err instanceof Error ? err : new Error('Не удалось построить сцену карты'));
+        setError?.(err instanceof Error ? err : new Error('Failed to build map scene'));
         return;
       }
 
@@ -266,7 +266,7 @@ export function useThreeScene(opts: UseThreeSceneOptions): UseThreeSceneResult {
       } catch (err) {
         console.error(err);
         setStep('done');
-        setError?.(err instanceof Error ? err : new Error('Не удалось обработать файл карты'));
+        setError?.(err instanceof Error ? err : new Error('Failed to process map file'));
       }
     }
 
@@ -286,7 +286,7 @@ export function useThreeScene(opts: UseThreeSceneOptions): UseThreeSceneResult {
       } catch (err) {
         console.error(err);
         setStep('done');
-        setError?.(err instanceof Error ? err : new Error('Не удалось перезагрузить карту'));
+        setError?.(err instanceof Error ? err : new Error('Failed to reload the map'));
       }
     }
 
@@ -343,7 +343,7 @@ export function useThreeScene(opts: UseThreeSceneOptions): UseThreeSceneResult {
           reader.onload  = e => { if (typeof e.target?.result === 'string') { setStep('map'); loadFile(e.target.result, true); } };
           reader.onerror = () => {
             setStep('done');
-            setError?.(new Error('Не удалось прочитать файл'));
+            setError?.(new Error('Failed to read file'));
           };
           reader.readAsText(file);
         });
@@ -420,13 +420,13 @@ export function useThreeScene(opts: UseThreeSceneOptions): UseThreeSceneResult {
           .catch(err => {
             console.error(err);
             setStep('done');
-            setError?.(err instanceof Error ? err : new Error('Не удалось загрузить карту'));
+            setError?.(err instanceof Error ? err : new Error('Failed to load map'));
           });
       })
       .catch(err => {
         console.error(err);
         setStep('done');
-        setError?.(err instanceof Error ? err : new Error('Ошибка инициализации WebAssembly'));
+        setError?.(err instanceof Error ? err : new Error('WebAssembly initialization error'));
       });
 
     return () => { disposeThree(); };
