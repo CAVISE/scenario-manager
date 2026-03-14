@@ -80,7 +80,6 @@ export const EditorErrorScreen: React.FC<EditorErrorScreenProps> = ({
         {(['tl', 'tr', 'bl', 'br'] as const).map(p => <Corner key={p} pos={p} />)}
 
         <div className="sm-err-card">
-          {/* Header */}
           <div className="sm-err-logo-wrap">
             <HexErrorLogo />
             <div className="sm-err-title-block">

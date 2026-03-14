@@ -1,11 +1,9 @@
-# Python
 __pycache__/
 *.py[cod]
 *.pyo
 venv/
 .venv/
 
-# Тяжёлые папки проекта — не нужны в образе бэкенда/фронтенда
 opencda/
 assets/
 evaluation_outputs/
@@ -14,34 +12,27 @@ simulation/
 ruchki/
 src/
 
-# Node
 frontend/node_modules/
 frontend/dist/
 
-# Данные и выводы
 output/
 *.log
 
-# Env
 .env
 .env.*
 
-# Git
 .git/
 .gitignore
 
-# Docker
 Dockerfile*
 docker-compose*
 .dockerignore
 
-# Editor / OS
 .idea/
 .vscode/
 *.swp
 .DS_Store
 Thumbs.db
 
-# Мусор
 qwe.yml
 test1.py

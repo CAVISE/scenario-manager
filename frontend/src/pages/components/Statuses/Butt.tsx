@@ -13,10 +13,10 @@ export default function SpeedDialTooltipOpen({ onAddCar, onAddRSU, onAddpoints, 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
   const actions = [
-    { icon: <TimelineIcon />, name: 'Добавить точки', action: onAddpoints },
-    { icon: <CarIcon />, name: 'Добавить машину', action: onAddCar },
-    { icon: <AddLocationIcon />, name: 'Добавить RSU', action: onAddRSU },
-    { icon: <ApartmentIcon />, name: 'Добавить здание', action: () => onAddBuilding(true) },
+    { icon: <TimelineIcon />, name: 'Add waypoint', action: onAddpoints },
+    { icon: <CarIcon />, name: 'Add car', action: onAddCar },
+    { icon: <AddLocationIcon />, name: 'Add RSU', action: onAddRSU },
+    { icon: <ApartmentIcon />, name: 'Add building', action: () => onAddBuilding(true) },
 
   ];
 

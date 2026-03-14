@@ -41,7 +41,7 @@ export function useDatGui(options: UseDatGuiOptions) {
           if (!file) return;
           const reader = new FileReader();
           reader.onload  = ev => { if (typeof ev.target?.result === 'string') onLoadFile(ev.target.result); };
-          reader.onerror = () => alert('Не удалось прочитать файл.');
+          reader.onerror = () => alert('Failed to read file.');
           reader.readAsText(file);
         });
         input.click();
@@ -85,14 +85,14 @@ export function useDatGui(options: UseDatGuiOptions) {
     attrF.add(ACTIONS, 'reload_map').name('Reload Map');
 
     const ctrlF = gui.addFolder('Controls');
-    ctrlF.add(ACTIONS, 'addCube').name('Добавить машину');
-    ctrlF.add(ACTIONS, 'model').name('Имя машины').onChange((val: string) => onNameChange(val));
+    ctrlF.add(ACTIONS, 'addCube').name('Add car');
+    ctrlF.add(ACTIONS, 'model').name('Car name').onChange((val: string) => onNameChange(val));
 
     const wrapper = document.createElement('div');
     wrapper.style.cssText = 'margin:8px 10px;display:flex;align-items:center;justify-content:space-between;';
 
     const lbl = document.createElement('div');
-    lbl.textContent  = 'Цвет машины';
+    lbl.textContent  = 'Car color';
     lbl.style.cssText = 'font-size:11px;color:#eee;';
     wrapper.appendChild(lbl);
 
@@ -134,12 +134,12 @@ export function useDatGui(options: UseDatGuiOptions) {
     document.addEventListener('click', closePicker);
     pickerContainer.addEventListener('click', e => e.stopPropagation());
 
-    const saveF = gui.addFolder('Сохранение сценария');
-    saveF.add(scenarioSettingsRef.current, 'scenario_id').name('ID сценария');
-    saveF.add(scenarioSettingsRef.current, 'scenario_name').name('Имя сценария');
-    saveF.add(scenarioSettingsRef.current, 'vehicle').name('Вид транспорта');
-    saveF.add(scenarioSettingsRef.current, 'weather', WEATHER_OPTIONS).name('Погода');
-    saveF.add(ACTIONS, 'saveScenario').name('Сохранить сценарий');
+    const saveF = gui.addFolder('Save scenario');
+    saveF.add(scenarioSettingsRef.current, 'scenario_id').name('ID scenario');
+    saveF.add(scenarioSettingsRef.current, 'scenario_name').name('name scanario');
+  
+    saveF.add(scenarioSettingsRef.current, 'weather', WEATHER_OPTIONS).name('Weather');
+    saveF.add(ACTIONS, 'saveScenario').name('Save scenario');
 
     window.PARAMS = { ...P, ...ACTIONS };
 

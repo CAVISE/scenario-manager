@@ -35,7 +35,6 @@ export default function SceneTreePanel({
     }
   }, [sceneGraph?.id]);
 
-  // Авто-раскрываем всё при изменении графа
   useEffect(() => {
     if (!sceneGraph) return;
     const ids: string[] = [];

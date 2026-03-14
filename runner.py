@@ -11,7 +11,6 @@ import numpy as np
 
 from omegaconf import OmegaConf
 
-# OpenCDA
 from opencda.core.common.cav_world import CavWorld
 from opencda.scenario_testing.utils import customized_map_api as map_api
 from opencda.scenario_testing.utils import sim_api
@@ -20,7 +19,6 @@ from opencda.scenario_testing.evaluations.evaluate_manager import (
     EvaluationManager,
 )
 
-# import sitecustomize
 
 
 def arg_parse_default() -> argparse.Namespace:
@@ -29,20 +27,20 @@ def arg_parse_default() -> argparse.Namespace:
         "-t",
         "--test_scenario",
         default="simple_verification",
-        help="Имя yaml‑сценария в config_yaml/",
+        help="The name of the yaml script in config_yaml/",
     )
     p.add_argument("-m", "--map", default="map10", help="CARLA map")
-    p.add_argument("-v", "--version", default="0.9.15", help="Версия симулятора CARLA")
+    p.add_argument("-v", "--version", default="0.9.15", help="Simulator version CARLA")
     p.add_argument(
         "--record",
         action="store_true",
-        help="Сохранять .log‑запись симуляции",
+        help="Save a .log record of the simulation",
         default=False,
     )
     p.add_argument(
         "--apply_ml",
         action="store_true",
-        help="Нужны ли ML‑/DL‑фреймворки внутри сценария",
+        help="Are ML/DL frameworks needed within the scenario?",
     )
     return p.parse_args()
 
@@ -74,19 +72,9 @@ def run_scenario(opt: argparse.Namespace, scenario_params):
         script_name=opt.map,
         current_time=scenario_params["current_time"],
     )
-
-    # spectator = scenario_manager.world.get_spectator()
-
     try:
         while True:
             scenario_manager.tick()
-            # t = single_cav_list[0].vehicle.get_transform()
-            # spectator.set_transform(
-            #     carla.Transform(
-            #         t.location + carla.Location(z=70), carla.Rotation(pitch=-90)
-            #     )
-            # )
-
             for cav in single_cav_list:
                 cav.update_info()
                 cav.vehicle.apply_control(cav.run_step())
@@ -105,12 +93,11 @@ def main():
     opt = arg_parse_default()
 
     base_yaml = f"{CFG_DIR}/base.yaml"
-                #assets/opencda/base.yml
     user_yaml = f"{CFG_DIR}/{opt.test_scenario}.yaml"
 
 
     if not os.path.isfile(user_yaml):
-        sys.exit(f"YAML для сценария '{opt.test_scenario}' не найден: {user_yaml}")
+        sys.exit(f"YAML for scenario '{opt.test_scenario}' not found: {user_yaml}")
 
     base_dict = OmegaConf.load(base_yaml)
     scene_dict = OmegaConf.load(user_yaml)

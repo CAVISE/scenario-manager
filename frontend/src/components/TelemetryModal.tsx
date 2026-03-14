@@ -84,10 +84,10 @@ const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
   };
 
   const tabLabels = {
-    routes: `Маршруты (${imagesByTab.routes.length})`,
-    telemetry: `Телеметрия (${imagesByTab.telemetry.length})`,
-    localization: `Локализация (${imagesByTab.localization.length})`,
-    other: `Прочее (${imagesByTab.other.length})`
+    routes: `Routes (${imagesByTab.routes.length})`,
+    telemetry: `Telemetry (${imagesByTab.telemetry.length})`,
+    localization: `Localization (${imagesByTab.localization.length})`,
+    other: `Others (${imagesByTab.other.length})`
   };
 
   const renderTabContent = (tabKey: TabCategories) => {
@@ -127,9 +127,9 @@ const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
           <ModalHeader>
             <TitleContainer>
               <Typography variant="h5" component="h2">
-                Результаты
+                Results
               </Typography>
-              <Tooltip title="Отображаются демонстрационные данные">
+              <Tooltip title="Showing demo data">
                 <DemoChip label="DEMO" size="small" />
               </Tooltip>
             </TitleContainer>
@@ -172,7 +172,7 @@ const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
         open={!!selectedImage} 
         onClose={() => setSelectedImage(null)} 
         imagePath={selectedImage || ''}
-        imageAlt="Изображение в полном размере"
+        imageAlt="Full size image"
       />
     </>
   );
