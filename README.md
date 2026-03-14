@@ -8,15 +8,15 @@
 ## Demo
 
 ### Scene Editor
-![Scene Editor](Screen-Scenario-manager.gif)
+![Scene Editor](docs/Screen-Scenario-manager.gif)
 *Place and move vehicles, RSUs, and buildings on an OpenDRIVE road network*
 
 ### Scene Graph Panel
-![Scene Graph Panel](Screen-Scenario-manager-panel.gif)
+![Scene Graph Panel](docs/Screen-Scenario-manager-panel.gif)
 *Hierarchical object tree with live position readout and type badges*
 
 ### Export Configs
-![Export Configs](Screen-Scenario-manager-config.gif)
+![Export Configs](docs/Screen-Scenario-manager-config.gif)
 *Generate config files for OMNeT++, Artery, Sionna, CARLA, and OpenCDA*
 
 ---
