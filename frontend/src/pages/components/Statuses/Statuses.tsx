@@ -49,7 +49,7 @@ export const Statuses = () => {
                 >
                     <ListItemButton>
                         <ListItemText primary={stat.scenario_name} />
-                        <ListItemText primary={stat.status == "true" ? "Готов" : "Выполняется"} />
+                        <ListItemText primary={stat.status == "true" ? "Ready" : "In progress"} />
                     </ListItemButton>
                 </ListItem>
             ))}

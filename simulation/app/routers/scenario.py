@@ -39,7 +39,6 @@ async def run_scenario(_id: str, bacground_task: BackgroundTasks, request: Reque
 
     scenario = services.get_scenario(_id)
 
-    # я осознаю что это sql инъекция, эта строчка написана в полном здравии и ясном уме
     query = f"INSERT INTO reports (scenario_id, scenario_name, status) VALUES ('{_id}', '{scenario['scenario_name']}', 'false')"
 
     inseted_value = cursor.execute(query)
@@ -52,8 +51,7 @@ async def run_scenario(_id: str, bacground_task: BackgroundTasks, request: Reque
     bacground_task.add_task(
         work.do_scenario, carla_host, carla_port, data, _id, inseted_value.lastrowid
     )
-    # work.do_scenario.delay(carla_host, carla_port, data, _id, inseted_value.lastrowid) #расскоментировать в случае использования celery
-    return "ok"
+    # work.do_scenario.delay(carla_host, carla_port, data, _id, inseted_value.lastrowid) 
 
 
 @router.get("/all")

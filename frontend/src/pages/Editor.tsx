@@ -96,7 +96,6 @@ const Editor = () => {
     updateSceneGraph
   });
 
-  // Автоматически синхронизирует меши RSU при изменении стора
   useRSUMeshSync({
     RSUs,
     sceneRef,
@@ -152,14 +151,14 @@ const Editor = () => {
 
   const handleStartSimulation = () => {
     const payload = {
-      scenario_id: "9959781287", scenario_name: "сценарий 1", weather: "HardRainNoon",
+      scenario_id: "9959781287", scenario_name: "Scenario 1", weather: "HardRainNoon",
       scenario: [{ path: [{x:-35,y:138,z:0.3},{x:35,y:10,z:0.3}], vehicle: "mercedes.coupe_2020", color: {r:127,g:0,b:0}, active: false }],
     };
     fetch(`http://localhost:${PORT}/api/start_opencda`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
     })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); })
-      .catch(err => { console.error(err); alert('Не удалось запустить симуляцию.'); });
+      .catch(err => { console.error(err); });
     setSimulationConfirmOpen(false);
   };
   

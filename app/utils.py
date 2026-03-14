@@ -19,7 +19,6 @@ def json_to_single_cav_list(json_data):
         }
         cav_list.append(cav)
 
-    # Формируем секцию scenario целиком (если нужно именно как yaml-файл, а не только single_cav_list)
     scenario_section = {
         "scenario": {
             "name": "multi_actor_scenario",
@@ -27,5 +26,4 @@ def json_to_single_cav_list(json_data):
             "single_cav_list": cav_list
         }
     }
-    # Только эта часть выводится — остальное копируется из твоего шаблона yaml, не из json
     return yaml.safe_dump(scenario_section, allow_unicode=True, sort_keys=False)
