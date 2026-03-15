@@ -1,0 +1,3 @@
+doxysphinx
+sphinx
+sphinx_rtd_theme

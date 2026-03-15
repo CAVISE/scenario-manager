@@ -36,3 +36,35 @@ Thumbs.db
 
 qwe.yml
 test1.py
+# ARTERY
+
+# Clangd server cache
+artery/.cache
+
+# CMake compile commands & build presets
+artery/CMakeUserPresets.json
+artery/compile_commands.json
+
+# Building website with mkdocs
+artery/www/
+artery/venv/
+
+# OMNeT++ IDE / Eclipse CDT auto-generated files
+artery/.cproject
+artery/.oppbuildspec
+artery/.project
+artery/.settings
+
+# VSCode auto-generated files
+artery/.vscode
+
+# CMake default directories
+artery/build/
+
+# Git data
+artery/.git
+
+# OPENCDA
+
+# Git data
+opencda/.git
