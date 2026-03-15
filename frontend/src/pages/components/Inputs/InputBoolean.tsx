@@ -15,8 +15,8 @@ const InputBoolean = ({param, state, setState}: Props) => {
     }
 
     return(
-        <FormControlLabel 
-            label={param} 
+        <FormControlLabel
+            label={param}
             control={<Checkbox checked={state[param] as boolean} onChange={handleChange}/>}
         />
     )

@@ -9,9 +9,9 @@ export interface UseMouseEventsOptions {
 
   getCarMeshes:   () => THREE.Mesh[];
   getPointsArr:   () => THREE.Mesh[];
-  getPointsObjs:  () => THREE.Mesh[];          
+  getPointsObjs:  () => THREE.Mesh[];
   getCubeCircles: () => THREE.Mesh[][];
-  updateSceneGraph: () => void; 
+  updateSceneGraph: () => void;
   getRoadMesh: () => THREE.Mesh | null;
 
   modeRef: React.MutableRefObject<{

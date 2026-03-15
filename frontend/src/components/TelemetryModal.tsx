@@ -1,15 +1,15 @@
 import React, { useState, useMemo } from 'react';
-import { 
-  Modal, 
-  Box, 
-  Tabs, 
-  Tab, 
-  IconButton, 
+import {
+  Modal,
+  Box,
+  Tabs,
+  Tab,
+  IconButton,
   Typography,
   Grid,
   Tooltip
 } from '@mui/material';
-import { 
+import {
   AspectRatio
 } from '@mui/joy';
 import CloseIcon from '@mui/icons-material/Close';
@@ -36,7 +36,7 @@ const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
       '20250513_081759_Collide_1.png',
       '20250513_081759_fig1_1.png'
     ];
-    
+
     return sampleImages.reduce((acc, name) => {
       acc[name] = { default: `/results/${name}` };
       return acc;
@@ -56,7 +56,7 @@ const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
       const lowerFileName = fileName.toLowerCase();
       const imageUrl = module.default;
       const displayName = fileName.replace('.png', '').replace(/_/g, ' ');
-      
+
       if (/(route|planned|actual|fig\d+)/i.test(lowerFileName)) {
         result.routes.push({ url: imageUrl, name: displayName });
       } else if (/(event|accelerometer|gyro|velocity|collide|offroad|stuck|traffic)/i.test(lowerFileName)) {
@@ -71,10 +71,10 @@ const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
     return result;
   };
 
-  const imagesByTab = useMemo(() => 
+  const imagesByTab = useMemo(() =>
     groupImagesByTab(imageModules),
   [imageModules]);
-  
+
   const handleTabChange = (_event: React.SyntheticEvent, newValue: TabCategories) => {
     setActiveTab(newValue);
   };
@@ -92,14 +92,14 @@ const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
 
   const renderTabContent = (tabKey: TabCategories) => {
     const images = imagesByTab[tabKey];
-    
+
     return (
       <Grid container spacing={2}>
         {images.map((image, index) => (
           <Grid item xs={12} sm={6} md={4} lg={3} key={`${tabKey}-${index}`}>
             <ImageCard onClick={() => handleImageClick(image.url)}>
               <AspectRatio ratio="4/3" sx={{ minHeight: 200 }}>
-                <img 
+                <img
                   src={image.url}
                   alt={image.name}
                   loading="lazy"
@@ -139,9 +139,9 @@ const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
           </ModalHeader>
 
           <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-            <Tabs 
-              value={activeTab} 
-              onChange={handleTabChange} 
+            <Tabs
+              value={activeTab}
+              onChange={handleTabChange}
               aria-label="telemetry tabs"
               variant="scrollable"
               scrollButtons="auto"
@@ -168,9 +168,9 @@ const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
         </ModalContainer>
       </Modal>
 
-      <ImageViewerModal 
-        open={!!selectedImage} 
-        onClose={() => setSelectedImage(null)} 
+      <ImageViewerModal
+        open={!!selectedImage}
+        onClose={() => setSelectedImage(null)}
         imagePath={selectedImage || ''}
         imageAlt="Full size image"
       />
@@ -178,4 +178,4 @@ const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
   );
 };
 
-export default TelemetryModal; 
+export default TelemetryModal;
