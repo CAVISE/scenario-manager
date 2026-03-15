@@ -25,11 +25,10 @@ const Section: React.FC<SectionProps> = ({ label, defaultOpen = true, children }
 };
 
 export default function RightPanel({
-  sceneGraph, onDetach, onDeleteCube,
+  sceneGraph, onDetach, onDeleteCube, removeLidar,
   selectedObject, onDeleteSelected, sceneRef, transformControlsRef, onSelectObject, pointsArrRef, carMeshesRef
 }: RightPanelProps) {
   const [collapsed, setCollapsed] = useState(false);
-
   const {
     car, rsu, building, lidar,
     isCar, isRSU, isCircle, isBuilding, isLidar, hasSelection,
@@ -98,7 +97,7 @@ export default function RightPanel({
               <BuildingProperties building={building} onDelete={onDeleteSelected} />
             )}
             {isLidar && lidar && (
-              <LidarProperties lidar={lidar} onDelete={() => { onDetach(); }} />
+              <LidarProperties lidar={lidar} onDelete={() => { removeLidar(lidar.id);onDetach(); }} />
             )}
           </Section>
         </div>

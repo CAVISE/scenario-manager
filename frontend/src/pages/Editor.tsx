@@ -47,7 +47,8 @@ const Editor = () => {
   const updatePoint         = useEditorStore(s => s.updatePoint);
   const addBuilding         = useEditorStore(s => s.addBuilding);
   const setBuildingMode     = useEditorStore(s => s.setBuildingMode);
-
+  const removeLidar         = useEditorStore(s=>s.removeLidar)
+  
   const sceneRef             = useRef<THREE.Scene>();
   const cameraRef            = useRef<THREE.PerspectiveCamera>();
   const carMeshesRef         = useRef<THREE.Mesh[]>([]);
@@ -181,6 +182,7 @@ const Editor = () => {
       <EditorTransformControls transformMode={transformMode} onSetMode={handleSetMode} />
 
       <RightPanel
+        removeLidar={removeLidar}
         sceneGraph={sceneGraph}
         onDetach={detachTransformControls}
         onDeleteCar={handleDeleteCar}
