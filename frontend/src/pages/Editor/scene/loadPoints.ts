@@ -10,7 +10,7 @@ export function loadPoints(ctx: LoadPointsContext): {
 } {
   const { scene, points } = ctx;
 
-  let cubeCircles = ctx.cubeCircles;
+  const cubeCircles = ctx.cubeCircles;
   let lines = ctx.lines;
 
   cubeCircles.forEach((circleArray, index) => {
@@ -37,7 +37,7 @@ export function loadPoints(ctx: LoadPointsContext): {
       const geometry = new THREE.CircleGeometry(radius, segments);
       const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
       const circle = new THREE.Mesh(geometry, material);
-      circle.userData = { type: 'circle', id: point.id, carId: point.carId }; 
+      circle.userData = { type: 'circle', id: point.id, carId: point.carId };
       circle.position.set(point.x, point.y, point.z);
 
       scene.add(circle);

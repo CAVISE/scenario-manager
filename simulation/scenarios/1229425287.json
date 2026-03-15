@@ -1,1 +1,24 @@
-{"scenario_name": "string", "map_name": "string", "weather": "string", "scenario": [{"path": [{"x": 0.0, "y": 0.0, "z": 0.0}], "vehicle": "string", "color": {"r": 0, "g": 0, "b": 0}, "active": false}], "scenario_id": "1229425287"}
+{
+  "map_name": "string",
+  "scenario": [
+    {
+      "active": false,
+      "color": {
+        "b": 0,
+        "g": 0,
+        "r": 0
+      },
+      "path": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      ],
+      "vehicle": "string"
+    }
+  ],
+  "scenario_id": "1229425287",
+  "scenario_name": "string",
+  "weather": "string"
+}

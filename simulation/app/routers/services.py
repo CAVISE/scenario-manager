@@ -44,9 +44,7 @@ def calculate_pitch_yaw(point1: schemas.LocationSchema, point2: schemas.Location
 def draw_path(path, world, tm: int = 20):
     for i, point in enumerate(path):
         point = carla.Location(x=point.x, y=point.y, z=point.z)
-        world.debug.draw_string(
-            point, str(i), life_time=tm, color=carla.Color(255, 0, 0)
-        )
+        world.debug.draw_string(point, str(i), life_time=tm, color=carla.Color(255, 0, 0))
 
 
 def get_scenario(_id):

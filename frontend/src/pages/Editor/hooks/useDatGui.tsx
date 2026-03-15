@@ -137,7 +137,7 @@ export function useDatGui(options: UseDatGuiOptions) {
     const saveF = gui.addFolder('Save scenario');
     saveF.add(scenarioSettingsRef.current, 'scenario_id').name('ID scenario');
     saveF.add(scenarioSettingsRef.current, 'scenario_name').name('name scanario');
-  
+
     saveF.add(scenarioSettingsRef.current, 'weather', WEATHER_OPTIONS).name('Weather');
     saveF.add(ACTIONS, 'saveScenario').name('Save scenario');
 
@@ -149,7 +149,7 @@ export function useDatGui(options: UseDatGuiOptions) {
       setTimeout(() => root.unmount(), 0);
       gui.destroy();
     };
-  }, []); 
+  }, []);
 
   return paramsRef;
 }

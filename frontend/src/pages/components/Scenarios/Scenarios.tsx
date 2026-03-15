@@ -7,7 +7,7 @@ import "./Scenarios.scss"
 import { useEditorStore } from "../../../store/useEditorStore";
 
 const Scenarios = () => {
-    const [scenarios, _] = useState<Scenario[]>([]);
+    const [scenarios] = useState<Scenario[]>([]);
     const [scenarioName, setScenarioName] = useState("");
     const kx = 0.086087664180445;
     const ky = 0.087651516713233;

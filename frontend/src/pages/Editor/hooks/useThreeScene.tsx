@@ -252,7 +252,8 @@ export function useThreeScene(opts: UseThreeSceneOptions): UseThreeSceneResult {
         s.points.forEach(p => s.removePoint(p.id));
         s.buildings.forEach(b => s.removeBuilding(b.id));
         setTimeout(() => localStorage.removeItem('editor-scenario-cache'), 100);
-        try { ModuleOpenDrive.FS_unlink('./data.xodr'); } catch (_) {}
+        try { ModuleOpenDrive.FS_unlink('./data.xodr'); } catch (_e) {// intentionally empty
+        }
       }
       try {
         ModuleOpenDrive.FS_createDataFile(".", "data.xodr", file_text, true, true);

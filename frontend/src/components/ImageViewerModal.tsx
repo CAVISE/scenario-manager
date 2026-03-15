@@ -4,17 +4,17 @@ import { ImageViewerContainer, ImageBox, CloseButton, FullSizeImage } from './ty
 import type { ImageViewerModalProps } from './types/ImageViewerModalTypes';
 
 
-const ImageViewerModal: React.FC<ImageViewerModalProps> = ({ 
-  open, 
-  onClose, 
-  imagePath, 
-  imageAlt 
+const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
+  open,
+  onClose,
+  imagePath,
+  imageAlt
 }) => {
   if (!open || !imagePath) return null;
 
   return (
-    <ImageViewerContainer 
-      open={open} 
+    <ImageViewerContainer
+      open={open}
       onClose={onClose}
       aria-labelledby="image-viewer-title"
       aria-describedby="image-viewer-description"
@@ -23,8 +23,8 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
         <CloseButton aria-label="close" onClick={onClose}>
           <CloseIcon />
         </CloseButton>
-        <FullSizeImage 
-          src={imagePath} 
+        <FullSizeImage
+          src={imagePath}
           alt={imageAlt}
           loading="lazy"
         />
@@ -33,4 +33,4 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
   );
 };
 
-export default ImageViewerModal; 
+export default ImageViewerModal;

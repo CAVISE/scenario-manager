@@ -35,7 +35,7 @@ export type SimulationConfig = {
   carla: {
     map: string;
     weather_preset: CarlaWeather,
-      
+
     num_vehicles: number;
     num_pedestrians: number;
     fixed_delta_seconds: number;
@@ -56,7 +56,7 @@ export type SimulationConfig = {
     sumo_host: string;
     sumo_gui: boolean;
     sumo_client_order: number;
-    max_speed: number;           
+    max_speed: number;
     tailgate_speed: number;
     speed_lim_dist: number;
     speed_decrease: number;

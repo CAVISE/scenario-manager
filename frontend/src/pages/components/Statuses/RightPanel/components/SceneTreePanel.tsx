@@ -126,7 +126,7 @@ export default function SceneTreePanel({
         {node.children?.map(renderTreeItem)}
       </TreeItem>
     );
-  }, [selectedId, sceneRef]);
+  }, [selectedId]);
 
   const total = sceneGraph ? countNodes(sceneGraph) - 1 : 0;
 

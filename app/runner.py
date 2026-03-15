@@ -1,21 +1,10 @@
 #!venv/bin/python3
-import argparse
-import os
-import sys
-from datetime import datetime
-import tkinter
 
-import carla
-import matplotlib
-import numpy as np
-
-from omegaconf import OmegaConf
 
 # OpenCDA
 from opencda.core.common.cav_world import CavWorld
 from opencda.scenario_testing.utils import customized_map_api as map_api
 from opencda.scenario_testing.utils import sim_api
-from opencda.scenario_testing.utils.yaml_utils import add_current_time
 from opencda.scenario_testing.evaluations.evaluate_manager import (
     EvaluationManager,
 )
@@ -33,8 +22,8 @@ def run_scenario(scenario_params, params):
     cav_world = CavWorld(apply_ml)
     scenario_manager = sim_api.ScenarioManager(
         scenario_params,
-        apply_ml, #apply_ml
-        "0.9.15", #version
+        apply_ml,  # apply_ml
+        "0.9.15",  # version
         xodr_path=xodr_path,
         cav_world=cav_world,
     )
@@ -51,7 +40,6 @@ def run_scenario(scenario_params, params):
         current_time=scenario_params["current_time"],
     )
 
-
     try:
         while True:
             scenario_manager.tick()
@@ -59,7 +47,7 @@ def run_scenario(scenario_params, params):
             for cav in single_cav_list:
                 cav.update_info()
                 cav.vehicle.apply_control(cav.run_step())
-            
+
     finally:
         eval_manager.evaluate()
         if record:

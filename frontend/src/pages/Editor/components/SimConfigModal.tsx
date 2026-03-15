@@ -397,8 +397,8 @@ export default function SimConfigModal({ open, onClose }: SimConfigModalProps) {
 
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: 3 }}>
           <Stack direction="row" spacing={1}>
-            
-          
+
+
           </Stack>
           <Button onClick={onClose} variant="outlined">Close</Button>
         </Stack>

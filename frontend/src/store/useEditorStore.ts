@@ -20,7 +20,7 @@ const persistOptions: PersistOptions<EditorState, EditorPersist> = {
     points:     state.points,
     buildings:  state.buildings,
     Scenario:   state.Scenario,
-    simConfig:  state.simConfig,  
+    simConfig:  state.simConfig,
     selectedId: state.selectedId,
   }),
 };

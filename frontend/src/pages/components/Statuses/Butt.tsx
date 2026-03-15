@@ -6,9 +6,13 @@ import CarIcon from '@mui/icons-material/DirectionsCar';
 import AddLocationIcon from '@mui/icons-material/AddLocation';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import ApartmentIcon from '@mui/icons-material/Apartment';
-
-// @ts-ignore
-export default function SpeedDialTooltipOpen({ onAddCar, onAddRSU, onAddpoints, onDeleteCar, onAddBuilding }) {
+export interface SpeedDialTooltipOpenProps{
+  onAddCar: ()=>void
+  onAddRSU: ()=>void
+  onAddpoints: ()=>void
+  onAddBuilding: (value: boolean)=>void
+}
+export default function SpeedDialTooltipOpen({ onAddCar, onAddRSU, onAddpoints, onAddBuilding }: SpeedDialTooltipOpenProps) {
   const [open, setOpen] = React.useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);

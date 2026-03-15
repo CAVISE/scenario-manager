@@ -61,8 +61,7 @@ app.add_middleware(
 
 @app.get("/")
 async def react_app():
-    """
-    """
+    """ """
 
 
 # @app.get("/")

@@ -124,4 +124,3 @@ const HexLogo: React.FC = () => (
 const Corner: React.FC<{ pos: CP }> = ({ pos }) => (
   <div className={`sm-corner sm-corner-${pos}`} />
 );
-

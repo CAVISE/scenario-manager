@@ -34,9 +34,9 @@ export function loadRSU(ctx: LoadRSUContext): {
 
     if (rsuModel) {
       obj = rsuModel.clone(true);
-      obj.scale.setScalar(0.05);  
+      obj.scale.setScalar(0.05);
       obj.rotation.x += Math.PI / 2;
-      obj.userData.type = 'point'; 
+      obj.userData.type = 'point';
       obj.userData.id = rsu.id;
     } else {
       const geometry = new THREE.BoxGeometry(5, 5, 5);
@@ -44,7 +44,7 @@ export function loadRSU(ctx: LoadRSUContext): {
       obj = new THREE.Mesh(geometry, material);
     }
 
-    obj.userData = { type: 'point', id: rsu.id }; 
+    obj.userData = { type: 'point', id: rsu.id };
     obj.position.set(rsu.x, rsu.y, rsu.z);
 
     scene.add(obj);

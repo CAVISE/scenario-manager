@@ -68,7 +68,7 @@ export function useCarMeshSync({
           }
         });
       }
-      
+
       return !!stillExists;
     });
 
@@ -127,7 +127,7 @@ export function useCarMeshSync({
         }, 50);
       }
     }
-    updateSceneGraph(); 
+    updateSceneGraph();
   }
 
   useEffect(() => {

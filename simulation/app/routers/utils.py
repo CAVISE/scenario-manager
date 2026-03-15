@@ -36,19 +36,6 @@ async def draw_path_handler(data: schemas.PathSchema, request: Request):
 
 # @router.get("/vehicles")
 
-"""
-{
-"path": [
-    {"x": -52.186737060546875, "y": 42.56512451171875, "z": 0.5999999642372131},
-    {"x": -48.565467834472656, "y": 85.6451187133789, "z": 0.5999999642372131},
-    {"x": -52.07392120361328, "y": 100.18904876708984, "z": 0.5999999642372131},
-    {"x": -68.73516845703125, "y": 129.30384826660156, "z": 0.5999999642372131}
-    ]
-}
-
-
-"""
-
 
 @router.get("/actors/get")
 async def get_actors(request: Request):
@@ -117,8 +104,6 @@ async def set_spectator_pos(data: schemas.TransformSchema, request: Request):
     return "ok"
 
 
-
-
 @router.get("/spectator/image")
 async def get_spectator_image(request: Request):
     client = request.app.state.client
@@ -128,9 +113,7 @@ async def get_spectator_image(request: Request):
 
     spectator_transofm = spectator.get_transform()
     vehicle_blueprints = world.get_blueprint_library().filter("*vehicle*")
-    ego_vehicle = world.spawn_actor(
-        random.choice(vehicle_blueprints), spectator_transofm
-    )
+    ego_vehicle = world.spawn_actor(random.choice(vehicle_blueprints), spectator_transofm)
     camera_bp = world.get_blueprint_library().find("sensor.camera.rgb")
     camera = world.spawn_actor(camera_bp, attach_to=ego_vehicle)
 
@@ -182,16 +165,13 @@ async def get_map_image(x: float, y: float, z: float, request: Request):
     sensor_bp.set_attribute("image_size_y", "2500")
     sensor_bp.set_attribute("fov", "10")
 
-    sensor_transform = carla.Transform(
-        carla.Location(x=x, y=y, z=z), carla.Rotation(pitch=-90)
-    )
+    sensor_transform = carla.Transform(carla.Location(x=x, y=y, z=z), carla.Rotation(pitch=-90))
 
     sensor = world.spawn_actor(sensor_bp, sensor_transform)
     print("Sensor created")
     sensors_list.append(sensor)
     global spectator_sensor
     spectator_sensor = sensor
-
 
     global image_exist
     image_exist = False

@@ -8,7 +8,7 @@ export function useSelectedObject(selectedObject: RightPanelProps['selectedObjec
   const RSUs       = useEditorStore(s => s.RSUs);
   const buildings  = useEditorStore(s => s.buildings);
   const lidars     = useEditorStore(s => s.lidars);
-  
+
   const car = useMemo(
     () => cars.find(c => c.id === selectedId) ?? null,
     [cars, selectedId],
