@@ -1,6 +1,7 @@
 import type * as THREE from 'three';
 import type { TransformControls } from 'three-stdlib';
 import type { Vec3 } from "../../../../Editor/types/editorTypes";
+import { Lidar } from '../../../../../store/types/useEditorStoreTypes';
 export const numInputSlot = {
   input: {
     onKeyDown: (e: React.KeyboardEvent) => e.stopPropagation(),
@@ -28,6 +29,7 @@ export type RightPanelProps = {
   onSelectObject:       (obj: SelectedObject) => void;
   pointsArrRef: React.MutableRefObject<THREE.Mesh[]>;
   carMeshesRef: React.MutableRefObject<THREE.Mesh[]>;
+  removeLidar: (id: string)=>void
 };
 export const css = `
 .rp-root {
