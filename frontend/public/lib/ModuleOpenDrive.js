@@ -1,6 +1,6 @@
 var libOpenDrive = (() => {
   var _scriptName = typeof document != 'undefined' ? document.currentScript?.src : undefined;
-  
+
   return (
 async function(moduleArg = {}) {
   var moduleRtn;

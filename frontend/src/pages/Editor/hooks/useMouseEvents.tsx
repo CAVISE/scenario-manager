@@ -79,7 +79,7 @@ export function useMouseEvents(opts: UseMouseEventsOptions) {
         selectObject(root.userData.id);
         transformControls.attach(root);
         onSelectObject(null)
-        onSelectObject({ type: 'lidar', id: root.userData.id }); 
+        onSelectObject({ type: 'lidar', id: root.userData.id });
         return;
       }
 
@@ -139,7 +139,7 @@ export function useMouseEvents(opts: UseMouseEventsOptions) {
         }
       }
     };
-    
+
     const onDblClick = (e: MouseEvent) => {
       const transformControls = getTransformControls();
       if (!transformControls) return;
@@ -348,5 +348,5 @@ export function useMouseEvents(opts: UseMouseEventsOptions) {
       window.removeEventListener('contextmenu', onContextMenu);
       window.removeEventListener('keydown',     onKeyDown);
     };
-  }, []); 
+  }, []);
 }

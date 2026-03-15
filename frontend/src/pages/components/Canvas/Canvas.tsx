@@ -12,7 +12,7 @@ const initColor: Color = {
     r: 127,
     g: 127,
     b: 127
-} 
+}
 
 const Canvas = () => {
     const imageRef = useRef<HTMLImageElement>(null);
@@ -267,23 +267,12 @@ const Canvas = () => {
         )));
     };
 
-    const handleDeleteLast = () => {
-        setVehicles(vehicles.map((item, it) => (
-            it == activeVehicle ?
-                { vehicle: item.vehicle, path: item.path.slice(0, -1), active: item.active, color: item.color } :
-                { vehicle: item.vehicle, path: item.path, active: item.active, color: item.color }
-        )));
-    }
-
-    const handleUsePoints = () => {
-        console.log(vehicles);
-    };
 
     const handleAddVehicle = () => {
         setVehicles([...vehicles, { vehicle: "", path: [], active: false, color: initColor } as VehicleWay])
     }
 
-    const handleDragStop = (e: DraggableEvent, data: DraggableData) => {
+    const handleDragStop = (_e: DraggableEvent, data: DraggableData) => {
         const dx = data.x;
         const dy = data.y;
         const key = Number(data.node.id);
@@ -479,7 +468,7 @@ const Canvas = () => {
                     onClick={handleClick}
                 />
                 {vehicles.map((vehicle) => (
-                    vehicle.active ? 
+                    vehicle.active ?
                     <>{vehicle.path.map((point, index) => (
                         <Draggable
                             onStop={handleDragStop}
@@ -508,7 +497,7 @@ const Canvas = () => {
                                 {index + 1}
                             </div>
                         </Draggable>
-                    ))}</> : 
+                    ))}</> :
                     <>{vehicle.path.map((point, index) => (
                         <div
                                 key={index}

@@ -48,7 +48,7 @@ const Editor = () => {
   const addBuilding         = useEditorStore(s => s.addBuilding);
   const setBuildingMode     = useEditorStore(s => s.setBuildingMode);
   const removeLidar         = useEditorStore(s=>s.removeLidar)
-  
+
   const sceneRef             = useRef<THREE.Scene>();
   const cameraRef            = useRef<THREE.PerspectiveCamera>();
   const carMeshesRef         = useRef<THREE.Mesh[]>([]);
@@ -162,7 +162,7 @@ const Editor = () => {
       .catch(err => { console.error(err); });
     setSimulationConfirmOpen(false);
   };
-  
+
   return (
     <div className='scenario-manager__editor'>
         <EditorLoadingScreen text={loadingText} progress={loadingProgress} />
@@ -192,7 +192,7 @@ const Editor = () => {
         sceneRef={sceneRef}
         transformControlsRef={transformControlsRef}
         onSelectObject={setSelectedObject}
-        pointsArrRef={pointsArrRef} 
+        pointsArrRef={pointsArrRef}
         carMeshesRef={carMeshesRef}
       />
 
@@ -200,9 +200,8 @@ const Editor = () => {
         onAddCar={handleAddCube}
         onAddRSU={handleAddRSU}
         onAddpoints={handleAddPoints}
-        onDeleteCar={handleDeleteCar}
         onAddBuilding={() => {
-        modeRef.current.isAddPointModeActive = false;  
+        modeRef.current.isAddPointModeActive = false;
         modeRef.current.isAddCarModeActive   = false;
         modeRef.current.isAddedPoints = false
         setBuildingMode(true);

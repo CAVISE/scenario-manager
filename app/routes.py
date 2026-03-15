@@ -1,6 +1,3 @@
-import os
-import subprocess
-
 from fastapi.routing import APIRouter
 from omegaconf import OmegaConf
 from fastapi import BackgroundTasks
@@ -41,4 +38,3 @@ async def start_opencda(scenario_raw: dict, background_tasks: BackgroundTasks):
 
     return scenario
     # run_scenario(opt, scenario_raw)
-

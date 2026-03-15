@@ -25,9 +25,7 @@ def has_reached_destination(vehicle, destination, threshold=7.0):
 
 
 @celery.task
-def do_scenario(
-    carla_host, carla_port, data: schemas.ScenarioSchema, scenario_id, report_id
-):
+def do_scenario(carla_host, carla_port, data: schemas.ScenarioSchema, scenario_id, report_id):
     # data = schemas.ScenarioSchema.model_validate(data)
 
     sensor_list = []
@@ -52,9 +50,7 @@ def do_scenario(
                 break
         ###############
 
-    pitch, yaw = services.calculate_pitch_yaw(
-        data.scenario[0].path[0], data.scenario[0].path[1]
-    )
+    pitch, yaw = services.calculate_pitch_yaw(data.scenario[0].path[0], data.scenario[0].path[1])
     roll = 0
     tmp_transform = carla.Transform(  # noqa: F841
         carla.Location(
@@ -72,9 +68,7 @@ def do_scenario(
         services.draw_path(data.scenario[elem].path, world, 50)
         path = [carla.Location(i.x, i.y, i.z) for i in data.scenario[elem].path]
 
-        pitch, yaw = services.calculate_pitch_yaw(
-            data.scenario[0].path[0], data.scenario[0].path[1]
-        )
+        pitch, yaw = services.calculate_pitch_yaw(data.scenario[0].path[0], data.scenario[0].path[1])
         roll = 0
 
         first_transform = carla.Transform(
@@ -108,9 +102,7 @@ def do_scenario(
             sensor = world.try_spawn_actor(camera_bp, camera_init_trans, attach_to=elem)
             # sensor_path = scenario_id + str(len(sensor_list)+1)
             spath = f"out/{scenario_id}/{i}/"
-            sensor.listen(
-                lambda image: image.save_to_disk(spath + f"{image.frame}.png")
-            )
+            sensor.listen(lambda image: image.save_to_disk(spath + f"{image.frame}.png"))
             sensor_list.append(sensor)
 
         while actors_list:
@@ -142,7 +134,7 @@ def do_scenario(
                 sensor.destroy()
             except Exception as _ex:
                 print(_ex)
-    print("сценарий завершился")
+    print("the scenario is over")
 
     connection = sqlite3.connect(config.SQLDB_NAME)
     cursor = connection.cursor()
@@ -150,4 +142,4 @@ def do_scenario(
     cursor.execute(query)
     connection.commit()
     connection.close()
-    print("данные сценария записаны")
+    print("script data recorded")
