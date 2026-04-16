@@ -44,7 +44,7 @@ export function loadRSU(ctx: LoadRSUContext): {
       obj = new THREE.Mesh(geometry, material);
     }
 
-    obj.userData = { type: 'point', id: rsu.id };
+    obj.userData = { type: 'point', id: rsu.id, isFallbackRSU: !rsuModel };
     obj.position.set(rsu.x, rsu.y, rsu.z);
 
     scene.add(obj);

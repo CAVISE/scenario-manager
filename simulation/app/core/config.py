@@ -6,7 +6,7 @@ class Config:
     CARLA_PORT: int = int(os.getenv("CARLA_PORT", 2000))
 
     SPAWN_DELAY = os.getenv("SPAWN_DELAY", 5.0)
-    SEED = os.getenv("SEED", 0)  # seed for traffic manager
+    SEED = os.getenv("SEED", 0) 
 
     REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
     REDIS_PORT = int(os.getenv("REDIS_PORT", 6369))

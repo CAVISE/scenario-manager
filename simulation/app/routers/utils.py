@@ -11,7 +11,7 @@ router = APIRouter()
 @router.get("/layers")
 async def set_layers(layer_name: str, toggle: int, request: Request):
     client = request.app.state.client
-    world = client.get_world()  # noqa: F841
+    world = client.get_world() 
     try:
         if toggle:
             exec(f"world.load_map_layer(carla.MapLayer.{layer_name})")

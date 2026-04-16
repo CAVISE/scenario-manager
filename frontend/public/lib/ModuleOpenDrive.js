@@ -14,8 +14,6 @@ var Module=moduleArg;var readyPromiseResolve,readyPromiseReject;var readyPromise
 })();
 if (typeof exports === 'object' && typeof module === 'object') {
   module.exports = libOpenDrive;
-  // This default export looks redundant, but it allows TS to import this
-  // commonjs style module.
   module.exports.default = libOpenDrive;
 } else if (typeof define === 'function' && define['amd'])
   define([], () => libOpenDrive);

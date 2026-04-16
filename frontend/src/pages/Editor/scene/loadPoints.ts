@@ -4,12 +4,8 @@ import type { LoadPointsContext } from './types/loadPointsTypes';
 import type { ConnectLinesContext } from './types/loadPointsTypes';
 import { Vec3 } from '../types/editorTypes';
 
-export function loadPoints(ctx: LoadPointsContext): {
-  cubeCircles: THREE.Mesh[][];
-  lines: THREE.Line[][];
-} {
+export function loadPoints(ctx: LoadPointsContext) {
   const { scene, points } = ctx;
-
   const cubeCircles = ctx.cubeCircles;
   let lines = ctx.lines;
 
@@ -18,55 +14,47 @@ export function loadPoints(ctx: LoadPointsContext): {
       circleArray.forEach(circle => {
         circle.parent?.remove(circle);
         circle.geometry?.dispose();
-        if (Array.isArray(circle.material)) {
-          circle.material.forEach(m => m.dispose());
-        } else {
-          (circle.material as THREE.Material)?.dispose();
-        }
+        (Array.isArray(circle.material) ? circle.material : [circle.material as THREE.Material])
+          .forEach(m => m?.dispose());
       });
       cubeCircles[index] = [];
     }
   });
 
   points.forEach((pointsArray, arrIndex) => {
-    if (!cubeCircles[arrIndex]) {
-      cubeCircles[arrIndex] = [];
-    }
+    if (!cubeCircles[arrIndex]) cubeCircles[arrIndex] = [];
 
     pointsArray.forEach((point, pointIndex) => {
       const geometry = new THREE.CircleGeometry(radius, segments);
       const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
-      const circle = new THREE.Mesh(geometry, material);
+      const circle   = new THREE.Mesh(geometry, material);
       circle.userData = { type: 'circle', id: point.id, carId: point.carId };
       circle.position.set(point.x, point.y, point.z);
-
       scene.add(circle);
       cubeCircles[arrIndex].push(circle);
 
       const canvas = document.createElement('canvas');
-      const size = 64;
-      canvas.width = size;
-      canvas.height = size;
-      const context = canvas.getContext('2d')!;
-      context.fillStyle = 'black';
-      context.font = 'bold 72px Arial';
-      context.textAlign = 'center';
-      context.textBaseline = 'middle';
-      context.strokeStyle = 'black';
-      context.fillText((pointIndex + 1).toString(), size / 2, size / 2);
+      canvas.width = 64; canvas.height = 64;
+      const ctx2d  = canvas.getContext('2d')!;
+      ctx2d.fillStyle    = 'black';
+      ctx2d.font         = 'bold 72px Arial';
+      ctx2d.textAlign    = 'center';
+      ctx2d.textBaseline = 'middle';
+      ctx2d.strokeStyle  = 'black';
+      ctx2d.fillText((pointIndex + 1).toString(), 32, 32);
 
-      const texture = new THREE.CanvasTexture(canvas);
-      const spriteMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true });
-      const sprite = new THREE.Sprite(spriteMaterial);
+      const sprite = new THREE.Sprite(
+        new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas), transparent: true })
+      );
       sprite.scale.set(2, 2, 1);
       sprite.position.set(0, 0, 1);
       circle.add(sprite);
     });
-
-    lines = connectCirclesWithLines({ scene, cars: ctx.cars, points, cubeCircles, lines: lines });
   });
 
-  return { cubeCircles, lines: lines };
+  lines = connectCirclesWithLines({ scene, cars: ctx.cars, points, cubeCircles, lines });
+
+  return { cubeCircles, lines };
 }
 
 export function connectCirclesWithLines(ctx: ConnectLinesContext): THREE.Line[][] {

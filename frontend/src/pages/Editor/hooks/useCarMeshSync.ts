@@ -2,6 +2,9 @@ import { useEffect } from 'react';
 import * as THREE from 'three';
 
 import type { UseCarMeshSyncParams } from './types/useCarMeshSyncTypes';
+import { useEditorStore } from '../../../store/useEditorStore';
+import { useCarModel } from './useCarModel';
+import { useEditorRefs } from '../context/EditorRefsContext';
 
 function applyColor(object: THREE.Object3D, color: string) {
   object.traverse(child => {
@@ -39,15 +42,12 @@ function cloneMaterials(object: THREE.Object3D) {
 }
 
 export function useCarMeshSync({
-  cars,
-  selectedId,
-  sceneRef,
-  carModelRef,
-  carMeshesRef,
-  transformControlsRef,
   updateSceneGraph
 }: UseCarMeshSyncParams) {
-
+  const cars = useEditorStore(s => s.cars)
+  const selectedId = useEditorStore(s =>s.selectedId)
+  const { carModelRef }                           = useCarModel();
+  const {sceneRef,carMeshesRef, transformControlsRef} = useEditorRefs()
   function syncMeshes() {
     const scene = sceneRef.current;
     if (!scene || !carModelRef.current) return;

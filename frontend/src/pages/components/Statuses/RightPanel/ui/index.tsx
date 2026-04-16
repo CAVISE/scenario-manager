@@ -1,43 +1,47 @@
 import { useState } from 'react';
 import type { RightPanelProps } from '../types/PanelTypes';
 import { useSelectedObject } from "../../../../Editor/hooks/useSelectedObject";
-import SceneTreePanel        from '../components/SceneTreePanel';
-import CarProperties         from '../components/CarProperties';
-import LidarProperties       from '../components/LidarProperties';
-import RSUProperties         from '../components/RSUProperties';
-import BuildingProperties    from '../components/BuildingProperties';
-import RoutePointProperties  from '../components/RoutePointProperties';
+
+import CarProperties from '../components/CarProperties/ui/CarProperties';
+import LidarProperties from '../components/LidarProperties/ui/LidarProperties';
+import RSUProperties from '../components/RSUProperties/ui/RSUProperties';
+import BuildingProperties from '../components/BuildingProperties/ui/BuildingProperties';
+import RoutePointProperties from '../components/RoutePointProperties/ui/RoutePointProperties';
 import type { SectionProps } from '../types/PanelTypes';
 import {css} from '../types/PanelTypes'
+import PedestrianProperties from '../components/PedestrianProperties/ui/PedestrianProperties';
+import ScenarioControlWidget from '../components/ScenarioControlWidget/ui/ScenarioControlWidget';
+import { useEditorStore } from '../../../../../store/useEditorStore';
+import SceneTreePanel from '../components/SceneTreePanel/ui/SceneTreePanel';
 
 
-const Section: React.FC<SectionProps> = ({ label, defaultOpen = true, children }) => {
-  const [open, setOpen] = useState(defaultOpen);
+const Section: React.FC<SectionProps> = ({ label, children, defaultOpen = true }) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
   return (
     <div className="rp-section">
-      <div className="rp-section-header" onClick={() => setOpen(v => !v)}>
+      <div className="rp-section-header" onClick={() => setIsOpen(v => !v)}>
         <span className="rp-section-label">{label}</span>
-        <span className={`rp-section-chevron ${open ? 'open' : ''}`}>▼</span>
+        <span className={`rp-section-chevron ${isOpen ? 'open' : ''}`}>▼</span>
       </div>
-      {open && <div className="rp-section-content">{children}</div>}
+      {isOpen && <div className="rp-section-content">{children}</div>}
     </div>
   );
 };
 
 export default function RightPanel({
-  sceneGraph, onDetach, onDeleteCube, removeLidar,
-  selectedObject, onDeleteSelected, sceneRef, transformControlsRef, onSelectObject, pointsArrRef, carMeshesRef
-}: RightPanelProps) {
+  sceneGraph, onDetach, updateSceneGraph}: RightPanelProps) {
+  const removeLidar = useEditorStore(s=>s.removeLidar)
+  const onSelectObject = useEditorStore(s=>s.selectObject)
   const [collapsed, setCollapsed] = useState(false);
+  const setChangePanelMode = useEditorStore(s => s.setChangePanelMode)
+  const selectedObject = useEditorStore(s => s.selectedObject);
   const {
-    car, rsu, building, lidar,
-    isCar, isRSU, isCircle, isBuilding, isLidar, hasSelection,
+    car, rsu, building, lidar, point,
+    isCar, isRSU, isCircle, isBuilding, isLidar, hasSelection, isPedestrian, pedestrian
   } = useSelectedObject(selectedObject);
 
-  const handleDeleteCar = () => {
-    onDeleteCube();
-    onDetach();
-  };
+  const onDeleteSelected = () => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete' }))
 
   return (
     <>
@@ -45,7 +49,7 @@ export default function RightPanel({
 
       <button
         className={`rp-toggle ${collapsed ? '' : 'open'}`}
-        onClick={() => setCollapsed(v => !v)}
+        onClick={() => { setCollapsed(v => !v); setChangePanelMode(); }}
       >
         <span className="rp-toggle-arrow">❯</span>
       </button>
@@ -69,11 +73,7 @@ export default function RightPanel({
             <SceneTreePanel
             sceneGraph={sceneGraph}
             onDetach={onDetach}
-            sceneRef={sceneRef}
-            transformControlsRef={transformControlsRef}
             onSelectObject={onSelectObject}
-            pointsArrRef={pointsArrRef}
-            carMeshesRef={carMeshesRef}
           />
           </Section>
 
@@ -85,20 +85,27 @@ export default function RightPanel({
               </div>
             )}
             {isCar && car && (
-              <CarProperties car={car} onDelete={handleDeleteCar} onDetach={onDetach} />
+              <CarProperties car={car} onDelete={onDeleteSelected} onDetach={onDetach} />
             )}
             {isRSU && rsu && (
               <RSUProperties rsu={rsu} onDelete={onDeleteSelected} />
             )}
-            {isCircle && (
-              <RoutePointProperties selectedObject={selectedObject} onDelete={onDeleteSelected} />
-            )}
+            {isCircle && point ? (
+              <RoutePointProperties point={point}selectedObject={selectedObject} onDelete={onDeleteSelected} />
+            ): null}
             {isBuilding && building && (
               <BuildingProperties building={building} onDelete={onDeleteSelected} />
             )}
             {isLidar && lidar && (
               <LidarProperties lidar={lidar} onDelete={() => { removeLidar(lidar.id);onDetach(); }} />
             )}
+            {isPedestrian && pedestrian && (
+              <PedestrianProperties pedestrian={pedestrian} onDelete={onDeleteSelected} />
+            )}
+          </Section>
+
+          <Section label="Scenario Manager" defaultOpen={true}>
+            <ScenarioControlWidget updateSceneGraph={updateSceneGraph}/>
           </Section>
         </div>
 

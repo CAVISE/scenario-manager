@@ -38,3 +38,23 @@ export interface ThreeSetup {
   light:            THREE.DirectionalLight;
   picking:          { scenes: PickingScenes; textures: PickingTextures; materials: PickingMaterials };
 }
+export const makeScene = () => { const s = new THREE.Scene(); s.background = new THREE.Color(0xffffff); return s; };
+export   const picking = {
+    scenes: {
+      lane:     makeScene(),
+      roadmark: makeScene(),
+      xyz:      makeScene(),
+      st:       makeScene(),
+    },
+    textures: {
+      lane:     new THREE.WebGLRenderTarget(1, 1, { type: THREE.FloatType }),
+      roadmark: new THREE.WebGLRenderTarget(1, 1, { type: THREE.FloatType }),
+      xyz:      new THREE.WebGLRenderTarget(1, 1, { type: THREE.FloatType }),
+      st:       new THREE.WebGLRenderTarget(1, 1, { type: THREE.FloatType }),
+    },
+    materials: {
+      id:  new THREE.ShaderMaterial({ vertexShader: PICKING_SHADERS.idVertex,  fragmentShader: PICKING_SHADERS.idFragment  }),
+      xyz: new THREE.ShaderMaterial({ vertexShader: PICKING_SHADERS.xyzVertex, fragmentShader: PICKING_SHADERS.xyzFragment }),
+      st:  new THREE.ShaderMaterial({ vertexShader: PICKING_SHADERS.stVertex,  fragmentShader: PICKING_SHADERS.stFragment  }),
+    },
+  };

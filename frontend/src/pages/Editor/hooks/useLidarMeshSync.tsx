@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import * as THREE from 'three';
-import type { Lidar } from '../../../store/useEditorStore';
+import { useEditorStore, type Lidar } from '../../../store/useEditorStore';
 
 import type { UseLidarMeshSyncParams } from './types/UseLidarMeshSyncTypes';
+import { useEditorRefs } from '../context/EditorRefsContext';
 
 function createLidarMesh(lidar: Lidar): THREE.Group {
   const group = new THREE.Group();
@@ -39,13 +40,11 @@ function disposeLidarGroup(group: THREE.Group) {
 }
 
 export function useLidarMeshSync({
-  lidars,
-  cars,
-  carMeshesRef,
-  transformControlsRef,
   updateSceneGraph
 }: UseLidarMeshSyncParams) {
-
+  const {carMeshesRef, transformControlsRef} = useEditorRefs()
+  const lidars = useEditorStore(s=>s.lidars)
+  const cars = useEditorStore(s=>s.cars)
   useEffect(() => {
     const timer = setTimeout(() => {
       const carMeshes = carMeshesRef.current;

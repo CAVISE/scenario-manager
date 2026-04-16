@@ -1,14 +1,14 @@
 import { create, type StateCreator } from 'zustand';
 import { persist, type PersistOptions } from 'zustand/middleware';
 import { nanoid } from 'nanoid';
-import { defaultSimConfig } from '../pages/Editor/Generators/types/configGeneratorsTypes';
-import type { EditorState, Car, RSU, Lidar, Building, Point, Scenario } from './types/useEditorStoreTypes';
+import { defaultSimConfig, mergeSimConfigWithDefaults } from '../pages/Editor/Generators/types/configGeneratorsTypes';
+import type { EditorState, Car, RSU, Lidar, Building, Point, Scenario, Pedestrian } from './types/useEditorStoreTypes';
 
-export type { EditorState, Car, RSU, Lidar, Building, Point, Scenario };
+export type { EditorState, Car, RSU, Lidar, Building, Point, Scenario,  };
 export type { V2XProtocol, BuildingMaterial, CarlaWeather } from './types/useEditorStoreTypes';
 export type {SimulationConfig} from '../pages/Editor/Generators/types/configGeneratorsTypes';
 type EditorPersist = Pick<EditorState,
-  'cars' | 'RSUs' | 'lidars' | 'points' | 'buildings' | 'Scenario' | 'simConfig' | 'selectedId'
+  'cars' | 'RSUs' | 'lidars' | 'points' | 'buildings' | 'Scenario' | 'simConfig' | 'selectedId' | 'selectedObject' | 'pedestrians'
 >;
 
 const persistOptions: PersistOptions<EditorState, EditorPersist> = {
@@ -22,45 +22,119 @@ const persistOptions: PersistOptions<EditorState, EditorPersist> = {
     Scenario:   state.Scenario,
     simConfig:  state.simConfig,
     selectedId: state.selectedId,
+    selectedObject: state.selectedObject,
+    pedestrians: state.pedestrians,
   }),
+  merge: (persisted, current) => {
+    const p = persisted as Partial<EditorPersist> | undefined;
+    if (!p) return current;
+    return {
+      ...current,
+      ...p,
+      simConfig: mergeSimConfigWithDefaults(p.simConfig),
+    };
+  },
 };
 
 const storeCreator: StateCreator<EditorState> = (set) => ({
   cars:           [],
+  error: null,
+  pedestrians:    [],
   points:         [],
   buildings:      [],
   lidars:         [],
   selectedId:     null,
+  selectedObject: null,
   isBuildingMode: false,
   routes:         [[]],
   RSUs:           [],
   simConfig:      defaultSimConfig,
-  Scenario:       { id: Date.now().toString(), name: 'Default Scenario', weather: 'ClearNoon' },
+  isPanelOpen: true,
+  Scenario:       { id: Date.now().toString(), name: 'Default Scenario', weather: 'ClearNoon', description: '' },
 
-  removeSelectedId: () => set({ selectedId: null }),
+  removeSelectedId: () => set({ selectedId: null, selectedObject: null }),
   setBuildingMode: value => set({ isBuildingMode: value, ...(value && { selectedId: null }) }),
-
   updateScenario: (props) =>
     set(s => ({ Scenario: { ...s.Scenario, ...props } })),
 
   updateSimConfig: props =>
-    set(s => ({ simConfig: { ...s.simConfig, ...props } })),
-
+    set(s => ({ simConfig: { ...mergeSimConfigWithDefaults(s.simConfig), ...props } })),
+  setError: props => set({error: props}),
   updateSimConfigOmnet: props =>
-    set(s => ({ simConfig: { ...s.simConfig, omnet: { ...s.simConfig.omnet, ...props } } })),
-
+    set(s => {
+      const sim = mergeSimConfigWithDefaults(s.simConfig);
+      return { simConfig: { ...sim, omnet: { ...sim.omnet, ...props } } };
+    }),
+  setChangePanelMode: () => set(s=>({isPanelOpen: !s.isPanelOpen})),
   updateSimConfigArtery: props =>
-    set(s => ({ simConfig: { ...s.simConfig, artery: { ...s.simConfig.artery, ...props } } })),
+    set(s => {
+      const sim = mergeSimConfigWithDefaults(s.simConfig);
+      return { simConfig: { ...sim, artery: { ...sim.artery, ...props } } };
+    }),
 
   updateSimConfigSionna: props =>
-    set(s => ({ simConfig: { ...s.simConfig, sionna: { ...s.simConfig.sionna, ...props } } })),
+    set(s => {
+      const sim = mergeSimConfigWithDefaults(s.simConfig);
+      return { simConfig: { ...sim, sionna: { ...sim.sionna, ...props } } };
+    }),
+  updateSimConfigMPC: props =>
+  set(s => {
+    const sim = mergeSimConfigWithDefaults(s.simConfig);
+    return { simConfig: { ...sim, mpc: { ...sim.mpc, ...props } } };
+  }),
+  addPedestrian: (x, y, z) => {
+    const ped: Pedestrian = {
+      id:              nanoid(),
+      x,
+      y,
+      z,
+      speed:           1.2,
+      cross_factor:    0.5,
+      is_invincible:   false,
+      tx_power:        10,
+      frequency:       5.9e9,
+      protocol:        'DSRC',
+      beacon_interval: 1000,
+    };
+
+    set(s => ({
+      pedestrians: [...s.pedestrians, ped],
+    }));
+
+    return ped.id;
+  },
+
+  updatePedestrian: (id, props) =>
+    set(s => ({
+      pedestrians: s.pedestrians.map(p => (p.id === id ? { ...p, ...props } : p)),
+    })),
+
+  removePedestrian: id =>
+    set(s => ({
+      pedestrians: s.pedestrians.filter(p => p.id !== id),
+      selectedId:  s.selectedId === id ? null : s.selectedId,
+    })),
 
   updateSimConfigCarla: props =>
-    set(s => ({ simConfig: { ...s.simConfig, carla: { ...s.simConfig.carla, ...props } } })),
-
+    set(s => {
+      const sim = mergeSimConfigWithDefaults(s.simConfig);
+      return { simConfig: { ...sim, carla: { ...sim.carla, ...props } } };
+    }),
+  updateSimConfigCAPI: props =>
+    set(s => {
+      const sim = mergeSimConfigWithDefaults(s.simConfig);
+      return { simConfig: { ...sim, capi: { ...sim.capi, ...props } } };
+    }),
   updateSimConfigOpenCDA: props =>
-    set(s => ({ simConfig: { ...s.simConfig, opencda: { ...s.simConfig.opencda, ...props } } })),
-
+    set(s => {
+      const sim = mergeSimConfigWithDefaults(s.simConfig);
+      return { simConfig: { ...sim, opencda: { ...sim.opencda, ...props } } };
+    }),
+  updateSimConfigSumo: props =>
+    set(s => {
+      const sim = mergeSimConfigWithDefaults(s.simConfig);
+      return { simConfig: { ...sim, sumo: { ...sim.sumo, ...props } } };
+    }),
   addCar: (x, y, z, model, color, speed = 50) => {
     const id = nanoid();
     set(s => ({
@@ -75,12 +149,15 @@ const storeCreator: StateCreator<EditorState> = (set) => ({
     set(s => ({ cars: s.cars.map(c => (c.id === id ? { ...c, ...props } : c)) })),
 
   removeCar: id =>
-    set(s => ({
-      cars:       s.cars.filter(c => c.id !== id),
+  set(s => {
+    console.trace('removeCar called', id);
+    return {
+      cars: s.cars.filter(c => c.id !== id),
       points:     s.points.filter(p => p.carId !== id),
       lidars:     s.lidars.filter(l => l.carId !== id),
       selectedId: s.selectedId === id ? null : s.selectedId,
-    })),
+    };
+  }),
 
   addRSU: (x, y, z) =>
     set(s => ({
@@ -103,6 +180,7 @@ const storeCreator: StateCreator<EditorState> = (set) => ({
 
   updateRSU: (id, props) =>
     set(s => ({ RSUs: s.RSUs.map(r => (r.id === id ? { ...r, ...props } : r)) })),
+
 
   addLidar: (carId, x, y, z) => {
     const id = nanoid();
@@ -136,7 +214,13 @@ const storeCreator: StateCreator<EditorState> = (set) => ({
   updatePoint: (id, props) =>
     set(s => ({ points: s.points.map(p => (p.id === id ? { ...p, ...props } : p)) })),
 
-  selectObject: id => set({ selectedId: id }),
+  selectObject: (obj) => set(() => {
+    const selectedId = obj?.id || null;
+    return {
+      selectedId,
+      selectedObject: obj,
+    };
+  }),
 
   addBuilding: (x, y, z) =>
     set(s => ({

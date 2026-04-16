@@ -2,6 +2,11 @@ export interface EditorLoadingScreenProps {
   text: string | null;
   progress?: number;
 }
+export  const subsystems = [
+    { label: 'OpenDRIVE Runtime', threshold: 10 },
+    { label: 'WebAssembly Module', threshold: 30 },
+    { label: 'WebGL Renderer',    threshold: 60 },
+  ];
 export type CP = 'tl' | 'tr' | 'bl' | 'br';
 export const css = `
   .sm-loader-root {
@@ -17,7 +22,6 @@ export const css = `
     font-family: "Courier New", Courier, monospace;
   }
 
-  /* Grid */
   .sm-loader-grid {
     position: absolute;
     inset: 0;
@@ -29,7 +33,6 @@ export const css = `
     pointer-events: none;
   }
 
-  /* Scanline */
   .sm-loader-scan {
     position: absolute;
     left: 0; right: 0;
@@ -39,7 +42,6 @@ export const css = `
     pointer-events: none;
   }
 
-  /* Corners */
   .sm-corner {
     position: absolute;
     width: 20px;
@@ -58,7 +60,6 @@ export const css = `
     border-bottom: 1px solid rgba(105,240,174,0.3);
     border-right: 1px solid rgba(105,240,174,0.3); }
 
-  /* Card */
   .sm-loader-card {
     position: relative;
     display: flex;
@@ -68,7 +69,6 @@ export const css = `
     animation: smFadeUp 0.7s cubic-bezier(0.4,0,0.2,1) both;
   }
 
-  /* Logo row */
   .sm-loader-logo-wrap {
     display: flex;
     flex-direction: column;
@@ -95,14 +95,12 @@ export const css = `
     text-transform: uppercase;
   }
 
-  /* Divider */
   .sm-loader-divider {
     width: 280px;
     height: 1px;
     background: linear-gradient(90deg, transparent, rgba(105,240,174,0.2), transparent);
   }
 
-  /* Progress */
   .sm-loader-progress-wrap {
     width: 300px;
     display: flex;
@@ -157,7 +155,6 @@ export const css = `
     font-variant-numeric: tabular-nums;
   }
 
-  /* Subsystems */
   .sm-loader-subsystems {
     display: flex;
     flex-direction: column;
@@ -183,7 +180,6 @@ export const css = `
     color: rgba(255,255,255,0.32);
   }
 
-  /* Stamp */
   .sm-loader-stamp {
     position: absolute;
     bottom: 20px;
@@ -193,7 +189,6 @@ export const css = `
     text-transform: uppercase;
   }
 
-  /* Keyframes */
   @keyframes smGridScroll {
     from { background-position: 0 0; }
     to   { background-position: 0 64px; }

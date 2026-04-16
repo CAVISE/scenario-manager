@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import  {css} from "./types/EditorErrorScreenTypes"
-import type { EditorErrorScreenProps, CP } from "./types/EditorErrorScreenTypes"
+import  {css, failedSubsystems} from "./types/EditorErrorScreenTypes"
+import type { CP } from "./types/EditorErrorScreenTypes"
+import { useEditorStore } from '../../../store/useEditorStore';
 const HexErrorLogo: React.FC = () => (
   <svg width="56" height="64" viewBox="0 0 56 64" fill="none">
     <polygon
@@ -38,16 +39,18 @@ const Corner: React.FC<{ pos: CP }> = ({ pos }) => (
   <div className={`sm-corner sm-corner-${pos}`} />
 );
 
-export const EditorErrorScreen: React.FC<EditorErrorScreenProps> = ({
-  title,
-  message = 'An unexpected error occurred. Check the console for details.',
-  code,
-  onRetry,
-  onDismiss,
+export const EditorErrorScreen: React.FC = ({
+
 }) => {
+  const error = useEditorStore(s=>s.error)
+  const setError = useEditorStore(s=>s.setError)
+  const message=error?.message
+  const title= error ? 'Runtime Error' : null 
+  const onRetry=() => { setError(null); window.location.reload(); }
+  const onDismiss=() => setError(null)
   const [mounted, setMounted] = useState(title !== null);
   const [opacity, setOpacity] = useState(title !== null ? 1 : 0);
-
+          
   useEffect(() => {
     if (title !== null) {
       setMounted(true);
@@ -60,12 +63,6 @@ export const EditorErrorScreen: React.FC<EditorErrorScreenProps> = ({
   }, [title]);
 
   if (!mounted) return null;
-
-  const failedSubsystems = [
-    { label: 'OpenDRIVE Runtime', failed: true },
-    { label: 'WebAssembly Module', failed: true },
-    { label: 'WebGL Renderer',    failed: false },
-  ];
 
   return (
     <>
@@ -108,7 +105,7 @@ export const EditorErrorScreen: React.FC<EditorErrorScreenProps> = ({
             ))}
           </div>
 
-          {(onRetry || onDismiss) && (
+          
             <div className="sm-err-actions">
               {onRetry && (
                 <button className="sm-err-btn sm-err-btn-retry" onClick={onRetry}>
@@ -121,11 +118,10 @@ export const EditorErrorScreen: React.FC<EditorErrorScreenProps> = ({
                 </button>
               )}
             </div>
-          )}
         </div>
 
         <span className="sm-err-stamp">
-          CAVISE · SM · {code ? `${code} · ` : ''}BUILD 2025
+          CAVISE · SM · BUILD 2025
         </span>
       </div>
     </>

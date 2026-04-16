@@ -1,13 +1,6 @@
-#!venv/bin/python3
 import argparse
 import os
 import sys
-from datetime import datetime
-import tkinter
-
-import carla
-import matplotlib
-import numpy as np
 
 from omegaconf import OmegaConf
 
@@ -49,14 +42,22 @@ XODR_PATH = "assets/xodrs"
 CFG_DIR = "assets/opencda"
 
 
-def run_scenario(opt: argparse.Namespace, scenario_params):
-    xodr_path = f"{XODR_PATH}/{opt.map}.xodr"
+def run_scenario(scenario_params, params):
+    from opencda.core.common.cav_world import CavWorld
+    from opencda.scenario_testing.utils import customized_map_api as map_api
+    from opencda.scenario_testing.utils import sim_api
+    from opencda.scenario_testing.evaluations.evaluate_manager import EvaluationManager
 
-    cav_world = CavWorld(opt.apply_ml)
+    apply_ml = params["apply_ml"]
+    record = params["record"]
+    map_name = params["map_name"]
+    xodr_path = f"{XODR_PATH}/{map_name}.xodr"
+
+    cav_world = CavWorld(apply_ml)
     scenario_manager = sim_api.ScenarioManager(
         scenario_params,
-        opt.apply_ml,
-        opt.version,
+        apply_ml,
+        "0.9.15",
         xodr_path=xodr_path,
         cav_world=cav_world,
     )
@@ -69,25 +70,23 @@ def run_scenario(opt: argparse.Namespace, scenario_params):
 
     eval_manager = EvaluationManager(
         scenario_manager.cav_world,
-        script_name=opt.map,
+        script_name=map_name,
         current_time=scenario_params["current_time"],
     )
+
     try:
         while True:
             scenario_manager.tick()
             for cav in single_cav_list:
                 cav.update_info()
                 cav.vehicle.apply_control(cav.run_step())
-            
     finally:
         eval_manager.evaluate()
-        if opt.record:
+        if record:
             scenario_manager.client.stop_recorder()
-
         scenario_manager.close()
         for v in single_cav_list + bg_veh_list:
             v.destroy()
-
 
 def main():
     opt = arg_parse_default()

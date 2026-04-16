@@ -1,4 +1,4 @@
-import { BottomNavbar } from "./components/BottomNavbar/BottomNavbar"
+import { BottomNavbar } from "./components/BottomNavbar/ui/BottomNavbar"
 import { Statuses } from "./components/Statuses/Statuses"
 
 const Reports = () => {
