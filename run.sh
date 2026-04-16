@@ -11,6 +11,8 @@ shift
 
 services="$@"
 
+COMPOSE_SM="$CAVISE_ROOT/scenario-manager/docker-compose.yml"
+
 case "$command" in
   build)
     echo "Building container images..."
@@ -36,8 +38,21 @@ case "$command" in
     echo "Restarting containers..."
     docker compose -f $CAVISE_ROOT/dc-configs/docker-compose.yml --env-file paths.conf restart $services
     ;;
+  sm-up)
+    echo "Starting scenario-manager..."
+    docker compose -f $COMPOSE_SM --profile prod up --build -d
+    xdg-open http://localhost 2>/dev/null || open http://localhost 2>/dev/null || start http://localhost
+    ;;
+  sm-down)
+    echo "Stopping scenario-manager..."
+    docker compose -f $COMPOSE_SM --profile prod down
+    ;;
+  sm-build)
+    echo "Building scenario-manager..."
+    docker compose -f $COMPOSE_SM --profile prod build
+    ;;
   *)
-    echo "Usage: $0 {build|up|start|stop|down|restart} [services...]"
+    echo "Usage: $0 {build|up|start|stop|down|restart|sm-up|sm-down|sm-build} [services...]"
     exit 1
     ;;
 esac

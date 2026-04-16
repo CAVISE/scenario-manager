@@ -16,7 +16,7 @@ logging.basicConfig(
     handlers=[logging.StreamHandler()],
 )
 logger = logging.getLogger(__name__)
-ALLOWED_REPOS = {"opencda", "artery"}
+ALLOWED_REPOS = {"opencda", "artery", "scenario-manager"}
 
 
 def get_available_versions(repo_url: str) -> List[Tuple[Literal["tag", "branch"], str]]:
@@ -182,7 +182,7 @@ def main() -> None:
         logger.exception("Error determining repo base URL")
         sys.exit(1)
 
-    repos = args.repos if args.repos else ["opencda", "artery"]
+    repos = args.repos if args.repos else ["opencda", "artery", "scenario-manager"]
     logger.info(f"Repositories to process: {repos}")
 
     for repo_name in repos:
