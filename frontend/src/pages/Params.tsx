@@ -1,14 +1,9 @@
 import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from "@mui/material";
-import { BottomNavbar } from "./components/BottomNavbar/BottomNavbar"
+import { BottomNavbar } from "./components/BottomNavbar/ui/BottomNavbar"
 import { useEffect, useState } from "react"
 import { useEditorStore } from "../store/useEditorStore";
-// import { defWorld } from "../types/Scenario";
-// import SelectVariants from "./components/Inputs/SelectVariants";
-// import InputNumber from "./components/Inputs/InputNumber";
-// import InputBoolean from "./components/Inputs/InputBoolean";
 
 const ParamsPage = () => {
-    // const [world, setWorld] = useState(defWorld);
     const [weather, setWeather] = useState("ClearNoon");
     const updateScenario = useEditorStore(state => state.updateScenario);
     useEffect(() => {
@@ -43,34 +38,6 @@ const ParamsPage = () => {
                     ))}
                 </Select>
             </FormControl>
-            {/* <p>{world.day_time} {world.precipitation} {world.precipitation_intensity} {world.glaze} {world.fog}</p>
-            <SelectVariants
-                param="day_time"
-                variants={["morning", "day", "evening", "night"]}
-                state={world}
-                setState={setWorld}
-            />
-            <SelectVariants
-                param="precipitation"
-                variants={["none", "rain", "snow"]}
-                state={world}
-                setState={setWorld}
-            />
-            <InputNumber
-                param="precipitation_intensity"
-                state={world}
-                setState={setWorld}
-            />
-            <InputBoolean
-                param="glaze"
-                state={world}
-                setState={setWorld}
-            />
-            <InputBoolean
-                param="fog"
-                state={world}
-                setState={setWorld}
-            /> */}
         </div>
     </div>)
 }

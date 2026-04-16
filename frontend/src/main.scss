@@ -1,3 +1,7 @@
+* {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
 html, body, #root {
   margin: 0;
   padding: 0;

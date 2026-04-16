@@ -1,6 +1,5 @@
-import type * as THREE from 'three';
-import type { TransformControls } from 'three-stdlib';
 import type { Vec3 } from "../../../../Editor/types/editorTypes";
+import React from 'react';
 export const numInputSlot = {
   input: {
     onKeyDown: (e: React.KeyboardEvent) => e.stopPropagation(),
@@ -11,7 +10,7 @@ export const numInputSlot = {
 export type SceneNode = { id: string; name: string; children?: SceneNode[] };
 
 export type SelectedObject = {
-  type: 'car' | 'rsu' | 'point' | 'building' | 'lidar' | 'circle';
+  type: 'car' | 'rsu' | 'point' | 'building' | 'lidar' | 'circle' | 'pedestrian';
   id?: string;
   position?: Vec3;
 } | null;
@@ -19,16 +18,8 @@ export type SelectedObject = {
 export type RightPanelProps = {
   sceneGraph:           SceneNode | null;
   onDetach:             () => void;
-  onDeleteCar:          () => void;
-  onDeleteCube:         () => void;
-  selectedObject:       SelectedObject ;
-  onDeleteSelected:     () => void;
-  sceneRef:             React.MutableRefObject<THREE.Scene | undefined>;
-  transformControlsRef: React.MutableRefObject<TransformControls | null>;
-  onSelectObject:       (obj: SelectedObject) => void;
-  pointsArrRef: React.MutableRefObject<THREE.Mesh[]>;
-  carMeshesRef: React.MutableRefObject<THREE.Mesh[]>;
-  removeLidar: (id: string)=>void
+  onDeleteCar:          () => void; 
+  updateSceneGraph: () => void
 };
 export const css = `
 .rp-root {
@@ -200,6 +191,128 @@ export const css = `
   color: #ccc;
 }
 .rp-empty-text { font-size: 11px; color: #bbb; }
+
+.rp-scenario-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rp-scenario-label {
+  font-size: 11px;
+  color: #707070;
+  font-weight: 600;
+}
+.rp-scenario-input {
+  border: 1px solid #ddd6cb;
+  background: #fff;
+  border-radius: 6px;
+  padding: 7px 8px;
+  font-size: 12px;
+  color: #1d1d1d;
+}
+.rp-scenario-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37,99,235,0.15);
+}
+.rp-scenario-actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+.rp-btn {
+  border: 1px solid #d8d4cc;
+  border-radius: 6px;
+  background: #fff;
+  color: #333;
+  font-size: 11px;
+  padding: 6px 4px;
+  cursor: pointer;
+}
+.rp-btn:hover { background: #f7f5f1; }
+.rp-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.rp-btn-primary {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+}
+.rp-btn-primary:hover { background: #1f55cb; }
+.rp-btn-run {
+  background: #0f766e;
+  color: #fff;
+  border-color: #0f766e;
+}
+.rp-btn-run:hover { background: #0c615a; }
+.rp-scenario-notice {
+  font-size: 11px;
+  color: #4b5563;
+  background: #f6f7fb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+.rp-scenario-statuses {
+  border: 1px solid #ece8e0;
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.rp-scenario-statuses-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #626262;
+  font-weight: 600;
+}
+.rp-link-btn {
+  border: none;
+  background: transparent;
+  color: #2563eb;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 0;
+}
+.rp-scenario-muted {
+  font-size: 11px;
+  color: #9aa0a6;
+}
+.rp-scenario-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.rp-scenario-status-name {
+  font-size: 11px;
+  color: #2e2e2e;
+  max-width: 140px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.rp-scenario-status-pill {
+  font-size: 10px;
+  border-radius: 10px;
+  padding: 2px 7px;
+  border: 1px solid transparent;
+}
+.rp-scenario-status-pill.ok {
+  color: #116a3d;
+  background: #e9f9ef;
+  border-color: #b8e8cb;
+}
+.rp-scenario-status-pill.pending {
+  color: #9a5b00;
+  background: #fff7e8;
+  border-color: #f7ddb0;
+}
 
 .rp-footer {
   padding: 9px 20px;

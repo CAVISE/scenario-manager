@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { MapControls, TransformControls } from 'three-stdlib';
-import { PICKING_SHADERS } from './types/useThreeSetupTypes';
+import { picking } from './types/useThreeSetupTypes';
 import type { ThreeSetup } from './types/useThreeSetupTypes';
 
 
@@ -31,27 +31,6 @@ export function createThreeSetup(containerId: string, onSpotlightPause: (v: bool
   const light = new THREE.DirectionalLight(0xffffff, 1.0);
   scene.add(light);
   scene.add(light.target);
-
-  const makeScene = () => { const s = new THREE.Scene(); s.background = new THREE.Color(0xffffff); return s; };
-  const picking = {
-    scenes: {
-      lane:     makeScene(),
-      roadmark: makeScene(),
-      xyz:      makeScene(),
-      st:       makeScene(),
-    },
-    textures: {
-      lane:     new THREE.WebGLRenderTarget(1, 1, { type: THREE.FloatType }),
-      roadmark: new THREE.WebGLRenderTarget(1, 1, { type: THREE.FloatType }),
-      xyz:      new THREE.WebGLRenderTarget(1, 1, { type: THREE.FloatType }),
-      st:       new THREE.WebGLRenderTarget(1, 1, { type: THREE.FloatType }),
-    },
-    materials: {
-      id:  new THREE.ShaderMaterial({ vertexShader: PICKING_SHADERS.idVertex,  fragmentShader: PICKING_SHADERS.idFragment  }),
-      xyz: new THREE.ShaderMaterial({ vertexShader: PICKING_SHADERS.xyzVertex, fragmentShader: PICKING_SHADERS.xyzFragment }),
-      st:  new THREE.ShaderMaterial({ vertexShader: PICKING_SHADERS.stVertex,  fragmentShader: PICKING_SHADERS.stFragment  }),
-    },
-  };
 
   const onResize = () => {
     camera.aspect = window.innerWidth / window.innerHeight;

@@ -95,6 +95,7 @@ export function startAnimate(p: StartAnimateParams): { running: boolean } {
       }
     }
 
+    p.onBeforeRender?.();
     p.renderer.render(p.scene, p.camera);
   }
 

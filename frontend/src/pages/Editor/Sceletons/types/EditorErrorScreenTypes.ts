@@ -7,7 +7,11 @@ export interface EditorErrorScreenProps {
   onRetry?: () => void;
   onDismiss?: () => void;
 }
-
+export  const failedSubsystems = [
+    { label: 'OpenDRIVE Runtime', failed: true },
+    { label: 'WebAssembly Module', failed: true },
+    { label: 'WebGL Renderer',    failed: false },
+  ];
 export const css = `
 .sm-err-root {
   position: fixed;
@@ -21,7 +25,6 @@ export const css = `
   overflow: hidden;
 }
 
-/* grid */
 .sm-err-grid {
   position: absolute;
   inset: 0;
@@ -32,7 +35,6 @@ export const css = `
   pointer-events: none;
 }
 
-/* scan line */
 .sm-err-scan {
   position: absolute;
   left: 0; right: 0;
@@ -46,7 +48,6 @@ export const css = `
   100% { top: 100%; }
 }
 
-/* corners */
 .sm-corner {
   position: absolute;
   width: 22px;
@@ -59,7 +60,6 @@ export const css = `
 .sm-corner-bl { bottom: 24px; left: 24px; border-width: 0 0 2px 2px; }
 .sm-corner-br { bottom: 24px; right: 24px; border-width: 0 2px 2px 0; }
 
-/* card */
 .sm-err-card {
   position: relative;
   width: 420px;
@@ -82,7 +82,6 @@ export const css = `
   to   { transform: scale(1) translateY(0); opacity: 1; }
 }
 
-/* card corner accents */
 .sm-err-card::before,
 .sm-err-card::after {
   content: '';
@@ -95,7 +94,6 @@ export const css = `
 .sm-err-card::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
 .sm-err-card::after  { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
 
-/* logo area */
 .sm-err-logo-wrap {
   display: flex;
   align-items: center;
@@ -121,13 +119,11 @@ export const css = `
   text-transform: uppercase;
 }
 
-/* divider */
 .sm-err-divider {
   height: 1px;
   background: linear-gradient(90deg, rgba(255,82,82,0.25), transparent);
 }
 
-/* error message block */
 .sm-err-msg-block {
   display: flex;
   flex-direction: column;
@@ -147,7 +143,6 @@ export const css = `
   min-height: 40px;
 }
 
-/* subsystems (failed list) */
 .sm-err-subsystems {
   display: flex;
   flex-direction: column;
@@ -172,7 +167,6 @@ export const css = `
   color: rgba(255,160,160,0.55);
 }
 
-/* actions */
 .sm-err-actions {
   display: flex;
   gap: 10px;
@@ -208,7 +202,6 @@ export const css = `
   color: rgba(255,160,160,0.7);
 }
 
-/* stamp */
 .sm-err-stamp {
   position: absolute;
   bottom: 14px;
@@ -221,7 +214,6 @@ export const css = `
   white-space: nowrap;
 }
 
-/* vignette */
 .sm-err-root::after {
   content: '';
   position: absolute;

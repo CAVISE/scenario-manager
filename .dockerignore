@@ -4,29 +4,16 @@ __pycache__/
 venv/
 .venv/
 
-opencda/
-assets/
-evaluation_outputs/
-plots/
-simulation/
-ruchki/
-src/
-
 frontend/node_modules/
 frontend/dist/
 
-output/
 *.log
+output/
 
 .env
 .env.*
 
 .git/
-.gitignore
-
-Dockerfile*
-docker-compose*
-.dockerignore
 
 .idea/
 .vscode/
@@ -34,5 +21,9 @@ docker-compose*
 .DS_Store
 Thumbs.db
 
-qwe.yml
-test1.py
+docker-compose*
+
+assets/
+evaluation_outputs/
+plots/
+

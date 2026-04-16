@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { css } from './types/EditorLoadingScreenTypes';
+import { css, subsystems } from './types/EditorLoadingScreenTypes';
 import type { EditorLoadingScreenProps } from './types/EditorLoadingScreenTypes';
 import { CP } from './types/EditorLoadingScreenTypes';
 export const EditorLoadingScreen: React.FC<EditorLoadingScreenProps> = ({
@@ -8,7 +8,7 @@ export const EditorLoadingScreen: React.FC<EditorLoadingScreenProps> = ({
 }) => {
   const [mounted, setMounted] = useState(text !== null);
   const [opacity, setOpacity] = useState(text !== null ? 1 : 0);
-
+  
   useEffect(() => {
     if (text !== null) {
       setMounted(true);
@@ -21,12 +21,6 @@ export const EditorLoadingScreen: React.FC<EditorLoadingScreenProps> = ({
   }, [text]);
 
   if (!mounted) return null;
-
-  const subsystems = [
-    { label: 'OpenDRIVE Runtime', threshold: 10 },
-    { label: 'WebAssembly Module', threshold: 30 },
-    { label: 'WebGL Renderer',    threshold: 60 },
-  ];
 
   return (
     <>
