@@ -1,5 +1,5 @@
 import { type SimulationConfig } from '../../pages/Editor/Generators/types/configGeneratorsTypes';
-import { Vec3 } from '../../pages/Editor/types/editorTypes';
+import { Vec3, type SelectedObject } from '../../pages/Editor/types/editorTypes';
 
 export type V2XProtocol      = 'ITS-G5' | 'C-V2X' | 'DSRC';
 export type BuildingMaterial  = 'concrete' | 'glass' | 'wood' | 'brick' | 'metal';
@@ -12,6 +12,23 @@ export type CarlaWeather     = 'CloudyNoon'
   | 'ClearSunset' | 'CloudySunset' | 'WetSunset' | 'WetCloudySunset'
   | 'SoftRainSunset' | 'MidRainSunset' | 'HardRainSunset';
 
+
+
+export type RouteNode = Vec3[][];
+
+export type Scenario = {
+  id:      string;
+  name:    string;
+  weather: string;
+  description: string;
+};
+export type SumoStop = {
+  lane:     string;
+  startPos: number;
+  endPos:   number;
+  duration: number;
+};
+
 export type Car = {
   id:       string;
   x:        number;
@@ -22,16 +39,29 @@ export type Car = {
   scale:    number;
   rotation: number;
   speed:    number;
+  opencda_max_speed?: number;
+
+  sumo_depart?:       number;
+  sumo_depart_lane?:  string;
+  sumo_depart_pos?:   number;
+  sumo_max_speed?:    number;
+  sumo_edges?:        string;
+  sumo_vtype?:        string;
+  sumo_stop?:         SumoStop;
 };
-
-export type RouteNode = Vec3[][];
-
-export type Scenario = {
-  id:      string;
-  name:    string;
-  weather: string;
+export type Pedestrian = {
+  id:              string;                 
+  x:               number;                
+  y:               number;                
+  z:               number;                 
+  speed:           number;                
+  cross_factor:    number;                
+  is_invincible:   boolean;               
+  tx_power:        number;               
+  frequency:       number;                 
+  protocol:        'DSRC' | 'C-V2X';      
+  beacon_interval: number;                 
 };
-
 export type RSU = {
   id: string;
   name: string;
@@ -55,6 +85,7 @@ export type RSU = {
   cam_interval: number;
   script: string;
 };
+
 
 export type Point = {
   id:    string;
@@ -97,27 +128,37 @@ export type EditorState = {
   lidars:         Lidar[];
   points:         Point[];
   buildings:      Building[];
+  error: Error | null;
   selectedId:     string | null;
   isBuildingMode: boolean;
   routes:         RouteNode;
   simConfig:      SimulationConfig;
   Scenario:       Scenario;
-
+  pedestrians: Pedestrian[],
+  isPanelOpen: boolean;
+  setError: (err: Error | null) => void
+  setChangePanelMode: () => void
   setBuildingMode:       (value: boolean) => void;
   removeSelectedId:      () => void;
+  selectedObject:     SelectedObject | null;
   updateSimConfig:       (props: Partial<SimulationConfig>) => void;
   updateSimConfigOmnet:  (props: Partial<SimulationConfig['omnet']>) => void;
   updateSimConfigArtery: (props: Partial<SimulationConfig['artery']>) => void;
   updateSimConfigSionna: (props: Partial<SimulationConfig['sionna']>) => void;
   updateSimConfigCarla:  (props: Partial<SimulationConfig['carla']>) => void;
   updateSimConfigOpenCDA: (props: Partial<SimulationConfig['opencda']>) => void;
-
+  updateSimConfigSumo: (props: Partial<SimulationConfig['sumo']>) => void;
+  updateSimConfigCAPI: (props: Partial<SimulationConfig['capi']>) => void;
+  updateSimConfigMPC: (props: Partial<SimulationConfig['mpc']>) => void;
+  
   addCar:    (x: number, y: number, z: number, model: string, color: string, speed?: number) => string;
   updateCar: (id: string, props: Partial<Omit<Car, 'id'>>) => void;
   removeCar: (id: string) => void;
-
+  addPedestrian:    (x: number, y: number, z: number) => string;
+  updatePedestrian: (id: string, props: Partial<Omit<Pedestrian, 'id'>>) => void;
+  removePedestrian: (id: string) => void;
   addRSU:    (x: number, y: number, z: number) => void;
-  removeRSU: (index: number) => void;
+  removeRSU: (id: number) => void;
   updateRSU: (id: string, props: Partial<Omit<RSU, 'id'>>) => void;
 
   addLidar:         (carId: string, x: number, y: number, z: number) => string;
@@ -131,7 +172,7 @@ export type EditorState = {
   removePointsByCarId: (carId: string) => void;
   updatePoint:         (id: string, props: Partial<Omit<Point, 'id' | 'carId'>>) => void;
 
-  selectObject:   (id: string | null) => void;
+  selectObject:   (obj: SelectedObject | null) => void;
   addBuilding:    (x: number, y: number, z: number) => void;
   updateBuilding: (id: string, props: Partial<Omit<Building, 'id'>>) => void;
   removeBuilding: (id: string) => void;

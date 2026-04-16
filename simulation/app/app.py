@@ -11,7 +11,6 @@ from .routers.reports import router as reports_router
 from .routers.scenario import router as scenario_router
 from .routers.utils import router as utils_router
 
-# scenario_id - str, scenario_name - str, status - true|false
 sqlite_schema = """
 CREATE TABLE IF NOT EXISTS reports (
     id INTEGER PRIMARY KEY,
@@ -49,7 +48,6 @@ app.include_router(utils_router, prefix="/utils", tags=["utils"])
 app.include_router(scenario_router, prefix="/scenario", tags=["scenario"])
 app.include_router(reports_router, prefix="/reports", tags=["reports"])
 
-# cors allow all
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

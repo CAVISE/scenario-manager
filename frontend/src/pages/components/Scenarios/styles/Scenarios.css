@@ -1,0 +1,34 @@
+.scenarios-wrapper {
+  display: flex;
+  justify-content: space-between;
+}
+.scenarios-wrapper .scenarios-list {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+.scenarios-wrapper .scenarios-list .scenario-li {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  border: 1px solid;
+  padding: 5px;
+  margin: 5px;
+}
+.scenarios-wrapper .scenarios-list .scenario-li .scenario-name {
+  font-family: "Roboto", sans-serif;
+  font-weight: 500;
+  font-size: 18px;
+}
+.scenarios-wrapper .scenarios-list .scenario-li .scenario-buttons .scenario-button {
+  margin: 5px;
+}
+.scenarios-wrapper .scenarios-controls {
+  display: flex;
+  flex-direction: column;
+}
+.scenarios-wrapper .scenarios-controls .scenario-button {
+  margin-bottom: 15px;
+}/*# sourceMappingURL=Scenarios.css.map */
