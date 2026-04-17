@@ -8,11 +8,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
-COPY r.in ./
-RUN pip install --no-cache-dir -r r.in
-
 COPY . .
+
+RUN pip install fastapi uvicorn omegaconf psycopg2-binary dotenv
 
 EXPOSE 1234
 
-CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "1234", "--reload"]
+CMD ["python", "main.py", "--host", "0.0.0.0", "--port", "1234"]
