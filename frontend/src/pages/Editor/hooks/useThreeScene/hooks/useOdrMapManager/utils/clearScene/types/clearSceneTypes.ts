@@ -5,12 +5,12 @@ export interface ClearSceneParams {
   three: ThreeSetup;
   odrMeshes: OdrMapMeshes;
   disposableObjs: THREE.BufferGeometry[];
-  localLineArrRef: React.MutableRefObject<THREE.Line[][]>;
-  carMeshesRef: React.MutableRefObject<THREE.Mesh[]>;
-  pointsObjsRef: React.MutableRefObject<THREE.Mesh[]>;
-  cubeCirclesRef: React.MutableRefObject<THREE.Mesh[][]>;
-  carQuaternionsRef: React.MutableRefObject<Map<string, THREE.Quaternion>>;
-  currentCarRef: React.MutableRefObject<string>;
-  currentColorRef: React.MutableRefObject<string>;
+  localLineArrRef: React.RefObject<THREE.Line[][]>;
+  carMeshesRef: React.RefObject<THREE.Mesh[]>;
+  pointsObjsRef: React.RefObject<THREE.Mesh[]>;
+  cubeCirclesRef: React.RefObject<THREE.Mesh[][]>;
+  carQuaternionsRef: React.RefObject<Map<string, THREE.Quaternion>>;
+  currentCarRef: React.RefObject<string>;
+  currentColorRef: React.RefObject<string>;
   syncRoadMesh: (mesh: THREE.Mesh | null) => void;
 }

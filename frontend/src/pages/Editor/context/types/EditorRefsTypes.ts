@@ -1,32 +1,32 @@
 import * as THREE from 'three';
 import { TransformControls } from 'three-stdlib';
-import { RefObject, MutableRefObject } from 'react';
+import { RefObject } from 'react';
 import { ThreeSetup } from '../../hooks/useOpenDriveUtils/useThreeSetup/types/useThreeSetupTypes';
 
 export interface EditorRefs {
-  sceneRef: MutableRefObject<THREE.Scene | undefined>;
-  cameraRef: MutableRefObject<THREE.PerspectiveCamera | undefined>;
-  carMeshesRef: MutableRefObject<THREE.Mesh[]>;
-  carQuaternionsRef: MutableRefObject<Map<string, THREE.Quaternion>>;
-  transformControlsRef: MutableRefObject<TransformControls | undefined>;
-  pointsArrRef: MutableRefObject<THREE.Mesh[]>;
-  pointsObjsRef: MutableRefObject<THREE.Mesh[]>;
-  cubeCirclesRef: MutableRefObject<THREE.Mesh[][]>;
-  pedestrianObjsRef: MutableRefObject<THREE.Mesh[]>;
-  rsuMeshesRef: MutableRefObject<THREE.Mesh[]>;
-  roadMeshRef: MutableRefObject<THREE.Mesh | null>;
-  currentCarRef: MutableRefObject<string>;
-  currentColorRef: MutableRefObject<string>;
-  loadPointsRef: MutableRefObject<() => void>;
-  loadRSURef: MutableRefObject<() => void>;
-  pedestrianMeshesRef: MutableRefObject<THREE.Mesh[]>;
-  isDraggingRef: MutableRefObject<boolean>;
+  sceneRef: RefObject<THREE.Scene | undefined>;
+  cameraRef: RefObject<THREE.PerspectiveCamera | undefined>;
+  carMeshesRef: RefObject<THREE.Mesh[]>;
+  carQuaternionsRef: RefObject<Map<string, THREE.Quaternion>>;
+  transformControlsRef: RefObject<TransformControls | undefined>;
+  pointsArrRef: RefObject<THREE.Mesh[]>;
+  pointsObjsRef: RefObject<THREE.Mesh[]>;
+  cubeCirclesRef: RefObject<THREE.Mesh[][]>;
+  pedestrianObjsRef: RefObject<THREE.Mesh[]>;
+  rsuMeshesRef: RefObject<THREE.Mesh[]>;
+  roadMeshRef: RefObject<THREE.Mesh | null>;
+  currentCarRef: RefObject<string>;
+  currentColorRef: RefObject<string>;
+  loadPointsRef: RefObject<() => void>;
+  loadRSURef: RefObject<() => void>;
+  pedestrianMeshesRef: RefObject<THREE.Mesh[]>;
+  isDraggingRef: RefObject<boolean>;
   mountRef: RefObject<HTMLDivElement>;
-  modeRef: MutableRefObject<{
+  modeRef: RefObject<{
     isAddCarModeActive: boolean;
     isAddPointModeActive: boolean;
     isAddPedestrianModeActive: boolean;
     isAddedPoints: boolean;
   }>;
-  threeRef: React.MutableRefObject<ThreeSetup | null>;
+  threeRef: React.RefObject<ThreeSetup | null>;
 }

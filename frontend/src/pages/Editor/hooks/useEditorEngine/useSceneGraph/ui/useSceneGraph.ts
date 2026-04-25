@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { buildSceneGraph, type SceneNode } from '../types/useSceneGraphTypes';
 
 export function useSceneGraph(
-  sceneRef: React.MutableRefObject<THREE.Scene | undefined>,
+  sceneRef: React.RefObject<THREE.Scene | undefined>,
 ) {
   const [sceneGraph, setSceneGraph] = useState<SceneNode | null>(null);
   const rafIdRef = useRef<number | null>(null);

@@ -38,14 +38,14 @@ export interface UseOdrMapManagerProps {
   loadPoints: () => void;
   syncRoadMesh: (mesh: THREE.Mesh | null) => void;
   updateSceneGraph: () => void;
-  buildingModelRef: React.MutableRefObject<THREE.Object3D | null>;
-  localLineArrRef: React.MutableRefObject<THREE.Line[][]>;
+  buildingModelRef: React.RefObject<THREE.Object3D | null>;
+  localLineArrRef: React.RefObject<THREE.Line[][]>;
 }
 
 export interface UseOdrMapManagerResult {
   getOdrMeshes: () => OdrMapMeshes;
   loadOdrMap: (clearMap?: boolean, fitView?: boolean) => void;
   reloadOdrMap: () => void;
-  setModuleRef: React.MutableRefObject<OpenDriveModule | null>;
-  setMapRef: React.MutableRefObject<OpenDriveMapInstance | null>;
+  setModuleRef: React.RefObject<OpenDriveModule | null>;
+  setMapRef: React.RefObject<OpenDriveMapInstance | null>;
 }

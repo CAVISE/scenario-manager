@@ -97,9 +97,9 @@ export function buildScenarioPayload(): ScenarioPayload {
 export interface LoadScenarioOptions {
   hasId: boolean;
   scenarioIdInput: string;
-  sceneRef: React.MutableRefObject<THREE.Scene | undefined>;
+  sceneRef: React.RefObject<THREE.Scene | undefined>;
   setNotice: (value: string) => void;
-  loadRSURef: React.MutableRefObject<() => void>;
+  loadRSURef: React.RefObject<() => void>;
   updateSceneGraph: () => void;
-  buildingModelRef: React.MutableRefObject<THREE.Object3D | null>;
+  buildingModelRef: React.RefObject<THREE.Object3D | null>;
 }
