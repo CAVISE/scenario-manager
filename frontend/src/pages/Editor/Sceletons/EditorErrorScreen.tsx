@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import  {css, failedSubsystems} from "./types/EditorErrorScreenTypes"
-import type { CP } from "./types/EditorErrorScreenTypes"
-import { useEditorStore } from '../../../store/useEditorStore';
+import { css, failedSubsystems } from './types/EditorErrorScreenTypes';
+import type { CP } from './types/EditorErrorScreenTypes';
+import { useEditorStore } from '../../../store';
 const HexErrorLogo: React.FC = () => (
   <svg width="56" height="64" viewBox="0 0 56 64" fill="none">
     <polygon
@@ -16,9 +16,32 @@ const HexErrorLogo: React.FC = () => (
       strokeWidth="1"
       fill="rgba(255,82,82,0.04)"
     />
-    <line x1="21" y1="25" x2="35" y2="39" stroke="#ff5252" strokeWidth="2" strokeLinecap="round" />
-    <line x1="35" y1="25" x2="21" y2="39" stroke="#ff5252" strokeWidth="2" strokeLinecap="round" />
-    <circle cx="28" cy="32" r="25" stroke="rgba(255,82,82,0.12)" strokeWidth="0.5" strokeDasharray="3 9">
+    <line
+      x1="21"
+      y1="25"
+      x2="35"
+      y2="39"
+      stroke="#ff5252"
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+    <line
+      x1="35"
+      y1="25"
+      x2="21"
+      y2="39"
+      stroke="#ff5252"
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+    <circle
+      cx="28"
+      cy="32"
+      r="25"
+      stroke="rgba(255,82,82,0.12)"
+      strokeWidth="0.5"
+      strokeDasharray="3 9"
+    >
       <animateTransform
         attributeName="transform"
         type="rotate"
@@ -28,9 +51,25 @@ const HexErrorLogo: React.FC = () => (
         repeatCount="indefinite"
       />
     </circle>
-    <circle cx="28" cy="32" r="17" stroke="rgba(255,82,82,0.2)" strokeWidth="0.5">
-      <animate attributeName="r" values="17;22;17" dur="3s" repeatCount="indefinite" />
-      <animate attributeName="opacity" values="0.4;0;0.4" dur="3s" repeatCount="indefinite" />
+    <circle
+      cx="28"
+      cy="32"
+      r="17"
+      stroke="rgba(255,82,82,0.2)"
+      strokeWidth="0.5"
+    >
+      <animate
+        attributeName="r"
+        values="17;22;17"
+        dur="3s"
+        repeatCount="indefinite"
+      />
+      <animate
+        attributeName="opacity"
+        values="0.4;0;0.4"
+        dur="3s"
+        repeatCount="indefinite"
+      />
     </circle>
   </svg>
 );
@@ -39,18 +78,19 @@ const Corner: React.FC<{ pos: CP }> = ({ pos }) => (
   <div className={`sm-corner sm-corner-${pos}`} />
 );
 
-export const EditorErrorScreen: React.FC = ({
-
-}) => {
-  const error = useEditorStore(s=>s.error)
-  const setError = useEditorStore(s=>s.setError)
-  const message=error?.message
-  const title= error ? 'Runtime Error' : null 
-  const onRetry=() => { setError(null); window.location.reload(); }
-  const onDismiss=() => setError(null)
+export const EditorErrorScreen: React.FC = () => {
+  const error = useEditorStore((s) => s.error);
+  const setError = useEditorStore((s) => s.setError);
+  const message = error?.message;
+  const title = error ? 'Runtime Error' : null;
+  const onRetry = () => {
+    setError(null);
+    window.location.reload();
+  };
+  const onDismiss = () => setError(null);
   const [mounted, setMounted] = useState(title !== null);
   const [opacity, setOpacity] = useState(title !== null ? 1 : 0);
-          
+
   useEffect(() => {
     if (title !== null) {
       setMounted(true);
@@ -69,12 +109,17 @@ export const EditorErrorScreen: React.FC = ({
       <style>{css}</style>
       <div
         className="sm-err-root"
-        style={{ opacity, transition: 'opacity 0.65s cubic-bezier(0.4,0,0.2,1)' }}
+        style={{
+          opacity,
+          transition: 'opacity 0.65s cubic-bezier(0.4,0,0.2,1)',
+        }}
       >
         <div className="sm-err-grid" />
         <div className="sm-err-scan" />
 
-        {(['tl', 'tr', 'bl', 'br'] as const).map(p => <Corner key={p} pos={p} />)}
+        {(['tl', 'tr', 'bl', 'br'] as const).map((p) => (
+          <Corner key={p} pos={p} />
+        ))}
 
         <div className="sm-err-card">
           <div className="sm-err-logo-wrap">
@@ -105,24 +150,24 @@ export const EditorErrorScreen: React.FC = ({
             ))}
           </div>
 
-          
-            <div className="sm-err-actions">
-              {onRetry && (
-                <button className="sm-err-btn sm-err-btn-retry" onClick={onRetry}>
-                  ↺ Retry
-                </button>
-              )}
-              {onDismiss && (
-                <button className="sm-err-btn sm-err-btn-dismiss" onClick={onDismiss}>
-                  Dismiss
-                </button>
-              )}
-            </div>
+          <div className="sm-err-actions">
+            {onRetry && (
+              <button className="sm-err-btn sm-err-btn-retry" onClick={onRetry}>
+                ↺ Retry
+              </button>
+            )}
+            {onDismiss && (
+              <button
+                className="sm-err-btn sm-err-btn-dismiss"
+                onClick={onDismiss}
+              >
+                Dismiss
+              </button>
+            )}
+          </div>
         </div>
 
-        <span className="sm-err-stamp">
-          CAVISE · SM · BUILD 2025
-        </span>
+        <span className="sm-err-stamp">CAVISE · SM · BUILD 2025</span>
       </div>
     </>
   );

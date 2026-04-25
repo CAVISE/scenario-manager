@@ -12,6 +12,6 @@ COPY . .
 
 RUN pip install fastapi uvicorn omegaconf psycopg2-binary dotenv
 
-EXPOSE 1234
+EXPOSE 8000
 
-CMD ["python", "main.py", "--host", "0.0.0.0", "--port", "1234"]
+CMD ["python", "main.py", "--host", "0.0.0.0", "--port", "8000"]

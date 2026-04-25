@@ -1,16 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { css, subsystems } from './types/EditorLoadingScreenTypes';
-import type { EditorLoadingScreenProps } from './types/EditorLoadingScreenTypes';
-import { CP } from './types/EditorLoadingScreenTypes';
-export const EditorLoadingScreen: React.FC<EditorLoadingScreenProps> = ({
-  text,
-  progress = 0,
-}) => {
-  const [mounted, setMounted] = useState(text !== null);
-  const [opacity, setOpacity] = useState(text !== null ? 1 : 0);
-  
+import { css, subsystems, CP } from './types/EditorLoadingScreenTypes';
+import { useHooks } from '../context';
+export const EditorLoadingScreen = () => {
+  const { loadingProgress, loadingText } = useHooks();
+
+  const [mounted, setMounted] = useState(loadingText !== null);
+  const [opacity, setOpacity] = useState(loadingText !== null ? 1 : 0);
   useEffect(() => {
-    if (text !== null) {
+    if (loadingText !== null) {
       setMounted(true);
       requestAnimationFrame(() => setOpacity(1));
     } else {
@@ -18,23 +15,29 @@ export const EditorLoadingScreen: React.FC<EditorLoadingScreenProps> = ({
       const t = setTimeout(() => setMounted(false), 2000);
       return () => clearTimeout(t);
     }
-  }, [text]);
+  }, [loadingText]);
 
   if (!mounted) return null;
 
   return (
     <>
       <style>{css}</style>
-      <div className="sm-loader-root" style={{ opacity, transition: 'opacity 0.65s cubic-bezier(0.4,0,0.2,1)' }}>
-
+      <div
+        className="sm-loader-root"
+        style={{
+          opacity,
+          transition: 'opacity 0.65s cubic-bezier(0.4,0,0.2,1)',
+        }}
+      >
         <div className="sm-loader-grid" />
 
         <div className="sm-loader-scan" />
 
-        {(['tl','tr','bl','br'] as const).map(p => <Corner key={p} pos={p} />)}
+        {(['tl', 'tr', 'bl', 'br'] as const).map((p) => (
+          <Corner key={p} pos={p} />
+        ))}
 
         <div className="sm-loader-card">
-
           <div className="sm-loader-logo-wrap">
             <HexLogo />
             <div className="sm-loader-title-block">
@@ -47,15 +50,20 @@ export const EditorLoadingScreen: React.FC<EditorLoadingScreenProps> = ({
 
           <div className="sm-loader-progress-wrap">
             <div className="sm-loader-bar-track">
-              <div className="sm-loader-bar-fill" style={{ width: `${progress}%` }} />
+              <div
+                className="sm-loader-bar-fill"
+                style={{ width: `${loadingProgress}%` }}
+              />
               <div className="sm-loader-bar-shimmer" />
             </div>
             <div className="sm-loader-status-row">
               <span className="sm-loader-status-text">
                 <span className="sm-loader-dot" />
-                {text ?? 'Ready'}
+                {loadingText ?? 'Ready'}
               </span>
-              <span className="sm-loader-pct">{Math.round(progress)}%</span>
+              <span className="sm-loader-pct">
+                {Math.round(loadingProgress)}%
+              </span>
             </div>
           </div>
 
@@ -65,18 +73,17 @@ export const EditorLoadingScreen: React.FC<EditorLoadingScreenProps> = ({
                 key={label}
                 className="sm-loader-sys-row"
                 style={{
-                  opacity: progress >= threshold ? 1 : 0.22,
+                  opacity: loadingProgress >= threshold ? 1 : 0.22,
                   transitionDelay: `${i * 120}ms`,
                 }}
               >
                 <span className="sm-loader-sys-icon">
-                  {progress >= threshold ? '✓' : '○'}
+                  {loadingProgress >= threshold ? '✓' : '○'}
                 </span>
                 <span className="sm-loader-sys-label">{label}</span>
               </div>
             ))}
           </div>
-
         </div>
 
         <span className="sm-loader-stamp">CAVISE · SM · BUILD 2025</span>
@@ -100,17 +107,33 @@ const HexLogo: React.FC = () => (
       fill="rgba(105,240,174,0.03)"
     />
     <text
-      x="28" y="37"
+      x="28"
+      y="37"
       textAnchor="middle"
       fontSize="14"
       fontFamily='"Courier New", Courier, monospace'
       fontWeight="700"
       fill="#69f0ae"
       letterSpacing="1"
-    >SM</text>
-    <circle cx="28" cy="32" r="25" stroke="rgba(105,240,174,0.1)" strokeWidth="0.5" strokeDasharray="3 9">
-      <animateTransform attributeName="transform" type="rotate"
-        from="0 28 32" to="360 28 32" dur="14s" repeatCount="indefinite" />
+    >
+      SM
+    </text>
+    <circle
+      cx="28"
+      cy="32"
+      r="25"
+      stroke="rgba(105,240,174,0.1)"
+      strokeWidth="0.5"
+      strokeDasharray="3 9"
+    >
+      <animateTransform
+        attributeName="transform"
+        type="rotate"
+        from="0 28 32"
+        to="360 28 32"
+        dur="14s"
+        repeatCount="indefinite"
+      />
     </circle>
   </svg>
 );

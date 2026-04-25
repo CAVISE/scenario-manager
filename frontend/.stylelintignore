@@ -1,0 +1,16 @@
+node_modules
+dist
+build
+
+public
+*.png
+*.jpg
+*.glb
+*.wasm
+*.xodr
+*.map
+*.lock
+
+package.json
+tsconfig*.json
+README.md

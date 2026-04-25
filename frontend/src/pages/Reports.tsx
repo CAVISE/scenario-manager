@@ -1,11 +1,13 @@
-import { BottomNavbar } from "./components/BottomNavbar/ui/BottomNavbar"
-import { Statuses } from "./components/Statuses/Statuses"
+import { BottomNavbar } from './components/BottomNavbar';
+import { Statuses } from './components/Statuses';
 
 const Reports = () => {
-    return(<div>
-        <BottomNavbar />
-        <Statuses />
-    </div>)
-}
+  return (
+    <div>
+      <BottomNavbar />
+      <Statuses />
+    </div>
+  );
+};
 
-export default Reports
+export default Reports;

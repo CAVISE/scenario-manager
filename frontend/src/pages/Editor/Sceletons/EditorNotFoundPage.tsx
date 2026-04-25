@@ -20,20 +20,33 @@ const HexLogo: React.FC = () => (
       fill="rgba(105,240,174,0.03)"
     />
     <text
-      x="28" y="38"
+      x="28"
+      y="38"
       textAnchor="middle"
       fontSize="20"
       fontFamily='"Courier New", Courier, monospace'
       fontWeight="700"
       fill="rgba(255,72,72,0.8)"
       letterSpacing="0"
-    >!</text>
-    <circle cx="28" cy="32" r="25"
+    >
+      !
+    </text>
+    <circle
+      cx="28"
+      cy="32"
+      r="25"
       stroke="rgba(255,72,72,0.15)"
       strokeWidth="0.5"
-      strokeDasharray="3 9">
-      <animateTransform attributeName="transform" type="rotate"
-        from="0 28 32" to="360 28 32" dur="14s" repeatCount="indefinite" />
+      strokeDasharray="3 9"
+    >
+      <animateTransform
+        attributeName="transform"
+        type="rotate"
+        from="0 28 32"
+        to="360 28 32"
+        dur="14s"
+        repeatCount="indefinite"
+      />
     </circle>
   </svg>
 );
@@ -44,7 +57,7 @@ export const NotFoundPage: React.FC = () => {
 
   useEffect(() => {
     timerRefs.current = LOG_LINES.map((line, i) =>
-      setTimeout(() => setVisibleLogs(prev => [...prev, i]), line.delay)
+      setTimeout(() => setVisibleLogs((prev) => [...prev, i]), line.delay),
     );
     return () => timerRefs.current.forEach(clearTimeout);
   }, []);
@@ -53,14 +66,14 @@ export const NotFoundPage: React.FC = () => {
     <>
       <style>{css}</style>
       <div className="nf-root">
-
         <div className="nf-grid" />
         <div className="nf-scan" />
 
-        {(['tl', 'tr', 'bl', 'br'] as const).map(p => <Corner key={p} pos={p} />)}
+        {(['tl', 'tr', 'bl', 'br'] as const).map((p) => (
+          <Corner key={p} pos={p} />
+        ))}
 
         <div className="nf-card">
-
           <div className="nf-logo-wrap">
             <HexLogo />
             <div className="nf-title-block">
@@ -85,29 +98,45 @@ export const NotFoundPage: React.FC = () => {
                   style={{ animationDelay: '0ms' }}
                 >
                   <span className="nf-log-prefix">{line.prefix}</span>
-                  <span className={`nf-log-text ${line.kind}`}>{line.text}</span>
+                  <span className={`nf-log-text ${line.kind}`}>
+                    {line.text}
+                  </span>
                 </div>
               ) : (
                 <div key={i} className="nf-log-row" style={{ opacity: 1 }}>
-                  <span className="nf-log-prefix" style={{ color: 'rgba(105,240,174,0.1)' }}>{'[SYS:·····]'}</span>
+                  <span
+                    className="nf-log-prefix"
+                    style={{ color: 'rgba(105,240,174,0.1)' }}
+                  >
+                    {'[SYS:·····]'}
+                  </span>
                   <span
                     className="nf-skel"
-                    style={{ height: '9px', width: `${90 + (i * 31) % 70}px`, marginTop: '1px' }}
+                    style={{
+                      height: '9px',
+                      width: `${90 + ((i * 31) % 70)}px`,
+                      marginTop: '1px',
+                    }}
                   />
                 </div>
-              )
+              ),
             )}
           </div>
 
           <div className="nf-actions">
-            <button className="nf-btn nf-btn-primary" onClick={() => window.history.back()}>
+            <button
+              className="nf-btn nf-btn-primary"
+              onClick={() => window.history.back()}
+            >
               ← Go Back
             </button>
-            <button className="nf-btn nf-btn-secondary" onClick={() => (window.location.href = '/')}>
+            <button
+              className="nf-btn nf-btn-secondary"
+              onClick={() => (window.location.href = '/')}
+            >
               Return Home
             </button>
           </div>
-
         </div>
 
         <span className="nf-stamp">CAVISE · SM · ROUTE_ERR · 0x404</span>

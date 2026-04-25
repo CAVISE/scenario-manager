@@ -1,4 +1,4 @@
-import { CarlaWeather } from "../../../../store/useEditorStore";
+import { CarlaWeather } from '../../../../store/types/useEditorStoreTypes';
 
 export type OpenCDALidarSim = {
   dropoff_general_rate: number;
@@ -66,21 +66,21 @@ export type MPCConfig = {
   acceleration_max: number;
 };
 export type SumoVType = {
-  id:              string;
-  minGap:          number;
-  tau:             number;
-  vClass:          string;
-  carFollowModel:  string;
-  speedFactor:     string;
-  color?:          string;
-  accel?:          number;
+  id: string;
+  minGap: number;
+  tau: number;
+  vClass: string;
+  carFollowModel: string;
+  speedFactor: string;
+  color?: string;
+  accel?: number;
 };
 
 export type CAPIExtraConfig = {
-  name:                   string;
-  path_loss_type:         string;
+  name: string;
+  path_loss_type: string;
   small_scale_variations: boolean;
-  visualization:          boolean;
+  visualization: boolean;
 };
 
 export type SimulationConfig = {
@@ -107,9 +107,9 @@ export type SimulationConfig = {
   };
   sumo: {
     scenario_name: string;
-    net_file:      string;
-    full_output:   boolean;
-    vtypes:        SumoVType[];
+    net_file: string;
+    full_output: boolean;
+    vtypes: SumoVType[];
   };
   sionna: {
     carrier_frequency: number;
@@ -130,7 +130,13 @@ export type SimulationConfig = {
     fixed_delta_seconds: number;
     traffic_manager_port: number;
     synchronous_mode: boolean;
-    sensors: { camera: boolean; lidar: boolean; radar: boolean; gnss: boolean; imu: boolean };
+    sensors: {
+      camera: boolean;
+      lidar: boolean;
+      radar: boolean;
+      gnss: boolean;
+      imu: boolean;
+    };
     lidar_channels: number;
     lidar_range: number;
     camera_fov: number;
@@ -139,7 +145,11 @@ export type SimulationConfig = {
     use_multi_class_bp: boolean;
     bp_meta_path: string;
     bp_class_sample_prob: {
-      car: number; truck: number; bus: number; bicycle: number; motorcycle: number;
+      car: number;
+      truck: number;
+      bus: number;
+      bicycle: number;
+      motorcycle: number;
     };
     sumo_port: number;
     sumo_host: string;
@@ -189,27 +199,27 @@ export type SimulationConfig = {
     bg_spawn_range: OpenCDABgSpawnRange;
   };
   capi: {
-    address:                    string;   
-    client_id:                  number;
-    traci_hostname:             string;   
-    traci_port:                 number;
-    network:                    string;   
-    cmdenv_express_mode:        boolean;
-    cmdenv_output_file:         string;   
-    scalar_recording:           boolean;
-    vector_recording:           boolean;
-    capi_log_level:             'debug' | 'info' | 'warn' | 'error';
-    middleware_update_interval: number;   
-    datetime:                   string;
-    carrier_frequency:          string;  
-    tx_power:                   string;   
-    channel_number:             number;  
-    ca_service_enabled:         boolean;
-    ca_service_port:            number;
-    cosim_service_enabled:      boolean;
-    cosim_service_port:         number;
-    cosim_filter_pattern:       string;   
-    extra_configs:              CAPIExtraConfig[];
+    address: string;
+    client_id: number;
+    traci_hostname: string;
+    traci_port: number;
+    network: string;
+    cmdenv_express_mode: boolean;
+    cmdenv_output_file: string;
+    scalar_recording: boolean;
+    vector_recording: boolean;
+    capi_log_level: 'debug' | 'info' | 'warn' | 'error';
+    middleware_update_interval: number;
+    datetime: string;
+    carrier_frequency: string;
+    tx_power: string;
+    channel_number: number;
+    ca_service_enabled: boolean;
+    ca_service_port: number;
+    cosim_service_enabled: boolean;
+    cosim_service_port: number;
+    cosim_filter_pattern: string;
+    extra_configs: CAPIExtraConfig[];
   };
   mpc: MPCConfig;
 };
@@ -217,7 +227,11 @@ export type SimulationConfig = {
 export const defaultSimConfig: SimulationConfig = {
   sim_duration: 100,
   omnet: {
-    tx_power: 20, bitrate: 6, beaconing_interval: 100, max_interf_dist: 2600, protocol: 'ITS-G5',
+    tx_power: 20,
+    bitrate: 6,
+    beaconing_interval: 100,
+    max_interf_dist: 2600,
+    protocol: 'ITS-G5',
   },
   artery: {
     middleware_update_interval: 100,
@@ -233,25 +247,39 @@ export const defaultSimConfig: SimulationConfig = {
     rsu_denm_enabled: true,
   },
   sionna: {
-    carrier_frequency: 5.9e9, max_depth: 5, num_samples: 1e6,
-    los: true, reflection: true, diffraction: true, scattering: false,
+    carrier_frequency: 5.9e9,
+    max_depth: 5,
+    num_samples: 1e6,
+    los: true,
+    reflection: true,
+    diffraction: true,
+    scattering: false,
   },
   carla: {
     map: 'Town03',
     weather_preset: 'ClearNoon',
     client_port: 2000,
     seed: 0,
-    num_vehicles: 50, num_pedestrians: 20,
+    num_vehicles: 50,
+    num_pedestrians: 20,
     fixed_delta_seconds: 0.05,
     traffic_manager_port: 8000,
     synchronous_mode: true,
     sensors: { camera: true, lidar: true, radar: false, gnss: true, imu: true },
-    lidar_channels: 32, lidar_range: 50, camera_fov: 90,
+    lidar_channels: 32,
+    lidar_range: 50,
+    camera_fov: 90,
   },
   opencda: {
     use_multi_class_bp: true,
     bp_meta_path: 'opencda/assets/blueprint_meta/bbx_stats_0915.json',
-    bp_class_sample_prob: { car: 0.5, truck: 0.1, bus: 0.1, bicycle: 0.1, motorcycle: 0.1 },
+    bp_class_sample_prob: {
+      car: 0.5,
+      truck: 0.1,
+      bus: 0.1,
+      bicycle: 0.1,
+      motorcycle: 0.1,
+    },
     sumo_port: 3000,
     sumo_host: 'sumo',
     sumo_gui: true,
@@ -325,64 +353,83 @@ export const defaultSimConfig: SimulationConfig = {
   },
   sumo: {
     scenario_name: 'scenario',
-    net_file:      'map.net.xml',
-    full_output:   false,
+    net_file: 'map.net.xml',
+    full_output: false,
     vtypes: [
       {
-        id:             'vType_0',
-        minGap:         2.0,
-        tau:            0.4,
-        vClass:         'passenger',
+        id: 'vType_0',
+        minGap: 2.0,
+        tau: 0.4,
+        vClass: 'passenger',
         carFollowModel: 'IDMM',
-        speedFactor:    'normc(1.00,0.00)',
+        speedFactor: 'normc(1.00,0.00)',
       },
     ],
   },
   capi: {
-    address:                    'tcp://*:7777',
-    client_id:                  1,
-    traci_hostname:             'sumo',
-    traci_port:                 3000,
-    network:                    'artery.inet.World',
-    cmdenv_express_mode:        false,
-    cmdenv_output_file:         '.cmdenv-log',
-    scalar_recording:           false,
-    vector_recording:           false,
-    capi_log_level:             'debug',
+    address: 'tcp://*:7777',
+    client_id: 1,
+    traci_hostname: 'sumo',
+    traci_port: 3000,
+    network: 'artery.inet.World',
+    cmdenv_express_mode: false,
+    cmdenv_output_file: '.cmdenv-log',
+    scalar_recording: false,
+    vector_recording: false,
+    capi_log_level: 'debug',
     middleware_update_interval: 0.1,
-    datetime:                   '2013-06-01 12:35:00',
-    carrier_frequency:          '5.9 GHz',
-    tx_power:                   '200 mW',
-    channel_number:             180,
-    ca_service_enabled:         true,
-    ca_service_port:            2001,
-    cosim_service_enabled:      true,
-    cosim_service_port:         2002,
-    cosim_filter_pattern:       '(cav|rsu)-.*',
+    datetime: '2013-06-01 12:35:00',
+    carrier_frequency: '5.9 GHz',
+    tx_power: '200 mW',
+    channel_number: 180,
+    ca_service_enabled: true,
+    ca_service_port: 2001,
+    cosim_service_enabled: true,
+    cosim_service_port: 2002,
+    cosim_filter_pattern: '(cav|rsu)-.*',
     extra_configs: [
       {
-        name:                   'gemv2',
-        path_loss_type:         'Gemv2',
+        name: 'gemv2',
+        path_loss_type: 'Gemv2',
         small_scale_variations: false,
-        visualization:          true,
+        visualization: true,
       },
     ],
   },
   mpc: {
-    NX: 4, NU: 2, T: 3, T_aug: 30,
-    dist_stop: 1.5, speed_stop: 0.5, time_max: 500.0, iter_max: 5,
-    target_speed: 10.0, n_ind: 10, dt: 0.1, d_dist: 1.0, du_res: 0.25,
+    NX: 4,
+    NU: 2,
+    T: 3,
+    T_aug: 30,
+    dist_stop: 1.5,
+    speed_stop: 0.5,
+    time_max: 500.0,
+    iter_max: 5,
+    target_speed: 10.0,
+    n_ind: 10,
+    dt: 0.1,
+    d_dist: 1.0,
+    du_res: 0.25,
     Qf: [5.0, 5.0, 0.0, 20.0],
     R: [0.01, 5.8],
     Rd: [0.01, 10.1],
-    RF: 3.3, RB: 0.8, W: 2.4, wd_ratio: 0.7, WB: 2.5, TR: 0.44, TW: 0.7,
-    steer_deg: 60.0, steer_change_deg: 30.0,
-    speed_max_kph: 55.0, speed_min_kph: -20.0, acceleration_max: 1.0,
+    RF: 3.3,
+    RB: 0.8,
+    W: 2.4,
+    wd_ratio: 0.7,
+    WB: 2.5,
+    TR: 0.44,
+    TW: 0.7,
+    steer_deg: 60.0,
+    steer_change_deg: 30.0,
+    speed_max_kph: 55.0,
+    speed_min_kph: -20.0,
+    acceleration_max: 1.0,
   },
 };
 
 export function mergeSimConfigWithDefaults(
-  partial: Partial<SimulationConfig> | undefined | null
+  partial: Partial<SimulationConfig> | undefined | null,
 ): SimulationConfig {
   const p = partial ?? {};
   const omnet = { ...defaultSimConfig.omnet, ...p.omnet };
@@ -430,7 +477,8 @@ export function mergeSimConfigWithDefaults(
     capi: {
       ...defaultSimConfig.capi,
       ...p.capi,
-      extra_configs: p.capi?.extra_configs ?? defaultSimConfig.capi.extra_configs,
+      extra_configs:
+        p.capi?.extra_configs ?? defaultSimConfig.capi.extra_configs,
     },
     mpc: { ...defaultSimConfig.mpc, ...p.mpc },
   };

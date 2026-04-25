@@ -5,13 +5,3 @@ export interface SharedMouseContext {
   setMouse: (e: MouseEvent) => void;
   insidePanel: (e: MouseEvent) => boolean;
 }
-export interface UseMouseEventsOptions {
-
-  updateSceneGraph: () => void;
-
-
-  buildingModelRef: React.MutableRefObject<THREE.Object3D | null>;
-
-  onDeleteCube:     () => void;
- 
-}

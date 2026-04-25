@@ -1,0 +1,24 @@
+.textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 80px;
+  resize: vertical;
+  max-width: 100%;
+  background: rgb(105 240 174 / 3%);
+  border: 1px solid rgb(105 240 174 / 15%);
+  outline: none;
+  color: rgb(121 15 234 / 75%);
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  line-height: 1.6;
+  padding: 10px 12px;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.textarea:focus {
+  border-color: rgb(105 240 174 / 45%);
+  background: rgb(105 240 174 / 6%);
+}

@@ -1,10 +1,20 @@
 export type CP = 'tl' | 'tr' | 'bl' | 'br';
 
 export const WEATHER_OPTIONS = [
-  "ClearNoon", "CloudyNoon", "WetNoon", "WetCloudyNoon",
-  "SoftRainNoon", "MidRainyNoon", "HardRainNoon",
-  "ClearSunset", "CloudySunset", "WetSunset", "WetCloudySunset",
-  "SoftRainSunset", "MidRainSunset", "HardRainSunset",
+  'ClearNoon',
+  'CloudyNoon',
+  'WetNoon',
+  'WetCloudyNoon',
+  'SoftRainNoon',
+  'MidRainyNoon',
+  'HardRainNoon',
+  'ClearSunset',
+  'CloudySunset',
+  'WetSunset',
+  'WetCloudySunset',
+  'SoftRainSunset',
+  'MidRainSunset',
+  'HardRainSunset',
 ] as const;
 
 export const css = `
