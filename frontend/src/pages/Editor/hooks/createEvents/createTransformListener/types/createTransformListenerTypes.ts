@@ -5,7 +5,7 @@ export interface CreateTransformListenerOptions {
     addEventListener: (event: never, cb: () => void) => void;
     removeEventListener: (event: never, cb: () => void) => void;
   };
-  carMeshesRef: React.MutableRefObject<THREE.Mesh[]>;
-  cubeCirclesRef: React.MutableRefObject<THREE.Mesh[][]>;
-  carQuaternionsRef: React.MutableRefObject<Map<string, THREE.Quaternion>>;
+  carMeshesRef: React.RefObject<THREE.Mesh[]>;
+  cubeCirclesRef: React.RefObject<THREE.Mesh[][]>;
+  carQuaternionsRef: React.RefObject<Map<string, THREE.Quaternion>>;
 }

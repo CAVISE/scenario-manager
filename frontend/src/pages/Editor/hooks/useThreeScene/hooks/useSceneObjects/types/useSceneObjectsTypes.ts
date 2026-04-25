@@ -1,12 +1,12 @@
 import * as THREE from 'three';
 export interface UseSceneObjectsProps {
   updateSceneGraph: () => void;
-  buildingModelRef: React.MutableRefObject<THREE.Object3D | null>;
+  buildingModelRef: React.RefObject<THREE.Object3D | null>;
 }
 
 export interface UseSceneObjectsResult {
   loadRSU: () => void;
   loadPoints: () => void;
   syncRoadMesh: (roadMesh: THREE.Mesh | null) => void;
-  localLineArrRef: React.MutableRefObject<THREE.Line[][]>;
+  localLineArrRef: React.RefObject<THREE.Line[][]>;
 }

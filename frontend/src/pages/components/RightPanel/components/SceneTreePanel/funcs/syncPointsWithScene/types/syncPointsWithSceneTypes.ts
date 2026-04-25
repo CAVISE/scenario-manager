@@ -1,5 +1,5 @@
 import * as THREE from 'three';
 export interface syncPointsWithSceneProps {
-  pointsArrRef: React.MutableRefObject<THREE.Mesh[]>;
-  sceneRef: React.MutableRefObject<THREE.Scene | undefined>;
+  pointsArrRef: React.RefObject<THREE.Mesh[]>;
+  sceneRef: React.RefObject<THREE.Scene | undefined>;
 }

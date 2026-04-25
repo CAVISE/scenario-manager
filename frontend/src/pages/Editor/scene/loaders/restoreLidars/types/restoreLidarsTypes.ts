@@ -1,5 +1,5 @@
 import * as THREE from 'three';
 export interface RestoreLidarsOptions {
-  carMeshesRef: React.MutableRefObject<THREE.Mesh[]>;
+  carMeshesRef: React.RefObject<THREE.Mesh[]>;
   updateSceneGraph: () => void;
 }

@@ -12,8 +12,8 @@ export interface BuildMapParams {
   OdrMap: OpenDriveMapInstance;
   odrMaterials: OdrMapMaterials;
   disposableObjs: THREE.BufferGeometry[];
-  odrMeshesRef: React.MutableRefObject<OdrMapMeshes>;
-  carMeshesRef: React.MutableRefObject<THREE.Mesh[]>;
+  odrMeshesRef: React.RefObject<OdrMapMeshes>;
+  carMeshesRef: React.RefObject<THREE.Mesh[]>;
   clearMap: boolean;
   fitView: boolean;
   resolution: number;
@@ -22,5 +22,5 @@ export interface BuildMapParams {
   loadPoints: () => void;
   syncRoadMesh: (mesh: THREE.Mesh | null) => void;
   updateSceneGraph: () => void;
-  buildingModelRef: React.MutableRefObject<THREE.Object3D | null>;
+  buildingModelRef: React.RefObject<THREE.Object3D | null>;
 }

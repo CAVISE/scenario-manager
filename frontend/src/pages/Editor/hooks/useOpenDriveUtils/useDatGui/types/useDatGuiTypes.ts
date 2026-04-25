@@ -42,14 +42,14 @@ export interface UseDatGuiOptions {
   onColorChange: (hex: string) => void;
   onNameChange: (name: string) => void;
 
-  meshVisRef: React.MutableRefObject<{
+  meshVisRef: React.RefObject<{
     refline_lines?: { visible: boolean } | null;
     roadmarks_mesh?: { visible: boolean } | null;
     roadmark_outline_lines?: { visible: boolean } | null;
     road_network_material?: { wireframe: boolean } | null;
   }>;
 
-  scenarioSettingsRef: React.MutableRefObject<{
+  scenarioSettingsRef: React.RefObject<{
     scenario_id: string;
     scenario_name: string;
     vehicle: string;
