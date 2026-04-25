@@ -1,66 +1,83 @@
 import { type SimulationConfig } from '../../pages/Editor/Generators/types/configGeneratorsTypes';
-import { Vec3, type SelectedObject } from '../../pages/Editor/types/editorTypes';
+import {
+  Vec3,
+  type SelectedObject,
+} from '../../pages/Editor/types/editorTypes';
 
-export type V2XProtocol      = 'ITS-G5' | 'C-V2X' | 'DSRC';
-export type BuildingMaterial  = 'concrete' | 'glass' | 'wood' | 'brick' | 'metal';
-export type AntennaType       = 'isotropic' | 'dipole' | 'tr38901' | 'planar_array';
-export type Polarization      = 'vertical' | 'horizontal' | 'cross';
-export type NetworkProtocol   = 'GeoNetworking' | 'BTP' | 'IPv4' | 'IPv6';
-export type CarlaWeather     = 'CloudyNoon'
-  | 'ClearNoon' | 'CloudyNoon' | 'WetNoon' | 'WetCloudyNoon'
-  | 'SoftRainNoon' | 'MidRainyNoon' | 'HardRainNoon'
-  | 'ClearSunset' | 'CloudySunset' | 'WetSunset' | 'WetCloudySunset'
-  | 'SoftRainSunset' | 'MidRainSunset' | 'HardRainSunset';
-
-
+export type V2XProtocol = 'ITS-G5' | 'C-V2X' | 'DSRC';
+export type BuildingMaterial =
+  | 'concrete'
+  | 'glass'
+  | 'wood'
+  | 'brick'
+  | 'metal';
+export type AntennaType = 'isotropic' | 'dipole' | 'tr38901' | 'planar_array';
+export type Polarization = 'vertical' | 'horizontal' | 'cross';
+export type NetworkProtocol = 'GeoNetworking' | 'BTP' | 'IPv4' | 'IPv6';
+export type CarlaWeather =
+  | 'CloudyNoon'
+  | 'ClearNoon'
+  | 'CloudyNoon'
+  | 'WetNoon'
+  | 'WetCloudyNoon'
+  | 'SoftRainNoon'
+  | 'MidRainyNoon'
+  | 'HardRainNoon'
+  | 'ClearSunset'
+  | 'CloudySunset'
+  | 'WetSunset'
+  | 'WetCloudySunset'
+  | 'SoftRainSunset'
+  | 'MidRainSunset'
+  | 'HardRainSunset';
 
 export type RouteNode = Vec3[][];
 
 export type Scenario = {
-  id:      string;
-  name:    string;
+  id: string;
+  name: string;
   weather: string;
   description: string;
 };
 export type SumoStop = {
-  lane:     string;
+  lane: string;
   startPos: number;
-  endPos:   number;
+  endPos: number;
   duration: number;
 };
 
 export type Car = {
-  id:       string;
-  x:        number;
-  y:        number;
-  z:        number;
-  color:    string;
-  model:    string;
-  scale:    number;
+  id: string;
+  x: number;
+  y: number;
+  z: number;
+  color: string;
+  model: string;
+  scale: number;
   rotation: number;
-  speed:    number;
+  speed: number;
   opencda_max_speed?: number;
 
-  sumo_depart?:       number;
-  sumo_depart_lane?:  string;
-  sumo_depart_pos?:   number;
-  sumo_max_speed?:    number;
-  sumo_edges?:        string;
-  sumo_vtype?:        string;
-  sumo_stop?:         SumoStop;
+  sumo_depart?: number;
+  sumo_depart_lane?: string;
+  sumo_depart_pos?: number;
+  sumo_max_speed?: number;
+  sumo_edges?: string;
+  sumo_vtype?: string;
+  sumo_stop?: SumoStop;
 };
 export type Pedestrian = {
-  id:              string;                 
-  x:               number;                
-  y:               number;                
-  z:               number;                 
-  speed:           number;                
-  cross_factor:    number;                
-  is_invincible:   boolean;               
-  tx_power:        number;               
-  frequency:       number;                 
-  protocol:        'DSRC' | 'C-V2X';      
-  beacon_interval: number;                 
+  id: string;
+  x: number;
+  y: number;
+  z: number;
+  speed: number;
+  cross_factor: number;
+  is_invincible: boolean;
+  tx_power: number;
+  frequency: number;
+  protocol: 'DSRC' | 'C-V2X';
+  beacon_interval: number;
 };
 export type RSU = {
   id: string;
@@ -86,13 +103,12 @@ export type RSU = {
   script: string;
 };
 
-
 export type Point = {
-  id:    string;
+  id: string;
   carId: string;
-  x:     number;
-  y:     number;
-  z:     number;
+  x: number;
+  y: number;
+  z: number;
 };
 
 export type Building = {
@@ -109,71 +125,86 @@ export type Building = {
   material: BuildingMaterial;
 };
 
-
 export type Lidar = {
-  id:                 string;
-  carId:              string;
-  x:                  number;
-  y:                  number;
-  z:                  number;
-  rotation:           number;
-  range:              number;
-  channels:           number;
+  id: string;
+  carId: string;
+  x: number;
+  y: number;
+  z: number;
+  rotation: number;
+  range: number;
+  channels: number;
   rotation_frequency: number;
 };
 
 export type EditorState = {
-  cars:           Car[];
-  RSUs:           RSU[];
-  lidars:         Lidar[];
-  points:         Point[];
-  buildings:      Building[];
+  cars: Car[];
+  RSUs: RSU[];
+  lidars: Lidar[];
+  points: Point[];
+  buildings: Building[];
   error: Error | null;
-  selectedId:     string | null;
+  selectedId: string | null;
   isBuildingMode: boolean;
-  routes:         RouteNode;
-  simConfig:      SimulationConfig;
-  Scenario:       Scenario;
-  pedestrians: Pedestrian[],
+  routes: RouteNode;
+  simConfig: SimulationConfig;
+  Scenario: Scenario;
+  pedestrians: Pedestrian[];
   isPanelOpen: boolean;
-  setError: (err: Error | null) => void
-  setChangePanelMode: () => void
-  setBuildingMode:       (value: boolean) => void;
-  removeSelectedId:      () => void;
-  selectedObject:     SelectedObject | null;
-  updateSimConfig:       (props: Partial<SimulationConfig>) => void;
-  updateSimConfigOmnet:  (props: Partial<SimulationConfig['omnet']>) => void;
+  setError: (err: Error | null) => void;
+  setChangePanelMode: () => void;
+  setBuildingMode: (value: boolean) => void;
+  removeSelectedId: () => void;
+  selectedObject: SelectedObject | null;
+  updateSimConfig: (props: Partial<SimulationConfig>) => void;
+  updateSimConfigOmnet: (props: Partial<SimulationConfig['omnet']>) => void;
   updateSimConfigArtery: (props: Partial<SimulationConfig['artery']>) => void;
   updateSimConfigSionna: (props: Partial<SimulationConfig['sionna']>) => void;
-  updateSimConfigCarla:  (props: Partial<SimulationConfig['carla']>) => void;
+  updateSimConfigCarla: (props: Partial<SimulationConfig['carla']>) => void;
   updateSimConfigOpenCDA: (props: Partial<SimulationConfig['opencda']>) => void;
   updateSimConfigSumo: (props: Partial<SimulationConfig['sumo']>) => void;
   updateSimConfigCAPI: (props: Partial<SimulationConfig['capi']>) => void;
   updateSimConfigMPC: (props: Partial<SimulationConfig['mpc']>) => void;
-  
-  addCar:    (x: number, y: number, z: number, model: string, color: string, speed?: number) => string;
+
+  addCar: (
+    x: number,
+    y: number,
+    z: number,
+    model: string,
+    color: string,
+    speed?: number,
+  ) => string;
   updateCar: (id: string, props: Partial<Omit<Car, 'id'>>) => void;
   removeCar: (id: string) => void;
-  addPedestrian:    (x: number, y: number, z: number) => string;
-  updatePedestrian: (id: string, props: Partial<Omit<Pedestrian, 'id'>>) => void;
+  addPedestrian: (x: number, y: number, z: number) => string;
+  updatePedestrian: (
+    id: string,
+    props: Partial<Omit<Pedestrian, 'id'>>,
+  ) => void;
   removePedestrian: (id: string) => void;
-  addRSU:    (x: number, y: number, z: number) => void;
+  addRSU: (x: number, y: number, z: number) => void;
   removeRSU: (id: number) => void;
   updateRSU: (id: string, props: Partial<Omit<RSU, 'id'>>) => void;
 
-  addLidar:         (carId: string, x: number, y: number, z: number) => string;
-  updateLidar:      (id: string, props: Partial<Omit<Lidar, 'id' | 'carId'>>) => void;
-  removeLidar:      (id: string) => void;
+  addLidar: (carId: string, x: number, y: number, z: number) => string;
+  updateLidar: (
+    id: string,
+    props: Partial<Omit<Lidar, 'id' | 'carId'>>,
+  ) => void;
+  removeLidar: (id: string) => void;
   removeLidarsByCarId: (carId: string) => void;
 
-  updateScenario:      (props: Partial<Scenario>) => void;
-  addPoint:            (carId: string, x: number, y: number, z: number) => void;
-  removePoint:         (id: string) => void;
+  updateScenario: (props: Partial<Scenario>) => void;
+  addPoint: (carId: string, x: number, y: number, z: number) => void;
+  removePoint: (id: string) => void;
   removePointsByCarId: (carId: string) => void;
-  updatePoint:         (id: string, props: Partial<Omit<Point, 'id' | 'carId'>>) => void;
+  updatePoint: (
+    id: string,
+    props: Partial<Omit<Point, 'id' | 'carId'>>,
+  ) => void;
 
-  selectObject:   (obj: SelectedObject | null) => void;
-  addBuilding:    (x: number, y: number, z: number) => void;
+  selectObject: (obj: SelectedObject | null) => void;
+  addBuilding: (x: number, y: number, z: number) => void;
   updateBuilding: (id: string, props: Partial<Omit<Building, 'id'>>) => void;
   removeBuilding: (id: string) => void;
 };

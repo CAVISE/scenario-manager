@@ -7,12 +7,12 @@ services:
       context: .
       dockerfile: Dockerfile.backend
     ports:
-      - "1234:1234"
+      - "8000:8000"
     networks:
       - cavise
     restart: unless-stopped
     command: >
-      sh -c "python main.py --host 0.0.0.0 --port 1234"
+      sh -c "python main.py --host 0.0.0.0 --port 8000"
 
   frontend-prod:
     profiles: [prod]
