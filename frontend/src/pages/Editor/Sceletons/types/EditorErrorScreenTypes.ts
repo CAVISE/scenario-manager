@@ -7,11 +7,11 @@ export interface EditorErrorScreenProps {
   onRetry?: () => void;
   onDismiss?: () => void;
 }
-export  const failedSubsystems = [
-    { label: 'OpenDRIVE Runtime', failed: true },
-    { label: 'WebAssembly Module', failed: true },
-    { label: 'WebGL Renderer',    failed: false },
-  ];
+export const failedSubsystems = [
+  { label: 'OpenDRIVE Runtime', failed: true },
+  { label: 'WebAssembly Module', failed: true },
+  { label: 'WebGL Renderer', failed: false },
+];
 export const css = `
 .sm-err-root {
   position: fixed;

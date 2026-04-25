@@ -1,12 +1,8 @@
-export interface EditorLoadingScreenProps {
-  text: string | null;
-  progress?: number;
-}
-export  const subsystems = [
-    { label: 'OpenDRIVE Runtime', threshold: 10 },
-    { label: 'WebAssembly Module', threshold: 30 },
-    { label: 'WebGL Renderer',    threshold: 60 },
-  ];
+export const subsystems = [
+  { label: 'OpenDRIVE Runtime', threshold: 10 },
+  { label: 'WebAssembly Module', threshold: 30 },
+  { label: 'WebGL Renderer', threshold: 60 },
+];
 export type CP = 'tl' | 'tr' | 'bl' | 'br';
 export const css = `
   .sm-loader-root {

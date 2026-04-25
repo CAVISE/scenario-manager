@@ -1,5 +1,3 @@
-import type { MutableRefObject } from 'react';
-import type * as THREE from 'three';
 import { styled } from '@mui/system';
 import { Box } from '@mui/material';
 import Card from '@mui/joy/Card';
@@ -15,19 +13,22 @@ export const MOCK_SCENARIOS: MockScenario[] = [
   {
     id: 'SCN-001',
     name: 'Highway Merge',
-    description: 'A scenario simulating vehicle merging onto a highway with moderate traffic.',
+    description:
+      'A scenario simulating vehicle merging onto a highway with moderate traffic.',
     thumbnail: '/results/44_kinematics_plotting.png',
   },
   {
     id: 'SCN-002',
     name: 'Urban Intersection',
-    description: 'Complex urban intersection scenario with pedestrian crossings.',
+    description:
+      'Complex urban intersection scenario with pedestrian crossings.',
     thumbnail: '/results/50_localization_plotting.png',
   },
   {
     id: 'SCN-003',
     name: 'Rain Collision Test',
-    description: 'Testing collision avoidance systems under heavy rain conditions.',
+    description:
+      'Testing collision avoidance systems under heavy rain conditions.',
     thumbnail: '/results/20250513_081759_Collide_1.png',
   },
   {
@@ -45,7 +46,8 @@ export const MOCK_SCENARIOS: MockScenario[] = [
   {
     id: 'SCN-006',
     name: 'Localization Benchmark',
-    description: 'Benchmarking localization accuracy with GPS signal interference.',
+    description:
+      'Benchmarking localization accuracy with GPS signal interference.',
     thumbnail: '/results/56_localization_plotting.png',
   },
 ];
@@ -86,8 +88,6 @@ export const ScenarioCard = styled(Card)({
 export interface UploadScenariosModalProps {
   open: boolean;
   onClose: () => void;
-  buildingModelRef: MutableRefObject<THREE.Object3D | null>;
-  updateSceneGraph: () => void;
 }
 
 export const uploadModalStyles = {
@@ -98,4 +98,8 @@ export const uploadModalStyles = {
   bgcolor: '#f5f5f5',
 } as const;
 
-export const uploadModalBoxStyles = { display: 'flex', alignItems: 'center', gap: 1 } as const;
+export const uploadModalBoxStyles = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 1,
+} as const;
