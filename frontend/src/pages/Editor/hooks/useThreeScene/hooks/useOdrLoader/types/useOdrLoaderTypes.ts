@@ -7,9 +7,9 @@ import { OpenDriveModule } from '../../../../useOpenDriveUtils/useOdrMap/types/u
 export interface UseOdrLoaderProps {
   setStep: (step: keyof typeof LOADING_STEPS) => void;
   setError: ((err: Error) => void) | undefined;
-  moduleRef: React.MutableRefObject<OpenDriveModule | null>;
-  mapRef: React.MutableRefObject<OpenDriveMapInstance | null>;
-  loadOdrMapRef: React.MutableRefObject<
+  moduleRef: React.RefObject<OpenDriveModule | null>;
+  mapRef: React.RefObject<OpenDriveMapInstance | null>;
+  loadOdrMapRef: React.RefObject<
     (clearMap?: boolean, fitView?: boolean) => void
   >;
 }

@@ -5,10 +5,10 @@ export interface handleDeleteNodeProps {
   id: string;
   e: React.MouseEvent;
   name: string;
-  carMeshesRef: React.MutableRefObject<THREE.Mesh[]>;
-  cubeCirclesRef: React.MutableRefObject<THREE.Mesh[][]>;
-  pointsArrRef: React.MutableRefObject<THREE.Mesh[]>;
-  sceneRef: React.MutableRefObject<THREE.Scene | undefined>;
-  transformControlsRef: React.MutableRefObject<TransformControls | undefined>;
+  carMeshesRef: React.RefObject<THREE.Mesh[]>;
+  cubeCirclesRef: React.RefObject<THREE.Mesh[][]>;
+  pointsArrRef: React.RefObject<THREE.Mesh[]>;
+  sceneRef: React.RefObject<THREE.Scene | undefined>;
+  transformControlsRef: React.RefObject<TransformControls | undefined>;
   detachTransformControls: () => void;
 }

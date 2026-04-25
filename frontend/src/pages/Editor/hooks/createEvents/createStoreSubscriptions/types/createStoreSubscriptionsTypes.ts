@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 export interface CreateStoreSubscriptionsOptions {
-  sceneRef: React.MutableRefObject<THREE.Scene | undefined>;
-  buildingModelRef: React.MutableRefObject<THREE.Object3D | null>;
+  sceneRef: React.RefObject<THREE.Scene | undefined>;
+  buildingModelRef: React.RefObject<THREE.Object3D | null>;
   getIsDragging: () => boolean;
   loadRSU: () => void;
   loadPoints: () => void;
