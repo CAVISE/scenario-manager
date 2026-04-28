@@ -155,7 +155,9 @@ export default function SceneTreePanel() {
       <style>{css + extraCss}</style>
       <div className="stp-header">
         <span className="stp-header-label">Scene Graph</span>
-        <span className="stp-header-count">{total} objects</span>
+        <span className="stp-header-count" data-testid="scene-graph-count">
+          {total} objects
+        </span>
         {total > 0 && (
           <button className="stp-clear-btn" onClick={handle_clear_scene}>
             Clear all

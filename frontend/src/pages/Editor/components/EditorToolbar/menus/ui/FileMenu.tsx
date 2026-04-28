@@ -6,13 +6,28 @@ import AssessmentIcon from '@mui/icons-material/Assessment';
 import UploadIcon from '@mui/icons-material/Upload';
 import { FileMenuProps, FolderIconStyles } from '../types/FileMenuTypes';
 import { useScenarioSave } from '../../../../hooks/useApiHooks/useScenarioSave';
+import { useHooks } from '../../../../context';
 
 export default function FileMenu({
   anchorEl,
   onClose,
   onUpload,
 }: FileMenuProps) {
-  const onOpenFile = () => window.PARAMS?.load_file?.();
+  const { loadFile } = useHooks();
+
+  const onOpenFile = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.xodr';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => loadFile(reader.result as string, true);
+      reader.readAsText(file);
+    };
+    input.click();
+  };
   const onSave = useScenarioSave();
   const onOpenSimulationConfirm = () => window.editorModals?.openSimulation();
 

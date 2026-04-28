@@ -208,7 +208,9 @@ export function buildOdrScene(p: LoadOdrMapParams): OdrMapMeshes {
 
   if (!scene.children.includes(transformControls)) scene.add(transformControls);
 
-  console.log(`Heap: ${(Module.HEAP8.length / 1024 / 1024) | 0} MB`);
+  if (import.meta.env.DEV) {
+    console.log(`Heap: ${(Module.HEAP8.length / 1024 / 1024) | 0} MB`);
+  }
 
   return {
     refline_lines,

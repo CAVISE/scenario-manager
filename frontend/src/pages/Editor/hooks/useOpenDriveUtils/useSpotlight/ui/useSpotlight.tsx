@@ -11,18 +11,32 @@ import type {
   SpotlightState,
 } from '../types/useSpotlightTypes';
 
-export function startAnimate(p: StartAnimateParams): { running: boolean } {
-  const handle = { running: true };
+export function startAnimate(
+  p: StartAnimateParams,
+): { running: boolean; stop: () => void } {
+  let mouseMoved = false;
+  const canvas = p.renderer.domElement;
+  const onMouseMove = () => { mouseMoved = true; };
+  canvas.addEventListener('mousemove', onMouseMove);
 
-  function animate() {
+  const handle = { running: true };
+  let lastTime = 0;
+  const FRAME_MS = 1000 / 30;
+
+  function animate(now: number) {
     if (!handle.running) return;
-    setTimeout(() => requestAnimationFrame(animate), 1000 / 30);
+    requestAnimationFrame(animate);
+
+    if (now - lastTime < FRAME_MS) return;
+    lastTime = now;
+
     if (!p.controls) return;
     p.controls.update();
 
     const { spotlightState: st } = p;
 
-    if (p.spotlightEnabled() && !st.paused) {
+    if (p.spotlightEnabled() && !st.paused && mouseMoved) {
+      mouseMoved = false;
       const { renderer, camera, mouse, picking } = p;
 
       camera.setViewOffset(
@@ -46,14 +60,7 @@ export function startAnimate(p: StartAnimateParams): { running: boolean } {
         rb = new Float32Array(4),
         xb = new Float32Array(4);
       renderer.readRenderTargetPixels(picking.textures.lane, 0, 0, 1, 1, lb);
-      renderer.readRenderTargetPixels(
-        picking.textures.roadmark,
-        0,
-        0,
-        1,
-        1,
-        rb,
-      );
+      renderer.readRenderTargetPixels(picking.textures.roadmark, 0, 0, 1, 1, rb);
       renderer.readRenderTargetPixels(picking.textures.xyz, 0, 0, 1, 1, xb);
 
       const odrMap = p.getOpenDriveMap();
@@ -113,9 +120,7 @@ export function startAnimate(p: StartAnimateParams): { running: boolean } {
           roadMesh.userData.odr_road_network_mesh.roadmarks_mesh;
         if (st.INTERSECTED_ROADMARK_ID !== rid) {
           if (st.INTERSECTED_ROADMARK_ID !== 0xffffffff) {
-            const prev = rm.get_idx_interval_roadmark(
-              st.INTERSECTED_ROADMARK_ID,
-            );
+            const prev = rm.get_idx_interval_roadmark(st.INTERSECTED_ROADMARK_ID);
             rmMesh.geometry.attributes.color.array.fill(
               COLORS.roadmark,
               prev[0] * 3,
@@ -133,11 +138,7 @@ export function startAnimate(p: StartAnimateParams): { running: boolean } {
           rmMesh.geometry.attributes.color.needsUpdate = true;
         }
         rm.delete();
-      } else if (
-        rmMesh &&
-        roadMesh &&
-        st.INTERSECTED_ROADMARK_ID !== 0xffffffff
-      ) {
+      } else if (rmMesh && roadMesh && st.INTERSECTED_ROADMARK_ID !== 0xffffffff) {
         const rm: OdrRoadmarksMesh =
           roadMesh.userData.odr_road_network_mesh.roadmarks_mesh;
         const iv = rm.get_idx_interval_roadmark(st.INTERSECTED_ROADMARK_ID);
@@ -156,8 +157,15 @@ export function startAnimate(p: StartAnimateParams): { running: boolean } {
     p.renderer.render(p.scene, p.camera);
   }
 
-  animate();
-  return handle;
+  requestAnimationFrame(animate);
+
+  return {
+    ...handle,
+    stop: () => {
+      handle.running = false;
+      canvas.removeEventListener('mousemove', onMouseMove);
+    },
+  };
 }
 
 export function createSpotlightState(): SpotlightState {

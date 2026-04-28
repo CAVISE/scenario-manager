@@ -22,4 +22,5 @@ export interface hooksContextTypes {
   handleAddPoints: () => void;
   detachTransformControls: () => void;
   handleSetBuildingMode: (value: boolean) => void;
+  loadFile: (text: string, clearMap: boolean) => void;
 }

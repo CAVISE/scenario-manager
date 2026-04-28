@@ -61,6 +61,7 @@ export function createStoreSubscriptions(
     if (loadPointsTimeout) clearTimeout(loadPointsTimeout);
     loadPointsTimeout = setTimeout(() => {
       loadPoints();
+      updateSceneGraph();
       loadPointsTimeout = null;
     }, 0);
   });

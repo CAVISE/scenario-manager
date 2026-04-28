@@ -191,7 +191,6 @@ const storeCreator: StateCreator<EditorState> = (set) => ({
 
   removeCar: (id) =>
     set((s) => {
-      console.trace('removeCar called', id);
       return {
         cars: s.cars.filter((c) => c.id !== id),
         points: s.points.filter((p) => p.carId !== id),

@@ -24,6 +24,7 @@ import {
   RSU,
 } from '../../../../../../../store/types/useEditorStoreTypes';
 import { StartSimulationPayload } from '../../../../../../Editor/hooks/useApiHooks/useSimulationMutation/types/useSimulationMutationTypes';
+import { getApiErrorMessage } from '../../../../../../../api/errors';
 
 export const handleLoad = async ({
   hasId,
@@ -76,7 +77,8 @@ export const handleLoad = async ({
         car.points?.forEach((pt) => s.addPoint(carId, pt.x, pt.y, pt.z));
         car.lidars?.forEach((l) => {
           s.addLidar(carId, l.x, l.y, l.z);
-          const last = useEditorStore.getState().lidars.at(-1);
+          const lidars = useEditorStore.getState().lidars;
+          const last = lidars[lidars.length - 1];
           if (last)
             s.updateLidar(last.id, {
               rotation: l.rotation,
@@ -94,7 +96,8 @@ export const handleLoad = async ({
     if (rsuGroup) {
       rsuGroup.path.forEach((rsu: RSUPath) => {
         s.addRSU(rsu.x, rsu.y, rsu.z);
-        const added = useEditorStore.getState().RSUs.at(-1);
+        const RSUs = useEditorStore.getState().RSUs;
+        const added = RSUs[RSUs.length - 1];
         if (added)
           s.updateRSU(added.id, {
             tx_power: rsu.tx_power,
@@ -130,7 +133,8 @@ export const handleLoad = async ({
     if (bldGroup) {
       bldGroup.path.forEach((b: BuildingPath) => {
         s.addBuilding(b.x, b.y, b.z);
-        const last = useEditorStore.getState().buildings.at(-1);
+        const buildings = useEditorStore.getState().buildings;
+        const last = buildings[buildings.length - 1];
         if (last)
           s.updateBuilding(last.id, {
             height: b.height,
@@ -140,7 +144,7 @@ export const handleLoad = async ({
 
       const tryAddBuildings = (attempts = 0) => {
         const scene = sceneRef.current;
-        const model = buildingModelRef.current;
+        const model = buildingModelRef?.current;
         if (!scene || !model) {
           if (attempts < 10)
             setTimeout(() => tryAddBuildings(attempts + 1), 300);
@@ -157,7 +161,7 @@ export const handleLoad = async ({
           scene.add(m);
         });
         loadRSURef.current?.();
-        updateSceneGraph();
+        updateSceneGraph?.();
       };
       tryAddBuildings();
     }
@@ -174,7 +178,7 @@ export const handleLoad = async ({
     setNotice('The script has been uploaded.');
   } catch (err) {
     console.error(err);
-    setNotice('Failed to load script.');
+    setNotice(await getApiErrorMessage(err, 'Failed to load script.'));
   }
 };
 
@@ -187,7 +191,7 @@ export const handleCreate = async (
     setNotice('Script saved (POST).');
   } catch (err) {
     console.error(err);
-    setNotice('Failed to save script.');
+    setNotice(await getApiErrorMessage(err, 'Failed to save script.'));
   }
 };
 
@@ -206,7 +210,9 @@ export const handlePatch = async (
     setNotice('The script has been updated (PATCH).');
   } catch (err) {
     console.error(err);
-    setNotice('Failed to update the script (PATCH).');
+    setNotice(
+      await getApiErrorMessage(err, 'Failed to update the script (PATCH).'),
+    );
   }
 };
 
@@ -225,7 +231,9 @@ export const handleDelete = async (
     setNotice('The script has been deleted (DELETE).');
   } catch (err) {
     console.error(err);
-    setNotice('Failed to delete script (DELETE).');
+    setNotice(
+      await getApiErrorMessage(err, 'Failed to delete script (DELETE).'),
+    );
   }
 };
 
@@ -244,9 +252,9 @@ export const handleRunSimulation = (
   };
   startMutation.mutate(payload, {
     onSuccess: () => setNotice('The simulation has started.'),
-    onError: (err) => {
+    onError: async (err) => {
       console.error(err);
-      setNotice('Failed to start simulation.');
+      setNotice(await getApiErrorMessage(err, 'Failed to start simulation.'));
     },
   });
 };
