@@ -2,10 +2,12 @@ import { useState, useCallback } from 'react';
 import { Button, Modal, Box, Typography } from '@mui/material';
 import TelemetryModal from '../../../../../components/TelemetryModal';
 import { useStartSimulationMutation } from '../../../hooks/useApiHooks/useSimulationMutation/ui/useSimulationMutation';
+import { getApiErrorMessage } from '../../../../../api/errors';
 
 export default function EditorModals() {
   const [telemetryModalOpen, setTelemetryModalOpen] = useState(false);
   const [simulationConfirmOpen, setSimulationConfirmOpen] = useState(false);
+  const [simulationError, setSimulationError] = useState<string | null>(null);
   const startSimulationMutation = useStartSimulationMutation();
 
   if (typeof window !== 'undefined') {
@@ -16,6 +18,7 @@ export default function EditorModals() {
   }
 
   const handleStartSimulation = useCallback(() => {
+    setSimulationError(null);
     const payload = {
       scenario_id: '9959781287',
       scenario_name: 'scenario 1',
@@ -34,11 +37,14 @@ export default function EditorModals() {
       ],
     };
     startSimulationMutation.mutate(payload, {
-      onError: (err) => {
+      onError: async (err) => {
         console.error(err);
-        alert('Failed to start simulation.');
+        setSimulationError(
+          await getApiErrorMessage(err, 'Failed to start simulation.'),
+        );
       },
       onSuccess: () => {
+        setSimulationError(null);
         setSimulationConfirmOpen(false);
       },
     });
@@ -75,6 +81,11 @@ export default function EditorModals() {
           <Typography sx={{ mt: 2, mb: 3 }}>
             Are you sure you want to run the simulation?
           </Typography>
+          {simulationError && (
+            <Typography sx={{ mb: 2, color: 'error.main' }}>
+              {simulationError}
+            </Typography>
+          )}
           <Button
             variant="contained"
             onClick={handleStartSimulation}

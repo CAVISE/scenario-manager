@@ -15,7 +15,7 @@ export const HooksProvider: React.FC<{ children: React.ReactNode }> = ({
   const buildingModelRef = useBuildingLoader();
   const { sceneGraph, updateSceneGraph } = useSceneGraph(sceneRef);
   const { loadingText, loadingProgress, setStep } = useLoadingState();
-  const { actionsRef } = useThreeScene({
+  const { actionsRef, loadFile } = useThreeScene({
     updateSceneGraph,
     setStep,
     buildingModelRef,
@@ -41,6 +41,7 @@ export const HooksProvider: React.FC<{ children: React.ReactNode }> = ({
     loadingText,
     setStep,
     actionsRef,
+    loadFile,
     handleAddCube,
     handleAddRSU,
     handleAddPedestrian,

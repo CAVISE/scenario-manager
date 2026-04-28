@@ -9,6 +9,6 @@ export interface handleDeleteNodeProps {
   cubeCirclesRef: React.RefObject<THREE.Mesh[][]>;
   pointsArrRef: React.RefObject<THREE.Mesh[]>;
   sceneRef: React.RefObject<THREE.Scene | undefined>;
-  transformControlsRef: React.RefObject<TransformControls | undefined>;
+  transformControlsRef: React.RefObject<TransformControls | null>;
   detachTransformControls: () => void;
 }

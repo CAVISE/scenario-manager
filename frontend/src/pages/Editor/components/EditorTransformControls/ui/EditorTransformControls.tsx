@@ -12,11 +12,13 @@ export const EditorTransformControls = () => {
     useTransformMode(transformControlsRef);
 
   return (
-    <div style={EditorTransformControlsStyles}>
+    <div style={EditorTransformControlsStyles} data-testid="transform-controls">
       <IconButton
         size="small"
         color={transformMode === 'translate' ? 'primary' : 'default'}
         onClick={() => handleSetMode('translate')}
+        aria-label="Transform translate"
+        data-testid="transform-translate"
       >
         <OpenWithIcon fontSize="small" />
       </IconButton>
@@ -24,6 +26,8 @@ export const EditorTransformControls = () => {
         size="small"
         color={transformMode === 'rotate' ? 'primary' : 'default'}
         onClick={() => handleSetMode('rotate')}
+        aria-label="Transform rotate"
+        data-testid="transform-rotate"
       >
         <RotateRightIcon fontSize="small" />
       </IconButton>
@@ -31,6 +35,8 @@ export const EditorTransformControls = () => {
         size="small"
         color={transformMode === 'scale' ? 'primary' : 'default'}
         onClick={() => handleSetMode('scale')}
+        aria-label="Transform scale"
+        data-testid="transform-scale"
       >
         <ZoomOutMapIcon fontSize="small" />
       </IconButton>

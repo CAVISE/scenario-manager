@@ -15,15 +15,18 @@ import {
 } from '../../../../../Editor/hooks/useApiHooks/useScenarioQueries';
 import { useEditorStore } from '../../../../../../store';
 import { useStartSimulationMutation } from '../../../../../Editor/hooks/useApiHooks/useSimulationMutation';
-import { useEditorRefs } from '../../../../../Editor/context';
+import { useEditorRefs, useHooks } from '../../../../../Editor/context';
 import { useStatusesQuery } from '../../../../../Editor/hooks/useApiHooks/useStatusesQuery';
+import { useNoticeWithToast } from '../../../../../../components/AppToast';
 
 export default function ScenarioControlWidget() {
   const scenario = useEditorStore((s) => s.Scenario);
   const updateScenario = useEditorStore((s) => s.updateScenario);
   const { sceneRef, loadRSURef } = useEditorRefs();
+  const { buildingModelRef, updateSceneGraph } = useHooks();
   const [scenarioIdInput, setScenarioIdInput] = useState(scenario.id ?? '');
   const [notice, setNotice] = useState<string>('');
+  const setNoticeWithToast = useNoticeWithToast(setNotice);
 
   const createScenarioMutation = useScenarioCreateMutation();
   const patchScenarioMutation = useScenarioPatchMutation();
@@ -70,8 +73,10 @@ export default function ScenarioControlWidget() {
               hasId,
               scenarioIdInput,
               sceneRef,
-              setNotice,
+              setNotice: setNoticeWithToast,
               loadRSURef,
+              buildingModelRef,
+              updateSceneGraph,
             })
           }
         >
@@ -81,7 +86,7 @@ export default function ScenarioControlWidget() {
           type="button"
           className="rp-btn rp-btn-primary"
           disabled={isBusy}
-          onClick={() => handleCreate(setNotice, createScenarioMutation)}
+          onClick={() => handleCreate(setNoticeWithToast, createScenarioMutation)}
         >
           POST
         </button>
@@ -91,7 +96,7 @@ export default function ScenarioControlWidget() {
           disabled={!hasId || isBusy}
           onClick={() =>
             handlePatch(
-              setNotice,
+              setNoticeWithToast,
               scenarioIdInput,
               hasId,
               patchScenarioMutation,
@@ -105,7 +110,12 @@ export default function ScenarioControlWidget() {
           className="rp-btn rp-btn-secondary"
           disabled={!hasId || isBusy}
           onClick={() =>
-            handleDelete(setNotice, scenarioIdInput, hasId, putScenarioMutation)
+            handleDelete(
+              setNoticeWithToast,
+              scenarioIdInput,
+              hasId,
+              putScenarioMutation,
+            )
           }
         >
           DELETE
@@ -118,7 +128,7 @@ export default function ScenarioControlWidget() {
         disabled={isBusy || !hasId}
         onClick={() =>
           handleRunSimulation(
-            setNotice,
+            setNoticeWithToast,
             scenarioIdInput,
             startSimulationMutation,
           )

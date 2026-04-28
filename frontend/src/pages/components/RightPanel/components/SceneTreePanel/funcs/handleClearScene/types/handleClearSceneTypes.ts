@@ -5,6 +5,6 @@ export interface handleClearSceneProps {
   sceneRef: React.RefObject<THREE.Scene | undefined>;
   cubeCirclesRef: React.RefObject<THREE.Mesh[][]>;
   pointsArrRef: React.RefObject<THREE.Mesh[]>;
-  transformControlsRef: React.RefObject<TransformControls | undefined>;
+  transformControlsRef: React.RefObject<TransformControls | null>;
   detachTransformControls: () => void;
 }

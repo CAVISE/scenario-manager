@@ -3,7 +3,7 @@ import { TransformControls } from 'three-stdlib';
 import { SelectedObject } from '../../../../../types/PanelTypes';
 export interface handleSelectProps {
   sceneRef: React.RefObject<THREE.Scene | undefined>;
-  transformControlsRef: React.RefObject<TransformControls | undefined>;
+  transformControlsRef: React.RefObject<TransformControls | null>;
   detachTransformControls: () => void;
   itemId: string;
   pointsArrRef: React.RefObject<THREE.Mesh[]>;

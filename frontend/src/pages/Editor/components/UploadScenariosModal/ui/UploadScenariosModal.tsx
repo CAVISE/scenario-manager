@@ -26,6 +26,8 @@ import type { ScenarioListItem } from '../../../../../api/types/IScenarioTypes';
 import { useScenariosListQuery } from '../../../hooks/useApiHooks/useScenarioQueries';
 import { handleLoad } from '../../../../components/RightPanel/components/ScenarioControlWidget/Handlers';
 import { useEditorRefs, useHooks } from '../../../context';
+import { getApiErrorMessageSync } from '../../../../../api/errors';
+import { useNoticeWithToast } from '../../../../../components/AppToast';
 
 function previewSrc(preview: string | null): string | undefined {
   if (!preview) return undefined;
@@ -48,6 +50,7 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
   const [selectedScenario, setSelectedScenario] =
     useState<ScenarioListItem | null>(null);
   const [notice, setNotice] = useState('');
+  const setNoticeWithToast = useNoticeWithToast(setNotice, 'info-default');
   const [loadingScene, setLoadingScene] = useState(false);
   const {
     data: scenarios = [],
@@ -82,7 +85,7 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
         hasId: true,
         scenarioIdInput: selectedScenario.scenario_id,
         sceneRef,
-        setNotice,
+        setNotice: setNoticeWithToast,
         loadRSURef,
         buildingModelRef,
         updateSceneGraph,
@@ -90,8 +93,14 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
     } finally {
       setLoadingScene(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [
+    selectedScenario,
+    sceneRef,
+    loadRSURef,
+    buildingModelRef,
+    updateSceneGraph,
+    setNoticeWithToast,
+  ]);
 
   const thumb = selectedScenario
     ? previewSrc(selectedScenario.preview)
@@ -142,9 +151,7 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
                   </Button>
                 }
               >
-                {error instanceof Error
-                  ? error.message
-                  : 'Failed to load scenario list'}
+                {getApiErrorMessageSync(error, 'Failed to load scenario list')}
               </Alert>
             ) : null}
             {isLoading ? (

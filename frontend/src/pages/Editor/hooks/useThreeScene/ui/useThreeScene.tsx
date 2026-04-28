@@ -75,7 +75,7 @@ export function useThreeScene({
       threeRef.current = null;
       sceneRef.current = undefined;
       cameraRef.current = undefined;
-      transformControlsRef.current = undefined;
+      transformControlsRef.current = null;
       setThreeReady(false);
     };
   }, []);
@@ -106,7 +106,7 @@ export function useThreeScene({
   useEffect(() => {
     loadOdrMapRef.current = loadOdrMap;
   }, [loadOdrMap]);
-  useOdrLoader({
+  const { loadFile } = useOdrLoader({
     setStep,
     setError,
     moduleRef: setModuleRef,
@@ -180,10 +180,6 @@ export function useThreeScene({
     actionsRef.current.deleteCar = ACTIONS.deleteCube;
     actionsRef.current.deleteCube = ACTIONS.deleteCube;
     actionsRef.current.addPedestrian = ACTIONS.addPedestrian;
-
-    if (process.env.NODE_ENV === 'development') {
-      (window as unknown as Record<string, unknown>).PARAMS = ACTIONS;
-    }
   }, [
     threeReady,
     modeRef,
@@ -197,5 +193,5 @@ export function useThreeScene({
     reloadOdrMap,
   ]);
 
-  return { actionsRef };
+  return { actionsRef, loadFile };
 }
