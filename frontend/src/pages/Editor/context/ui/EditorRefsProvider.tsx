@@ -9,11 +9,11 @@ export const EditorRefsProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const refs: EditorRefs = {
-    sceneRef: useRef<THREE.Scene>(),
-    cameraRef: useRef<THREE.PerspectiveCamera>(),
+    sceneRef: useRef<THREE.Scene | undefined>(undefined),
+    cameraRef: useRef<THREE.PerspectiveCamera | undefined>(undefined),
     carMeshesRef: useRef<THREE.Mesh[]>([]),
     carQuaternionsRef: useRef(new Map<string, THREE.Quaternion>()),
-    transformControlsRef: useRef<TransformControls | undefined>(undefined),
+    transformControlsRef: useRef<TransformControls | null>(null),
     pointsArrRef: useRef<THREE.Mesh[]>([]),
     pointsObjsRef: useRef<THREE.Mesh[]>([]),
     cubeCirclesRef: useRef<THREE.Mesh[][]>([]),
@@ -26,7 +26,7 @@ export const EditorRefsProvider: React.FC<{ children: React.ReactNode }> = ({
     loadRSURef: useRef<() => void>(() => {}),
     pedestrianMeshesRef: useRef<THREE.Mesh[]>([]),
     isDraggingRef: useRef(false),
-    mountRef: useRef<HTMLDivElement>(null),
+    mountRef: useRef<HTMLDivElement | null>(null),
     modeRef: useRef({
       isAddCarModeActive: false,
       isAddPointModeActive: false,

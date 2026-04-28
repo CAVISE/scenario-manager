@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { useEditorStore } from '../../../../../../store';
 import type { ScenarioSettings } from '../../../../types/editorTypes';
 import { useScenarioCreateMutation } from '../../useScenarioQueries/ui/useScenarioQueries';
+import { getApiErrorMessage } from '../../../../../../api/errors';
 
 export function useScenarioSave() {
   const scenarioSettingsRef = useRef<ScenarioSettings>({
@@ -128,7 +129,7 @@ export function useScenarioSave() {
       await createScenarioMutation.mutateAsync(scenario);
     } catch (err) {
       console.error(err);
-      alert('Failed to save scenario.');
+      alert(await getApiErrorMessage(err, 'Failed to save scenario.'));
     }
     return scenario;
   };

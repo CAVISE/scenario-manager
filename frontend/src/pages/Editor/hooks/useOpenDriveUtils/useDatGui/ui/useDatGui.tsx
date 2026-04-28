@@ -53,7 +53,9 @@ export function useDatGui(options: UseDatGuiOptions) {
             if (typeof ev.target?.result === 'string')
               onLoadFile(ev.target.result);
           };
-          reader.onerror = () => alert('Failed to read file.');
+          reader.onerror = () => {
+            console.error('Failed to read file.');
+          };
           reader.readAsText(file);
         });
         input.click();

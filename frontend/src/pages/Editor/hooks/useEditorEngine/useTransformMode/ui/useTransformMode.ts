@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { TransformControls } from 'three-stdlib';
 import type { TransformMode } from '../types/useTransformModeTypes';
 export function useTransformMode(
-  transformControlsRef: React.RefObject<TransformControls | undefined>,
+  transformControlsRef: React.RefObject<TransformControls | null>,
 ) {
   const [transformMode, setTransformMode] =
     useState<TransformMode>('translate');

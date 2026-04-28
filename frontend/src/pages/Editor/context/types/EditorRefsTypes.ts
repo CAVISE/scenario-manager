@@ -8,7 +8,7 @@ export interface EditorRefs {
   cameraRef: RefObject<THREE.PerspectiveCamera | undefined>;
   carMeshesRef: RefObject<THREE.Mesh[]>;
   carQuaternionsRef: RefObject<Map<string, THREE.Quaternion>>;
-  transformControlsRef: RefObject<TransformControls | undefined>;
+  transformControlsRef: RefObject<TransformControls | null>;
   pointsArrRef: RefObject<THREE.Mesh[]>;
   pointsObjsRef: RefObject<THREE.Mesh[]>;
   cubeCirclesRef: RefObject<THREE.Mesh[][]>;
@@ -21,7 +21,7 @@ export interface EditorRefs {
   loadRSURef: RefObject<() => void>;
   pedestrianMeshesRef: RefObject<THREE.Mesh[]>;
   isDraggingRef: RefObject<boolean>;
-  mountRef: RefObject<HTMLDivElement>;
+  mountRef: RefObject<HTMLDivElement | null>;
   modeRef: RefObject<{
     isAddCarModeActive: boolean;
     isAddPointModeActive: boolean;
