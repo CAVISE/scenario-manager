@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { useEditorStore } from '../../../../../../store';
 import type { ScenarioSettings } from '../../../../types/editorTypes';
-import { useScenarioCreateMutation } from '../../useScenarioQueries/ui/useScenarioQueries';
+import { useScenarioCreateMutation } from '../../useScenarioQueries';
 import { getApiErrorMessage } from '../../../../../../api/errors';
 
 export function useScenarioSave() {
