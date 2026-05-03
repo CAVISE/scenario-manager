@@ -75,7 +75,7 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
     setNotice('');
     onClose();
   };
-  const { buildingModelRef, updateSceneGraph } = useHooks();
+  const { buildingModelRef, updateSceneGraph, loadFile } = useHooks();
   const handleLoadOnScene = useCallback(async () => {
     if (!selectedScenario?.scenario_id) return;
     setLoadingScene(true);
@@ -89,6 +89,7 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
         loadRSURef,
         buildingModelRef,
         updateSceneGraph,
+        loadFile,
       });
     } finally {
       setLoadingScene(false);
@@ -100,6 +101,7 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
     buildingModelRef,
     updateSceneGraph,
     setNoticeWithToast,
+    loadFile
   ]);
 
   const thumb = selectedScenario

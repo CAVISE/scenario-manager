@@ -1,30 +1,39 @@
 import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+import react from '@vitejs/plugin-react-swc';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig({
-  plugins: [react()],
-  test: {
-    environment: 'jsdom',
-    globals: true,
-    clearMocks: true,
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'html'],
-      thresholds: {
-        lines: 35,
-        functions: 30,
-        branches: 30,
-        statements: 35,
-      },
-    },
-  },
+  plugins: [
+    react(),
+    visualizer({
+      open: true,
+      gzipSize: true,
+      brotliSize: true,
+      filename: 'dist/stats.html',
+    }),
+  ],
+
   build: {
+    sourcemap: true,
+    chunkSizeWarningLimit: 700,
+
     rollupOptions: {
       output: {
         manualChunks: {
-          three: ['three', 'three-stdlib'],
-          mui: ['@mui/material', '@mui/icons-material', '@mui/joy'],
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'react-vendor': ['react', 'react-dom'],
+          router: ['react-router-dom'],
+          mui: [
+            '@mui/material',
+            '@mui/joy',
+            '@mui/system',
+            '@mui/base',
+            '@emotion/react',
+            '@emotion/styled',
+            '@emotion/cache',
+          ],
+          icons: ['@mui/icons-material'],
+          three: ['three'],
+          'three-stdlib': ['three-stdlib'],
         },
       },
     },

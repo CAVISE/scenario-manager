@@ -152,7 +152,7 @@ async def load_scenario(scenario_id: str, background_tasks: BackgroundTasks = No
         cursor = conn.cursor()
 
         query = """
-            SELECT id, scenario_id, name_of_scenario, scenario_text, preview, annotation
+            SELECT id, scenario_id, name_of_scenario, scenario_text, preview, annotation, file_
             FROM scenarios
             WHERE scenario_id = %s
         """
@@ -173,14 +173,15 @@ async def load_scenario(scenario_id: str, background_tasks: BackgroundTasks = No
             "name_of_scenario": row[2],
             "scenario_text": scenario_text,
             "preview": row[4],
-            "annotation": row[5]
+            "annotation": row[5],
+            "file_": row[6],
         }
 
         if background_tasks:
             background_tasks.add_task(log_action, "load_scenario", str())
 
+        print(result)
         return {"status": "success", "scenario": result}
-
     except HTTPException:
         raise
     except Exception as e:
@@ -198,22 +199,22 @@ async def upload_scenario(scenario_raw: dict, background_tasks: BackgroundTasks)
 
         conn = get_db_connection()
         cursor = conn.cursor()
-
+        print(scenario_raw)
         name = scenario_raw['name_of_scenario']
         scenario_text = json.dumps(scenario_raw.get('scenario', {}))
         preview = scenario_raw.get('preview')     
         annotation = scenario_raw.get('description')
         scenario_id = scenario_raw.get('scenario_id')
-
+        file_text = scenario_raw.get('file_')
         query = """
-            INSERT INTO scenarios (scenario_id, name_of_scenario, scenario_text, preview, annotation)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO scenarios (scenario_id, name_of_scenario, scenario_text, preview, annotation, file_)
+            VALUES (%s, %s, %s, %s, %s, %s)
         """
-        cursor.execute(query, (scenario_id, name, scenario_text, preview, annotation))
+        print(file_text)
+        cursor.execute(query, (scenario_id, name, scenario_text, preview, annotation, file_text))
         conn.commit()
 
         background_tasks.add_task(log_action, "upload_scenario")
-
         return {"status": "success", "message": "Scenario created"}
 
     except Exception as e:

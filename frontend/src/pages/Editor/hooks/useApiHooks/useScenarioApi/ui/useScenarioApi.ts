@@ -9,10 +9,12 @@ export function useScenarioApi() {
   const loadScenario = useCallback(
     async (id: string) => {
       const data = await scenariosApi.get(id);
+      localStorage.setItem('cached_xodr', data.file_ ? data.file_ : '');
       updateScenario({
         id: data.scenario_id ?? '',
         name: data.scenario_name ?? '',
         weather: data.weather ?? '',
+        file_: data.file_,
       });
       return data;
     },

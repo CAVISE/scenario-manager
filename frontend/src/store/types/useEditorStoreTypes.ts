@@ -38,6 +38,7 @@ export type Scenario = {
   name: string;
   weather: string;
   description: string;
+  file_: string | null;
 };
 export type SumoStop = {
   lane: string;

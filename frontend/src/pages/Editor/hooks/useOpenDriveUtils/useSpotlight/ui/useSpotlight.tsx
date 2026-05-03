@@ -11,12 +11,15 @@ import type {
   SpotlightState,
 } from '../types/useSpotlightTypes';
 
-export function startAnimate(
-  p: StartAnimateParams,
-): { running: boolean; stop: () => void } {
+export function startAnimate(p: StartAnimateParams): {
+  running: boolean;
+  stop: () => void;
+} {
   let mouseMoved = false;
   const canvas = p.renderer.domElement;
-  const onMouseMove = () => { mouseMoved = true; };
+  const onMouseMove = () => {
+    mouseMoved = true;
+  };
   canvas.addEventListener('mousemove', onMouseMove);
 
   const handle = { running: true };
@@ -60,7 +63,14 @@ export function startAnimate(
         rb = new Float32Array(4),
         xb = new Float32Array(4);
       renderer.readRenderTargetPixels(picking.textures.lane, 0, 0, 1, 1, lb);
-      renderer.readRenderTargetPixels(picking.textures.roadmark, 0, 0, 1, 1, rb);
+      renderer.readRenderTargetPixels(
+        picking.textures.roadmark,
+        0,
+        0,
+        1,
+        1,
+        rb,
+      );
       renderer.readRenderTargetPixels(picking.textures.xyz, 0, 0, 1, 1, xb);
 
       const odrMap = p.getOpenDriveMap();
@@ -120,7 +130,9 @@ export function startAnimate(
           roadMesh.userData.odr_road_network_mesh.roadmarks_mesh;
         if (st.INTERSECTED_ROADMARK_ID !== rid) {
           if (st.INTERSECTED_ROADMARK_ID !== 0xffffffff) {
-            const prev = rm.get_idx_interval_roadmark(st.INTERSECTED_ROADMARK_ID);
+            const prev = rm.get_idx_interval_roadmark(
+              st.INTERSECTED_ROADMARK_ID,
+            );
             rmMesh.geometry.attributes.color.array.fill(
               COLORS.roadmark,
               prev[0] * 3,
@@ -138,7 +150,11 @@ export function startAnimate(
           rmMesh.geometry.attributes.color.needsUpdate = true;
         }
         rm.delete();
-      } else if (rmMesh && roadMesh && st.INTERSECTED_ROADMARK_ID !== 0xffffffff) {
+      } else if (
+        rmMesh &&
+        roadMesh &&
+        st.INTERSECTED_ROADMARK_ID !== 0xffffffff
+      ) {
         const rm: OdrRoadmarksMesh =
           roadMesh.userData.odr_road_network_mesh.roadmarks_mesh;
         const iv = rm.get_idx_interval_roadmark(st.INTERSECTED_ROADMARK_ID);
