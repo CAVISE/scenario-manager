@@ -138,8 +138,8 @@ def do_scenario(carla_host, carla_port, data: schemas.ScenarioSchema, scenario_i
 
     connection = sqlite3.connect(config.SQLDB_NAME)
     cursor = connection.cursor()
-    query = f"UPDATE {config.SQLDB_TABLE} SET status='true' WHERE id={report_id}"
-    cursor.execute(query)
+    query = f"UPDATE {config.SQLDB_TABLE} SET status = ? WHERE id = ?"
+    cursor.execute(query, ("true", report_id))
     connection.commit()
     connection.close()
     print("script data recorded")

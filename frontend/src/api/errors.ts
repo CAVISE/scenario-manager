@@ -19,7 +19,6 @@ export async function getApiErrorMessage(
         if (message && message.trim()) return message;
       }
     } catch {
-      // ignore parse errors and fallback below
     }
     return fallback;
   }

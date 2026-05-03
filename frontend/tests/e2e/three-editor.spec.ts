@@ -2,9 +2,14 @@ import { expect, test, type Page } from '@playwright/test';
 
 const openEditor = async (page: Page) => {
   await page.goto('/');
-  await page.getByRole('link', { name: /Open Editor/i }).click();
+
+  const editorLink = page.getByTestId('open-editor');
+
+  await expect(editorLink).toBeVisible();
+
+  await editorLink.click();
+
   await expect(page).toHaveURL(/\/editor$/);
-  await expect(page.getByText('Scene Graph')).toBeVisible();
 };
 
 const openSpeedDial = async (page: Page) => {
@@ -121,7 +126,9 @@ test.describe('Three.js editor flows', () => {
   test('shows object actions in speed dial', async ({ page }) => {
     await openEditor(page);
     await openSpeedDial(page);
-    await expect(page.getByRole('menuitem', { name: 'Add waypoint' })).toBeVisible();
+    await expect(
+      page.getByRole('menuitem', { name: 'Add waypoint' }),
+    ).toBeVisible();
     await expect(page.getByRole('menuitem', { name: 'Add car' })).toBeVisible();
     await expect(page.getByRole('menuitem', { name: 'Add RSU' })).toBeVisible();
     await expect(

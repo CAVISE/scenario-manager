@@ -59,7 +59,11 @@ const HexLogo: React.FC = () => (
 
 const StartPage = () => {
   const [scenarios] = useState<Scenario[]>([]);
-  const [scenarioName, setScenarioName] = useState('');
+  const [scenarioName, setScenarioName] = useState(() => {
+    const stored = window.localStorage.getItem('scenario_name');
+    if (stored) return JSON.parse(stored) as string;
+    return 'New Scenario'; 
+  });
   const [weather, setWeather] = useState('ClearNoon');
   const updateScenario = useEditorStore((s) => s.updateScenario);
 
@@ -146,7 +150,6 @@ const StartPage = () => {
     setWeather(event.target.value);
     updateScenario({ weather: event.target.value });
   };
-
   return (
     <>
       <style>{css}</style>
@@ -240,8 +243,12 @@ const StartPage = () => {
 
           <div className="sm-home-divider" />
 
-          <Link to="/editor" className="sm-home-editor-link">
-            Open Editor &rarr;
+          <Link
+            to="/editor"
+            className="sm-home-editor-link"
+            data-testid="open-editor"
+          >
+            Open Editor →
           </Link>
         </div>
 

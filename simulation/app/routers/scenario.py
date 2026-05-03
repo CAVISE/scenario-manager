@@ -30,14 +30,14 @@ async def run_scenario(_id: str, bacground_task: BackgroundTasks, request: Reque
 
     scenario = services.get_scenario(_id)
 
-    query = f"INSERT INTO reports (scenario_id, scenario_name, status) VALUES ('{_id}', '{scenario['scenario_name']}', 'false')"
+    query = "INSERT INTO reports (scenario_id, scenario_name, status) VALUES (?, ?, ?)"
 
-    inseted_value = cursor.execute(query)
+    inseted_value = cursor.execute(query, (_id, scenario["scenario_name"], "false"))
     connection.commit()
     connection.close()
 
     data = json.load(open(f"scenarios/{_id}.json"))
-    data = schemas.ScenarioSchema.parse_obj(data)
+    data = schemas.ScenarioSchema.model_validate(data)
 
     bacground_task.add_task(work.do_scenario, carla_host, carla_port, data, _id, inseted_value.lastrowid)
     # work.do_scenario.delay(carla_host, carla_port, data, _id, inseted_value.lastrowid)

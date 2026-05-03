@@ -1,10 +1,11 @@
 import { Routes, Route } from 'react-router-dom';
 import StartPage from './pages/StartPage';
-import Editor from './pages/Editor.tsx';
 import { NotFoundPage } from './pages/Editor/Sceletons/EditorNotFoundPage';
 import { HooksProvider } from './pages/Editor/context';
 import { EditorRefsProvider } from './pages/Editor/context';
-
+import { lazy, Suspense } from 'react';
+import { AppLoader } from './pages/Editor/Sceletons/EditorLoader.tsx';
+const Editor = lazy(() => import('./pages/Editor.tsx'));
 function App() {
   return (
     <main>
@@ -13,11 +14,13 @@ function App() {
         <Route
           path="/editor"
           element={
-            <EditorRefsProvider>
-              <HooksProvider>
-                <Editor />
-              </HooksProvider>
-            </EditorRefsProvider>
+            <Suspense fallback={<AppLoader />}>
+              <EditorRefsProvider>
+                <HooksProvider>
+                  <Editor />
+                </HooksProvider>
+              </EditorRefsProvider>
+            </Suspense>
           }
         />
         <Route path="*" element={<NotFoundPage />} />

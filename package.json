@@ -1,5 +1,13 @@
 {
+  "scripts": {
+    "test:frontend": "npm --prefix frontend run test",
+    "test:backend": "python -m pytest tests/backend -q",
+    "test": "npm run test:frontend && npm run test:backend",
+    "test:coverage": "npm --prefix frontend run test:coverage && python -m pytest tests/backend --cov=app --cov=simulation/app --cov-report=term-missing"
+  },
   "devDependencies": {
-    "@types/dat.gui": "^0.7.13"
-  }
+    "@types/dat.gui": "^0.7.13",
+    "@vitejs/plugin-react-swc": "^4.3.0"
+  },
+  "license": "UNLICENSED"
 }

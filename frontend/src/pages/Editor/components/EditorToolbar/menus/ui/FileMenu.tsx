@@ -7,6 +7,7 @@ import UploadIcon from '@mui/icons-material/Upload';
 import { FileMenuProps, FolderIconStyles } from '../types/FileMenuTypes';
 import { useScenarioSave } from '../../../../hooks/useApiHooks/useScenarioSave';
 import { useHooks } from '../../../../context';
+import { useEffect } from 'react';
 
 export default function FileMenu({
   anchorEl,
@@ -30,7 +31,7 @@ export default function FileMenu({
   };
   const onSave = useScenarioSave();
   const onOpenSimulationConfirm = () => window.editorModals?.openSimulation();
-
+  useEffect(() => {}, []);
   const onOpenTelemetryModal = () => window.editorModals?.openTelemetry();
 
   return (

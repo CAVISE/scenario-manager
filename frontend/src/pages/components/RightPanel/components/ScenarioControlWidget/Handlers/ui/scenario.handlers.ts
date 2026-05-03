@@ -1,7 +1,4 @@
-import {
-  buildScenarioPayload,
-  LoadScenarioOptions,
-} from './scenario.load.handler';
+import { buildScenarioPayload } from './scenario.load.handler';
 import {
   BuildingPath,
   CarPath,
@@ -25,6 +22,7 @@ import {
 } from '../../../../../../../store/types/useEditorStoreTypes';
 import { StartSimulationPayload } from '../../../../../../Editor/hooks/useApiHooks/useSimulationMutation/types/useSimulationMutationTypes';
 import { getApiErrorMessage } from '../../../../../../../api/errors';
+import { LoadScenarioOptions } from '../types/scenario.load.handlerTypes';
 
 export const handleLoad = async ({
   hasId,
@@ -34,6 +32,7 @@ export const handleLoad = async ({
   loadRSURef,
   buildingModelRef,
   updateSceneGraph,
+  loadFile,
 }: LoadScenarioOptions) => {
   if (!hasId) return;
   try {
@@ -43,6 +42,17 @@ export const handleLoad = async ({
       queryFn: () => scenariosApi.get(id),
     });
     const s = useEditorStore.getState();
+    s.updateScenario({
+      id: data.scenario_id ?? '',
+      name: data.scenario_name ?? '',
+      weather: data.weather ?? '',
+      file_: data.file_ ?? null,
+    });
+    const xodr = data.file_ ?? (data.scenario as any)?.file_;
+    if (xodr) {
+      localStorage.setItem('cached_xodr', xodr);
+      loadFile(xodr, true);
+    }
     const rawScenario = data.scenario as unknown as {
       scenario_text: ScenarioGroup<
         CarPath | RSUPath | BuildingPath | PedestrianPath
