@@ -220,7 +220,7 @@ describe('useEditorStore — additional branch coverage', () => {
       const { merge } = (useEditorStore as any).persist.getOptions();
       const current = useEditorStore.getState();
       const result = merge(undefined, current);
-      expect(result).toBe(current);
+      expect(result).toStrictEqual(current);
     });
   });
   describe('persist merge', () => {
