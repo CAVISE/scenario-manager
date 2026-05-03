@@ -68,6 +68,7 @@ describe('useScenarioQueries', () => {
       id: 's-1',
       name: 'Scenario one',
       weather: 'ClearNoon',
+      file_: null,
     });
   });
 
@@ -143,6 +144,7 @@ describe('useScenarioQueries', () => {
       id: 's-2',
       name: 'Scenario 2',
       weather: 'CloudyNoon',
+      file_: null,
     });
   });
   it('useScenarioPutMutation caches response when scenario_id is present', async () => {
@@ -165,6 +167,7 @@ describe('useScenarioQueries', () => {
       id: 'put-1',
       name: 'Put Scenario',
       weather: 'ClearNoon',
+      file_: null,
     });
   });
   it('queryFn branch: throws when called without id', async () => {
