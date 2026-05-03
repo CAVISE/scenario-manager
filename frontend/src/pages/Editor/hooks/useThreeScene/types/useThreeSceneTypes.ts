@@ -15,7 +15,7 @@ export interface UseThreeSceneResult {
     deleteCube: () => void;
     addPedestrian: () => void;
   }>;
-  loadFile: (text: string, clearMap: boolean) => void; 
+  loadFile: (text: string, clearMap: boolean) => void;
 }
 export const PARAMS = {
   resolution: 0.3,

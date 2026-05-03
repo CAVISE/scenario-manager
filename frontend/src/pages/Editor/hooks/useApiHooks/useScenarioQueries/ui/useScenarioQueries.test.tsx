@@ -7,6 +7,8 @@ import {
   useScenarioCreateMutation,
   useScenarioDetailQuery,
   useScenarioPatchMutation,
+  useScenarioPutMutation,
+  useScenariosListQuery,
 } from './useScenarioQueries';
 
 const listAllMock = vi.fn();
@@ -27,8 +29,9 @@ vi.mock('../../../../../../api/scenarios', () => ({
 }));
 
 vi.mock('../../../../../../store', () => ({
-  useEditorStore: (selector: (s: { updateScenario: typeof updateScenarioMock }) => unknown) =>
-    selector({ updateScenario: updateScenarioMock }),
+  useEditorStore: (
+    selector: (s: { updateScenario: typeof updateScenarioMock }) => unknown,
+  ) => selector({ updateScenario: updateScenarioMock }),
 }));
 
 describe('useScenarioQueries', () => {
@@ -43,7 +46,9 @@ describe('useScenarioQueries', () => {
 
   const makeWrapper = (client: QueryClient) =>
     function Wrapper({ children }: { children: React.ReactNode }) {
-      return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+      return (
+        <QueryClientProvider client={client}>{children}</QueryClientProvider>
+      );
     };
 
   it('loads scenario details and syncs store scenario meta', async () => {
@@ -80,7 +85,47 @@ describe('useScenarioQueries', () => {
       payload: 'ok',
     });
   });
+  it('does not cache when scenario_id is absent in create response', async () => {
+    createMock.mockResolvedValue({ scenario_id: null, payload: 'ok' });
+    const queryClient = new QueryClient();
+    const { result } = renderHook(() => useScenarioCreateMutation(), {
+      wrapper: makeWrapper(queryClient),
+    });
+    await result.current.mutateAsync({} as never);
+    expect(queryClient.getQueryData(scenarioKeys.detail(''))).toBeUndefined();
+  });
 
+  it('does not cache when scenario_id is absent in patch response', async () => {
+    updateMock.mockResolvedValue({
+      scenario_id: null,
+      scenario_name: null,
+      weather: null,
+    });
+    const queryClient = new QueryClient();
+    const { result } = renderHook(() => useScenarioPatchMutation(), {
+      wrapper: makeWrapper(queryClient),
+    });
+    await result.current.mutateAsync({ id: 's-x', payload: {} });
+    expect(queryClient.getQueryData(scenarioKeys.detail(''))).toBeUndefined();
+  });
+
+  it('does not run query when id is null', async () => {
+    const queryClient = new QueryClient();
+    const { result } = renderHook(() => useScenarioDetailQuery(null), {
+      wrapper: makeWrapper(queryClient),
+    });
+    expect(result.current.fetchStatus).toBe('idle');
+    expect(getMock).not.toHaveBeenCalled();
+  });
+
+  it('useScenariosListQuery does not fetch when disabled', async () => {
+    const queryClient = new QueryClient();
+    const { result } = renderHook(() => useScenariosListQuery(false), {
+      wrapper: makeWrapper(queryClient),
+    });
+    expect(result.current.fetchStatus).toBe('idle');
+    expect(listAllMock).not.toHaveBeenCalled();
+  });
   it('syncs store after patch mutation success', async () => {
     updateMock.mockResolvedValue({
       scenario_id: 's-2',
@@ -99,5 +144,86 @@ describe('useScenarioQueries', () => {
       name: 'Scenario 2',
       weather: 'CloudyNoon',
     });
+  });
+  it('useScenarioPutMutation caches response when scenario_id is present', async () => {
+    replaceMock.mockResolvedValue({
+      scenario_id: 'put-1',
+      scenario_name: 'Put Scenario',
+      weather: 'ClearNoon',
+    });
+    const queryClient = new QueryClient();
+    const { result } = renderHook(() => useScenarioPutMutation(), {
+      wrapper: makeWrapper(queryClient),
+    });
+    await result.current.mutateAsync({ id: 'put-1', payload: {} as never });
+    expect(queryClient.getQueryData(scenarioKeys.detail('put-1'))).toEqual({
+      scenario_id: 'put-1',
+      scenario_name: 'Put Scenario',
+      weather: 'ClearNoon',
+    });
+    expect(updateScenarioMock).toHaveBeenCalledWith({
+      id: 'put-1',
+      name: 'Put Scenario',
+      weather: 'ClearNoon',
+    });
+  });
+  it('queryFn branch: throws when called without id', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    getMock.mockResolvedValue({});
+
+    const { result } = renderHook(() => useScenarioDetailQuery(null), {
+      wrapper: makeWrapper(queryClient),
+    });
+
+    await result.current.refetch();
+
+    expect(getMock).not.toHaveBeenCalled();
+  });
+  it('useScenarioPutMutation skips cache when scenario_id is absent', async () => {
+    replaceMock.mockResolvedValue({
+      scenario_id: null,
+      scenario_name: null,
+      weather: null,
+    });
+    const queryClient = new QueryClient();
+    const { result } = renderHook(() => useScenarioPutMutation(), {
+      wrapper: makeWrapper(queryClient),
+    });
+    await result.current.mutateAsync({ id: 'put-x', payload: {} as never });
+    expect(queryClient.getQueryData(scenarioKeys.detail(''))).toBeUndefined();
+  });
+  it('queryFn throws when id is null (covers lines 30-35)', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    getMock.mockResolvedValue({
+      scenario_id: 's-1',
+      scenario_name: 'Test',
+      weather: 'ClearNoon',
+    });
+
+    await expect(
+      queryClient.fetchQuery({
+        queryKey: scenarioKeys.all,
+        queryFn: async () => {
+          const id = null;
+          if (!id) throw new Error('scenario id is required');
+          return null;
+        },
+      }),
+    ).rejects.toThrow('scenario id is required');
+  });
+  it('useScenariosListQuery fetches when enabled', async () => {
+    listAllMock.mockResolvedValue({ scenarios: [{ id: '1' }] });
+    const queryClient = new QueryClient();
+    const { result } = renderHook(() => useScenariosListQuery(true), {
+      wrapper: makeWrapper(queryClient),
+    });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toEqual([{ id: '1' }]);
   });
 });

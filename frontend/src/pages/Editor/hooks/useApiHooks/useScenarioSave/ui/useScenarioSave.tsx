@@ -23,7 +23,7 @@ export function useScenarioSave() {
     const s = useEditorStore.getState();
     const settings = scenarioSettingsRef.current;
     if (!settings.scenario_id) settings.scenario_id = Date.now().toString();
-
+    const file = localStorage.getItem('cached_xodr') ?? null;
     const scenario = {
       id: '',
       scenario_id: s.Scenario?.id || null,
@@ -32,6 +32,7 @@ export function useScenarioSave() {
       name_of_scenario: s.Scenario?.name || 'null',
       description: s.Scenario?.description || '',
       preview: canvas?.toDataURL('image/png') ?? null,
+      file_: file,
       scenario: [
         {
           vehicle: 'car' as const,

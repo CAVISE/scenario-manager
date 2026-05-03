@@ -32,13 +32,10 @@ export function useOdrLoader({
         s.buildings.forEach((b) => s.removeBuilding(b.id));
 
         setTimeout(() => localStorage.removeItem('editor-scenario-cache'), 100);
-
-        try {
-          Module.FS_unlink(MAP_PATH);
-        } catch (err) {
-          console.warn('FS_unlink skipped:', err);
-        }
       }
+      try {
+        Module.FS_unlink('/data.xodr');
+      } catch {}
 
       try {
         Module.FS_createDataFile('.', 'data.xodr', fileText, true, true);
@@ -131,30 +128,41 @@ export function useOdrLoader({
       s.buildings.forEach((b) => s.removeBuilding(b.id));
       setTimeout(() => localStorage.removeItem('editor-scenario-cache'), 100);
 
-      try {
-        Module.FS_unlink(MAP_PATH);
-      } catch (err) {
-        console.error(err);
-        setStep('done');
-        setError?.(
-          err instanceof Error ? err : new Error('Failed to process map file'),
-        );
-        return;
-      }
     }
+    try {
+      Module.FS_unlink('/data.xodr');
+    } catch {}
 
     try {
       Module.FS_createDataFile('.', 'data.xodr', fileText, true, true);
+    } catch (err) {
+      console.error('FS_createDataFile failed:', err);
+      setStep('done');
+      setError?.(
+        err instanceof Error ? err : new Error('FS_createDataFile failed'),
+      );
+      return;
+    }
+
+    try {
       mapRef.current?.delete();
       mapRef.current = new Module.OpenDriveMap(MAP_PATH, ODR_MAP_OPTIONS);
+    } catch (err) {
+      console.error('OpenDriveMap failed:', err);
+      setStep('done');
+      setError?.(
+        err instanceof Error ? err : new Error('OpenDriveMap parse failed'),
+      );
+      return;
+    }
+
+    try {
       setStep('scene');
       loadOdrMapRef.current(clearMap);
     } catch (err) {
-      console.error(err);
+      console.error('loadOdrMapRef failed:', err);
       setStep('done');
-      setError?.(
-        err instanceof Error ? err : new Error('Failed to process map file'),
-      );
+      setError?.(err instanceof Error ? err : new Error('loadOdrMap failed'));
     }
   }
 

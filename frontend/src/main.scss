@@ -11,3 +11,61 @@ body,
   height: 100%;
   overflow: hidden;
 }
+.app-loader {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  background: #0b0f17;
+  color: #e6e6e6;
+  font-family: Inter, system-ui, sans-serif;
+  z-index: 9999;
+}
+
+.app-loader__logo {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-bottom: 24px;
+  opacity: 0.9;
+}
+
+.app-loader__bar {
+  width: 180px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.app-loader__progress {
+  height: 100%;
+  width: 40%;
+  background: linear-gradient(90deg, #4f7cff, #7c4dff);
+  animation: loader-move 1.2s infinite ease-in-out;
+}
+
+.app-loader__text {
+  margin-top: 16px;
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+@keyframes loader-move {
+  0% {
+    transform: translateX(-120%);
+  }
+  50% {
+    transform: translateX(60%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
+.app-loader--hide {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}

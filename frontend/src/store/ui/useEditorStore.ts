@@ -53,11 +53,17 @@ const persistOptions: PersistOptions<EditorState, EditorPersist> = {
   }),
   merge: (persisted, current) => {
     const p = persisted as Partial<EditorPersist> | undefined;
-    if (!p) return current;
+
     return {
       ...current,
       ...p,
-      simConfig: mergeSimConfigWithDefaults(p.simConfig),
+      Scenario: {
+        ...current.Scenario,
+        ...p?.Scenario,
+        file_:
+          p?.Scenario?.file_ ?? localStorage.getItem('cached_xodr') ?? null,
+      },
+      simConfig: mergeSimConfigWithDefaults(p?.simConfig),
     };
   },
 };
@@ -81,6 +87,7 @@ const storeCreator: StateCreator<EditorState> = (set) => ({
     name: 'Default Scenario',
     weather: 'ClearNoon',
     description: '',
+    file_: localStorage.getItem('cached_xodr'),
   },
 
   removeSelectedId: () => set({ selectedId: null, selectedObject: null }),

@@ -23,7 +23,7 @@ export default function ScenarioControlWidget() {
   const scenario = useEditorStore((s) => s.Scenario);
   const updateScenario = useEditorStore((s) => s.updateScenario);
   const { sceneRef, loadRSURef } = useEditorRefs();
-  const { buildingModelRef, updateSceneGraph } = useHooks();
+  const { buildingModelRef, updateSceneGraph, loadFile } = useHooks();
   const [scenarioIdInput, setScenarioIdInput] = useState(scenario.id ?? '');
   const [notice, setNotice] = useState<string>('');
   const setNoticeWithToast = useNoticeWithToast(setNotice);
@@ -77,6 +77,7 @@ export default function ScenarioControlWidget() {
               loadRSURef,
               buildingModelRef,
               updateSceneGraph,
+              loadFile,
             })
           }
         >
@@ -86,7 +87,9 @@ export default function ScenarioControlWidget() {
           type="button"
           className="rp-btn rp-btn-primary"
           disabled={isBusy}
-          onClick={() => handleCreate(setNoticeWithToast, createScenarioMutation)}
+          onClick={() =>
+            handleCreate(setNoticeWithToast, createScenarioMutation)
+          }
         >
           POST
         </button>

@@ -85,6 +85,7 @@ export interface ScenarioPayload {
   preview?: string | null;
   scenario: ScenarioGroup[];
   map?: string;
+  file_: string | null;
 }
 
 export interface ScenarioListItem {

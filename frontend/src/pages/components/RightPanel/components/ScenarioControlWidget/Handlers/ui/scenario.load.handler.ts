@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 import { useEditorStore } from '../../../../../../../store';
 import { ScenarioPayload } from '../../../../../../../api/types/IScenarioTypes';
 import {
@@ -22,6 +21,7 @@ export function buildScenarioPayload(): ScenarioPayload {
     id: s.Scenario?.id || null,
     name_of_scenario: s.Scenario?.name || null,
     preview: canvas?.toDataURL('image/png') ?? null,
+    file_: localStorage.getItem('cached_xodr') ?? null,
     scenario: [
       {
         vehicle: 'car',
@@ -92,14 +92,4 @@ export function buildScenarioPayload(): ScenarioPayload {
       },
     ],
   };
-}
-
-export interface LoadScenarioOptions {
-  hasId: boolean;
-  scenarioIdInput: string;
-  sceneRef: React.RefObject<THREE.Scene | undefined>;
-  setNotice: (value: string) => void;
-  loadRSURef: React.RefObject<() => void>;
-  updateSceneGraph: () => void;
-  buildingModelRef: React.RefObject<THREE.Object3D | null>;
 }

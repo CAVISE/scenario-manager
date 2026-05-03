@@ -25,8 +25,8 @@ async def get_reports(_id: str, request: Request):
     connection = sqlite3.connect(config.SQLDB_NAME)
     cursor = connection.cursor()
 
-    query = f"SELECT * FROM reports WHERE scenario_id = '{_id}'"
-    resp = cursor.execute(query)
+    query = "SELECT * FROM reports WHERE scenario_id = ?"
+    resp = cursor.execute(query, (_id,))
     result = resp.fetchall()
 
     return result

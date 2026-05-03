@@ -17,7 +17,12 @@ export const css = `
     overflow: hidden;
     font-family: "Courier New", Courier, monospace;
   }
-
+  .sm-loader-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
   .sm-loader-grid {
     position: absolute;
     inset: 0;
