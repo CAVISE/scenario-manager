@@ -4,6 +4,13 @@ on:
   pull_request:
 
 jobs:
+  semgrep:
+    uses: CAVISE/pipelines/.github/workflows/semgrep.yml@ci/scenario-manager-workflows
+    with:
+      config: auto
+      target: .
+      fail-on-findings: false
+
   frontend-quality:
     uses: CAVISE/pipelines/.github/workflows/node-yarn-quality.yml@ci/scenario-manager-workflows
     with:
