@@ -2,3 +2,7 @@ pytest
 pytest-cov
 fastapi
 httpx
+omegaconf
+psycopg2-binary
+python-dotenv
+celery
