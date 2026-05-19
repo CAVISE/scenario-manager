@@ -1,4 +1,4 @@
-name: Frontend Checks
+name: Scenario Manager Checks
 
 on:
   pull_request:
