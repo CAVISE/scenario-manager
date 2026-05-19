@@ -1,0 +1,20 @@
+name: Frontend Checks
+
+on:
+  pull_request:
+
+jobs:
+  frontend-quality:
+    uses: CAVISE/pipelines/.github/workflows/node-yarn-quality.yml@ci/scenario-manager-workflows
+    with:
+      node-version: "22"
+      working-directory: frontend
+      cache-dependency-path: frontend/yarn.lock
+      run-eslint: true
+      eslint-target: .
+      eslint-extensions: ts,tsx
+      run-stylelint: true
+      stylelint-pattern: src/**/*.{css,scss,sass}
+      run-type-check: true
+      tsconfig: tsconfig.json
+      run-build: true
