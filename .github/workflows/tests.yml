@@ -6,7 +6,7 @@ on:
 
 jobs:
   frontend:
-    uses: CAVISE/pipelines/.github/workflows/node-yarn-vitest.yml@ci/scenario-manager-workflows
+    uses: CAVISE/pipelines/.github/workflows/node-yarn-vitest.yml@main
     with:
       node-version: "22"
       working-directory: frontend
@@ -14,7 +14,7 @@ jobs:
       coverage: true
 
   backend:
-    uses: CAVISE/pipelines/.github/workflows/python-pytest.yml@ci/scenario-manager-workflows
+    uses: CAVISE/pipelines/.github/workflows/python-pytest.yml@main
     with:
       python-versions: '["3.12"]'
       cache-dependency-path: requirements-dev.txt
