@@ -1,0 +1,27 @@
+name: Scenario Manager Checks
+
+on:
+  pull_request:
+
+jobs:
+  semgrep:
+    uses: CAVISE/pipelines/.github/workflows/semgrep.yml@main
+    with:
+      config: auto
+      target: .
+      fail-on-findings: false
+
+  frontend-quality:
+    uses: CAVISE/pipelines/.github/workflows/node-yarn-quality.yml@main
+    with:
+      node-version: "22"
+      working-directory: frontend
+      cache-dependency-path: frontend/yarn.lock
+      run-eslint: true
+      eslint-target: .
+      eslint-extensions: ts,tsx
+      run-stylelint: true
+      stylelint-pattern: src/**/*.{css,scss,sass}
+      run-type-check: true
+      tsconfig: tsconfig.json
+      run-build: true
