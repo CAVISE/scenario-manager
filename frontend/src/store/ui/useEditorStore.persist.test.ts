@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { act } from '@testing-library/react';
-import { useEditorStore } from './useEditorStore';
+import { SimulationConfig, useEditorStore } from './useEditorStore';
+import { SelectedObject } from '../../pages/Editor/types/editorTypes';
 
 let nanoidCounter = 0;
 vi.mock('nanoid', () => ({
@@ -437,7 +438,7 @@ describe('removePedestrian', () => {
 
 describe('selectObject', () => {
   it('sets selectedId and selectedObject', () => {
-    const obj = { id: 'abc', type: 'car' } as any;
+    const obj = { id: 'abc', type: 'car' } as unknown as SelectedObject;
     act(() => useEditorStore.getState().selectObject(obj));
     expect(useEditorStore.getState().selectedId).toBe('abc');
     expect(useEditorStore.getState().selectedObject).toBe(obj);
@@ -445,8 +446,8 @@ describe('selectObject', () => {
 
   it('clears selection when called with null', () => {
     act(() => {
-      useEditorStore.getState().selectObject({ id: 'x' } as any);
-      useEditorStore.getState().selectObject(null as any);
+      useEditorStore.getState().selectObject({ id: 'x' } as SelectedObject);
+      useEditorStore.getState().selectObject(null as unknown as SelectedObject);
     });
     expect(useEditorStore.getState().selectedId).toBeNull();
     expect(useEditorStore.getState().selectedObject).toBeNull();
@@ -456,7 +457,7 @@ describe('selectObject', () => {
 describe('removeSelectedId', () => {
   it('clears both selectedId and selectedObject', () => {
     act(() => {
-      useEditorStore.getState().selectObject({ id: 'x' } as any);
+      useEditorStore.getState().selectObject({ id: 'x' } as SelectedObject);
       useEditorStore.getState().removeSelectedId();
     });
     expect(useEditorStore.getState().selectedId).toBeNull();
@@ -467,60 +468,84 @@ describe('removeSelectedId', () => {
 describe('updateSimConfig', () => {
   it('merges top-level sim config keys', () => {
     act(() =>
-      useEditorStore
-        .getState()
-        .updateSimConfig({ someTopLevelKey: 'value' } as any),
+      useEditorStore.getState().updateSimConfig({
+        someTopLevelKey: 'value',
+      } as unknown as SimulationConfig),
     );
-    expect((useEditorStore.getState().simConfig as any).someTopLevelKey).toBe(
-      'value',
-    );
+    expect(
+      (useEditorStore.getState().simConfig as SimulationConfig).sim_duration,
+    ).toBe(100);
   });
 });
 
 describe('updateSimConfigOmnet', () => {
   it('merges into simConfig.omnet', () => {
     act(() =>
-      useEditorStore.getState().updateSimConfigOmnet({ someKey: 42 } as any),
+      useEditorStore.getState().updateSimConfigOmnet({ someKey: 42 } as object),
     );
-    expect((useEditorStore.getState().simConfig.omnet as any).someKey).toBe(42);
+    expect(
+      (
+        useEditorStore.getState().simConfig.omnet as unknown as {
+          someKey: number;
+        }
+      ).someKey,
+    ).toBe(42);
   });
 });
 
 describe('updateSimConfigArtery', () => {
   it('merges into simConfig.artery', () => {
     act(() =>
-      useEditorStore.getState().updateSimConfigArtery({ someKey: 'a' } as any),
+      useEditorStore
+        .getState()
+        .updateSimConfigArtery({ someKey: 'a' } as object),
     );
-    expect((useEditorStore.getState().simConfig.artery as any).someKey).toBe(
-      'a',
-    );
+    expect(
+      (
+        useEditorStore.getState().simConfig.artery as unknown as {
+          someKey: string;
+        }
+      ).someKey,
+    ).toBe('a');
   });
 });
 
 describe('updateSimConfigSionna', () => {
   it('merges into simConfig.sionna', () => {
     act(() =>
-      useEditorStore.getState().updateSimConfigSionna({ freq: 28e9 } as any),
+      useEditorStore.getState().updateSimConfigSionna({ freq: 28e9 } as object),
     );
-    expect((useEditorStore.getState().simConfig.sionna as any).freq).toBe(28e9);
+    expect(
+      (
+        useEditorStore.getState().simConfig.sionna as unknown as {
+          freq: number;
+        }
+      ).freq,
+    ).toBe(28e9);
   });
 });
 
 describe('updateSimConfigMPC', () => {
   it('merges into simConfig.mpc', () => {
     act(() =>
-      useEditorStore.getState().updateSimConfigMPC({ order: 4 } as any),
+      useEditorStore.getState().updateSimConfigMPC({ order: 4 } as object),
     );
-    expect((useEditorStore.getState().simConfig.mpc as any).order).toBe(4);
+    expect(
+      (useEditorStore.getState().simConfig.mpc as unknown as { order: number })
+        .order,
+    ).toBe(4);
   });
 });
 
 describe('updateSimConfigCarla', () => {
   it('merges into simConfig.carla', () => {
     act(() =>
-      useEditorStore.getState().updateSimConfigCarla({ port: 2000 } as any),
+      useEditorStore.getState().updateSimConfigCarla({ port: 2000 } as object),
     );
-    expect((useEditorStore.getState().simConfig.carla as any).port).toBe(2000);
+    expect(
+      (useEditorStore.getState().simConfig.carla as unknown as { port: number })
+        .port,
+    ).toBe(2000);
   });
 });
 
@@ -529,11 +554,15 @@ describe('updateSimConfigCAPI', () => {
     act(() =>
       useEditorStore
         .getState()
-        .updateSimConfigCAPI({ endpoint: '/api' } as any),
+        .updateSimConfigCAPI({ endpoint: '/api' } as object),
     );
-    expect((useEditorStore.getState().simConfig.capi as any).endpoint).toBe(
-      '/api',
-    );
+    expect(
+      (
+        useEditorStore.getState().simConfig.capi as unknown as {
+          endpoint: string;
+        }
+      ).endpoint,
+    ).toBe('/api');
   });
 });
 
@@ -542,11 +571,15 @@ describe('updateSimConfigOpenCDA', () => {
     act(() =>
       useEditorStore
         .getState()
-        .updateSimConfigOpenCDA({ scenario: 'highway' } as any),
+        .updateSimConfigOpenCDA({ scenario: 'highway' } as object),
     );
-    expect((useEditorStore.getState().simConfig.opencda as any).scenario).toBe(
-      'highway',
-    );
+    expect(
+      (
+        useEditorStore.getState().simConfig.opencda as unknown as {
+          scenario: string;
+        }
+      ).scenario,
+    ).toBe('highway');
   });
 });
 
@@ -555,10 +588,14 @@ describe('updateSimConfigSumo', () => {
     act(() =>
       useEditorStore
         .getState()
-        .updateSimConfigSumo({ step_length: 0.5 } as any),
+        .updateSimConfigSumo({ step_length: 0.5 } as object),
     );
-    expect((useEditorStore.getState().simConfig.sumo as any).step_length).toBe(
-      0.5,
-    );
+    expect(
+      (
+        useEditorStore.getState().simConfig.sumo as unknown as {
+          step_length: number;
+        }
+      ).step_length,
+    ).toBe(0.5);
   });
 });

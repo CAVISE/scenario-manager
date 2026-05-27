@@ -12,6 +12,7 @@ export const CARLA_MAPS = [
   'Town06',
   'Town07',
   'Town10HD',
+  'TownBig',
 ];
 export const WEATHER_PRESETS = [
   'ClearNoon',

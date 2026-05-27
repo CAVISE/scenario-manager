@@ -290,10 +290,26 @@ class BehaviorAgent(object):
                     self.start_waypoint.transform.location, cur_loc, cur_yaw)
 
         end_waypoint = self._map.get_waypoint(end_location)
+        # If end_waypoint landed on the opposite lane, flip to the correct side
+        if self.start_waypoint.lane_id * end_waypoint.lane_id < 0:
+            left = end_waypoint.get_left_lane()
+            if left and left.lane_type == carla.LaneType.Driving and \
+               left.lane_id * self.start_waypoint.lane_id > 0:
+                end_waypoint = left
         if end_reset:
             self.end_waypoint = end_waypoint
 
+        print(f"[set_destination] start_wp=({self.start_waypoint.transform.location.x:.2f},"
+              f"{self.start_waypoint.transform.location.y:.2f})"
+              f" road={self.start_waypoint.road_id} lane={self.start_waypoint.lane_id}")
+        print(f"[set_destination] end_wp=({end_waypoint.transform.location.x:.2f},"
+              f"{end_waypoint.transform.location.y:.2f})"
+              f" road={end_waypoint.road_id} lane={end_waypoint.lane_id}")
+
         route_trace = self._trace_route(self.start_waypoint, end_waypoint)
+
+        print(f"[set_destination] route_trace length={len(route_trace)}, "
+              f"initial_global_route={'already set' if self.initial_global_route is not None else 'None'}")
 
         # TODO: why is the last waypoint not showing in the trace_route return results
         if self.initial_global_route is None:
@@ -353,11 +369,20 @@ class BehaviorAgent(object):
             grp.setup()
             self._global_planner = grp
 
-        # Obtain route plan
-        route = self._global_planner.trace_route(
-            start_waypoint.transform.location,
-            end_waypoint.transform.location)
+        start_loc = start_waypoint.transform.location
+        end_loc = end_waypoint.transform.location
+        print(f"[_trace_route] start=({start_loc.x:.2f},{start_loc.y:.2f},{start_loc.z:.2f})"
+              f" road_id={start_waypoint.road_id} lane_id={start_waypoint.lane_id}")
+        print(f"[_trace_route] end=({end_loc.x:.2f},{end_loc.y:.2f},{end_loc.z:.2f})"
+              f" road_id={end_waypoint.road_id} lane_id={end_waypoint.lane_id}")
 
+        try:
+            route = self._global_planner.trace_route(start_loc, end_loc)
+        except Exception as e:
+            print(f"[_trace_route] ERROR in trace_route: {e}")
+            return []
+
+        print(f"[_trace_route] route length={len(route)}")
         return route
 
     def traffic_light_manager(self, waypoint):
@@ -779,6 +804,10 @@ class BehaviorAgent(object):
         waipoint_buffer = self.get_local_planner().get_waypoint_buffer()
         # ttc reset to 1000 at the beginning
         self.ttc = 1000
+        # tick counter for debouncing reroute calls
+        if not hasattr(self, '_tick_count'):
+            self._tick_count = 0
+        self._tick_count += 1
         # when overtake_counter > 0, another overtake/lane change is forbidden
         if self.overtake_counter > 0:
             self.overtake_counter -= 1
@@ -793,29 +822,34 @@ class BehaviorAgent(object):
         # 0. Simulation ends condition
         if self.is_close_to_destination():
             print('Simulation is Over')
-            sys.exit(0)
+            raise StopIteration('destination_reached')
 
-        # 1. Traffic light management
         if self.traffic_light_manager(ego_vehicle_wp) != 0:
             return 0, None
 
-        # 2. when the temporary route is finished, we return to the global route
         if len(self.get_local_planner().get_waypoints_queue()) == 0 \
                 and len(self.get_local_planner().get_waypoint_buffer()) <= 2:
+
+            if self.is_close_to_destination():
+                print('Simulation is Over (route finished)')
+                raise StopIteration('destination_reached')
             if self.debug:
                 print('Destination Reset!')
-            # in case the vehicle is disabled overtaking function
-            # at the beginning
+
             self.overtake_allowed = True and self.overtake_allowed_origin
             self.lane_change_allowed = True
             self.destination_push_flag = 0
-            self.set_destination(
-                ego_vehicle_loc,
-                self.end_waypoint.transform.location,
-                clean=True,
-                clean_history=True)
+            if not hasattr(self, '_last_reroute_tick'):
+                self._last_reroute_tick = -30
+            current_tick = getattr(self, '_tick_count', 0)
+            if current_tick - self._last_reroute_tick >= 30:
+                self._last_reroute_tick = current_tick
+                self.set_destination(
+                    ego_vehicle_loc,
+                    self.end_waypoint.transform.location,
+                    clean=True,
+                    clean_history=True)
 
-        # intersection behavior. if the car is near a intersection, no overtake is allowed
         if is_intersection:
             self.overtake_allowed = False
         else:

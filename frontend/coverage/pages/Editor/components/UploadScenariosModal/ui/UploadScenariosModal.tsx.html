@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>37/37</span>
+                <span class='fraction'>38/38</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>35/35</span>
+                <span class='fraction'>36/36</span>
             </div>
         
             
@@ -448,6 +448,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -460,6 +462,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">27x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -500,11 +503,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -527,8 +526,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">13x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -657,8 +657,6 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
-&nbsp;
-import AspectRatio from '@mui/joy/AspectRatio';
 import CloseIcon from '@mui/icons-material/Close';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import {
@@ -667,6 +665,8 @@ import {
   ScenarioCard,
   uploadModalStyles,
   uploadModalBoxStyles,
+  boxStyles,
+  imgStyles,
 } from '../types/UploadScenariosModalTypes';
 import type { UploadScenariosModalProps } from '../types/UploadScenariosModalTypes';
 import type { ScenarioListItem } from '../../../../../api/types/IScenarioTypes';
@@ -722,7 +722,7 @@ const UploadScenariosModal: React.FC&lt;UploadScenariosModalProps&gt; = ({
     setNotice('');
     onClose();
   };
-  const { buildingModelRef, updateSceneGraph, loadFile } = useHooks();
+  const { buildingModelRef, updateSceneGraph, loadFile, setStep } = useHooks();
   const handleLoadOnScene = useCallback(async () =&gt; {
     if (!selectedScenario?.scenario_id) return;
     setLoadingScene(true);
@@ -737,9 +737,11 @@ const UploadScenariosModal: React.FC&lt;UploadScenariosModalProps&gt; = ({
         buildingModelRef,
         updateSceneGraph,
         loadFile,
+        setStep,
       });
     } finally {
       setLoadingScene(false);
+      onClose();
     }
   }, [
     selectedScenario,
@@ -748,7 +750,8 @@ const UploadScenariosModal: React.FC&lt;UploadScenariosModalProps&gt; = ({
     buildingModelRef,
     updateSceneGraph,
     setNoticeWithToast,
-    loadFile
+    loadFile,
+    setStep,
   ]);
 &nbsp;
   const thumb = selectedScenario
@@ -791,11 +794,7 @@ const UploadScenariosModal: React.FC&lt;UploadScenariosModalProps&gt; = ({
                 severity="error"
                 sx={{ mb: 2 }}
                 action={
-                  &lt;Button
-                    color="inherit"
-                    size="small"
-                    onClick={() =&gt; refetch()}
-                  &gt;
+                  &lt;Button color="inherit" size="small" onClick={() =&gt; refetch()}&gt;
                     Retry
                   &lt;/Button&gt;
                 }
@@ -818,12 +817,15 @@ const UploadScenariosModal: React.FC&lt;UploadScenariosModalProps&gt; = ({
                 ) : null}
                 {scenarios.map((scenario) =&gt; (
                   &lt;Grid item xs={12} sm={6} md={4} key={scenario.scenario_id}&gt;
-                    &lt;ScenarioCard
-                      onClick={() =&gt; handleSelectScenario(scenario)}
-                    &gt;
-                      &lt;AspectRatio
-                        ratio="16/9"
-                        sx={{ minHeight: 140, bgcolor: '#eee' }}
+                    &lt;ScenarioCard onClick={() =&gt; handleSelectScenario(scenario)}&gt;
+                      &lt;Box
+                        sx={{
+                          position: 'relative',
+                          paddingTop: '56.25%',
+                          minHeight: 140,
+                          bgcolor: '#eee',
+                          overflow: 'hidden',
+                        }}
                       &gt;
                         {previewSrc(scenario.preview) ? (
                           &lt;img
@@ -831,27 +833,26 @@ const UploadScenariosModal: React.FC&lt;UploadScenariosModalProps&gt; = ({
                             alt={scenario.name}
                             loading="lazy"
                             style={{
-                              objectFit: 'cover',
+                              ...imgStyles,
+                              position: 'absolute',
+                              inset: 0,
                               width: '100%',
                               height: '100%',
+                              objectFit: 'cover',
                             }}
                           /&gt;
                         ) : (
                           &lt;Box
                             sx={{
-                              width: '100%',
-                              height: '100%',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              color: 'text.secondary',
-                              fontSize: 12,
+                              ...boxStyles,
+                              position: 'absolute',
+                              inset: 0,
                             }}
                           &gt;
                             No preview
                           &lt;/Box&gt;
                         )}
-                      &lt;/AspectRatio&gt;
+                      &lt;/Box&gt;
                       &lt;Box sx={{ p: 1.5 }}&gt;
                         &lt;Typography variant="subtitle2" noWrap&gt;
                           {scenario.name}
@@ -935,15 +936,14 @@ const UploadScenariosModal: React.FC&lt;UploadScenariosModalProps&gt; = ({
   );
 };
 &nbsp;
-export default UploadScenariosModal;
-&nbsp;</pre></td></tr></table></pre>
+export default UploadScenariosModal;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
             </div><!-- /wrapper -->
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-03T15:14:27.871Z
+                at 2026-05-25T10:01:26.216Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

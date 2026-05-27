@@ -1,5 +1,6 @@
 import datetime
 import json
+import os
 import sqlite3
 
 from fastapi import APIRouter, BackgroundTasks, Request
@@ -21,9 +22,9 @@ async def set_scenario(data: schemas.ScenarioSchema):
 
 
 @router.get("/run/{_id}")
-async def run_scenario(_id: str, bacground_task: BackgroundTasks, request: Request):
-    carla_host = config.CARLA_HOST
-    carla_port = config.CARLA_PORT
+async def run_scenario(_id: str, background_task: BackgroundTasks, request: Request):
+    CARLA_HOST = os.getenv("CARLA_HOST", "localhost")
+    CARLA_PORT = int(os.getenv("CARLA_PORT", "2000"))
 
     connection = sqlite3.connect(config.SQLDB_NAME)
     cursor = connection.cursor()
@@ -39,8 +40,8 @@ async def run_scenario(_id: str, bacground_task: BackgroundTasks, request: Reque
     data = json.load(open(f"scenarios/{_id}.json"))
     data = schemas.ScenarioSchema.model_validate(data)
 
-    bacground_task.add_task(work.do_scenario, carla_host, carla_port, data, _id, inseted_value.lastrowid)
-    # work.do_scenario.delay(carla_host, carla_port, data, _id, inseted_value.lastrowid)
+    background_task.add_task(work.do_scenario, CARLA_HOST, CARLA_PORT, data, _id, inseted_value.lastrowid)
+    # work.do_scenario.delay(CARLA_HOST, CARLA_PORT, data, _id, inseted_value.lastrowid)
 
 
 @router.get("/all")

@@ -1,10 +1,8 @@
 import ky from 'ky';
-import { PORT } from '../VARS';
-
-const apiBaseUrl = `http://localhost:${PORT}`;
+import { API_URL } from '../VARS';
 
 export const api = ky.create({
-  prefixUrl: apiBaseUrl,
+  prefixUrl: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },

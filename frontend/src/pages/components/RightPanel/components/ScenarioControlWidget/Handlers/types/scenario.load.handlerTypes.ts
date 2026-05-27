@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import type { LOADING_STEPS } from '../../../../../../Editor/types/editorTypes';
+
 export interface LoadScenarioOptions {
   hasId: boolean;
   scenarioIdInput: string;
@@ -8,4 +10,5 @@ export interface LoadScenarioOptions {
   updateSceneGraph: () => void;
   buildingModelRef: React.RefObject<THREE.Object3D | null>;
   loadFile: (fileContent: string, x: boolean) => void;
+  setStep?: (step: keyof typeof LOADING_STEPS) => void;
 }

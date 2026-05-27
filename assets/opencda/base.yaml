@@ -22,12 +22,12 @@ vehicle_base:
     perception:
       activate: false
       camera:
-        visualize: 1
+        visualize: 0
         num: 1
         positions:
           - [2.5, 0, 1.0, 0]
       lidar:
-        visualize: true
+        visualize: false
         channels: 32
         range: 50
         points_per_second: 100000
@@ -56,7 +56,7 @@ vehicle_base:
     pixels_per_meter: 2
     raster_size: [224, 224]
     lane_sample_resolution: 0.1
-    visualize: true
+    visualize: false
     activate: true
 
   safety_manager:
@@ -111,7 +111,40 @@ vehicle_base:
   v2x:
     enabled: true
     communication_range: 35
-
+rsu_base:
+  sensing:
+    perception:
+      activate: false
+      camera:
+        visualize: 0
+        num: 1
+        positions:
+          - [2.5, 0, 1.0, 0]
+      lidar:
+        visualize: false
+        channels: 32
+        range: 50
+        points_per_second: 100000
+        rotation_frequency: 20
+        upper_fov: 10.0
+        lower_fov: -30.0
+        dropoff_general_rate: 0.0
+        dropoff_intensity_limit: 1.0
+        dropoff_zero_intensity: 0.0
+        noise_stddev: 0.0
+    localization:
+      activate: false
+      dt: ${world.fixed_delta_seconds}
+      gnss:
+        noise_alt_stddev: 0.001
+        noise_lat_stddev: 1.0e-6
+        noise_lon_stddev: 1.0e-6
+        heading_direction_stddev: 0.1
+        speed_stddev: 0.2
+      debug_helper:
+        show_animation: false
+        x_scale: 1.0
+        y_scale: 100.0
 carla_traffic_manager:
   sync_mode: true
   global_distance: 5

@@ -6,4 +6,6 @@ export interface StartSimulationPayload {
   weather: string;
   scenario: ScenarioGroup[];
   description: string;
+  map: string;
+  xodr: string | undefined;
 }
