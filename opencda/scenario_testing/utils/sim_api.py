@@ -8,13 +8,16 @@ please use cosim_api.py.
 # License: TDG-Attribution-NonCommercial-NoDistrib
 
 import math
+import os
 import random
 import sys
 import json
 from random import shuffle
 from omegaconf import OmegaConf
 from omegaconf.listconfig import ListConfig
-
+from dotenv import load_dotenv
+from pathlib import Path
+load_dotenv(Path(__file__).resolve().parents[4] / ".env.local")
 import carla
 import numpy as np
 
@@ -181,7 +184,11 @@ class ScenarioManager:
             random.seed(simulation_config['seed'])
 
         self.client = \
-            carla.Client('localhost', simulation_config['client_port'])
+            carla.Client(
+                os.environ.get('CARLA_HOST', 'localhost'),
+                simulation_config['client_port']
+            )
+        print(f"DEBUG: connecting to {os.environ.get('CARLA_HOST', 'localhost')}:{simulation_config['client_port']}")
         self.client.set_timeout(60.0)
 
         if xodr_path:
@@ -189,11 +196,13 @@ class ScenarioManager:
         elif town:
             try:
                 self.world = self.client.load_world(town)
-            except RuntimeError:
+            except RuntimeError as e:
+                print(f"DEBUG load_world error: {e}")
                 print(
                     f"{bcolors.FAIL} %s is not found in your CARLA repo! "
                     f"Please download all town maps to your CARLA "
                     f"repo!{bcolors.ENDC}" % town)
+                self.world = None 
         else:
             self.world = self.client.get_world()
 
@@ -320,9 +329,39 @@ class ScenarioManager:
                                              *cav_config['spawn_special'])
 
             cav_vehicle_bp.set_attribute('color', '0, 0, 255')
-            vehicle = self.world.spawn_actor(cav_vehicle_bp, spawn_transform)
+            # Snap spawn point to the nearest drivable waypoint.
+            # get_waypoint may return a waypoint on the oncoming lane (positive
+            # lane_id in CARLA = wrong direction). We pick the waypoint whose
+            # forward direction best matches the requested yaw.
+            spawn_yaw = spawn_transform.rotation.yaw
+            wp = self.carla_map.get_waypoint(
+                spawn_transform.location,
+                project_to_road=True,
+                lane_type=carla.LaneType.Driving
+            )
+            # If the waypoint yaw differs from spawn yaw by more than 90 deg,
+            # try the opposite lane (get_left_lane keeps same road).
+            import math as _math
+            def _yaw_diff(a, b):
+                d = abs(a - b) % 360
+                return d if d <= 180 else 360 - d
+            if _yaw_diff(wp.transform.rotation.yaw, spawn_yaw) > 90:
+                left = wp.get_left_lane()
+                if left and left.lane_type == carla.LaneType.Driving:
+                    wp = left
+            spawn_transform = wp.transform
+            spawn_transform.location.z += 0.3
 
-            # create vehicle manager for each cav
+            vehicle = self.world.try_spawn_actor(cav_vehicle_bp, spawn_transform)
+            if vehicle is None:
+                for next_wp in wp.next(5.0):
+                    t = next_wp.transform
+                    t.location.z += 0.3
+                    vehicle = self.world.try_spawn_actor(cav_vehicle_bp, t)
+                    if vehicle:
+                        break
+            if vehicle is None:
+                raise RuntimeError(f"Failed to spawn vehicle at {spawn_transform.location}")
             vehicle_manager = VehicleManager(
                 vehicle, cav_config, application,
                 self.carla_map, self.cav_world,
@@ -341,6 +380,16 @@ class ScenarioManager:
                 vehicle_manager.vehicle.get_location(),
                 destination,
                 clean=True)
+
+            buf_len = len(vehicle_manager.agent.get_local_planner().get_waypoint_buffer())
+            if buf_len == 0:
+                print(f"WARNING: waypoint buffer empty after set_destination for CAV "
+                      f"{cav_config.get('name', i)}. "
+                      f"Destination {destination} may be unreachable. "
+                      f"Check coordinate conversion in utils.py.")
+            else:
+                print(f"DEBUG: CAV {cav_config.get('name', i)} route OK, "
+                      f"buffer has {buf_len} waypoints.")
 
             single_cav_list.append(vehicle_manager)
 
@@ -734,9 +783,10 @@ class ScenarioManager:
 
     def tick(self):
         """
-        Tick the server.
+        Tick the server and advance the CAV world clock.
         """
         self.world.tick()
+        self.cav_world.tick()
 
     def destroyActors(self):
         """

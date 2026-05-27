@@ -1,6 +1,5 @@
 import { styled } from '@mui/system';
-import { Box } from '@mui/material';
-import Card from '@mui/joy/Card';
+import { Box, Card } from '@mui/material';
 
 export interface MockScenario {
   id: string;
@@ -8,7 +7,20 @@ export interface MockScenario {
   description: string;
   thumbnail: string;
 }
-
+export const boxStyles = {
+  width: '100%',
+  height: '100%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  color: 'text.secondary',
+  fontSize: 12,
+} as const;
+export const imgStyles = {
+  objectFit: 'cover',
+  width: '100%',
+  height: '100%',
+} as const;
 export const MOCK_SCENARIOS: MockScenario[] = [
   {
     id: 'SCN-001',

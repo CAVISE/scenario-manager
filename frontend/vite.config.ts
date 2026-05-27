@@ -24,9 +24,7 @@ export default defineConfig({
           router: ['react-router-dom'],
           mui: [
             '@mui/material',
-            '@mui/joy',
             '@mui/system',
-            '@mui/base',
             '@emotion/react',
             '@emotion/styled',
             '@emotion/cache',

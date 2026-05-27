@@ -7,7 +7,7 @@ import {
   Grid,
   Divider,
   Typography,
-} from '@mui/joy';
+} from '@mui/material';
 import { useEditorStore } from '../../../../../../store';
 import { numInputSlot } from '../../../types/PanelTypes';
 import { IPedestrianProps } from '../types/PedestrianPropertiesTypes';
@@ -25,7 +25,7 @@ export default function PedestrianProperties({
 
   return (
     <Stack spacing={2}>
-      <Typography level="title-sm">Pedestrian</Typography>
+      <Typography variant="subtitle1">Pedestrian</Typography>
 
       <FormLabel>Position</FormLabel>
       <Grid container spacing={1}>
@@ -34,7 +34,7 @@ export default function PedestrianProperties({
             <FormControl>
               <FormLabel sx={formLabelStyles}>{axis.toUpperCase()}</FormLabel>
               <Input
-                size="sm"
+                size="small"
                 type="number"
                 slotProps={numInputSlot}
                 value={pedestrian[axis].toFixed(3)}
@@ -50,14 +50,14 @@ export default function PedestrianProperties({
       </Grid>
 
       <Divider />
-      <Typography level="title-sm" sx={typographyStyles}>
+      <Typography variant="subtitle2" sx={typographyStyles}>
         Behavior
       </Typography>
 
       <FormControl>
         <FormLabel>Speed (m/s)</FormLabel>
         <Input
-          size="sm"
+          size="small"
           type="number"
           slotProps={numInputSlot}
           value={pedestrian.speed}
@@ -72,7 +72,7 @@ export default function PedestrianProperties({
       <FormControl>
         <FormLabel>Cross factor (0–1)</FormLabel>
         <Input
-          size="sm"
+          size="small"
           type="number"
           slotProps={numInputSlot}
           value={pedestrian.cross_factor}
@@ -106,7 +106,7 @@ export default function PedestrianProperties({
       </FormControl>
 
       <Divider />
-      <Typography level="title-sm" sx={typographyStyles}>
+      <Typography variant="subtitle2" sx={typographyStyles}>
         V2X
       </Typography>
 
@@ -115,7 +115,7 @@ export default function PedestrianProperties({
           <FormControl>
             <FormLabel>TX Power (mW)</FormLabel>
             <Input
-              size="sm"
+              size="small"
               type="number"
               slotProps={numInputSlot}
               value={pedestrian.tx_power}
@@ -131,7 +131,7 @@ export default function PedestrianProperties({
           <FormControl>
             <FormLabel>Beacon interval (ms)</FormLabel>
             <Input
-              size="sm"
+              size="small"
               type="number"
               slotProps={numInputSlot}
               value={pedestrian.beacon_interval}
@@ -148,7 +148,7 @@ export default function PedestrianProperties({
       <FormControl>
         <FormLabel>Frequency (Hz)</FormLabel>
         <Input
-          size="sm"
+          size="small"
           type="number"
           slotProps={numInputSlot}
           value={pedestrian.frequency}
