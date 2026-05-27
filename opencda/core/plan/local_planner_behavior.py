@@ -251,6 +251,12 @@ class LocalPlanner(object):
         current_wpt = self._map.get_waypoint(current_location).next(1)[0]
         current_wpt_loc = current_wpt.transform.location
 
+        # Guard: buffer may be empty on the very first tick or after
+        # a failed route trace (e.g. unreachable destination).
+        # Return empty path so run_step gets rx=[] and exits cleanly.
+        if not self._waypoint_buffer:
+            return [], [], [], []
+
         # retrieve the future and past waypoint to check whether a lane change
         # is gonna operated
         future_wpt = self._waypoint_buffer[-1][0]

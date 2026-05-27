@@ -1,5 +1,12 @@
-import { Button } from '@mui/material';
-import { Stack, FormControl, FormLabel, Input, Slider, Grid } from '@mui/joy';
+import {
+  Stack,
+  FormControl,
+  FormLabel,
+  OutlinedInput,
+  Slider,
+  Grid,
+  Button,
+} from '@mui/material';
 import { useEditorStore } from '../../../../../../store';
 import { numInputSlot } from '../../../types/PanelTypes';
 import { ILidarProps } from '../types/LidarPropertiesTypes';
@@ -17,8 +24,8 @@ export default function LidarProperties({ lidar, onDelete }: ILidarProps) {
               <FormLabel sx={{ fontSize: 'xs', mb: 0.5 }}>
                 {axis.toUpperCase()}
               </FormLabel>
-              <Input
-                size="sm"
+              <OutlinedInput
+                size="small"
                 type="number"
                 slotProps={numInputSlot}
                 value={lidar[axis].toFixed(2)}

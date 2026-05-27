@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import { useNoticeWithToast } from './useNoticeWithToast';
 import { useAppToast } from './AppToastProvider';
 
@@ -18,7 +18,7 @@ describe('useNoticeWithToast', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useAppToast as any).mockReturnValue(mockToast);
+    (useAppToast as Mock).mockReturnValue(mockToast);
   });
 
   it('should call toast.error if message contains "error" or "failed"', () => {

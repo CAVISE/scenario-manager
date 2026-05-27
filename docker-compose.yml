@@ -1,18 +1,24 @@
-version: "3.8"
-
 services:
-
   backend:
     build:
       context: .
       dockerfile: Dockerfile.backend
     ports:
       - "8000:8000"
+    volumes:
+      - static_maps:/app/static/maps
+      - eval_outputs:/app/evaluation_outputs
     networks:
       - cavise
     restart: unless-stopped
     command: >
       sh -c "python main.py --host 0.0.0.0 --port 8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
 
   frontend-prod:
     profiles: [prod]
@@ -22,11 +28,18 @@ services:
       target: production
     ports:
       - "80:80"
+    volumes:
+      - static_maps:/usr/share/nginx/html/maps:ro
     networks:
       - cavise
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: unless-stopped
+
+volumes:
+  static_maps:
+  eval_outputs:
 
 networks:
   cavise:

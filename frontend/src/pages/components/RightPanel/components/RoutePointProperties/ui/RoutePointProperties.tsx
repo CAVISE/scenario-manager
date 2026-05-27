@@ -6,7 +6,7 @@ import {
   Input,
   Grid,
   Typography,
-} from '@mui/joy';
+} from '@mui/material';
 import { useEditorStore } from '../../../../../../store';
 import { RoutePointPropertiesProps } from '../types/RoutePointPropertiesTypes';
 
@@ -18,7 +18,7 @@ export default function RoutePointProperties({
 
   return (
     <Stack spacing={2}>
-      <Typography level="title-sm">Route point</Typography>
+      <Typography variant="subtitle1">Route point</Typography>
 
       <FormLabel>Position</FormLabel>
       <Grid container spacing={1}>
@@ -29,7 +29,7 @@ export default function RoutePointProperties({
                 {axis.toUpperCase()}
               </FormLabel>
               <Input
-                size="sm"
+                size="small"
                 type="number"
                 slotProps={{
                   input: {

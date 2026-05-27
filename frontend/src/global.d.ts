@@ -5,6 +5,7 @@ declare global {
     editorModals: {
       openTelemetry: () => void;
       openSimulation: () => void;
+      openMapPicker: () => void;
     };
   }
 }

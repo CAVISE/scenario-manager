@@ -10,38 +10,38 @@ export function useLoadingState() {
     LOADING_STEPS.init.pct,
   );
 
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  const setStep = useCallback((step: keyof typeof LOADING_STEPS) => {
-    if (isDoneRef.current) return;
+  const clearTimers = useCallback(() => {
+    timersRef.current.forEach(clearTimeout);
+    timersRef.current = [];
+  }, []);
 
-    const delay = step === 'done' ? 1000 : 0;
+  const setStep = useCallback(
+    (step: keyof typeof LOADING_STEPS) => {
+      clearTimers();
 
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-    }
-
-    timerRef.current = setTimeout(() => {
       if (step === 'done') {
-        timerRef.current = setTimeout(() => {
+        setLoadingProgress(LOADING_STEPS.done.pct);
+        const t = setTimeout(() => {
+          setLoadingText(null);
           isDoneRef.current = true;
-          setLoadingProgress(100);
-          setTimeout(() => {
-            setLoadingText(null);
-          }, 400);
-        }, 300);
+        }, 450);
+        timersRef.current.push(t);
         return;
       }
-    }, delay);
-  }, []);
+
+      isDoneRef.current = false;
+      const cfg = LOADING_STEPS[step];
+      setLoadingText(cfg.text);
+      setLoadingProgress(cfg.pct);
+    },
+    [clearTimers],
+  );
 
   useEffect(() => {
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-    };
-  }, []);
+    return () => clearTimers();
+  }, [clearTimers]);
 
   return { loadingText, loadingProgress, setStep };
 }

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { useEditorStore } from './useEditorStore';
+import { SimulationConfig, useEditorStore } from './useEditorStore';
+import { SelectedObject } from '../../pages/Editor/types/editorTypes';
 
 describe('useEditorStore', () => {
   beforeEach(() => {
@@ -92,7 +93,7 @@ describe('useEditorStore', () => {
   it('setBuildingMode(true) enables building mode and clears selectedId', () => {
     const store = useEditorStore.getState();
     const carId = store.addCar(0, 0, 0, 'model', 'red');
-    store.selectObject({ id: carId } as any);
+    store.selectObject({ id: carId } as unknown as SelectedObject);
     expect(useEditorStore.getState().selectedId).toBe(carId);
 
     useEditorStore.getState().setBuildingMode(true);
@@ -125,35 +126,41 @@ describe('useEditorStore', () => {
   });
 
   it('updateSimConfigOmnet merges omnet fields and preserves others', () => {
-    useEditorStore.getState().updateSimConfigOmnet({ port: 9999 } as any);
+    useEditorStore.getState().updateSimConfigOmnet({ port: 9999 } as object);
     const { simConfig } = useEditorStore.getState();
 
-    expect((simConfig.omnet as any).port).toBe(9999);
+    expect((simConfig.omnet as unknown as { port: number }).port).toBe(9999);
     expect(simConfig.carla).toBeDefined();
     expect(simConfig.sumo).toBeDefined();
   });
 
   it('updateSimConfigArtery merges artery fields and preserves others', () => {
-    useEditorStore.getState().updateSimConfigArtery({ port: 1234 } as any);
+    useEditorStore.getState().updateSimConfigArtery({ port: 1234 } as object);
     const { simConfig } = useEditorStore.getState();
 
-    expect((simConfig.artery as any).port).toBe(1234);
+    expect((simConfig.artery as unknown as { port: number }).port).toBe(1234);
     expect(simConfig.omnet).toBeDefined();
   });
 
   it('updateSimConfigSionna merges sionna fields and preserves others', () => {
-    useEditorStore.getState().updateSimConfigSionna({ resolution: 64 } as any);
+    useEditorStore
+      .getState()
+      .updateSimConfigSionna({ resolution: 64 } as object);
     const { simConfig } = useEditorStore.getState();
 
-    expect((simConfig.sionna as any).resolution).toBe(64);
+    expect(
+      (simConfig.sionna as unknown as { resolution: number }).resolution,
+    ).toBe(64);
     expect(simConfig.carla).toBeDefined();
   });
 
   it('updateSimConfigMPC merges mpc fields and preserves others', () => {
-    useEditorStore.getState().updateSimConfigMPC({ enabled: true } as any);
+    useEditorStore.getState().updateSimConfigMPC({ enabled: true } as object);
     const { simConfig } = useEditorStore.getState();
 
-    expect((simConfig.mpc as any).enabled).toBe(true);
+    expect((simConfig.mpc as unknown as { enabled: boolean }).enabled).toBe(
+      true,
+    );
     expect(simConfig.sumo).toBeDefined();
   });
 
@@ -215,8 +222,12 @@ describe('useEditorStore', () => {
   });
 
   it('updateSimConfig merges top-level sim config fields', () => {
-    useEditorStore.getState().updateSimConfig({ duration: 300 } as any);
-    expect((useEditorStore.getState().simConfig as any).duration).toBe(300);
+    useEditorStore
+      .getState()
+      .updateSimConfig({ sim_duration: 300 } as unknown as SimulationConfig);
+    expect(
+      (useEditorStore.getState().simConfig as SimulationConfig).sim_duration,
+    ).toBe(300);
     expect(useEditorStore.getState().simConfig.carla).toBeDefined();
   });
 

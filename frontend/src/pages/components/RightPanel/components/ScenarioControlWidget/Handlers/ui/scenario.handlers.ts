@@ -19,10 +19,12 @@ import { useStartSimulationMutation } from '../../../../../../Editor/hooks/useAp
 import {
   Building,
   RSU,
+  Scenario,
 } from '../../../../../../../store/types/useEditorStoreTypes';
 import { StartSimulationPayload } from '../../../../../../Editor/hooks/useApiHooks/useSimulationMutation/types/useSimulationMutationTypes';
 import { getApiErrorMessage } from '../../../../../../../api/errors';
 import { LoadScenarioOptions } from '../types/scenario.load.handlerTypes';
+import { fetchXodrText } from '../../../../../../Editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
 
 export const handleLoad = async ({
   hasId,
@@ -33,8 +35,10 @@ export const handleLoad = async ({
   buildingModelRef,
   updateSceneGraph,
   loadFile,
+  setStep,
 }: LoadScenarioOptions) => {
   if (!hasId) return;
+  setStep?.('map');
   try {
     const id = scenarioIdInput.trim();
     const data = await queryClient.fetchQuery({
@@ -48,10 +52,11 @@ export const handleLoad = async ({
       weather: data.weather ?? '',
       file_: data.file_ ?? null,
     });
-    const xodr = data.file_ ?? (data.scenario as any)?.file_;
+    const xodr = data.file_ ?? (data.scenario as unknown as Scenario)?.file_;
     if (xodr) {
+      const xodrText = await fetchXodrText(xodr);
       localStorage.setItem('cached_xodr', xodr);
-      loadFile(xodr, true);
+      loadFile(xodrText, true);
     }
     const rawScenario = data.scenario as unknown as {
       scenario_text: ScenarioGroup<
@@ -182,12 +187,15 @@ export const handleLoad = async ({
     s.updateScenario({
       id: String(meta?.scenario_id ?? id),
       name: meta?.name_of_scenario ?? '',
-      weather: 'ClearNoon',
     });
     updateSceneGraph();
     setNotice('The script has been uploaded.');
+    if (!xodr) {
+      setStep?.('done');
+    }
   } catch (err) {
     console.error(err);
+    setStep?.('done');
     setNotice(await getApiErrorMessage(err, 'Failed to load script.'));
   }
 };
@@ -257,8 +265,10 @@ export const handleRunSimulation = (
     scenario_id: scenario.id || scenarioIdInput.trim() || '',
     scenario_name: scenario.name || 'Scenario',
     weather: scenario.weather || 'ClearNoon',
-    scenario: buildScenarioPayload().scenario,
+    scenario: buildScenarioPayload().scenario || [],
     description: scenario.description || '',
+    map: useEditorStore.getState().simConfig?.carla?.map || 'Town10HD',
+    xodr: localStorage.getItem('cached_xodr') || undefined,
   };
   startMutation.mutate(payload, {
     onSuccess: () => setNotice('The simulation has started.'),

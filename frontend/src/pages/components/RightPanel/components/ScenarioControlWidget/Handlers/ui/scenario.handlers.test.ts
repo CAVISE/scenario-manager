@@ -9,10 +9,6 @@ vi.mock('../../../../../../../api/queryClient', () => ({
   queryClient: { fetchQuery: fetchQueryMock },
 }));
 
-vi.mock('../../../../../../../api/scenarios', () => ({
-  scenariosApi: { get: getScenarioMock },
-}));
-
 vi.mock(
   '../../../../../../Editor/hooks/useApiHooks/useScenarioQueries',
   () => ({
@@ -22,7 +18,12 @@ vi.mock(
     useScenarioPutMutation: () => ({}),
   }),
 );
-
+vi.mock('../../../../../../../api/scenarios', () => ({
+  scenariosApi: {
+    get: getScenarioMock,
+    delete: vi.fn().mockResolvedValue({ scenario_id: 'sc-1' }),
+  },
+}));
 vi.mock(
   '../../../../../../Editor/hooks/useApiHooks/useSimulationMutation',
   () => ({
@@ -108,8 +109,10 @@ import { LoadScenarioOptions } from '../types/scenario.load.handlerTypes';
 import {
   useScenarioCreateMutation,
   useScenarioPatchMutation,
+  useScenarioPutMutation,
 } from '../../../../../../Editor/hooks/useApiHooks/useScenarioQueries';
 import { useEditorStore } from '../../../../../../../store';
+import { useStartSimulationMutation } from '../../../../../../Editor/hooks/useApiHooks/useSimulationMutation';
 
 describe('handleLoad regression', () => {
   beforeEach(() => {
@@ -298,10 +301,7 @@ describe('buildScenarioPayload', () => {
     storeState.selectedId = 'car-1';
 
     const payload = buildScenarioPayload();
-    const carGroup = payload.scenario[0] as Extract<
-      (typeof payload.scenario)[0],
-      { vehicle: 'car' }
-    >;
+    const carGroup = payload.scenario.find((g) => g.vehicle === 'car')!;
     const carPath = carGroup.path[0];
 
     expect(carPath.model).toBe('audi');
@@ -354,10 +354,7 @@ describe('buildScenarioPayload', () => {
     ];
 
     const payload = buildScenarioPayload();
-    const rsuGroup = payload.scenario[1] as Extract<
-      (typeof payload.scenario)[1],
-      { vehicle: 'RSU' }
-    >;
+    const rsuGroup = payload.scenario.find((g) => g.vehicle === 'RSU')!;
     const rsuPath = rsuGroup.path[0];
 
     expect(rsuPath.x).toBe(5);
@@ -382,10 +379,7 @@ describe('buildScenarioPayload', () => {
     ];
 
     const payload = buildScenarioPayload();
-    const rsuGroup = payload.scenario[1] as Extract<
-      (typeof payload.scenario)[1],
-      { vehicle: 'RSU' }
-    >;
+    const rsuGroup = payload.scenario.find((g) => g.vehicle === 'RSU')!;
     const rsuPath = rsuGroup.path[0];
     expect(rsuPath.script).toBeNull();
   });
@@ -403,10 +397,9 @@ describe('buildScenarioPayload', () => {
     ];
 
     const payload = buildScenarioPayload();
-    const buildingGroup = payload.scenario[2] as Extract<
-      (typeof payload.scenario)[2],
-      { vehicle: 'building' }
-    >;
+    const buildingGroup = payload.scenario.find(
+      (g) => g.vehicle === 'building',
+    )!;
     const building = buildingGroup.path[0];
 
     expect(building.id).toBe('b-1');
@@ -432,10 +425,7 @@ describe('buildScenarioPayload', () => {
     ];
 
     const payload = buildScenarioPayload();
-    const pedGroup = payload.scenario[3] as Extract<
-      (typeof payload.scenario)[3],
-      { vehicle: 'pedestrian' }
-    >;
+    const pedGroup = payload.scenario.find((g) => g.vehicle === 'pedestrian')!;
     const ped = pedGroup.path[0];
 
     expect(ped.id).toBe('ped-1');
@@ -446,11 +436,7 @@ describe('buildScenarioPayload', () => {
 
   it('returns empty path arrays when store collections are empty', () => {
     const payload = buildScenarioPayload();
-
-    expect(payload.scenario[0].path).toHaveLength(0);
-    expect(payload.scenario[1].path).toHaveLength(0);
-    expect(payload.scenario[2].path).toHaveLength(0);
-    expect(payload.scenario[3].path).toHaveLength(0);
+    expect(payload.scenario).toHaveLength(0);
   });
 
   it('uses simConfig map when available', () => {
@@ -474,10 +460,16 @@ describe('buildScenarioPayload', () => {
     await handleLoad({
       hasId: true,
       scenarioIdInput: 'q-1',
-      sceneRef: { current: null } as any,
+      sceneRef: { current: null } as unknown as React.RefObject<
+        THREE.Scene | undefined
+      >,
       setNotice: vi.fn(),
-      loadRSURef: { current: vi.fn() } as any,
-      buildingModelRef: { current: null } as any,
+      loadRSURef: { current: vi.fn() } as unknown as React.RefObject<
+        () => void
+      >,
+      buildingModelRef: {
+        current: null,
+      } as unknown as React.RefObject<THREE.Mesh | null>,
       updateSceneGraph: vi.fn(),
       loadFile: vi.fn(),
     });
@@ -499,17 +491,23 @@ describe('buildScenarioPayload', () => {
       },
     });
 
-    storeState.buildings = [{ id: 'b-1', x: 1, y: 2, z: 3 }] as any;
+    storeState.buildings = [{ id: 'b-1', x: 1, y: 2, z: 3 }] as Building[];
 
     const mockModel = { clone: vi.fn() };
 
     await handleLoad({
       hasId: true,
       scenarioIdInput: 'retry-max',
-      sceneRef: { current: null } as any,
+      sceneRef: { current: null } as unknown as React.RefObject<
+        THREE.Scene | undefined
+      >,
       setNotice: vi.fn(),
-      loadRSURef: { current: vi.fn() } as any,
-      buildingModelRef: { current: mockModel } as any,
+      loadRSURef: { current: vi.fn() } as unknown as React.RefObject<
+        () => void
+      >,
+      buildingModelRef: {
+        current: mockModel,
+      } as unknown as React.RefObject<THREE.Mesh | null>,
       updateSceneGraph: vi.fn(),
       loadFile: vi.fn(),
     });
@@ -583,10 +581,16 @@ describe('buildScenarioPayload', () => {
       await handleLoad({
         hasId: false,
         scenarioIdInput: 'sc-1',
-        sceneRef: { current: null } as any,
+        sceneRef: { current: null } as unknown as React.RefObject<
+          THREE.Scene | undefined
+        >,
         setNotice,
-        loadRSURef: { current: vi.fn() } as any,
-        buildingModelRef: { current: null } as any,
+        loadRSURef: { current: vi.fn() } as unknown as React.RefObject<
+          () => void
+        >,
+        buildingModelRef: {
+          current: null,
+        } as unknown as React.RefObject<THREE.Mesh | null>,
         updateSceneGraph: vi.fn(),
         loadFile: vi.fn(),
       });
@@ -611,9 +615,9 @@ describe('buildScenarioPayload', () => {
 
       storeState.buildings = [
         { id: 'b-1', x: 1, y: 2, z: 3, rotation: 0, scale: 1 },
-      ] as any;
+      ] as Building[];
 
-      const sceneRef: { current: any } = { current: null };
+      const sceneRef: { current: THREE.Scene | null } = { current: null };
       const clonedMesh = {
         userData: {},
         position: { set: vi.fn() },
@@ -627,17 +631,26 @@ describe('buildScenarioPayload', () => {
       await handleLoad({
         hasId: true,
         scenarioIdInput: 'retry-1',
-        sceneRef: sceneRef as any,
+        sceneRef: sceneRef as unknown as React.RefObject<
+          THREE.Scene | undefined
+        >,
         setNotice: vi.fn(),
-        loadRSURef: { current: loadRSU } as any,
-        buildingModelRef: { current: mockModel } as any,
+        loadRSURef: { current: loadRSU } as unknown as React.RefObject<
+          () => void
+        >,
+        buildingModelRef: {
+          current: mockModel,
+        } as unknown as React.RefObject<THREE.Mesh | null>,
         updateSceneGraph,
         loadFile: vi.fn(),
       });
 
       expect(mockModel.clone).not.toHaveBeenCalled();
 
-      sceneRef.current = { children: [], add: vi.fn() };
+      sceneRef.current = {
+        children: [],
+        add: vi.fn(),
+      } as unknown as THREE.Scene;
       vi.runAllTimers();
 
       expect(mockModel.clone).toHaveBeenCalledWith(true);
@@ -708,17 +721,23 @@ describe('buildScenarioPayload', () => {
 
       const newRSU = { id: 'rsu-new' };
       storeState.addRSU = vi.fn(() => {
-        storeState.RSUs.push(newRSU as any);
+        storeState.RSUs.push(newRSU as RSU);
       });
       storeState.RSUs = [];
 
       await handleLoad({
         hasId: true,
         scenarioIdInput: 'rsu-update',
-        sceneRef: { current: { children: [], add: vi.fn() } } as any,
+        sceneRef: {
+          current: { children: [], add: vi.fn() },
+        } as unknown as React.RefObject<THREE.Scene | undefined>,
         setNotice: vi.fn(),
-        loadRSURef: { current: vi.fn() } as any,
-        buildingModelRef: { current: null } as any,
+        loadRSURef: { current: vi.fn() } as unknown as React.RefObject<
+          () => void
+        >,
+        buildingModelRef: {
+          current: null,
+        } as unknown as React.RefObject<THREE.Mesh | null>,
         updateSceneGraph: vi.fn(),
         loadFile: vi.fn(),
       });
@@ -762,10 +781,16 @@ describe('buildScenarioPayload', () => {
       await handleLoad({
         hasId: true,
         scenarioIdInput: 'rsu-skip',
-        sceneRef: { current: { children: [], add: vi.fn() } } as any,
+        sceneRef: {
+          current: { children: [], add: vi.fn() },
+        } as unknown as React.RefObject<THREE.Scene | undefined>,
         setNotice: vi.fn(),
-        loadRSURef: { current: vi.fn() } as any,
-        buildingModelRef: { current: null } as any,
+        loadRSURef: { current: vi.fn() } as unknown as React.RefObject<
+          () => void
+        >,
+        buildingModelRef: {
+          current: null,
+        } as unknown as React.RefObject<THREE.Mesh | null>,
         updateSceneGraph: vi.fn(),
         loadFile: vi.fn(),
       });
@@ -802,10 +827,16 @@ describe('buildScenarioPayload', () => {
       await handleLoad({
         hasId: true,
         scenarioIdInput: 'rsu-skip',
-        sceneRef: { current: { children: [], add: vi.fn() } } as any,
+        sceneRef: {
+          current: { children: [], add: vi.fn() },
+        } as unknown as React.RefObject<THREE.Scene | undefined>,
         setNotice: vi.fn(),
-        loadRSURef: { current: vi.fn() } as any,
-        buildingModelRef: { current: null } as any,
+        loadRSURef: { current: vi.fn() } as unknown as React.RefObject<
+          () => void
+        >,
+        buildingModelRef: {
+          current: null,
+        } as unknown as React.RefObject<THREE.Mesh | null>,
         updateSceneGraph: vi.fn(),
         loadFile: vi.fn(),
       });
@@ -829,7 +860,9 @@ describe('buildScenarioPayload', () => {
   describe('handleDelete', () => {
     it('returns early when hasId is false', async () => {
       const setNotice = vi.fn();
-      const putMutation = { mutateAsync: vi.fn() } as any;
+      const putMutation = { mutateAsync: vi.fn() } as unknown as ReturnType<
+        typeof useScenarioPutMutation
+      >;
 
       await handleDelete(setNotice, 'sc-1', false, putMutation);
 
@@ -838,7 +871,9 @@ describe('buildScenarioPayload', () => {
 
     it('calls mutateAsync with trimmed id and sets success notice', async () => {
       const setNotice = vi.fn();
-      const putMutation = { mutateAsync: vi.fn().mockResolvedValue({}) } as any;
+      const putMutation = { mutateAsync: vi.fn() } as unknown as ReturnType<
+        typeof useScenarioPutMutation
+      >;
 
       await handleDelete(setNotice, '  sc-1  ', true, putMutation);
 
@@ -854,7 +889,7 @@ describe('buildScenarioPayload', () => {
       const setNotice = vi.fn();
       const putMutation = {
         mutateAsync: vi.fn().mockRejectedValue(new Error('fail')),
-      } as any;
+      } as unknown as ReturnType<typeof useScenarioPutMutation>;
 
       await handleDelete(setNotice, 'sc-1', true, putMutation);
 
@@ -874,7 +909,7 @@ describe('buildScenarioPayload', () => {
       const setNotice = vi.fn();
       const startMutation = {
         mutate: vi.fn((_, { onSuccess }) => onSuccess()),
-      } as any;
+      } as unknown as ReturnType<typeof useStartSimulationMutation>;
 
       handleRunSimulation(setNotice, 'sc-1', startMutation);
 
@@ -898,7 +933,7 @@ describe('buildScenarioPayload', () => {
       const setNotice = vi.fn();
       const startMutation = {
         mutate: vi.fn((_, { onSuccess }) => onSuccess()),
-      } as any;
+      } as unknown as ReturnType<typeof useStartSimulationMutation>;
 
       handleRunSimulation(setNotice, '  sc-fallback  ', startMutation);
 
@@ -917,7 +952,7 @@ describe('buildScenarioPayload', () => {
       const setNotice = vi.fn();
       const startMutation = {
         mutate: vi.fn((_, { onError }) => onError(new Error('sim error'))),
-      } as any;
+      } as unknown as ReturnType<typeof useStartSimulationMutation>;
 
       handleRunSimulation(setNotice, 'sc-1', startMutation);
 
@@ -964,10 +999,16 @@ describe('buildScenarioPayload', () => {
     await handleLoad({
       hasId: true,
       scenarioIdInput: 'b-scene-1',
-      sceneRef: { current: mockScene } as any,
+      sceneRef: { current: mockScene } as unknown as React.RefObject<
+        THREE.Scene | undefined
+      >,
       setNotice,
-      loadRSURef: { current: loadRSU } as any,
-      buildingModelRef: { current: mockModel } as any,
+      loadRSURef: { current: loadRSU } as unknown as React.RefObject<
+        () => void
+      >,
+      buildingModelRef: {
+        current: mockModel,
+      } as unknown as React.RefObject<THREE.Object3D | null>,
       updateSceneGraph,
       loadFile: vi.fn(),
     });
@@ -1011,10 +1052,16 @@ describe('buildScenarioPayload', () => {
     await handleLoad({
       hasId: true,
       scenarioIdInput: 'b-skip-1',
-      sceneRef: { current: mockScene } as any,
+      sceneRef: { current: mockScene } as unknown as React.RefObject<
+        THREE.Scene | undefined
+      >,
       setNotice: vi.fn(),
-      loadRSURef: { current: vi.fn() } as any,
-      buildingModelRef: { current: mockModel } as any,
+      loadRSURef: { current: vi.fn() } as unknown as React.RefObject<
+        () => void
+      >,
+      buildingModelRef: {
+        current: mockModel,
+      } as unknown as React.RefObject<THREE.Object3D | null>,
       updateSceneGraph: vi.fn(),
       loadFile: vi.fn(),
     });
@@ -1034,12 +1081,16 @@ describe('buildScenarioPayload', () => {
     await handleLoad({
       hasId: true,
       scenarioIdInput: 'bad-id',
-      sceneRef: { current: { children: [], add: vi.fn() } } as any,
+      sceneRef: {
+        current: { children: [], add: vi.fn() },
+      } as unknown as React.RefObject<THREE.Scene | undefined>,
       setNotice,
-      loadRSURef: { current: vi.fn() } as LoadScenarioOptions['loadRSURef'],
+      loadRSURef: { current: vi.fn() } as unknown as React.RefObject<
+        () => void
+      >,
       buildingModelRef: {
         current: {},
-      } as LoadScenarioOptions['buildingModelRef'],
+      } as unknown as React.RefObject<THREE.Object3D | null>,
       updateSceneGraph: vi.fn(),
       loadFile: vi.fn(),
     });
@@ -1052,10 +1103,16 @@ describe('buildScenarioPayload', () => {
     await handleLoad({
       hasId: false,
       scenarioIdInput: 'sc-1',
-      sceneRef: { current: null } as any,
+      sceneRef: { current: null } as unknown as React.RefObject<
+        THREE.Scene | undefined
+      >,
       setNotice,
-      loadRSURef: { current: vi.fn() } as any,
-      buildingModelRef: { current: null } as any,
+      loadRSURef: { current: vi.fn() } as unknown as React.RefObject<
+        () => void
+      >,
+      buildingModelRef: {
+        current: null,
+      } as unknown as React.RefObject<THREE.Object3D | null>,
       updateSceneGraph: vi.fn(),
       loadFile: vi.fn(),
     });
@@ -1097,15 +1154,21 @@ describe('buildScenarioPayload', () => {
       },
     });
 
-    storeState.lidars = [{ id: 'lidar-1' }] as any;
+    storeState.lidars = [{ id: 'lidar-1' }] as Lidar[];
 
     await handleLoad({
       hasId: true,
       scenarioIdInput: 'lidar-test',
-      sceneRef: { current: null } as any,
+      sceneRef: { current: null } as unknown as React.RefObject<
+        THREE.Scene | undefined
+      >,
       setNotice: vi.fn(),
-      loadRSURef: { current: vi.fn() } as any,
-      buildingModelRef: { current: null } as any,
+      loadRSURef: { current: vi.fn() } as unknown as React.RefObject<
+        () => void
+      >,
+      buildingModelRef: {
+        current: null,
+      } as unknown as React.RefObject<THREE.Object3D | null>,
       updateSceneGraph: vi.fn(),
       loadFile: vi.fn(),
     });
@@ -1134,9 +1197,11 @@ describe('buildScenarioPayload', () => {
       },
     });
 
-    storeState.buildings = [{ id: 'b-1', x: 1, y: 2, z: 3 }] as any;
+    storeState.buildings = [{ id: 'b-1', x: 1, y: 2, z: 3 }] as Building[];
 
-    const sceneRef = { current: null as any };
+    const sceneRef = {
+      current: null as unknown as THREE.Scene | undefined,
+    } as unknown as React.RefObject<THREE.Scene | undefined>;
     const mockModel = {
       clone: vi.fn().mockReturnValue({
         userData: {},
@@ -1152,15 +1217,22 @@ describe('buildScenarioPayload', () => {
       scenarioIdInput: 'retry-test',
       sceneRef,
       setNotice: vi.fn(),
-      loadRSURef: { current: loadRSU } as any,
-      buildingModelRef: { current: mockModel } as any,
+      loadRSURef: { current: loadRSU } as unknown as React.RefObject<
+        () => void
+      >,
+      buildingModelRef: {
+        current: mockModel,
+      } as unknown as React.RefObject<THREE.Object3D | null>,
       updateSceneGraph: vi.fn(),
       loadFile: vi.fn(),
     });
 
     expect(mockModel.clone).not.toHaveBeenCalled();
 
-    sceneRef.current = { children: [], add: vi.fn() };
+    (sceneRef as unknown as { current: unknown }).current = {
+      children: [],
+      add: vi.fn(),
+    };
     vi.runAllTimers();
 
     expect(mockModel.clone).toHaveBeenCalled();
