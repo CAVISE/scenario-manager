@@ -1,4 +1,4 @@
-import { Point } from '../../../../../../../store/types/useEditorStoreTypes';
+import { Point } from '../../../../../../store/types/useEditorStoreTypes';
 
 export interface RoutePointPropertiesProps {
   point: Point;
