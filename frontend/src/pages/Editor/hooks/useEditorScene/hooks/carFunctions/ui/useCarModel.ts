@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { OBJLoader } from 'three-stdlib';
 
 export function useCarModel() {
-  const carModelRef = useRef<THREE.Object3D>();
+  const carModelRef = useRef<THREE.Object3D | null>(null);
   const loaderRef = useRef(new OBJLoader());
   const [modelLoaded, setModelLoaded] = useState(false);
 
