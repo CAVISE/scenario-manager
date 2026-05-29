@@ -1,51 +1,95 @@
 import { useState, useCallback } from 'react';
-import { Button, Modal, Box, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Button,
+  List,
+  ListItemButton,
+  ListItemText,
+  Modal,
+  Typography,
+} from '@mui/material';
 import TelemetryModal from '../../../../../components/TelemetryModal';
-import { useStartSimulationMutation } from '../../../hooks/useApiHooks/useSimulationMutation/ui/useSimulationMutation';
+import { useStartSimulationMutation } from '../../../hooks/useApiHooks/useSimulationMutation';
+import { useEditorStore } from '../../../../../store';
 import { getApiErrorMessage } from '../../../../../api/errors';
+import type { StartSimulationPayload } from '../../../hooks/useApiHooks/useSimulationMutation/types/useSimulationMutationTypes';
+import { buildScenarioPayload } from '../../../../components/RightPanel/components/ScenarioControlWidget/Handlers';
+import {
+  fetchXodrText,
+  getStoredXodrName,
+  setStoredXodrName,
+} from '../../../hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
+import { CARLA_MAPS } from '../../SimConfigModal/types/SimConfigModalTypes';
+import { useHooks } from '../../../context';
 
 export default function EditorModals() {
   const [telemetryModalOpen, setTelemetryModalOpen] = useState(false);
   const [simulationConfirmOpen, setSimulationConfirmOpen] = useState(false);
+  const [mapPickerOpen, setMapPickerOpen] = useState(false);
   const [simulationError, setSimulationError] = useState<string | null>(null);
+  const [mapPickerError, setMapPickerError] = useState<string | null>(null);
+  const [loadingMap, setLoadingMap] = useState<string | null>(null);
   const startSimulationMutation = useStartSimulationMutation();
+  const updateSimConfigCarla = useEditorStore((s) => s.updateSimConfigCarla);
+  const { loadFile } = useHooks();
 
   if (typeof window !== 'undefined') {
     window.editorModals = {
       openTelemetry: () => setTelemetryModalOpen(true),
       openSimulation: () => setSimulationConfirmOpen(true),
+      openMapPicker: () => setMapPickerOpen(true),
     };
   }
 
-  const handleStartSimulation = useCallback(() => {
+  const handleSelectMap = useCallback(
+    async (mapName: string) => {
+      setMapPickerError(null);
+      setLoadingMap(mapName);
+      try {
+        const xodrName = setStoredXodrName(mapName);
+        const xodrText = await fetchXodrText(xodrName);
+        updateSimConfigCarla({ map: mapName });
+        loadFile(xodrText, true);
+        setMapPickerOpen(false);
+      } catch (err) {
+        console.error(err);
+        setMapPickerError(
+          await getApiErrorMessage(err, `Failed to load map ${mapName}.`),
+        );
+      } finally {
+        setLoadingMap(null);
+      }
+    },
+    [loadFile, updateSimConfigCarla],
+  );
+
+  const handleStart = useCallback(() => {
     setSimulationError(null);
-    const payload = {
-      scenario_id: '9959781287',
-      scenario_name: 'scenario 1',
-      weather: 'HardRainNoon',
-      description: 'Generated scenario from SM UI',
-      scenario: [
-        {
-          path: [
-            { x: -35, y: 138, z: 0.3 },
-            { x: 35, y: 10, z: 0.3 },
-          ],
-          vehicle: 'pedestrian' as const,
-          color: { r: 127, g: 0, b: 0 },
-          active: false,
-        },
-      ],
+
+    const state = useEditorStore.getState();
+    const scenario = state.Scenario;
+    const mapName = getStoredXodrName(state.simConfig?.carla?.map);
+
+    const payload: StartSimulationPayload = {
+      scenario_id: scenario.id || '',
+      scenario_name: scenario.name || 'Scenario',
+      weather: scenario.weather || 'ClearNoon',
+      description: scenario.description || '',
+      map: mapName,
+      scenario: buildScenarioPayload().scenario,
     };
+
     startSimulationMutation.mutate(payload, {
+      onSuccess: () => {
+        setSimulationError(null);
+        setSimulationConfirmOpen(false);
+      },
       onError: async (err) => {
         console.error(err);
         setSimulationError(
           await getApiErrorMessage(err, 'Failed to start simulation.'),
         );
-      },
-      onSuccess: () => {
-        setSimulationError(null);
-        setSimulationConfirmOpen(false);
       },
     });
   }, [startSimulationMutation]);
@@ -88,14 +132,57 @@ export default function EditorModals() {
           )}
           <Button
             variant="contained"
-            onClick={handleStartSimulation}
+            onClick={handleStart}
+            disabled={startSimulationMutation.isPending}
             sx={{
               bgcolor: 'error.main',
               '&:hover': { bgcolor: 'error.dark' },
             }}
           >
-            Run
+            {startSimulationMutation.isPending ? 'Starting...' : 'Run'}
           </Button>
+        </Box>
+      </Modal>
+
+      <Modal open={mapPickerOpen} onClose={() => setMapPickerOpen(false)}>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%,-50%)',
+            width: 420,
+            maxHeight: '70vh',
+            bgcolor: 'background.paper',
+            border: '1px solid #ccc',
+            boxShadow: 24,
+            p: 3,
+            borderRadius: 1,
+            overflow: 'auto',
+          }}
+        >
+          <Typography variant="h6" gutterBottom>
+            Select map
+          </Typography>
+          {mapPickerError ? (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {mapPickerError}
+            </Alert>
+          ) : null}
+          <List dense sx={{ p: 0 }}>
+            {CARLA_MAPS.map((mapName) => (
+              <ListItemButton
+                key={mapName}
+                onClick={() => handleSelectMap(mapName)}
+                disabled={Boolean(loadingMap)}
+              >
+                <ListItemText
+                  primary={mapName}
+                  secondary={loadingMap === mapName ? 'Loading…' : undefined}
+                />
+              </ListItemButton>
+            ))}
+          </List>
         </Box>
       </Modal>
     </>

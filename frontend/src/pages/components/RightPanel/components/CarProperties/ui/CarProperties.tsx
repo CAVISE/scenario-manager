@@ -9,7 +9,7 @@ import {
   Grid,
   Divider,
   Typography,
-} from '@mui/joy';
+} from '@mui/material';
 import { Box } from '@mui/material';
 import { HexColorPicker } from 'react-colorful';
 import { useEditorStore } from '../../../../../../store';
@@ -49,7 +49,7 @@ export default function CarProperties({ car, onDelete }: CarPropertiesProps) {
             <FormControl>
               <FormLabel sx={formLabelStyles}>{axis.toUpperCase()}</FormLabel>
               <Input
-                size="sm"
+                size="small"
                 type="number"
                 slotProps={numInputSlot}
                 value={car[axis].toFixed(3)}
@@ -112,7 +112,7 @@ export default function CarProperties({ car, onDelete }: CarPropertiesProps) {
             border: '1px solid #ccc',
           }}
         />
-        <Typography level="body-sm" sx={{ mt: 0.5 }}>
+        <Typography variant="body2" sx={{ mt: 0.5 }}>
           Current color: #{car.color ?? '00ff00'}
         </Typography>
       </FormControl>

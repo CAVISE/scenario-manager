@@ -5,7 +5,7 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-} from '@mui/joy';
+} from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { useEditorStore } from '../../../../../../store';
 import LidarProperties from '../../LidarProperties';
@@ -17,7 +17,7 @@ export default function CarLidarList({ carId, lidars }: CarLidarListProps) {
   return (
     <Stack spacing={1}>
       <Stack direction="row" justifyContent="space-between" alignItems="center">
-        <Typography level="title-sm">Lidars ({lidars.length})</Typography>
+        <Typography variant="h6">Lidars ({lidars.length})</Typography>
         <Button
           size="small"
           variant="outlined"
@@ -29,8 +29,8 @@ export default function CarLidarList({ carId, lidars }: CarLidarListProps) {
 
       {lidars.map((l, i) => (
         <Accordion key={l.id}>
-          <AccordionSummary indicator={<KeyboardArrowDownIcon />}>
-            <Typography level="title-sm">Lidar {i + 1}</Typography>
+          <AccordionSummary expandIcon={<KeyboardArrowDownIcon />}>
+            <Typography variant="subtitle1">Lidar {i + 1}</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <LidarProperties

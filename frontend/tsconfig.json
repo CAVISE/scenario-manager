@@ -17,6 +17,7 @@
     "useDefineForClassFields": true
   },
   "include": ["src", "vitest.config.ts"],
+  "exclude": ["vitest.config.ts", "node_modules"],
   "references": [
     {
       "path": "./tsconfig.node.json"

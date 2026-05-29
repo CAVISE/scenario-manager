@@ -87,14 +87,20 @@ class IMUSensor(object):
         self.sensor.listen(lambda event: IMUSensor._on_detect(weak_self, event))
         self.imu_data = deque()
         self.vehicle = vehicle
+        self._destroyed = False
 
     def get_signed_forward_acceleration(self, acceleration, gravity=9.81):
         acceleration.z -= gravity
+        # Guard: vehicle may already be destroyed when callback fires
+        if self._destroyed or not self.vehicle.is_alive:
+            return 0.0
         forward_vector = self.vehicle.get_transform().get_forward_vector()
         forward_vector = carla.Vector3D(forward_vector.x, forward_vector.y, 0)
         forward_vector_norm = math.sqrt(forward_vector.x ** 2 + forward_vector.y ** 2)
-        forward_vector = carla.Vector3D(forward_vector.x / forward_vector_norm, forward_vector.y / forward_vector_norm,
-                                        0)
+        if forward_vector_norm == 0:
+            return 0.0
+        forward_vector = carla.Vector3D(forward_vector.x / forward_vector_norm,
+                                        forward_vector.y / forward_vector_norm, 0)
         signed_forward_acceleration = acceleration.x * forward_vector.x + acceleration.y * forward_vector.y
         return signed_forward_acceleration
 
@@ -102,6 +108,9 @@ class IMUSensor(object):
     def _on_detect(weak_self, imu_data) -> None:
         self = weak_self()
         if not self:
+            return
+        # Guard: stop processing if sensor or vehicle already torn down
+        if self._destroyed:
             return
         linear_acceleration = imu_data.accelerometer
         angular_velocity = imu_data.gyroscope
@@ -115,6 +124,8 @@ class IMUSensor(object):
         pass
 
     def destroy(self) -> None:
+        # Set flag first so any in-flight callback sees it immediately
+        self._destroyed = True
         if self.sensor.is_alive:
             self.sensor.stop()
             self.sensor.destroy()

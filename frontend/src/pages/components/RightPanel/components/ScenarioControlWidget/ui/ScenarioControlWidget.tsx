@@ -23,7 +23,7 @@ export default function ScenarioControlWidget() {
   const scenario = useEditorStore((s) => s.Scenario);
   const updateScenario = useEditorStore((s) => s.updateScenario);
   const { sceneRef, loadRSURef } = useEditorRefs();
-  const { buildingModelRef, updateSceneGraph, loadFile } = useHooks();
+  const { buildingModelRef, updateSceneGraph, loadFile, setStep } = useHooks();
   const [scenarioIdInput, setScenarioIdInput] = useState(scenario.id ?? '');
   const [notice, setNotice] = useState<string>('');
   const setNoticeWithToast = useNoticeWithToast(setNotice);
@@ -78,6 +78,7 @@ export default function ScenarioControlWidget() {
               buildingModelRef,
               updateSceneGraph,
               loadFile,
+              setStep,
             })
           }
         >

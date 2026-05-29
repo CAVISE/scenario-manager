@@ -7,7 +7,7 @@ import {
   Grid,
   Divider,
   Typography,
-} from '@mui/joy';
+} from '@mui/material';
 import { numInputSlot } from '../../../types/PanelTypes';
 import {
   BuildingPropertiesProps,
@@ -32,7 +32,7 @@ export default function BuildingProperties({
       onMouseDown={(e) => e.stopPropagation()}
       onContextMenu={(e) => e.stopPropagation()}
     >
-      <Typography level="title-sm">Building</Typography>
+      <Typography variant="subtitle1">Building</Typography>
 
       <FormLabel>Position</FormLabel>
       <Grid container spacing={1}>
@@ -41,7 +41,7 @@ export default function BuildingProperties({
             <FormControl>
               <FormLabel sx={formLabelStyles}>{axis.toUpperCase()}</FormLabel>
               <Input
-                size="sm"
+                size="small"
                 type="number"
                 slotProps={numInputSlot}
                 value={building[axis].toFixed(3)}
@@ -57,14 +57,14 @@ export default function BuildingProperties({
       </Grid>
 
       <Divider />
-      <Typography level="title-sm" sx={typographyStyles}>
+      <Typography variant="subtitle2" sx={typographyStyles}>
         Sionna / OMNeT++ Parameters
       </Typography>
 
       <FormControl>
         <FormLabel>Height (m)</FormLabel>
         <Input
-          size="sm"
+          size="small"
           type="number"
           slotProps={numInputSlot}
           value={building.height ?? 20}

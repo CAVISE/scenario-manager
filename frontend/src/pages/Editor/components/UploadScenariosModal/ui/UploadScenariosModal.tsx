@@ -10,8 +10,6 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
-
-import AspectRatio from '@mui/joy/AspectRatio';
 import CloseIcon from '@mui/icons-material/Close';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import {
@@ -20,6 +18,8 @@ import {
   ScenarioCard,
   uploadModalStyles,
   uploadModalBoxStyles,
+  boxStyles,
+  imgStyles,
 } from '../types/UploadScenariosModalTypes';
 import type { UploadScenariosModalProps } from '../types/UploadScenariosModalTypes';
 import type { ScenarioListItem } from '../../../../../api/types/IScenarioTypes';
@@ -75,7 +75,7 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
     setNotice('');
     onClose();
   };
-  const { buildingModelRef, updateSceneGraph, loadFile } = useHooks();
+  const { buildingModelRef, updateSceneGraph, loadFile, setStep } = useHooks();
   const handleLoadOnScene = useCallback(async () => {
     if (!selectedScenario?.scenario_id) return;
     setLoadingScene(true);
@@ -90,9 +90,11 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
         buildingModelRef,
         updateSceneGraph,
         loadFile,
+        setStep,
       });
     } finally {
       setLoadingScene(false);
+      onClose();
     }
   }, [
     selectedScenario,
@@ -101,7 +103,9 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
     buildingModelRef,
     updateSceneGraph,
     setNoticeWithToast,
-    loadFile
+    loadFile,
+    setStep,
+    onClose,
   ]);
 
   const thumb = selectedScenario
@@ -174,9 +178,14 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
                     <ScenarioCard
                       onClick={() => handleSelectScenario(scenario)}
                     >
-                      <AspectRatio
-                        ratio="16/9"
-                        sx={{ minHeight: 140, bgcolor: '#eee' }}
+                      <Box
+                        sx={{
+                          position: 'relative',
+                          paddingTop: '56.25%',
+                          minHeight: 140,
+                          bgcolor: '#eee',
+                          overflow: 'hidden',
+                        }}
                       >
                         {previewSrc(scenario.preview) ? (
                           <img
@@ -184,27 +193,26 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
                             alt={scenario.name}
                             loading="lazy"
                             style={{
-                              objectFit: 'cover',
+                              ...imgStyles,
+                              position: 'absolute',
+                              inset: 0,
                               width: '100%',
                               height: '100%',
+                              objectFit: 'cover',
                             }}
                           />
                         ) : (
                           <Box
                             sx={{
-                              width: '100%',
-                              height: '100%',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              color: 'text.secondary',
-                              fontSize: 12,
+                              ...boxStyles,
+                              position: 'absolute',
+                              inset: 0,
                             }}
                           >
                             No preview
                           </Box>
                         )}
-                      </AspectRatio>
+                      </Box>
                       <Box sx={{ p: 1.5 }}>
                         <Typography variant="subtitle2" noWrap>
                           {scenario.name}
