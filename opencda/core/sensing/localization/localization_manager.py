@@ -206,11 +206,18 @@ class LocalizationManager(object):
         if not self.activate:
             self._ego_pos = self.vehicle.get_transform()
             self._speed = get_speed(self.vehicle)
+
+            loc = self._ego_pos.location
+            yaw = self._ego_pos.rotation.yaw
+            self.debug_helper.run_step(
+                loc.x, loc.y, yaw, self._speed,  # gnss = gt
+                loc.x, loc.y, yaw, self._speed,  # filter = gt
+                loc.x, loc.y, yaw, self._speed,  # gt
+            )
         else:
             speed_true = get_speed(self.vehicle)
             speed_noise = self.add_speed_noise(speed_true)
 
-            # gnss coordinates under ESU(Unreal coordinate system)
             x, y, z = geo_to_transform(self.gnss.lat,
                                        self.gnss.lon,
                                        self.gnss.alt,

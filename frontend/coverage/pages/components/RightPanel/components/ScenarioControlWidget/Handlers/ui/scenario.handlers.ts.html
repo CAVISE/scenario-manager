@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">94.26% </span>
+                <span class="strong">93.7% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>115/122</span>
+                <span class='fraction'>119/127</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">86.76% </span>
+                <span class="strong">86.84% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>59/68</span>
+                <span class='fraction'>66/76</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">98.09% </span>
+                <span class="strong">97.27% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>103/105</span>
+                <span class='fraction'>107/110</span>
             </div>
         
             
@@ -333,7 +333,17 @@
 <a name='L268'></a><a href='#L268'>268</a>
 <a name='L269'></a><a href='#L269'>269</a>
 <a name='L270'></a><a href='#L270'>270</a>
-<a name='L271'></a><a href='#L271'>271</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L271'></a><a href='#L271'>271</a>
+<a name='L272'></a><a href='#L272'>272</a>
+<a name='L273'></a><a href='#L273'>273</a>
+<a name='L274'></a><a href='#L274'>274</a>
+<a name='L275'></a><a href='#L275'>275</a>
+<a name='L276'></a><a href='#L276'>276</a>
+<a name='L277'></a><a href='#L277'>277</a>
+<a name='L278'></a><a href='#L278'>278</a>
+<a name='L279'></a><a href='#L279'>279</a>
+<a name='L280'></a><a href='#L280'>280</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -369,10 +379,12 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">15x</span>
 <span class="cline-any cline-yes">13x</span>
-<span class="cline-any cline-yes">13x</span>
-<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-yes">15x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -385,6 +397,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">15x</span>
 <span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -518,10 +531,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">15x</span>
 <span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -589,6 +605,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -628,6 +646,7 @@ import {
 import { StartSimulationPayload } from '../../../../../../Editor/hooks/useApiHooks/useSimulationMutation/types/useSimulationMutationTypes';
 import { getApiErrorMessage } from '../../../../../../../api/errors';
 import { LoadScenarioOptions } from '../types/scenario.load.handlerTypes';
+import { fetchXodrText } from '../../../../../../Editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
 &nbsp;
 export const handleLoad = async ({
   hasId,
@@ -638,8 +657,10 @@ export const handleLoad = async ({
   buildingModelRef,
   updateSceneGraph,
   loadFile,
+  setStep,
 }: LoadScenarioOptions) =&gt; {
   if (!hasId) return;
+  setStep?.('map');
   try {
     const id = scenarioIdInput.trim();
     const data = await queryClient.fetchQuery({
@@ -655,8 +676,9 @@ export const handleLoad = async ({
     });
     const xodr = data.file_ ?? (data.scenario as any)?.file_;
     <span class="missing-if-branch" title="if path not taken" >I</span>if (xodr) {
+      const xodrText = <span class="cstat-no" title="statement not covered" >await fetchXodrText(xodr);</span>
 <span class="cstat-no" title="statement not covered" >      localStorage.setItem('cached_xodr', xodr);</span>
-<span class="cstat-no" title="statement not covered" >      loadFile(xodr, true);</span>
+<span class="cstat-no" title="statement not covered" >      loadFile(xodrText, true);</span>
     }
     const rawScenario = data.scenario as unknown as {
       scenario_text: ScenarioGroup&lt;
@@ -787,12 +809,15 @@ export const handleLoad = async ({
     s.updateScenario({
       id: String(meta?.scenario_id ?? <span class="branch-1 cbranch-no" title="branch not covered" >id),</span>
       name: meta?.name_of_scenario ?? '',
-      weather: 'ClearNoon',
     });
     updateSceneGraph();
     setNotice('The script has been uploaded.');
+    if (!xodr) {
+      setStep?.('done');
+    }
   } catch (err) {
     console.error(err);
+    setStep?.('done');
     setNotice(await getApiErrorMessage(err, 'Failed to load script.'));
   }
 };
@@ -862,8 +887,10 @@ export const handleRunSimulation = (
     scenario_id: scenario.id || scenarioIdInput.trim() || <span class="branch-2 cbranch-no" title="branch not covered" >'',</span>
     scenario_name: scenario.name || 'Scenario',
     weather: scenario.weather || 'ClearNoon',
-    scenario: buildScenarioPayload().scenario,
+    scenario: buildScenarioPayload().scenario || <span class="branch-1 cbranch-no" title="branch not covered" >[],</span>
     description: scenario.description || '',
+    map: useEditorStore.getState().simConfig?.carla?.map || 'Town10HD',
+    xodr: localStorage.getItem('cached_xodr') || undefined,
   };
   startMutation.mutate(payload, {
     onSuccess: () =&gt; setNotice('The simulation has started.'),
@@ -880,7 +907,7 @@ export const handleRunSimulation = (
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-03T15:14:27.871Z
+                at 2026-05-25T10:01:26.216Z
             </div>
         <script src="../../../../../../../prettify.js"></script>
         <script>

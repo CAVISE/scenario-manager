@@ -1,0 +1,30 @@
+***********Localization Module***********
+Actor ID: 47
+mean error for GNSS raw data on x-axis: 0.096800 (meter), mean error for GNSS raw data on y-axis: 132.991542 (meter),mean error for GNSS raw data on yaw : 0.085184 (degree) 
+mean error after data fusion on x-axis: 0.086966 (meter), mean error after data fusion  on y-axis: 131.979711 (meter),mean error after data fusion yaw : 0.691832 (degree) 
+
+Actor ID: 52
+mean error for GNSS raw data on x-axis: 0.088277 (meter), mean error for GNSS raw data on y-axis: 34.043199 (meter),mean error for GNSS raw data on yaw : 0.079977 (degree) 
+mean error after data fusion on x-axis: 0.025842 (meter), mean error after data fusion  on y-axis: 34.029230 (meter),mean error after data fusion yaw : 0.092353 (degree) 
+
+Actor ID: 57
+mean error for GNSS raw data on x-axis: 0.449844 (meter), mean error for GNSS raw data on y-axis: 273.260448 (meter),mean error for GNSS raw data on yaw : 0.081942 (degree) 
+mean error after data fusion on x-axis: 0.563535 (meter), mean error after data fusion  on y-axis: 271.850771 (meter),mean error after data fusion yaw : 0.172566 (degree) 
+
+***********Kinematics Module***********
+Actor ID: 47
+Speed average: nan (m/s), Speed std: nan (m/s) 
+Acceleration average: nan (m/s), Acceleration std: nan (m/s) 
+TTC average: nan (m/s), TTC std: nan (m/s) 
+
+Actor ID: 52
+Speed average: 0.022023 (m/s), Speed std: 0.056692 (m/s) 
+Acceleration average: 0.001763 (m/s), Acceleration std: 1.608526 (m/s) 
+TTC average: nan (m/s), TTC std: nan (m/s) 
+
+Actor ID: 57
+Speed average: nan (m/s), Speed std: nan (m/s) 
+Acceleration average: nan (m/s), Acceleration std: nan (m/s) 
+TTC average: nan (m/s), TTC std: nan (m/s) 
+
+***********Platooning Analysis***********

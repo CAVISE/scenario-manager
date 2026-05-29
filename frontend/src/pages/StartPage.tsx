@@ -62,7 +62,7 @@ const StartPage = () => {
   const [scenarioName, setScenarioName] = useState(() => {
     const stored = window.localStorage.getItem('scenario_name');
     if (stored) return JSON.parse(stored) as string;
-    return 'New Scenario'; 
+    return 'New Scenario';
   });
   const [weather, setWeather] = useState('ClearNoon');
   const updateScenario = useEditorStore((s) => s.updateScenario);
@@ -71,28 +71,21 @@ const StartPage = () => {
   const ky = 0.087651516713233;
 
   useEffect(() => {
-    if (window.localStorage.getItem('scenario_name') == null)
-      createNewScenario();
-    else
-      setScenarioName(
-        JSON.parse(window.localStorage.getItem('scenario_name')!),
-      );
+    if (localStorage.getItem('scenario_name') == null) createNewScenario();
+    else setScenarioName(JSON.parse(localStorage.getItem('scenario_name')!));
 
-    const storedWeather = window.localStorage.getItem('weather');
+    const storedWeather = localStorage.getItem('weather');
     if (storedWeather) setWeather(JSON.parse(storedWeather));
   }, []);
 
   useEffect(() => {
-    window.localStorage.setItem('weather', JSON.stringify(weather));
+    localStorage.setItem('weather', JSON.stringify(weather));
   }, [weather]);
 
   const handleChangeName = (event: React.ChangeEvent<HTMLInputElement>) => {
     setScenarioName(event.target.value);
     updateScenario({ name: event.target.value });
-    window.localStorage.setItem(
-      'scenario_name',
-      JSON.stringify(event.target.value),
-    );
+    localStorage.setItem('scenario_name', JSON.stringify(event.target.value));
   };
 
   const handleCreateNewScenario = () => {
@@ -102,10 +95,10 @@ const StartPage = () => {
 
   const handleSaveScenario = () => {
     const scen: Scenario = {
-      scenario_id: JSON.parse(window.localStorage.getItem('scenario_id')!),
-      scenario_name: JSON.parse(window.localStorage.getItem('scenario_name')!),
-      weather: JSON.parse(window.localStorage.getItem('weather')!),
-      scenario: JSON.parse(window.localStorage.getItem('scenario')!),
+      scenario_id: JSON.parse(localStorage.getItem('scenario_id')!),
+      scenario_name: JSON.parse(localStorage.getItem('scenario_name')!),
+      weather: JSON.parse(localStorage.getItem('weather')!),
+      scenario: JSON.parse(localStorage.getItem('scenario')!),
     };
 
     scen.scenario = scen.scenario.map((item) => ({
@@ -119,7 +112,7 @@ const StartPage = () => {
       })),
     }));
 
-    window.localStorage.setItem('scenario', JSON.stringify(scen.scenario));
+    localStorage.setItem('scenario', JSON.stringify(scen.scenario));
   };
 
   const handleEdit = (index: number) => {
@@ -128,22 +121,16 @@ const StartPage = () => {
       name: scenarios[index].scenario_name,
       weather: scenarios[index].weather,
     });
-    window.localStorage.setItem(
+    localStorage.setItem(
       'scenario_id',
       JSON.stringify(scenarios[index].scenario_id),
     );
-    window.localStorage.setItem(
+    localStorage.setItem(
       'scenario_name',
       JSON.stringify(scenarios[index].scenario_name),
     );
-    window.localStorage.setItem(
-      'weather',
-      JSON.stringify(scenarios[index].weather),
-    );
-    window.localStorage.setItem(
-      'scenario',
-      JSON.stringify(scenarios[index].scenario),
-    );
+    localStorage.setItem('weather', JSON.stringify(scenarios[index].weather));
+    localStorage.setItem('scenario', JSON.stringify(scenarios[index].scenario));
   };
 
   const handleWeatherChange = (event: React.ChangeEvent<HTMLSelectElement>) => {

@@ -1,4 +1,4 @@
-import { Building } from '../../../../../../../store/useEditorStore';
+import { Building } from '../../../../../../store/types/useEditorStoreTypes';
 
 export interface BuildingPropertiesProps {
   building: Building;

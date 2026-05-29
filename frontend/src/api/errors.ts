@@ -18,7 +18,8 @@ export async function getApiErrorMessage(
         const message = payload.detail || payload.message || payload.error;
         if (message && message.trim()) return message;
       }
-    } catch {
+    } catch (e) {
+      console.error('Failed to parse error response:', e);
     }
     return fallback;
   }

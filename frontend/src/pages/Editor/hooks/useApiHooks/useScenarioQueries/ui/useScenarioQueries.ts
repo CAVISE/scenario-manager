@@ -72,7 +72,7 @@ export function useScenarioPatchMutation() {
         id: data.scenario_id ?? '',
         name: data.scenario_name ?? '',
         weather: data.weather ?? '',
-        file_: data.file_ ?? null, 
+        file_: data.file_ ?? null,
       });
     },
   });
