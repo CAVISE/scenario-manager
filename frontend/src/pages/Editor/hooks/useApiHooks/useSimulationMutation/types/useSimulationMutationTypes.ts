@@ -7,5 +7,5 @@ export interface StartSimulationPayload {
   scenario: ScenarioGroup[];
   description: string;
   map: string;
-  xodr: string | undefined;
+  xodr?: string | undefined;
 }
