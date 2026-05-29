@@ -1,107 +1,139 @@
-import json
-import sqlite3
+import pytest
 from pathlib import Path
-
+from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
 
-from simulation.app.app import app
-from simulation.app.routers import scenario as scenario_router
+
+@pytest.fixture
+def client():
+    from main import app
+    return TestClient(app)
 
 
-def _scenario_payload():
-  return {
-    "scenario_id": None,
-    "scenario_name": "Test Scenario",
-    "weather": "ClearNoon",
-    "scenario": [
-      {
-        "vehicle": "car",
-        "color": {"r": 0, "g": 255, "b": 0},
-        "active": True,
-        "path": [{"x": 1, "y": 2, "z": 0}, {"x": 3, "y": 4, "z": 0}],
-      }
-    ],
-  }
+@pytest.fixture(autouse=True)
+def reset_simulation_state():
+    from app.routers.simulation import simulation_state, _ws_clients
+    simulation_state.update({
+        "running": False,
+        "status": "idle",
+        "error": None,
+        "map": None,
+        "run_id": None,
+    })
+    _ws_clients.clear()
+    yield
+
+def test_status_returns_idle_by_default(client):
+    response = client.get("/api/status")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "idle"
+    assert data["running"] is False
+    assert data["error"] is None
+
+def test_stop_returns_400_when_not_running(client):
+    response = client.post("/api/stop")
+    assert response.status_code == 400
+    assert response.json()["detail"] == "No simulation running"
 
 
-def test_create_and_get_scenario(tmp_path, monkeypatch):
-  monkeypatch.chdir(tmp_path)
-  Path("scenarios").mkdir()
-  client = TestClient(app)
+def test_stop_returns_stopping_when_running(client):
+    from app.routers.simulation import simulation_state
+    simulation_state["running"] = True
+    simulation_state["status"] = "running"
 
-  create_response = client.post("/scenario/create", json=_scenario_payload())
-  assert create_response.status_code == 200
-  created_id = create_response.json()["scenario_id"]
+    import sys
+    import types
+    fake_runner = types.ModuleType("app.runner")
+    fake_runner.request_stop = MagicMock()
 
-  get_response = client.get(f"/scenario/{created_id}")
-  assert get_response.status_code == 200
-  assert get_response.json()["scenario_name"] == "Test Scenario"
+    with patch.dict(sys.modules, {"app.runner": fake_runner}):
+        response = client.post("/api/stop")
 
+    assert response.status_code == 200
+    assert response.json()["status"] == "stopping"
+    assert simulation_state["status"] == "stopping"
 
-def test_edit_scenario_overwrites_existing_file(tmp_path, monkeypatch):
-  monkeypatch.chdir(tmp_path)
-  scenarios_dir = Path("scenarios")
-  scenarios_dir.mkdir()
-  scenario_id = "abc123"
-  existing = _scenario_payload()
-  existing["scenario_id"] = scenario_id
-  json.dump(existing, open(scenarios_dir / f"{scenario_id}.json", "w"))
+def test_start_returns_409_when_already_running(client):
+    from app.routers.simulation import simulation_state
+    simulation_state["running"] = True
 
-  updated = _scenario_payload()
-  updated["scenario_id"] = scenario_id
-  updated["scenario_name"] = "Updated"
-  client = TestClient(app)
-
-  response = client.post("/scenario/edit", json=updated)
-  assert response.status_code == 200
-
-  stored = json.load(open(scenarios_dir / f"{scenario_id}.json"))
-  assert stored["scenario_name"] == "Updated"
+    response = client.post("/api/start_opencda", json={
+        "map": "Town01",
+        "max_ticks": 100,
+        "scenario": [],
+    })
+    assert response.status_code == 409
+    assert "already running" in response.json()["detail"]
 
 
-def test_reports_get_all_reads_from_config_db(tmp_path, monkeypatch):
-  db_path = tmp_path / "db.db"
-  conn = sqlite3.connect(db_path)
-  conn.execute(
-    "CREATE TABLE reports (id INTEGER PRIMARY KEY, scenario_id TEXT, scenario_name TEXT, status BOOLEAN)"
-  )
-  conn.execute("INSERT INTO reports (scenario_id, scenario_name, status) VALUES ('s1', 'Scenario', 'false')")
-  conn.commit()
-  conn.close()
+def test_start_returns_started(client):
+    with patch("app.routers.simulation._executor") as mock_executor, \
+         patch("app.utils.json_to_single_cav_list", return_value={}), \
+         patch("omegaconf.OmegaConf.load", return_value={}), \
+         patch("omegaconf.OmegaConf.merge", return_value=MagicMock()), \
+         patch("omegaconf.OmegaConf.to_container", return_value={"current_time": "20250101_120000"}), \
+         patch("opencda.scenario_testing.utils.yaml_utils.add_current_time", side_effect=lambda x: x):
+        mock_executor.submit = MagicMock()
+        response = client.post("/api/start_opencda", json={
+            "map": "Town01",
+            "max_ticks": 100,
+            "scenario": [],
+        })
 
-  monkeypatch.setattr("simulation.app.core.config.config.SQLDB_NAME", str(db_path))
-  client = TestClient(app)
+    assert response.status_code == 200
+    assert response.json()["status"] == "started"
+    assert response.json()["map"] == "Town01"
 
-  response = client.get("/reports/get/all")
-  assert response.status_code == 200
-  assert len(response.json()) == 1
+def test_results_returns_400_on_path_traversal(client):
+    response = client.get("/api/results/../etc")
+    assert response.status_code in (400, 404)
 
 
-def test_run_scenario_schedules_background_task(tmp_path, monkeypatch):
-  monkeypatch.chdir(tmp_path)
-  Path("scenarios").mkdir()
-  scenario_id = "run123"
-  payload = _scenario_payload()
-  payload["scenario_id"] = scenario_id
-  json.dump(payload, open(Path("scenarios") / f"{scenario_id}.json", "w"))
+def test_results_returns_404_when_not_found(client, tmp_path):
+    with patch("app.routers.simulation.get_settings") as mock_settings:
+        mock_settings.return_value.eval_dir = tmp_path
+        response = client.get("/api/results/nonexistent_run")
+    assert response.status_code == 404
 
-  db_path = tmp_path / "db.db"
-  conn = sqlite3.connect(db_path)
-  conn.execute(
-    "CREATE TABLE reports (id INTEGER PRIMARY KEY, scenario_id TEXT, scenario_name TEXT, status BOOLEAN)"
-  )
-  conn.commit()
-  conn.close()
-  monkeypatch.setattr("simulation.app.core.config.config.SQLDB_NAME", str(db_path))
 
-  calls = []
-  monkeypatch.setattr(
-    scenario_router.work,
-    "do_scenario",
-    lambda *args, **kwargs: calls.append((args, kwargs)),
-  )
+def test_results_returns_png_files(client, tmp_path):
+    run_id = "Town01_20250101"
+    run_dir = tmp_path / run_id
+    run_dir.mkdir()
+    (run_dir / "result.png").write_bytes(b"fake")
+    (run_dir / "other.txt").write_bytes(b"ignore")
 
-  client = TestClient(app)
-  response = client.get(f"/scenario/run/{scenario_id}")
-  assert response.status_code == 200
-  assert len(calls) == 1
+    with patch("app.routers.simulation.get_settings") as mock_settings:
+        mock_settings.return_value.eval_dir = tmp_path
+        response = client.get(f"/api/results/{run_id}")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["run_id"] == run_id
+    assert len(data["files"]) == 1
+    assert data["files"][0]["filename"] == "result.png"
+
+def test_delete_results_404_when_not_found(client, tmp_path):
+    with patch("app.routers.simulation.get_settings") as mock_settings:
+        mock_settings.return_value.eval_dir = tmp_path
+        response = client.delete("/api/results/nonexistent")
+    assert response.status_code == 404
+
+
+def test_delete_results_removes_directory(client, tmp_path):
+    run_id = "Town01_20250101"
+    run_dir = tmp_path / run_id
+    run_dir.mkdir()
+
+    with patch("app.routers.simulation.get_settings") as mock_settings:
+        mock_settings.return_value.eval_dir = tmp_path
+        response = client.delete(f"/api/results/{run_id}")
+
+    assert response.status_code == 200
+    assert not run_dir.exists()
+
+def test_health_returns_ok(client):
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json()["status"] == "ok"

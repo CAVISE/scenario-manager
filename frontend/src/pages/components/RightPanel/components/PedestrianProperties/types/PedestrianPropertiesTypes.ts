@@ -1,4 +1,4 @@
-import { Pedestrian } from '../../../../../../../store/types/useEditorStoreTypes';
+import { Pedestrian } from '../../../../../../store/types/useEditorStoreTypes';
 
 export interface IPedestrianProps {
   pedestrian: Pedestrian;

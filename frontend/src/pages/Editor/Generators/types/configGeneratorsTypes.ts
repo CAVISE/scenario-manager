@@ -83,6 +83,30 @@ export type CAPIExtraConfig = {
   visualization: boolean;
 };
 
+const VALID_CARLA_MAPS = [
+  'Town01',
+  'Town02',
+  'Town03',
+  'Town04',
+  'Town05',
+  'Town06',
+  'Town07',
+  'Town10HD',
+  'TownBig',
+] as const;
+
+function normalizeCarlaMap(mapValue: unknown): string {
+  if (typeof mapValue !== 'string') return defaultSimConfig.carla.map;
+  const map = mapValue.trim();
+  if (
+    (VALID_CARLA_MAPS as readonly string[]).includes(map) ||
+    map === 'town10'
+  ) {
+    return map === 'town10' ? 'Town10HD' : map;
+  }
+  return defaultSimConfig.carla.map;
+}
+
 export type SimulationConfig = {
   sim_duration: number;
   omnet: {
@@ -433,6 +457,7 @@ export function mergeSimConfigWithDefaults(
 ): SimulationConfig {
   const p = partial ?? {};
   const omnet = { ...defaultSimConfig.omnet, ...p.omnet };
+  const normalizedCarlaMap = normalizeCarlaMap(p.carla?.map);
   if (omnet.protocol === 'DSRC') omnet.protocol = 'ITS-G5';
   return {
     ...defaultSimConfig,
@@ -448,6 +473,7 @@ export function mergeSimConfigWithDefaults(
     carla: {
       ...defaultSimConfig.carla,
       ...p.carla,
+      map: normalizedCarlaMap,
       sensors: { ...defaultSimConfig.carla.sensors, ...p.carla?.sensors },
     },
     opencda: {

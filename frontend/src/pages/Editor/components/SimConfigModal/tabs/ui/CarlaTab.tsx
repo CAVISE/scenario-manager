@@ -13,19 +13,50 @@ import {
 import { CARLA_MAPS, WEATHER_PRESETS } from '../../types/SimConfigModalTypes';
 import { CarlaWeather } from '../../../../../../store/types/useEditorStoreTypes';
 import { useEditorStore } from '../../../../../../store';
+import { useEffect, useMemo } from 'react';
+import { getStoredXodrName } from '../../../../hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
+
+function toCarlaMapNameFromXodr(xodrName: string): string | null {
+  const base = xodrName.replace(/\.xodr$/i, '');
+  if (!base) return null;
+  if (
+    base.toLowerCase() === 'town10' ||
+    base.toLowerCase() === 'town10hd_opt'
+  ) {
+    return 'Town10HD';
+  }
+  const withoutOpt = base.replace(/_Opt$/i, '');
+  return CARLA_MAPS.includes(withoutOpt) ? withoutOpt : null;
+}
 
 export default function CarlaTab() {
   const simConfig = useEditorStore((s) => s.simConfig);
   const updateSimConfigCarla = useEditorStore((s) => s.updateSimConfigCarla);
+  const storedMap = useMemo(
+    () => toCarlaMapNameFromXodr(getStoredXodrName(simConfig.carla.map)),
+    [simConfig.carla.map],
+  );
+
+  useEffect(() => {
+    if (storedMap && storedMap !== simConfig.carla.map) {
+      updateSimConfigCarla({ map: storedMap });
+    }
+  }, [simConfig.carla.map, storedMap, updateSimConfigCarla]);
+
+  const selectedMap = CARLA_MAPS.includes(simConfig.carla.map)
+    ? simConfig.carla.map
+    : storedMap || 'Town03';
   return (
     <Stack spacing={2}>
       <Stack direction="row" spacing={2}>
         <FormControl size="small" fullWidth>
           <InputLabel>Map</InputLabel>
           <Select
-            value={simConfig.carla.map}
+            value={selectedMap}
             label="Map"
-            onChange={(e) => updateSimConfigCarla({ map: e.target.value })}
+            onChange={(e) =>
+              updateSimConfigCarla({ map: e.target.value as string })
+            }
           >
             {CARLA_MAPS.map((m) => (
               <MenuItem key={m} value={m}>

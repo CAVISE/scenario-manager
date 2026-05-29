@@ -10,7 +10,7 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-} from '@mui/joy';
+} from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { useEditorStore } from '../../../../../../store';
 import { numInputSlot } from '../../../types/PanelTypes';
@@ -29,7 +29,7 @@ export default function RSUProperties({ rsu, onDelete }: RSUPropertiesProps) {
 
   return (
     <Stack spacing={2}>
-      <Typography level="title-sm">RSU Object</Typography>
+      <Typography variant="subtitle1">RSU Object</Typography>
 
       <FormLabel>Position</FormLabel>
       <Grid container spacing={1}>
@@ -38,7 +38,7 @@ export default function RSUProperties({ rsu, onDelete }: RSUPropertiesProps) {
             <FormControl>
               <FormLabel sx={formLabelStyles}>{axis.toUpperCase()}</FormLabel>
               <Input
-                size="sm"
+                size="small"
                 type="number"
                 slotProps={numInputSlot}
                 value={rsu[axis].toFixed(3)}
@@ -52,7 +52,7 @@ export default function RSUProperties({ rsu, onDelete }: RSUPropertiesProps) {
       </Grid>
 
       <Divider />
-      <Typography level="title-sm" sx={typographyStyles}>
+      <Typography variant="subtitle2" sx={typographyStyles}>
         V2X Parameters
       </Typography>
 
@@ -61,7 +61,7 @@ export default function RSUProperties({ rsu, onDelete }: RSUPropertiesProps) {
           <FormControl>
             <FormLabel>TX Power (mW)</FormLabel>
             <Input
-              size="sm"
+              size="small"
               type="number"
               slotProps={numInputSlot}
               value={rsu.tx_power ?? 20}
@@ -75,7 +75,7 @@ export default function RSUProperties({ rsu, onDelete }: RSUPropertiesProps) {
           <FormControl>
             <FormLabel>Range (m)</FormLabel>
             <Input
-              size="sm"
+              size="small"
               type="number"
               slotProps={numInputSlot}
               value={rsu.range ?? 500}
@@ -90,7 +90,7 @@ export default function RSUProperties({ rsu, onDelete }: RSUPropertiesProps) {
       <FormControl>
         <FormLabel>Frequency (Hz)</FormLabel>
         <Input
-          size="sm"
+          size="small"
           type="number"
           slotProps={numInputSlot}
           value={rsu.frequency ?? 5.9e9}
@@ -124,8 +124,8 @@ export default function RSUProperties({ rsu, onDelete }: RSUPropertiesProps) {
       </FormControl>
 
       <Accordion>
-        <AccordionSummary indicator={<KeyboardArrowDownIcon />}>
-          <Typography level="title-sm">Script</Typography>
+        <AccordionSummary expandIcon={<KeyboardArrowDownIcon />}>
+          <Typography variant="subtitle2">Script</Typography>
         </AccordionSummary>
         <AccordionDetails>
           <FormControl>

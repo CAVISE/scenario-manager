@@ -23,7 +23,7 @@ export type {
   CarlaWeather,
 } from '../types/useEditorStoreTypes';
 export type { SimulationConfig } from '../../pages/Editor/Generators/types/configGeneratorsTypes';
-type EditorPersist = Pick<
+export type EditorPersist = Pick<
   EditorState,
   | 'cars'
   | 'RSUs'

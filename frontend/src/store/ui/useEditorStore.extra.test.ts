@@ -217,7 +217,15 @@ describe('useEditorStore — additional branch coverage', () => {
   });
   describe('persist merge', () => {
     it('returns current state when persisted is undefined', () => {
-      const { merge } = (useEditorStore as any).persist.getOptions();
+      const { merge } = (
+        useEditorStore as {
+          persist: {
+            getOptions: () => {
+              merge: (persisted: unknown, current: unknown) => unknown;
+            };
+          };
+        }
+      ).persist.getOptions();
       const current = useEditorStore.getState();
       const result = merge(undefined, current);
       expect(result).toStrictEqual(current);

@@ -1,6 +1,5 @@
 import { styled } from '@mui/system';
-import { Box, Chip } from '@mui/material';
-import { Card } from '@mui/joy';
+import { Box, Chip, Card } from '@mui/material';
 export interface TelemetryModalProps {
   open: boolean;
   onClose: () => void;
@@ -10,6 +9,21 @@ export type ImagesByTabType = Record<
   TabCategories,
   Array<{ url: string; name: string }>
 >;
+export interface SimStatus {
+  run_id: string | null;
+  status: string;
+}
+
+export interface FileEntry {
+  filename: string;
+  url: string;
+}
+
+export interface ResultsResponse {
+  files: FileEntry[];
+  run_id: string;
+}
+
 export const ModalContainer = styled(Box)({
   position: 'absolute',
   top: '50%',

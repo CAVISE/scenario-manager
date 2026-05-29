@@ -1,12 +1,24 @@
-import { useQuery } from '@tanstack/react-query';
-import { Status, statusesKey } from '../types/IStatusesTypes';
+import { useSimulationSocket } from '../../useSimulationSocket';
+import { Status } from '../types/IStatusesTypes';
 
 export function useStatusesQuery() {
-  return useQuery({
-    queryKey: statusesKey,
-    queryFn: async (): Promise<Status[]> => {
-      return [];
-    },
-    staleTime: 10_000,
-  });
+  const { state, connected } = useSimulationSocket();
+
+  const data: Status[] = state
+    ? [
+        {
+          scenario_id: state.run_id ?? '—',
+          scenario_name: state.map ?? '—',
+          status: state.status === 'finished' ? 'true' : 'false',
+        },
+      ]
+    : [];
+
+  return {
+    data,
+    isLoading: !connected && !state,
+    isError: false,
+    error: null,
+    refetch: () => {},
+  };
 }

@@ -25,6 +25,8 @@ vi.mock('../../../context', () => ({
   useHooks: () => ({
     buildingModelRef: { current: null },
     updateSceneGraph: vi.fn(),
+    loadFile: vi.fn(),
+    setStep: vi.fn(),
   }),
 }));
 
