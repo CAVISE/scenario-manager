@@ -1340,6 +1340,11 @@
     "@types/deep-eql" "*"
     assertion-error "^2.0.1"
 
+"@types/dat.gui@^0.7.13":
+  version "0.7.13"
+  resolved "https://registry.yarnpkg.com/@types/dat.gui/-/dat.gui-0.7.13.tgz#40bbdcf72714ce46fe624d9d05e8000f1265653c"
+  integrity sha512-LmG4Pr0mbsB/1WVttf8xaHx45BvSBDGY5D9+0/9AZCbI4vvOguwBHZdKyJMxt5Yst8+icRSHKmr7ClV2u5ZtDA==
+
 "@types/deep-eql@*":
   version "4.0.2"
   resolved "https://registry.npmjs.org/@types/deep-eql/-/deep-eql-4.0.2.tgz"
