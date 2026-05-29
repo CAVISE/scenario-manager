@@ -1,4 +1,4 @@
-import { Lidar } from '../../../../../../../store/useEditorStore';
+import { Lidar } from "../../../../../../store/types/useEditorStoreTypes";
 
 export interface CarListProps {
   carId: string;
