@@ -1,5 +1,6 @@
 const XODR_EXT = '.xodr';
 const CACHE_KEY = 'cached_xodr';
+const XODR_CONTENT_KEY = 'cached_xodr_content';
 const DEFAULT_XODR = 'data.xodr';
 const MAP_ALIASES: Record<string, string[]> = {
   town10: ['Town10HD', 'Town10HD_Opt'],
@@ -67,4 +68,36 @@ export async function fetchXodrText(mapName: string): Promise<string> {
     if (isOpenDrive(text)) return text;
   }
   throw new Error(`Failed to load valid OpenDRIVE map for: ${mapName}`);
+}
+
+/** Map file name for DB `file_` (never full OpenDRIVE XML). */
+export function getMapFileReference(fallbackMapName?: string): string {
+  const stored = localStorage.getItem(CACHE_KEY);
+  if (stored?.trim() && !isOpenDrive(stored) && !stored.includes('\n')) {
+    return withXodrExtension(stored);
+  }
+  return getStoredXodrName(fallbackMapName);
+}
+
+export function setCachedCustomXodrContent(content: string): void {
+  localStorage.setItem(XODR_CONTENT_KEY, content);
+  localStorage.setItem(CACHE_KEY, DEFAULT_XODR);
+}
+
+/** OpenDRIVE XML for POST /api/start_opencda (`xodr` field). */
+export async function resolveXodrTextForSimulation(
+  fallbackMapName?: string,
+): Promise<string | undefined> {
+  const custom = localStorage.getItem(XODR_CONTENT_KEY);
+  if (custom && isOpenDrive(custom)) return custom;
+
+  const stored = localStorage.getItem(CACHE_KEY);
+  if (stored && isOpenDrive(stored)) return stored;
+
+  try {
+    return await fetchXodrText(getStoredXodrName(fallbackMapName));
+  } catch (e) {
+    console.error(e);
+    return undefined;
+  }
 }

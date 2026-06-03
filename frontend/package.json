@@ -1,5 +1,5 @@
 {
-  "name": "scenario-web-app",
+  "name": "scenario-manager",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -26,7 +26,6 @@
     "@mui/x-tree-view": "^8.0.0-beta.3",
     "@tanstack/react-query": "^5.91.0",
     "dat.gui": "^0.7.9",
-    "eslint-plugin-react": "^7.37.5",
     "ky": "^1.14.3",
     "notyf": "^3.10.0",
     "react": "^18.2.0",
@@ -39,6 +38,7 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "eslint-plugin-react": "^7.37.5",
     "@playwright/test": "^1.59.1",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",

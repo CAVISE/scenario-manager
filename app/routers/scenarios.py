@@ -19,6 +19,18 @@ router = APIRouter(tags=["scenarios"])
 log = get_logger(__name__)
 
 
+def _normalize_scenario_blob(scenario) -> dict:
+    if scenario is None:
+        return {}
+    if isinstance(scenario, list):
+        return {"scenario_text": scenario}
+    if isinstance(scenario, dict):
+        if "scenario_text" in scenario:
+            return scenario
+        return {"scenario_text": [scenario]}
+    return {}
+
+
 @router.get("/load_all_scenarios", response_model=LoadAllScenariosResponse)
 async def load_all_scenarios():
     log.info("action=load_all_scenarios")
@@ -86,7 +98,7 @@ async def load_scenario(scenario_id: str):
 @router.post("/upload_scenario", response_model=ScenarioMutationResponse)
 async def upload_scenario(body: UploadScenarioRequest):
     log.info("action=upload_scenario name=%s", body.name_of_scenario)
-    scenario_text = json.dumps(body.scenario or {})
+    scenario_text = json.dumps(_normalize_scenario_blob(body.scenario))
 
     with get_conn() as conn:
         with conn.cursor() as cur:
@@ -125,7 +137,11 @@ async def upload_scenario(body: UploadScenarioRequest):
 async def update_scenario(body: UpdateScenarioRequest):
     log.info("action=update_scenario scenario_id=%s", body.scenario_id)
     # Only serialize when explicitly provided to avoid overwriting with empty object
-    scenario_text = json.dumps(body.scenario) if body.scenario is not None else None
+    scenario_text = (
+        json.dumps(_normalize_scenario_blob(body.scenario))
+        if body.scenario is not None
+        else None
+    )
 
     with get_conn() as conn:
         with conn.cursor() as cur:

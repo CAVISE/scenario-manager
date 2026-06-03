@@ -47,6 +47,50 @@ export type SumoStop = {
   duration: number;
 };
 
+// ── OpenCDA per-CAV behavior services ────────────────────────────────────────
+export type BehaviorServiceType =
+  | 'self_informer'
+  | 'aim_client'
+  | 'movement_controller';
+
+export type SelfInformerService = {
+  type: 'self_informer';
+};
+
+export type AIMClientService = {
+  type: 'aim_client';
+  debug?: boolean;
+};
+
+export type MovementControllerService = {
+  type: 'movement_controller';
+};
+
+export type AIMServerService = {
+  type: 'aim_server';
+  debug?: boolean;
+  control_radius?: number;
+  control_center_location?: { x: number; y: number; z: number };
+  model?: string;
+  underling_model?: string;
+  hidden_channels?: number;
+  weight?: string;
+  priority?: number;
+};
+
+export type CavBehaviorService =
+  | SelfInformerService
+  | AIMClientService
+  | MovementControllerService;
+
+export type RsuBehaviorService = AIMServerService;
+
+// ── OpenCDA per-CAV v2x override ─────────────────────────────────────────────
+export type CavV2X = {
+  enabled?: boolean;
+  communication_range?: number;
+};
+
 export type Car = {
   id: string;
   x: number;
@@ -57,7 +101,35 @@ export type Car = {
   scale: number;
   rotation: number;
   speed: number;
+  /** Numeric id in OpenCDA scenario (e.g. 100, 200). */
+  opencda_id?: number;
+  /** CARLA blueprint id override, e.g. vehicle.tesla.cybertruck */
+  opencda_carla_model?: string;
+  /** Override name in single_cav_list (default cav1, cav2, …). */
+  opencda_name?: string;
   opencda_max_speed?: number;
+  opencda_ignore_traffic_light?: boolean;
+  opencda_overtake_allowed?: boolean;
+  opencda_collision_time_ahead?: number;
+  opencda_local_planner_debug?: boolean;
+  opencda_local_planner_debug_trajectory?: boolean;
+  /** Merge-lane spawn ratio 0..1 (spawn_special). */
+  opencda_spawn_special?: number;
+  /** Per-CAV sensing/perception override block. */
+  opencda_sensing?: {
+    perception_activate?: boolean;
+    camera_visualize?: number;
+    camera_num?: number;
+    lidar_visualize?: boolean;
+    lidar_channels?: number;
+    lidar_range?: number;
+  };
+  /** RGB color override for OpenCDA visualization e.g. [156, 255, 206] */
+  opencda_color?: [number, number, number];
+  /** Per-CAV v2x override */
+  opencda_v2x?: CavV2X;
+  /** Per-CAV behavior services list */
+  opencda_behavior_services?: CavBehaviorService[];
 
   sumo_depart?: number;
   sumo_depart_lane?: string;
@@ -102,6 +174,12 @@ export type RSU = {
   tilt: number;
   cam_interval: number;
   script: string;
+  /** Override name in rsu_list (default rsu1, rsu2, …). */
+  opencda_name?: string;
+  /** RSU id in OpenCDA (aim_check uses positive id, e.g. 1). */
+  opencda_id?: number;
+  opencda_behavior_services?: RsuBehaviorService[];
+  opencda_color?: [number, number, number];
 };
 
 export type Point = {

@@ -6,7 +6,8 @@ export function useScenarioSave() {
   const createScenarioMutation = useScenarioCreateMutation();
   return async () => {
     try {
-      await createScenarioMutation.mutateAsync(buildScenarioPayload());
+      const payload = buildScenarioPayload();
+      await createScenarioMutation.mutateAsync({ payload });
     } catch (err) {
       console.error(err);
       alert(await getApiErrorMessage(err, 'Failed to save scenario.'));

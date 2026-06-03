@@ -15,9 +15,12 @@ import { useEditorStore } from '../../../../../store';
 import { getApiErrorMessage } from '../../../../../api/errors';
 import type { StartSimulationPayload } from '../../../hooks/useApiHooks/useSimulationMutation/types/useSimulationMutationTypes';
 import { buildScenarioPayload } from '../../../../components/RightPanel/components/ScenarioControlWidget/Handlers';
+import { scenarioGroupsFromPayload } from '../../../../../api/scenarioRequest';
+import { validateStartSimulationPayload } from '../../../../../api/scenarioValidation';
 import {
   fetchXodrText,
   getStoredXodrName,
+  resolveXodrTextForSimulation,
   setStoredXodrName,
 } from '../../../hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
 import { CARLA_MAPS } from '../../SimConfigModal/types/SimConfigModalTypes';
@@ -64,21 +67,29 @@ export default function EditorModals() {
     [loadFile, updateSimConfigCarla],
   );
 
-  const handleStart = useCallback(() => {
+  const handleStart = useCallback(async () => {
     setSimulationError(null);
 
     const state = useEditorStore.getState();
     const scenario = state.Scenario;
     const mapName = getStoredXodrName(state.simConfig?.carla?.map);
+    const xodr = await resolveXodrTextForSimulation(state.simConfig?.carla?.map);
 
     const payload: StartSimulationPayload = {
       scenario_id: scenario.id || '',
       scenario_name: scenario.name || 'Scenario',
       weather: scenario.weather || 'ClearNoon',
       description: scenario.description || '',
-      map: mapName,
-      scenario: buildScenarioPayload().scenario,
+      map: mapName.replace(/\.xodr$/i, ''),
+      scenario: scenarioGroupsFromPayload(buildScenarioPayload().scenario),
+      xodr,
     };
+
+    const validation = validateStartSimulationPayload(payload);
+    if (!validation.ok) {
+      setSimulationError(validation.message);
+      return;
+    }
 
     startSimulationMutation.mutate(payload, {
       onSuccess: () => {

@@ -1,4 +1,11 @@
 import { buildScenarioPayload } from './scenario.load.handler';
+import { scenarioGroupsFromPayload } from '../../../../../../../api/scenarioRequest';
+import {
+  validateDeletePayload,
+  validateStartSimulationPayload,
+  validateUpdatePayload,
+  validateUploadPayload,
+} from '../../../../../../../api/scenarioValidation';
 import {
   BuildingPath,
   CarPath,
@@ -24,7 +31,11 @@ import {
 import { StartSimulationPayload } from '../../../../../../Editor/hooks/useApiHooks/useSimulationMutation/types/useSimulationMutationTypes';
 import { getApiErrorMessage } from '../../../../../../../api/errors';
 import { LoadScenarioOptions } from '../types/scenario.load.handlerTypes';
-import { fetchXodrText } from '../../../../../../Editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
+import {
+  fetchXodrText,
+  getStoredXodrName,
+  resolveXodrTextForSimulation,
+} from '../../../../../../Editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
 
 export const handleLoad = async ({
   hasId,
@@ -48,7 +59,7 @@ export const handleLoad = async ({
     const s = useEditorStore.getState();
     s.updateScenario({
       id: data.scenario_id ?? '',
-      name: data.scenario_name ?? '',
+      name: data.scenario_name ?? data.name_of_scenario ?? '',
       weather: data.weather ?? '',
       file_: data.file_ ?? null,
     });
@@ -203,9 +214,26 @@ export const handleLoad = async ({
 export const handleCreate = async (
   setNotice: (value: string) => void,
   createMutation: ReturnType<typeof useScenarioCreateMutation>,
+  scenarioIdInput = '',
 ) => {
   try {
-    await createMutation.mutateAsync(buildScenarioPayload());
+    const payload = buildScenarioPayload();
+    const trimmedId = scenarioIdInput.trim();
+    const validation = validateUploadPayload(payload, trimmedId);
+    if (!validation.ok) {
+      setNotice(validation.message);
+      return;
+    }
+    await createMutation.mutateAsync({
+      payload: {
+        ...payload,
+        scenario_id: trimmedId || payload.scenario_id,
+      },
+      scenarioIdInput: trimmedId,
+    });
+    if (trimmedId) {
+      useEditorStore.getState().updateScenario({ id: trimmedId });
+    }
     setNotice('Script saved (POST).');
   } catch (err) {
     console.error(err);
@@ -221,9 +249,16 @@ export const handlePatch = async (
 ) => {
   if (!hasId) return;
   try {
+    const id = scenarioIdInput.trim();
+    const payload = buildScenarioPayload();
+    const validation = validateUpdatePayload(id, payload);
+    if (!validation.ok) {
+      setNotice(validation.message);
+      return;
+    }
     await patchMutation.mutateAsync({
-      id: scenarioIdInput.trim(),
-      payload: buildScenarioPayload(),
+      id,
+      payload,
     });
     setNotice('The script has been updated (PATCH).');
   } catch (err) {
@@ -242,8 +277,14 @@ export const handleDelete = async (
 ) => {
   if (!hasId) return;
   try {
+    const id = scenarioIdInput.trim();
+    const validation = validateDeletePayload(id);
+    if (!validation.ok) {
+      setNotice(validation.message);
+      return;
+    }
     await putMutation.mutateAsync({
-      id: scenarioIdInput.trim(),
+      id,
       payload: buildScenarioPayload(),
     });
     setNotice('The script has been deleted (DELETE).');
@@ -255,21 +296,32 @@ export const handleDelete = async (
   }
 };
 
-export const handleRunSimulation = (
+export const handleRunSimulation = async (
   setNotice: (value: string) => void,
   scenarioIdInput: string,
   startMutation: ReturnType<typeof useStartSimulationMutation>,
 ) => {
-  const scenario = useEditorStore.getState().Scenario;
+  const state = useEditorStore.getState();
+  const scenario = state.Scenario;
+  const mapName = getStoredXodrName(state.simConfig?.carla?.map);
+  const xodr = await resolveXodrTextForSimulation(state.simConfig?.carla?.map);
+
   const payload: StartSimulationPayload = {
     scenario_id: scenario.id || scenarioIdInput.trim() || '',
     scenario_name: scenario.name || 'Scenario',
     weather: scenario.weather || 'ClearNoon',
-    scenario: buildScenarioPayload().scenario || [],
+    scenario: scenarioGroupsFromPayload(buildScenarioPayload().scenario),
     description: scenario.description || '',
-    map: useEditorStore.getState().simConfig?.carla?.map || 'Town10HD',
-    xodr: localStorage.getItem('cached_xodr') || undefined,
+    map: mapName.replace(/\.xodr$/i, ''),
+    xodr,
   };
+
+  const simulationValidation = validateStartSimulationPayload(payload);
+  if (!simulationValidation.ok) {
+    setNotice(simulationValidation.message);
+    return;
+  }
+
   startMutation.mutate(payload, {
     onSuccess: () => setNotice('The simulation has started.'),
     onError: async (err) => {
