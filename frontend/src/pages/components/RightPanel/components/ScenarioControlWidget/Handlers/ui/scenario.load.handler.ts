@@ -1,4 +1,5 @@
 import { useEditorStore } from '../../../../../../../store';
+import { getMapFileReference } from '../../../../../../Editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
 import {
   ScenarioGroup,
   ScenarioPayload,
@@ -17,15 +18,14 @@ export function buildScenarioPayload(): ScenarioPayload {
   const canvas = document.querySelector(
     '#ThreeJS canvas',
   ) as HTMLCanvasElement | null;
+
   return {
+    // Fields expected by the backend UploadScenarioRequest model:
     scenario_id: s.Scenario?.id || null,
-    scenario_name: s.Scenario?.name || localStorage.getItem('scenario_name'),
-    weather: s.Scenario?.weather || localStorage.getItem('weather'),
-    map: s.simConfig?.carla?.map || 'town10',
-    id: s.Scenario?.id || null,
-    name_of_scenario: s.Scenario?.name || null,
+    name_of_scenario: s.Scenario?.name?.trim() || null,
+    description: s.Scenario?.description || null,
     preview: canvas?.toDataURL('image/png') ?? null,
-    file_: localStorage.getItem('cached_xodr') ?? null,
+    file_: getMapFileReference(s.simConfig?.carla?.map) ?? null,
     scenario: (
       [
         {

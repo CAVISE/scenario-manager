@@ -1,4 +1,5 @@
 import { useEditorStore } from '../../../../../../store';
+import { setCachedCustomXodrContent } from '../../../../hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
 import { OpenDriveModule } from '../../../../hooks/useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
 import { PARAMS } from '../../../../hooks/useThreeScene/types/useThreeSceneTypes';
 import {
@@ -65,7 +66,7 @@ export function loadFile({
     return;
   }
   if (clear_map) {
-    localStorage.setItem('cached_xodr', file_text);
+    setCachedCustomXodrContent(file_text);
     const s = useEditorStore.getState();
     s.cars.forEach((c) => s.removeCar(c.id));
     while (useEditorStore.getState().RSUs.length > 0)

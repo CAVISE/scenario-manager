@@ -72,42 +72,63 @@ describe('useScenarioQueries', () => {
     });
   });
 
-  it('stores created scenario response in query cache', async () => {
-    createMock.mockResolvedValue({ scenario_id: 'new-id', payload: 'ok' });
+  it('invalidates scenario queries after create when payload has scenario_id', async () => {
+    createMock.mockResolvedValue({ status: 'success', message: 'created' });
     const queryClient = new QueryClient();
+    const invalidateQueries = vi.spyOn(queryClient, 'invalidateQueries');
 
     const { result } = renderHook(() => useScenarioCreateMutation(), {
       wrapper: makeWrapper(queryClient),
     });
 
-    await result.current.mutateAsync({} as never);
-    expect(queryClient.getQueryData(scenarioKeys.detail('new-id'))).toEqual({
-      scenario_id: 'new-id',
-      payload: 'ok',
+    await result.current.mutateAsync({
+      payload: {
+        scenario_id: 'new-id',
+        name_of_scenario: 'New',
+        description: null,
+        scenario: [],
+        file_: null,
+      },
+      scenarioIdInput: 'new-id',
+    });
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: scenarioKeys.detail('new-id'),
+    });
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: scenarioKeys.list(),
     });
   });
-  it('does not cache when scenario_id is absent in create response', async () => {
-    createMock.mockResolvedValue({ scenario_id: null, payload: 'ok' });
+
+  it('does not invalidate queries when create payload has no scenario_id', async () => {
+    createMock.mockResolvedValue({ status: 'success', message: 'created' });
     const queryClient = new QueryClient();
+    const invalidateQueries = vi.spyOn(queryClient, 'invalidateQueries');
     const { result } = renderHook(() => useScenarioCreateMutation(), {
       wrapper: makeWrapper(queryClient),
     });
-    await result.current.mutateAsync({} as never);
-    expect(queryClient.getQueryData(scenarioKeys.detail(''))).toBeUndefined();
+    await result.current.mutateAsync({
+      payload: {
+        scenario_id: null,
+        name_of_scenario: 'New',
+        description: null,
+        scenario: [],
+        file_: null,
+      },
+    });
+    expect(invalidateQueries).not.toHaveBeenCalled();
   });
 
-  it('does not cache when scenario_id is absent in patch response', async () => {
-    updateMock.mockResolvedValue({
-      scenario_id: null,
-      scenario_name: null,
-      weather: null,
-    });
+  it('invalidates detail cache after patch using mutation id', async () => {
+    updateMock.mockResolvedValue({ status: 'success', message: 'updated' });
     const queryClient = new QueryClient();
+    const invalidateQueries = vi.spyOn(queryClient, 'invalidateQueries');
     const { result } = renderHook(() => useScenarioPatchMutation(), {
       wrapper: makeWrapper(queryClient),
     });
     await result.current.mutateAsync({ id: 's-x', payload: {} });
-    expect(queryClient.getQueryData(scenarioKeys.detail(''))).toBeUndefined();
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: scenarioKeys.detail('s-x'),
+    });
   });
 
   it('does not run query when id is null', async () => {
@@ -127,47 +148,41 @@ describe('useScenarioQueries', () => {
     expect(result.current.fetchStatus).toBe('idle');
     expect(listAllMock).not.toHaveBeenCalled();
   });
-  it('syncs store after patch mutation success', async () => {
-    updateMock.mockResolvedValue({
-      scenario_id: 's-2',
-      scenario_name: 'Scenario 2',
-      weather: 'CloudyNoon',
-    });
+  it('syncs store from patch payload after mutation success', async () => {
+    updateMock.mockResolvedValue({ status: 'success', message: 'updated' });
     const queryClient = new QueryClient();
 
     const { result } = renderHook(() => useScenarioPatchMutation(), {
       wrapper: makeWrapper(queryClient),
     });
 
-    await result.current.mutateAsync({ id: 's-2', payload: {} });
+    await result.current.mutateAsync({
+      id: 's-2',
+      payload: {
+        name_of_scenario: 'Scenario 2',
+        description: 'Updated note',
+      },
+    });
     expect(updateScenarioMock).toHaveBeenCalledWith({
       id: 's-2',
       name: 'Scenario 2',
-      weather: 'CloudyNoon',
-      file_: null,
+      description: 'Updated note',
     });
   });
-  it('useScenarioPutMutation caches response when scenario_id is present', async () => {
-    replaceMock.mockResolvedValue({
-      scenario_id: 'put-1',
-      scenario_name: 'Put Scenario',
-      weather: 'ClearNoon',
-    });
+
+  it('useScenarioPutMutation invalidates scenario queries on success', async () => {
+    replaceMock.mockResolvedValue({ status: 'success', message: 'deleted' });
     const queryClient = new QueryClient();
+    const invalidateQueries = vi.spyOn(queryClient, 'invalidateQueries');
     const { result } = renderHook(() => useScenarioPutMutation(), {
       wrapper: makeWrapper(queryClient),
     });
     await result.current.mutateAsync({ id: 'put-1', payload: {} as never });
-    expect(queryClient.getQueryData(scenarioKeys.detail('put-1'))).toEqual({
-      scenario_id: 'put-1',
-      scenario_name: 'Put Scenario',
-      weather: 'ClearNoon',
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: scenarioKeys.detail('put-1'),
     });
-    expect(updateScenarioMock).toHaveBeenCalledWith({
-      id: 'put-1',
-      name: 'Put Scenario',
-      weather: 'ClearNoon',
-      file_: null,
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: scenarioKeys.list(),
     });
   });
   it('queryFn branch: throws when called without id', async () => {
@@ -185,18 +200,17 @@ describe('useScenarioQueries', () => {
 
     expect(getMock).not.toHaveBeenCalled();
   });
-  it('useScenarioPutMutation skips cache when scenario_id is absent', async () => {
-    replaceMock.mockResolvedValue({
-      scenario_id: null,
-      scenario_name: null,
-      weather: null,
-    });
+  it('useScenarioPutMutation still invalidates by mutation id', async () => {
+    replaceMock.mockResolvedValue({ status: 'success', message: 'deleted' });
     const queryClient = new QueryClient();
+    const invalidateQueries = vi.spyOn(queryClient, 'invalidateQueries');
     const { result } = renderHook(() => useScenarioPutMutation(), {
       wrapper: makeWrapper(queryClient),
     });
     await result.current.mutateAsync({ id: 'put-x', payload: {} as never });
-    expect(queryClient.getQueryData(scenarioKeys.detail(''))).toBeUndefined();
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: scenarioKeys.detail('put-x'),
+    });
   });
   it('queryFn throws when id is null (covers lines 30-35)', async () => {
     const queryClient = new QueryClient({
