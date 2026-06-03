@@ -1,10 +1,39 @@
 import { HTTPError } from 'ky';
 
+type ValidationIssue = {
+  msg?: string;
+  loc?: (string | number)[];
+};
+
 type ApiErrorPayload =
-  | { detail?: string; message?: string; error?: string }
+  | {
+      detail?: string | ValidationIssue[];
+      message?: string;
+      error?: string;
+    }
   | string
   | null
   | undefined;
+
+function formatApiDetail(
+  detail: string | ValidationIssue[] | undefined,
+): string | null {
+  if (!detail) return null;
+  if (typeof detail === 'string' && detail.trim()) return detail;
+  if (Array.isArray(detail)) {
+    const lines = detail
+      .map((issue) => {
+        const path = issue.loc
+          ?.filter((part: string | number) => part !== 'body')
+          .join('.');
+        const msg = issue.msg ?? 'Validation error';
+        return path ? `${path}: ${msg}` : msg;
+      })
+      .filter(Boolean);
+    return lines.length > 0 ? lines.join('; ') : null;
+  }
+  return null;
+}
 
 export async function getApiErrorMessage(
   err: unknown,
@@ -15,7 +44,9 @@ export async function getApiErrorMessage(
       const payload = (await err.response.json()) as ApiErrorPayload;
       if (typeof payload === 'string' && payload.trim()) return payload;
       if (payload && typeof payload === 'object') {
-        const message = payload.detail || payload.message || payload.error;
+        const fromDetail = formatApiDetail(payload.detail);
+        if (fromDetail) return fromDetail;
+        const message = payload.message || payload.error;
         if (message && message.trim()) return message;
       }
     } catch (e) {

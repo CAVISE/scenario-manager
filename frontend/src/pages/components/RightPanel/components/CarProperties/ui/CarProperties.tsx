@@ -15,6 +15,8 @@ import { HexColorPicker } from 'react-colorful';
 import { useEditorStore } from '../../../../../../store';
 import { numInputSlot } from '../../../types/PanelTypes';
 import CarLidarList from '../../CarLidarList';
+import CarOpenCDASection from './CarOpenCDASection';
+import CarOpenCDARareSection from './CarOpenCDARareSection';
 import {
   CarPropertiesProps,
   formLabelStyles,
@@ -116,6 +118,9 @@ export default function CarProperties({ car, onDelete }: CarPropertiesProps) {
           Current color: #{car.color ?? '00ff00'}
         </Typography>
       </FormControl>
+
+      <CarOpenCDASection car={car} />
+      <CarOpenCDARareSection car={car} />
 
       <Divider />
 

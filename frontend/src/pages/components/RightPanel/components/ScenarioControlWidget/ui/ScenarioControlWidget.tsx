@@ -89,7 +89,11 @@ export default function ScenarioControlWidget() {
           className="rp-btn rp-btn-primary"
           disabled={isBusy}
           onClick={() =>
-            handleCreate(setNoticeWithToast, createScenarioMutation)
+            handleCreate(
+              setNoticeWithToast,
+              createScenarioMutation,
+              scenarioIdInput,
+            )
           }
         >
           POST

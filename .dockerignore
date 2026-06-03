@@ -28,3 +28,4 @@ ENV/
 
 __pycache__/
 *.pyc
+docs/

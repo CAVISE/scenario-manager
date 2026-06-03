@@ -4,7 +4,7 @@ fastapi==0.136.1
 uvicorn==0.46.0
 pydantic==2.13.3
 pydantic-settings
-psycopg2==2.9.12
+psycopg2-binary==2.9.12
 python-dotenv==1.2.2
 omegaconf==2.3.0
 networkx==3.6.1

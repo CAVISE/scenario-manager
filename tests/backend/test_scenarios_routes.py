@@ -110,6 +110,18 @@ def test_upload_scenario_requires_name(client):
     response = client.post("/api/upload_scenario", json={"scenario_id": "sc-1"})
     assert response.status_code == 422
 
+
+def test_upload_scenario_accepts_scenario_array(client):
+    conn, _ = make_conn(one=None)
+    with patch("app.routers.scenarios.get_conn", return_value=conn):
+        response = client.post("/api/upload_scenario", json={
+            "name_of_scenario": "Array Scenario",
+            "scenario_id": "sc-array",
+            "scenario": [{"vehicle": "car", "path": [{"x": 0, "y": 0, "z": 0}]}],
+        })
+
+    assert response.status_code == 200
+
 def test_update_scenario_success(client):
     conn, cursor = make_conn(one=("sc-1",))
 

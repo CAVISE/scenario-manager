@@ -54,6 +54,21 @@ def test_stop_returns_stopping_when_running(client):
     assert response.json()["status"] == "stopping"
     assert simulation_state["status"] == "stopping"
 
+VALID_SIM_SCENARIO = [
+    {
+        "vehicle": "car",
+        "path": [
+            {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "points": [{"id": 0, "x": 10, "y": 0, "z": 0}],
+            }
+        ],
+    }
+]
+
+
 def test_start_returns_409_when_already_running(client):
     from app.routers.simulation import simulation_state
     simulation_state["running"] = True
@@ -61,7 +76,7 @@ def test_start_returns_409_when_already_running(client):
     response = client.post("/api/start_opencda", json={
         "map": "Town01",
         "max_ticks": 100,
-        "scenario": [],
+        "scenario": VALID_SIM_SCENARIO,
     })
     assert response.status_code == 409
     assert "already running" in response.json()["detail"]
@@ -78,7 +93,7 @@ def test_start_returns_started(client):
         response = client.post("/api/start_opencda", json={
             "map": "Town01",
             "max_ticks": 100,
-            "scenario": [],
+            "scenario": VALID_SIM_SCENARIO,
         })
 
     assert response.status_code == 200

@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">93.7% </span>
+                <span class="strong">94.02% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>119/127</span>
+                <span class='fraction'>126/134</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">97.27% </span>
+                <span class="strong">97.43% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>107/110</span>
+                <span class='fraction'>114/117</span>
             </div>
         
             
@@ -342,7 +342,33 @@
 <a name='L277'></a><a href='#L277'>277</a>
 <a name='L278'></a><a href='#L278'>278</a>
 <a name='L279'></a><a href='#L279'>279</a>
-<a name='L280'></a><a href='#L280'>280</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L280'></a><a href='#L280'>280</a>
+<a name='L281'></a><a href='#L281'>281</a>
+<a name='L282'></a><a href='#L282'>282</a>
+<a name='L283'></a><a href='#L283'>283</a>
+<a name='L284'></a><a href='#L284'>284</a>
+<a name='L285'></a><a href='#L285'>285</a>
+<a name='L286'></a><a href='#L286'>286</a>
+<a name='L287'></a><a href='#L287'>287</a>
+<a name='L288'></a><a href='#L288'>288</a>
+<a name='L289'></a><a href='#L289'>289</a>
+<a name='L290'></a><a href='#L290'>290</a>
+<a name='L291'></a><a href='#L291'>291</a>
+<a name='L292'></a><a href='#L292'>292</a>
+<a name='L293'></a><a href='#L293'>293</a>
+<a name='L294'></a><a href='#L294'>294</a>
+<a name='L295'></a><a href='#L295'>295</a>
+<a name='L296'></a><a href='#L296'>296</a>
+<a name='L297'></a><a href='#L297'>297</a>
+<a name='L298'></a><a href='#L298'>298</a>
+<a name='L299'></a><a href='#L299'>299</a>
+<a name='L300'></a><a href='#L300'>300</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -547,8 +573,17 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
@@ -605,6 +640,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -622,6 +662,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { buildScenarioPayload } from './scenario.load.handler';
+import { scenarioGroupsFromPayload } from '../../../../../../../api/scenarioRequest';
 import {
   BuildingPath,
   CarPath,
@@ -642,11 +683,16 @@ import { useStartSimulationMutation } from '../../../../../../Editor/hooks/useAp
 import {
   Building,
   RSU,
+  Scenario,
 } from '../../../../../../../store/types/useEditorStoreTypes';
 import { StartSimulationPayload } from '../../../../../../Editor/hooks/useApiHooks/useSimulationMutation/types/useSimulationMutationTypes';
 import { getApiErrorMessage } from '../../../../../../../api/errors';
 import { LoadScenarioOptions } from '../types/scenario.load.handlerTypes';
-import { fetchXodrText } from '../../../../../../Editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
+import {
+  fetchXodrText,
+  getStoredXodrName,
+  resolveXodrTextForSimulation,
+} from '../../../../../../Editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
 &nbsp;
 export const handleLoad = async ({
   hasId,
@@ -670,11 +716,11 @@ export const handleLoad = async ({
     const s = useEditorStore.getState();
     s.updateScenario({
       id: data.scenario_id ?? '',
-      name: data.scenario_name ?? '',
+      name: data.scenario_name ?? data.name_of_scenario ?? '',
       weather: data.weather ?? '',
       file_: data.file_ ?? null,
     });
-    const xodr = data.file_ ?? (data.scenario as any)?.file_;
+    const xodr = data.file_ ?? (data.scenario as unknown as Scenario)?.file_;
     <span class="missing-if-branch" title="if path not taken" >I</span>if (xodr) {
       const xodrText = <span class="cstat-no" title="statement not covered" >await fetchXodrText(xodr);</span>
 <span class="cstat-no" title="statement not covered" >      localStorage.setItem('cached_xodr', xodr);</span>
@@ -825,9 +871,18 @@ export const handleLoad = async ({
 export const handleCreate = async (
   setNotice: (value: string) =&gt; void,
   createMutation: ReturnType&lt;typeof useScenarioCreateMutation&gt;,
+  scenarioIdInput = '',
 ) =&gt; {
   try {
-    await createMutation.mutateAsync(buildScenarioPayload());
+    const payload = buildScenarioPayload();
+    const trimmedId = scenarioIdInput.trim();
+    await createMutation.mutateAsync({
+      ...payload,
+      scenario_id: trimmedId || payload.scenario_id,
+    });
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (trimmedId) {
+      useEditorStore.getState().updateScenario({ id: trimmedId });
+    }
     setNotice('Script saved (POST).');
   } catch (err) {
     console.error(err);
@@ -877,21 +932,26 @@ export const handleDelete = async (
   }
 };
 &nbsp;
-export const handleRunSimulation = (
+export const handleRunSimulation = async (
   setNotice: (value: string) =&gt; void,
   scenarioIdInput: string,
   startMutation: ReturnType&lt;typeof useStartSimulationMutation&gt;,
 ) =&gt; {
-  const scenario = useEditorStore.getState().Scenario;
+  const state = useEditorStore.getState();
+  const scenario = state.Scenario;
+  const mapName = getStoredXodrName(state.simConfig?.carla?.map);
+  const xodr = await resolveXodrTextForSimulation(state.simConfig?.carla?.map);
+&nbsp;
   const payload: StartSimulationPayload = {
     scenario_id: scenario.id || scenarioIdInput.trim() || <span class="branch-2 cbranch-no" title="branch not covered" >'',</span>
     scenario_name: scenario.name || 'Scenario',
     weather: scenario.weather || 'ClearNoon',
-    scenario: buildScenarioPayload().scenario || <span class="branch-1 cbranch-no" title="branch not covered" >[],</span>
+    scenario: scenarioGroupsFromPayload(buildScenarioPayload().scenario),
     description: scenario.description || '',
-    map: useEditorStore.getState().simConfig?.carla?.map || 'Town10HD',
-    xodr: localStorage.getItem('cached_xodr') || undefined,
+    map: mapName.replace(/\.xodr$/i, ''),
+    xodr,
   };
+&nbsp;
   startMutation.mutate(payload, {
     onSuccess: () =&gt; setNotice('The simulation has started.'),
     onError: async (err) =&gt; {
@@ -907,7 +967,7 @@ export const handleRunSimulation = (
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-25T10:01:26.216Z
+                at 2026-06-02T16:28:34.183Z
             </div>
         <script src="../../../../../../../prettify.js"></script>
         <script>

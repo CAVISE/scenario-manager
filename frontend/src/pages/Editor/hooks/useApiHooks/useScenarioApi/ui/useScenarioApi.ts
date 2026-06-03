@@ -9,12 +9,14 @@ export function useScenarioApi() {
   const loadScenario = useCallback(
     async (id: string) => {
       const data = await scenariosApi.get(id);
-      localStorage.setItem('cached_xodr', data.file_ ? data.file_ : '');
+      if (data.file_) {
+        localStorage.setItem('cached_xodr', data.file_);
+      }
       updateScenario({
         id: data.scenario_id ?? '',
-        name: data.scenario_name ?? '',
+        name: data.name_of_scenario ?? '',
         weather: data.weather ?? '',
-        file_: data.file_,
+        file_: data.file_ ?? null,
       });
       return data;
     },
@@ -22,13 +24,11 @@ export function useScenarioApi() {
   );
 
   const patchScenario = useCallback(
-    async (payload: Partial<ScenarioPayload>) => {
+    async (payload: Partial<ScenarioPayload> & { scenario_id: string }) => {
       const data = await scenariosApi.update(payload);
-      updateScenario({
-        id: data.scenario_id ?? '',
-        name: data.scenario_name ?? '',
-        weather: data.weather ?? '',
-      });
+      if (data.scenario_id) {
+        updateScenario({ id: data.scenario_id });
+      }
       return data;
     },
     [updateScenario],
@@ -37,11 +37,9 @@ export function useScenarioApi() {
   const putScenario = useCallback(
     async (payload: ScenarioPayload) => {
       const data = await scenariosApi.replace(payload);
-      updateScenario({
-        id: data.scenario_id ?? '',
-        name: data.scenario_name ?? '',
-        weather: data.weather ?? '',
-      });
+      if (data.scenario_id) {
+        updateScenario({ id: data.scenario_id });
+      }
       return data;
     },
     [updateScenario],
