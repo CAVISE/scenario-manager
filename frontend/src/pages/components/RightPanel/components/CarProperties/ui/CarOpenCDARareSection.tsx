@@ -86,7 +86,11 @@ export default function CarOpenCDARareSection({ car }: { car: Car }) {
               </FormControl>
             )}
 
-            <Typography variant="caption" color="text.secondary" sx={{ pt: 0.5 }}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ pt: 0.5 }}
+            >
               sensing / perception
             </Typography>
 

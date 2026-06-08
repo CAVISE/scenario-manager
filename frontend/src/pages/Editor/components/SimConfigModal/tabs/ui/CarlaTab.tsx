@@ -140,7 +140,9 @@ export default function CarlaTab() {
           size="small"
           fullWidth
           value={simConfig.carla.seed}
-          onChange={(e) => updateSimConfigCarla({ seed: Number(e.target.value) })}
+          onChange={(e) =>
+            updateSimConfigCarla({ seed: Number(e.target.value) })
+          }
         />
       </Stack>
       <Stack direction="row" spacing={2}>

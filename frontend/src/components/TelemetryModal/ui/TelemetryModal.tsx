@@ -162,7 +162,14 @@ const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
     return (
       <Grid container spacing={2}>
         {tabImages.map((image) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={`${tabKey}-${image.url}`}>
+          <Grid
+            item
+            xs={12}
+            sm={6}
+            md={4}
+            lg={3}
+            key={`${tabKey}-${image.url}`}
+          >
             <ImageCard onClick={() => setSelectedImage(image.url)}>
               <ImagePreviewFrame>
                 <ImagePreviewImg

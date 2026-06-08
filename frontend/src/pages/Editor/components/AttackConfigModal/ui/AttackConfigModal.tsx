@@ -90,7 +90,7 @@ export default function AttackConfigModal({
     useEditorStore((s) => s.simConfig),
   );
   const updateSimConfig = useEditorStore((s) => s.updateSimConfig);
-  const attacks = simConfig.attacks ?? [];
+  const attacks = useMemo(() => simConfig.attacks ?? [], [simConfig.attacks]);
   const [selectedAttack, setSelectedAttack] = useState(0);
 
   const current = useMemo(

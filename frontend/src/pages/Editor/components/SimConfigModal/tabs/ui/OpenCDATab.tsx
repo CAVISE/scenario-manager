@@ -12,7 +12,10 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { opencdaPanelPaperSx, opencdaSectionLabelSx } from '../../opencdaUiStyles';
+import {
+  opencdaPanelPaperSx,
+  opencdaSectionLabelSx,
+} from '../../opencdaUiStyles';
 import { useEditorStore } from '../../../../../../store';
 import { AIM_CHECK_SIM_OVERRIDES } from '../../../../Generators/exporters/aimCheckDefaults';
 import {

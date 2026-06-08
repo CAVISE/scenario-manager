@@ -1,6 +1,5 @@
 import type { ScenarioGroup, ScenarioPayload } from './types/IScenarioTypes';
 import {
-  validateDeletePayload,
   validateUpdatePayload,
   validateUploadPayload,
 } from './scenarioValidation';
