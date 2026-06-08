@@ -73,7 +73,9 @@ export default function EditorModals() {
     const state = useEditorStore.getState();
     const scenario = state.Scenario;
     const mapName = getStoredXodrName(state.simConfig?.carla?.map);
-    const xodr = await resolveXodrTextForSimulation(state.simConfig?.carla?.map);
+    const xodr = await resolveXodrTextForSimulation(
+      state.simConfig?.carla?.map,
+    );
 
     const payload: StartSimulationPayload = {
       scenario_id: scenario.id || '',

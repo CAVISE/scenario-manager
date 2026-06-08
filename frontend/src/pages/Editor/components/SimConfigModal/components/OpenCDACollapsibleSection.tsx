@@ -59,7 +59,9 @@ export default function OpenCDACollapsibleSection({
           {title}
         </Typography>
       </AccordionSummary>
-      <AccordionDetails sx={{ pt: 0, pb: 2, px: 2 }}>{children}</AccordionDetails>
+      <AccordionDetails sx={{ pt: 0, pb: 2, px: 2 }}>
+        {children}
+      </AccordionDetails>
     </Accordion>
   );
 }

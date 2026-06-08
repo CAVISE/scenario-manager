@@ -53,7 +53,8 @@ export function useScenarioCreateMutation() {
     }) => scenariosApi.create(payload, scenarioIdInput),
     onSuccess: (_data, variables) => {
       const id =
-        variables.scenarioIdInput?.trim() || variables.payload.scenario_id?.trim();
+        variables.scenarioIdInput?.trim() ||
+        variables.payload.scenario_id?.trim();
       if (id) {
         queryClient.invalidateQueries({ queryKey: scenarioKeys.detail(id) });
         queryClient.invalidateQueries({ queryKey: scenarioKeys.list() });

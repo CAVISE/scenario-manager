@@ -122,9 +122,7 @@ export const ImagePreviewFrame = styled(Box)(({ theme }) => ({
   minHeight: 160,
   aspectRatio: '4 / 3',
   backgroundColor:
-    theme.palette.mode === 'dark'
-      ? 'rgb(11, 15, 23)'
-      : 'rgb(248, 250, 252)',
+    theme.palette.mode === 'dark' ? 'rgb(11, 15, 23)' : 'rgb(248, 250, 252)',
   borderBottom: `1px solid ${theme.palette.divider}`,
 }));
 

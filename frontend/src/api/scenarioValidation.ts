@@ -2,9 +2,7 @@ import type { ScenarioGroup, ScenarioPayload } from './types/IScenarioTypes';
 import type { StartSimulationPayload } from '../pages/Editor/hooks/useApiHooks/useSimulationMutation/types/useSimulationMutationTypes';
 import { scenarioGroupsFromPayload } from './scenarioRequest';
 
-export type ValidationResult =
-  | { ok: true }
-  | { ok: false; message: string };
+export type ValidationResult = { ok: true } | { ok: false; message: string };
 
 const SCENARIO_ID_RE = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/;
 const MAX_NAME_LEN = 200;
@@ -49,7 +47,9 @@ export function validateScenarioName(
   return { ok: true };
 }
 
-function validateDescription(text: string | null | undefined): ValidationResult {
+function validateDescription(
+  text: string | null | undefined,
+): ValidationResult {
   if (text && text.length > MAX_DESCRIPTION_LEN) {
     return {
       ok: false,
@@ -119,7 +119,8 @@ export function validateUploadPayload(
   payload: ScenarioPayload,
   scenarioIdInput = '',
 ): ValidationResult {
-  const scenarioId = scenarioIdInput.trim() || payload.scenario_id?.trim() || '';
+  const scenarioId =
+    scenarioIdInput.trim() || payload.scenario_id?.trim() || '';
   return firstFailure(
     validateScenarioId(scenarioId),
     validateScenarioName(payload.name_of_scenario),
