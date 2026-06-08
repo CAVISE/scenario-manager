@@ -651,11 +651,13 @@ export function mergeSimConfigWithDefaults(
         ...p.opencda?.bg_spawn_range,
         x_step:
           p.opencda?.bg_spawn_range?.x_step ??
-          (p.opencda?.bg_spawn_range as { z_min?: number } | undefined)?.z_min ??
+          (p.opencda?.bg_spawn_range as { z_min?: number } | undefined)
+            ?.z_min ??
           defaultSimConfig.opencda.bg_spawn_range.x_step,
         y_step:
           p.opencda?.bg_spawn_range?.y_step ??
-          (p.opencda?.bg_spawn_range as { z_max?: number } | undefined)?.z_max ??
+          (p.opencda?.bg_spawn_range as { z_max?: number } | undefined)
+            ?.z_max ??
           defaultSimConfig.opencda.bg_spawn_range.y_step,
       },
     },
