@@ -24,7 +24,8 @@ import {
   setStoredXodrName,
 } from '../../../hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
 import { CARLA_MAPS } from '../../SimConfigModal/types/SimConfigModalTypes';
-import { useHooks } from '../../../context';
+import { useEditorRefs, useHooks } from '../../../context';
+import { ScenarioGroup } from '../../../../../api/types/IScenarioTypes';
 
 export default function EditorModals() {
   const [telemetryModalOpen, setTelemetryModalOpen] = useState(false);
@@ -36,6 +37,7 @@ export default function EditorModals() {
   const startSimulationMutation = useStartSimulationMutation();
   const updateSimConfigCarla = useEditorStore((s) => s.updateSimConfigCarla);
   const { loadFile } = useHooks();
+  const { odrMapRef } = useEditorRefs();
 
   if (typeof window !== 'undefined') {
     window.editorModals = {
@@ -82,9 +84,17 @@ export default function EditorModals() {
       scenario_name: scenario.name || 'Scenario',
       weather: scenario.weather || 'ClearNoon',
       description: scenario.description || '',
+<<<<<<< Updated upstream
       map: mapName.replace(/\.xodr$/i, ''),
       scenario: scenarioGroupsFromPayload(buildScenarioPayload().scenario),
       xodr,
+=======
+      map: mapName,
+      scenario: buildScenarioPayload().scenario as ScenarioGroup[],
+      map_offsets: odrMapRef.current
+        ? { x: odrMapRef.current.x_offs, y: odrMapRef.current.y_offs }
+        : undefined,
+>>>>>>> Stashed changes
     };
 
     const validation = validateStartSimulationPayload(payload);

@@ -8,4 +8,6 @@ export interface StartSimulationPayload {
   description: string;
   map: string;
   xodr?: string | undefined;
+  max_ticks?: number;
+  map_offsets?: { x: number; y: number };
 }

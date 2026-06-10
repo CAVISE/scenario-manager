@@ -5,6 +5,7 @@ import { useSceneGraph } from '../../hooks/useEditorEngine/useSceneGraph';
 import { useThreeScene } from '../../hooks/useThreeScene';
 import { useEditorRefs } from './EditorRefsContext';
 import { HooksContext } from './hooksContext';
+import { useEffect } from 'react';
 
 export const HooksProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -49,7 +50,9 @@ export const HooksProvider: React.FC<{ children: React.ReactNode }> = ({
     detachTransformControls,
     handleSetBuildingMode,
   };
-
+  useEffect(() => {
+    console.log('[Loading] text:', loadingText, 'progress:', loadingProgress);
+  }, [loadingText, loadingProgress]);
   return (
     <HooksContext.Provider value={value}>{children}</HooksContext.Provider>
   );

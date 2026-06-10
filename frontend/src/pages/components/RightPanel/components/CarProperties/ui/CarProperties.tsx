@@ -45,9 +45,9 @@ export default function CarProperties({ car, onDelete }: CarPropertiesProps) {
       </FormControl>
 
       <FormLabel>Position</FormLabel>
-      <Grid container spacing={1}>
+      <Grid item container spacing={1}>
         {(['x', 'y', 'z'] as const).map((axis) => (
-          <Grid xs={4} key={axis}>
+          <Grid item xs={4} key={axis}>
             <FormControl>
               <FormLabel sx={formLabelStyles}>{axis.toUpperCase()}</FormLabel>
               <Input
