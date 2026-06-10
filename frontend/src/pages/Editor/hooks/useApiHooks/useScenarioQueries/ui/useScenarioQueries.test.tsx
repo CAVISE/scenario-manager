@@ -229,4 +229,23 @@ describe('useScenarioQueries', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual([{ id: '1' }]);
   });
+  it('useScenarioDetailQuery fetches and updates store', async () => {
+    getMock.mockResolvedValue({
+      scenario_id: 'sc-1',
+      scenario_name: 'My Scenario',
+      weather: 'ClearNoon',
+      file_: 'map.xodr',
+    });
+    const queryClient = new QueryClient();
+    const { result } = renderHook(() => useScenarioDetailQuery('sc-1'), {
+      wrapper: makeWrapper(queryClient),
+    });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(updateScenarioMock).toHaveBeenCalledWith({
+      id: 'sc-1',
+      name: 'My Scenario',
+      weather: 'ClearNoon',
+      file_: 'map.xodr',
+    });
+  });
 });

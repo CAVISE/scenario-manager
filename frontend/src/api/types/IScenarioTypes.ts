@@ -76,16 +76,32 @@ export type ScenarioGroup =
       path: PedestrianScenarioPath[];
     });
 
+export interface ScenarioStoredJson {
+  scenario_text: ScenarioGroup[];
+}
+
 export interface ScenarioPayload {
-  id: string | null;
-  name_of_scenario: string | null;
+  scenario_name?: string | null;
   scenario_id: string | null;
-  scenario_name: string | null;
-  weather: string | null;
+  name_of_scenario: string | null;
+  description?: string | null;
   preview?: string | null;
-  scenario: ScenarioGroup[];
-  map?: string;
+  scenario: ScenarioGroup[] | ScenarioStoredJson;
   file_: string | null;
+  weather?: string | undefined;
+  map?: string | null;
+  id?: string | null;
+}
+
+export interface ScenarioDetail {
+  scenario_id: string;
+  name_of_scenario: string | null;
+  scenario_name?: string | null;
+  weather?: string | null;
+  description?: string | null;
+  preview?: string | null;
+  file_?: string | null;
+  scenario?: ScenarioGroup[] | ScenarioStoredJson | null;
 }
 
 export interface ScenarioListItem {

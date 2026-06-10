@@ -1,96 +1,114 @@
-import { describe, it, expect, vi } from 'vitest';
-import { HTTPError } from 'ky';
+import { describe, expect, it } from 'vitest';
 import { getApiErrorMessage, getApiErrorMessageSync } from './errors';
+import { HTTPError } from 'ky';
 
-function makeHttpError(jsonResult: unknown, jsonThrows = false): HTTPError {
-  const error = Object.create(HTTPError.prototype) as HTTPError;
-  error.response = {
-    json: jsonThrows
-      ? vi.fn().mockRejectedValue(new Error('parse error'))
-      : vi.fn().mockResolvedValue(jsonResult),
-  } as unknown as Response;
-  return error;
+function makeHttpError(body: unknown, status = 400): HTTPError {
+  const response = new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+  return new HTTPError(response, new Request('http://test'), {} as never);
 }
+
+function makeHttpErrorBadJson(status = 500): HTTPError {
+  const response = new Response('not json', { status });
+  return new HTTPError(response, new Request('http://test'), {} as never);
+}
+
 describe('getApiErrorMessage', () => {
-  it('returns fallback for non-Error non-HTTPError values', async () => {
-    expect(await getApiErrorMessage(null, 'fallback')).toBe('fallback');
-    expect(await getApiErrorMessage(undefined, 'fallback')).toBe('fallback');
-    expect(await getApiErrorMessage(42, 'fallback')).toBe('fallback');
-    expect(await getApiErrorMessage('raw string', 'fallback')).toBe('fallback');
+  it('returns fallback for non-Error value', async () => {
+    expect(await getApiErrorMessage('oops', 'fallback')).toBe('fallback');
   });
 
-  it('returns err.message for plain Error', async () => {
-    const err = new Error('something went wrong');
-    expect(await getApiErrorMessage(err, 'fallback')).toBe(
-      'something went wrong',
+  it('returns Error.message for plain Error', async () => {
+    expect(await getApiErrorMessage(new Error('boom'), 'fallback')).toBe(
+      'boom',
     );
   });
 
-  it('returns fallback for plain Error with blank message', async () => {
-    const err = new Error('   ');
-    expect(await getApiErrorMessage(err, 'fallback')).toBe('fallback');
-  });
-
-  it('returns string payload from HTTPError when response is a trimmed string', async () => {
-    const err = makeHttpError('server error message');
-    expect(await getApiErrorMessage(err, 'fallback')).toBe(
-      'server error message',
+  it('returns fallback for Error with blank message', async () => {
+    expect(await getApiErrorMessage(new Error('   '), 'fallback')).toBe(
+      'fallback',
     );
   });
 
-  it('returns fallback when HTTPError string payload is blank', async () => {
-    const err = makeHttpError('   ');
-    expect(await getApiErrorMessage(err, 'fallback')).toBe('fallback');
+  it('returns string payload directly', async () => {
+    const err = makeHttpError('Server is down');
+    expect(await getApiErrorMessage(err, 'fallback')).toBe('Server is down');
   });
 
-  it('returns detail from HTTPError object payload', async () => {
-    const err = makeHttpError({ detail: 'not found' });
-    expect(await getApiErrorMessage(err, 'fallback')).toBe('not found');
+  it('returns detail string from object payload', async () => {
+    const err = makeHttpError({ detail: 'Invalid input' });
+    expect(await getApiErrorMessage(err, 'fallback')).toBe('Invalid input');
   });
 
-  it('returns message from HTTPError object payload when detail is absent', async () => {
-    const err = makeHttpError({ message: 'bad request' });
-    expect(await getApiErrorMessage(err, 'fallback')).toBe('bad request');
+  it('formats array of validation issues', async () => {
+    const err = makeHttpError({
+      detail: [
+        { loc: ['body', 'name'], msg: 'field required' },
+        { loc: ['body', 'id'], msg: 'invalid' },
+      ],
+    });
+    const result = await getApiErrorMessage(err, 'fallback');
+    expect(result).toContain('name: field required');
+    expect(result).toContain('id: invalid');
   });
 
-  it('returns error from HTTPError object payload when detail and message are absent', async () => {
-    const err = makeHttpError({ error: 'unauthorized' });
-    expect(await getApiErrorMessage(err, 'fallback')).toBe('unauthorized');
+  it('filters "body" from loc path', async () => {
+    const err = makeHttpError({
+      detail: [{ loc: ['body', 'scenario_id'], msg: 'too short' }],
+    });
+    const result = await getApiErrorMessage(err, 'fallback');
+    expect(result).toBe('scenario_id: too short');
   });
 
-  it('returns fallback when HTTPError object payload fields are all blank', async () => {
-    const err = makeHttpError({ detail: '  ', message: '', error: undefined });
-    expect(await getApiErrorMessage(err, 'fallback')).toBe('fallback');
+  it('uses msg without loc', async () => {
+    const err = makeHttpError({ detail: [{ msg: 'general error' }] });
+    expect(await getApiErrorMessage(err, 'fallback')).toBe('general error');
   });
 
-  it('returns fallback when HTTPError payload is null', async () => {
+  it('falls back to payload.message', async () => {
+    const err = makeHttpError({ message: 'Something went wrong' });
+    expect(await getApiErrorMessage(err, 'fallback')).toBe(
+      'Something went wrong',
+    );
+  });
+
+  it('falls back to payload.error', async () => {
+    const err = makeHttpError({ error: 'Not found' });
+    expect(await getApiErrorMessage(err, 'fallback')).toBe('Not found');
+  });
+
+  it('returns fallback when payload is null', async () => {
     const err = makeHttpError(null);
     expect(await getApiErrorMessage(err, 'fallback')).toBe('fallback');
   });
 
-  it('returns fallback when HTTPError json() throws', async () => {
-    const err = makeHttpError(null, true);
+  it('returns fallback when response body is not JSON', async () => {
+    const err = makeHttpErrorBadJson();
     expect(await getApiErrorMessage(err, 'fallback')).toBe('fallback');
   });
 });
 
 describe('getApiErrorMessageSync', () => {
-  it('returns err.message for plain Error', () => {
-    expect(getApiErrorMessageSync(new Error('sync error'), 'fallback')).toBe(
+  it('returns Error.message', () => {
+    expect(getApiErrorMessageSync(new Error('sync error'), 'fb')).toBe(
       'sync error',
     );
   });
 
-  it('returns fallback for plain Error with blank message', () => {
-    expect(getApiErrorMessageSync(new Error('  '), 'fallback')).toBe(
-      'fallback',
-    );
+  it('returns fallback for non-Error', () => {
+    expect(getApiErrorMessageSync({ code: 42 }, 'fb')).toBe('fb');
   });
-
-  it('returns fallback for non-Error values', () => {
-    expect(getApiErrorMessageSync(null, 'fallback')).toBe('fallback');
-    expect(getApiErrorMessageSync(undefined, 'fallback')).toBe('fallback');
-    expect(getApiErrorMessageSync('string', 'fallback')).toBe('fallback');
-    expect(getApiErrorMessageSync(42, 'fallback')).toBe('fallback');
+  it('returns fallback when detail array is empty', async () => {
+    const err = makeHttpError({ detail: [] });
+    expect(await getApiErrorMessage(err, 'fallback')).toBe('fallback');
+  });
+  it('returns fallback when detail array issues have no msg or loc', async () => {
+    const err = makeHttpError({ detail: [{ msg: '' }] });
+    expect(await getApiErrorMessage(err, 'fallback')).toBe('fallback');
+  });
+  it('returns fallback for blank Error.message', () => {
+    expect(getApiErrorMessageSync(new Error('  '), 'fb')).toBe('fb');
   });
 });

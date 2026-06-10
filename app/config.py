@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     log_dir: Path = BASE_DIR / "logs"
 
     # Simulation
-    max_ticks_default: int = 1000
+    max_ticks_default: int = 3000
     eval_retention_days: int = 30
 
     cors_origins: str = "http://localhost:5173"

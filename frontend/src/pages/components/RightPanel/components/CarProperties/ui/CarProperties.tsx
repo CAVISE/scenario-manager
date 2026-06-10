@@ -15,6 +15,8 @@ import { HexColorPicker } from 'react-colorful';
 import { useEditorStore } from '../../../../../../store';
 import { numInputSlot } from '../../../types/PanelTypes';
 import CarLidarList from '../../CarLidarList';
+import CarOpenCDASection from './CarOpenCDASection';
+import CarOpenCDARareSection from './CarOpenCDARareSection';
 import {
   CarPropertiesProps,
   formLabelStyles,
@@ -43,9 +45,9 @@ export default function CarProperties({ car, onDelete }: CarPropertiesProps) {
       </FormControl>
 
       <FormLabel>Position</FormLabel>
-      <Grid container spacing={1}>
+      <Grid item container spacing={1}>
         {(['x', 'y', 'z'] as const).map((axis) => (
-          <Grid xs={4} key={axis}>
+          <Grid item xs={4} key={axis}>
             <FormControl>
               <FormLabel sx={formLabelStyles}>{axis.toUpperCase()}</FormLabel>
               <Input
@@ -116,6 +118,9 @@ export default function CarProperties({ car, onDelete }: CarPropertiesProps) {
           Current color: #{car.color ?? '00ff00'}
         </Typography>
       </FormControl>
+
+      <CarOpenCDASection car={car} />
+      <CarOpenCDARareSection car={car} />
 
       <Divider />
 

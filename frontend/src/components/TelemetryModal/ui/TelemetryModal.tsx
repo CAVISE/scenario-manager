@@ -3,13 +3,13 @@ import { api } from '../../../api/client';
 import { API_URL } from '../../../VARS';
 import {
   Modal,
-  Box,
   Tabs,
   Tab,
   IconButton,
   Typography,
   Grid,
   Tooltip,
+  CircularProgress,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ImageViewerModal from '../../ImageViewerModal';
@@ -25,9 +25,11 @@ import {
   DemoChip,
   ImageCard,
   TabPanel,
-  telemetryModalImageStyles,
-  telemetryModalTypographyStyles,
-  telemetryModalBoxStyles,
+  TabsBar,
+  EmptyStateBox,
+  ImagePreviewFrame,
+  ImagePreviewImg,
+  ImageCaption,
 } from '../types/TelemetryModalTypes';
 
 interface SimStatus {
@@ -50,9 +52,11 @@ const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [images, setImages] = useState<Record<string, { default: string }>>({});
   const [isEmpty, setIsEmpty] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!open) return;
+    setLoading(true);
 
     api
       .get('api/status')
@@ -81,7 +85,8 @@ const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
       .catch(() => {
         setImages({});
         setIsEmpty(true);
-      });
+      })
+      .finally(() => setLoading(false));
   }, [open]);
 
   const groupImagesByTab = (
@@ -97,7 +102,7 @@ const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
     Object.entries(modules).forEach(([filename, module]) => {
       const imageUrl = module.default;
       const lower = filename.toLowerCase();
-      const displayName = filename.replace('.png', '').replace(/_/g, ' ');
+      const displayName = filename.replace(/\.png$/i, '').replace(/_/g, ' ');
 
       if (/_routes\.png$/i.test(lower)) {
         result.routes.push({ url: imageUrl, name: displayName });
@@ -134,17 +139,6 @@ const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
 
   const imagesByTab = useMemo(() => groupImagesByTab(images), [images]);
 
-  const handleTabChange = (
-    _event: React.SyntheticEvent,
-    newValue: TabCategories,
-  ) => {
-    setActiveTab(newValue);
-  };
-
-  const handleImageClick = (imageUrl: string) => {
-    setSelectedImage(imageUrl);
-  };
-
   const tabLabels = {
     routes: `Routes (${imagesByTab.routes.length})`,
     telemetry: `Telemetry (${imagesByTab.telemetry.length})`,
@@ -155,22 +149,37 @@ const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
   const renderTabContent = (tabKey: TabCategories) => {
     const tabImages = imagesByTab[tabKey];
 
+    if (tabImages.length === 0) {
+      return (
+        <EmptyStateBox>
+          <Typography variant="body2" color="text.secondary">
+            No images in this category.
+          </Typography>
+        </EmptyStateBox>
+      );
+    }
+
     return (
-      <Grid container spacing={2}>
-        {tabImages.map((image, index) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={`${tabKey}-${index}`}>
-            <ImageCard onClick={() => handleImageClick(image.url)}>
-              <Box sx={{ position: 'relative', paddingTop: '75%' }}>
-                <img
+      <Grid item container spacing={2}>
+        {tabImages.map((image) => (
+          <Grid
+            item
+            xs={12}
+            sm={6}
+            md={4}
+            lg={3}
+            key={`${tabKey}-${image.url}`}
+          >
+            <ImageCard onClick={() => setSelectedImage(image.url)}>
+              <ImagePreviewFrame>
+                <ImagePreviewImg
                   src={image.url}
                   alt={image.name}
                   loading="lazy"
-                  style={telemetryModalImageStyles}
+                  decoding="async"
                 />
-              </Box>
-              <Typography sx={telemetryModalTypographyStyles}>
-                {image.name}
-              </Typography>
+              </ImagePreviewFrame>
+              <ImageCaption title={image.name}>{image.name}</ImageCaption>
             </ImageCard>
           </Grid>
         ))}
@@ -184,10 +193,10 @@ const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
         <ModalContainer>
           <ModalHeader>
             <TitleContainer>
-              <Typography variant="h5" component="h2">
-                Results
+              <Typography variant="h5" component="h2" fontWeight={600}>
+                Simulation results
               </Typography>
-              {isEmpty && (
+              {isEmpty && !loading && (
                 <Tooltip title="No simulation results yet">
                   <DemoChip label="NO DATA" size="small" />
                 </Tooltip>
@@ -198,28 +207,37 @@ const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
             </IconButton>
           </ModalHeader>
 
-          {isEmpty ? (
-            <Box sx={{ p: 4, textAlign: 'center' }}>
-              <Typography color="text.secondary">
-                No results yet. Run a simulation first.
+          {loading ? (
+            <EmptyStateBox>
+              <CircularProgress size={32} sx={{ mb: 2 }} />
+              <Typography variant="body2">Loading results…</Typography>
+            </EmptyStateBox>
+          ) : isEmpty ? (
+            <EmptyStateBox>
+              <Typography variant="body1" gutterBottom>
+                No results yet
               </Typography>
-            </Box>
+              <Typography variant="body2">
+                Run a simulation and wait until it finishes, then open Results
+                again.
+              </Typography>
+            </EmptyStateBox>
           ) : (
             <>
-              <Box sx={telemetryModalBoxStyles}>
+              <TabsBar>
                 <Tabs
                   value={activeTab}
-                  onChange={handleTabChange}
-                  aria-label="telemetry tabs"
+                  onChange={(_, v) => setActiveTab(v)}
                   variant="scrollable"
                   scrollButtons="auto"
+                  allowScrollButtonsMobile
                 >
                   <Tab label={tabLabels.routes} value="routes" />
                   <Tab label={tabLabels.telemetry} value="telemetry" />
                   <Tab label={tabLabels.localization} value="localization" />
                   <Tab label={tabLabels.other} value="other" />
                 </Tabs>
-              </Box>
+              </TabsBar>
 
               <TabPanel
                 sx={{ display: activeTab === 'routes' ? 'block' : 'none' }}
@@ -252,7 +270,7 @@ const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
         open={!!selectedImage}
         onClose={() => setSelectedImage(null)}
         imagePath={selectedImage || ''}
-        imageAlt="Full size image"
+        imageAlt="Simulation result plot"
       />
     </>
   );

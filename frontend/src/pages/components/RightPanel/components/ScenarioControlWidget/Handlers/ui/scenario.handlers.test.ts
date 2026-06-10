@@ -113,6 +113,7 @@ import {
 } from '../../../../../../Editor/hooks/useApiHooks/useScenarioQueries';
 import { useEditorStore } from '../../../../../../../store';
 import { useStartSimulationMutation } from '../../../../../../Editor/hooks/useApiHooks/useSimulationMutation';
+import { ScenarioGroup } from '../../../../../../../api/types/IScenarioTypes';
 
 describe('handleLoad regression', () => {
   beforeEach(() => {
@@ -301,7 +302,8 @@ describe('buildScenarioPayload', () => {
     storeState.selectedId = 'car-1';
 
     const payload = buildScenarioPayload();
-    const carGroup = payload.scenario.find((g) => g.vehicle === 'car')!;
+    const scenario = payload.scenario as ScenarioGroup[];
+    const carGroup = scenario.find((g) => g.vehicle === 'car')!;
     const carPath = carGroup.path[0];
 
     expect(carPath.model).toBe('audi');
@@ -330,10 +332,8 @@ describe('buildScenarioPayload', () => {
     storeState.selectedId = 'car-1';
 
     const payload = buildScenarioPayload();
-    const carGroup = payload.scenario[0] as Extract<
-      (typeof payload.scenario)[0],
-      { vehicle: 'car' }
-    >;
+    const scenario = payload.scenario as ScenarioGroup[];
+    const carGroup = scenario.find((g) => g.vehicle === 'car')!;
     const carPath = carGroup.path[0];
 
     expect(carPath.selected).toBe(false);
@@ -354,7 +354,8 @@ describe('buildScenarioPayload', () => {
     ];
 
     const payload = buildScenarioPayload();
-    const rsuGroup = payload.scenario.find((g) => g.vehicle === 'RSU')!;
+    const scenario = payload.scenario as ScenarioGroup[];
+    const rsuGroup = scenario.find((g) => g.vehicle === 'RSU')!;
     const rsuPath = rsuGroup.path[0];
 
     expect(rsuPath.x).toBe(5);
@@ -379,7 +380,8 @@ describe('buildScenarioPayload', () => {
     ];
 
     const payload = buildScenarioPayload();
-    const rsuGroup = payload.scenario.find((g) => g.vehicle === 'RSU')!;
+    const scenario = payload.scenario as ScenarioGroup[];
+    const rsuGroup = scenario.find((g) => g.vehicle === 'RSU')!;
     const rsuPath = rsuGroup.path[0];
     expect(rsuPath.script).toBeNull();
   });
@@ -397,7 +399,8 @@ describe('buildScenarioPayload', () => {
     ];
 
     const payload = buildScenarioPayload();
-    const buildingGroup = payload.scenario.find(
+    const scenario = payload.scenario as ScenarioGroup[];
+    const buildingGroup = scenario.find(
       (g) => g.vehicle === 'building',
     )!;
     const building = buildingGroup.path[0];
@@ -425,7 +428,8 @@ describe('buildScenarioPayload', () => {
     ];
 
     const payload = buildScenarioPayload();
-    const pedGroup = payload.scenario.find((g) => g.vehicle === 'pedestrian')!;
+    const scenario = payload.scenario as ScenarioGroup[];
+    const pedGroup = scenario.find((g) => g.vehicle === 'pedestrian')!;
     const ped = pedGroup.path[0];
 
     expect(ped.id).toBe('ped-1');
@@ -540,10 +544,8 @@ describe('buildScenarioPayload', () => {
     ];
 
     const payload = buildScenarioPayload();
-    const carGroup = payload.scenario[0] as Extract<
-      (typeof payload.scenario)[0],
-      { vehicle: 'car' }
-    >;
+    const scenario = payload.scenario as ScenarioGroup[];
+    const carGroup = scenario.find((g) => g.vehicle === 'car')!;
     const carPath = carGroup.path[0];
     expect(carPath.rotation).toBe(0);
   });

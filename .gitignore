@@ -29,3 +29,4 @@ ENV/
 
 __pycache__/
 *.pyc
+evaluation_outputs/

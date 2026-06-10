@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 import * as THREE from 'three';
 import { OpenDriveMapInstance } from '../../../../../types/editorTypes';
 import {
@@ -36,6 +36,7 @@ export function useOdrMapManager({
     cubeCirclesRef,
     currentCarRef,
     currentColorRef,
+    odrMapRef,
   } = useEditorRefs();
 
   const odrMeshesRef = useRef<OdrMapMeshes>({ ...EMPTY_ODR_MESHES });
@@ -43,6 +44,8 @@ export function useOdrMapManager({
   const disposableObjs = useRef<THREE.BufferGeometry[]>([]);
   const moduleRef = useRef<OpenDriveModule | null>(null);
   const mapRef = useRef<OpenDriveMapInstance | null>(null);
+
+
 
   const loadOdrMap = useCallback(
     (clearMap = true, fitView = true) => {
@@ -102,6 +105,11 @@ export function useOdrMapManager({
       }
 
       setTimeout(() => restoreLidars({ carMeshesRef, updateSceneGraph }), 100);
+      odrMapRef.current = mapRef.current;
+      console.log('[OdrMapManager] loadOdrMap finished, calling setStep done');
+      console.log('X offset: ', mapRef?.current?.x_offs);
+      console.log('Y offset: ', mapRef?.current?.y_offs);
+
       setStep('done');
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -133,7 +141,10 @@ export function useOdrMapManager({
     try {
       mapRef.current?.delete();
       mapRef.current = new Module.OpenDriveMap('./data.xodr', ODR_MAP_OPTIONS);
+      odrMapRef.current = mapRef.current;
       loadOdrMap(true, false);
+      console.log('X offset: ', mapRef.current.x_offs);
+      console.log('Y offset: ', mapRef.current.y_offs);
     } catch (err) {
       console.error(err);
       setStep('done');

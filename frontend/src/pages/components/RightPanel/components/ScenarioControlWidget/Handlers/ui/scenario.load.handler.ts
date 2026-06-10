@@ -19,12 +19,38 @@ export function buildScenarioPayload(): ScenarioPayload {
   ) as HTMLCanvasElement | null;
   return {
     scenario_id: s.Scenario?.id || null,
-    scenario_name: s.Scenario?.name || localStorage.getItem('scenario_name'),
-    weather: s.Scenario?.weather || localStorage.getItem('weather'),
+    scenario_name:
+      s.Scenario?.name ?? localStorage.getItem('scenario_name') ?? undefined,
+    weather:
+      s.Scenario?.weather ?? localStorage.getItem('weather') ?? undefined,
     map: s.simConfig?.carla?.map || 'town10',
     id: s.Scenario?.id || null,
     name_of_scenario: s.Scenario?.name || null,
-    preview: canvas?.toDataURL('image/png') ?? null,
+    preview: (() => {
+      if (!canvas) return null;
+      try {
+        const thumb = document.createElement('canvas');
+        thumb.width = 320;
+        thumb.height = 180;
+        const ctx = thumb.getContext('2d');
+        if (!ctx) return null;
+        const scale = Math.min(320 / canvas.width, 180 / canvas.height);
+        const dx = (320 - canvas.width * scale) / 2;
+        const dy = (180 - canvas.height * scale) / 2;
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, 320, 180);
+        ctx.drawImage(
+          canvas,
+          dx,
+          dy,
+          canvas.width * scale,
+          canvas.height * scale,
+        );
+        return thumb.toDataURL('image/jpeg', 0.72);
+      } catch {
+        return null;
+      }
+    })(),
     file_: localStorage.getItem('cached_xodr') ?? null,
     scenario: (
       [
