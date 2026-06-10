@@ -21,9 +21,9 @@ export default function RoutePointProperties({
       <Typography variant="subtitle1">Route point</Typography>
 
       <FormLabel>Position</FormLabel>
-      <Grid container spacing={1}>
+      <Grid item container spacing={1}>
         {(['x', 'y', 'z'] as const).map((axis) => (
-          <Grid xs={4} key={axis}>
+          <Grid item xs={4} key={axis}>
             <FormControl>
               <FormLabel sx={{ fontSize: 'xs', mb: 0.5 }}>
                 {axis.toUpperCase()}

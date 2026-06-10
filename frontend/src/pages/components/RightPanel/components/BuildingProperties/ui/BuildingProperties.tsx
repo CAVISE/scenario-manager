@@ -35,7 +35,7 @@ export default function BuildingProperties({
       <Typography variant="subtitle1">Building</Typography>
 
       <FormLabel>Position</FormLabel>
-      <Grid container spacing={1}>
+      <Grid item container spacing={1}>
         {(['x', 'y', 'z'] as const).map((axis) => (
           <Grid xs={4} key={axis}>
             <FormControl>

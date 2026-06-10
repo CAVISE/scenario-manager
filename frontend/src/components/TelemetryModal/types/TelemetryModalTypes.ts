@@ -118,9 +118,14 @@ export const ImageCard = styled(Card)(({ theme }) => ({
 export const ImagePreviewFrame = styled(Box)(({ theme }) => ({
   position: 'relative',
   width: '100%',
+<<<<<<< Updated upstream
   flex: '1 1 auto',
   minHeight: 160,
   aspectRatio: '4 / 3',
+=======
+
+  paddingTop: '75%',
+>>>>>>> Stashed changes
   backgroundColor:
     theme.palette.mode === 'dark' ? 'rgb(11, 15, 23)' : 'rgb(248, 250, 252)',
   borderBottom: `1px solid ${theme.palette.divider}`,

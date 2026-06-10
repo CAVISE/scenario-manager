@@ -46,9 +46,13 @@ export type OpenCDABgSpawnRange = {
   x_max: number;
   y_min: number;
   y_max: number;
+<<<<<<< Updated upstream
   /** Grid step along X (OpenCDA range[4], not a Z bound). */
   x_step: number;
   /** Grid step along Y (OpenCDA range[5], not a Z bound). */
+=======
+  x_step: number;
+>>>>>>> Stashed changes
   y_step: number;
 };
 
@@ -148,8 +152,13 @@ function normalizeCarlaMap(mapValue: unknown): string {
 
 export type SimulationConfig = {
   sim_duration: number;
+<<<<<<< Updated upstream
   /** OpenCDA adversary framework attacks (top-level `attacks:` list). */
   attacks: OpenCDAAttackConfig[];
+=======
+  attacks: OpenCDAAttackConfig[];
+  max_ticks?: number;
+>>>>>>> Stashed changes
   omnet: {
     tx_power: number;
     bitrate: number;
@@ -188,7 +197,10 @@ export type SimulationConfig = {
   carla: {
     map: string;
     weather_preset: CarlaWeather;
+<<<<<<< Updated upstream
     /** Raw world.weather overrides for OpenCDA YAML export. */
+=======
+>>>>>>> Stashed changes
     weather_override?: Partial<Record<string, number>>;
     client_port: number;
     seed: number;
@@ -262,6 +274,7 @@ export type SimulationConfig = {
     local_planner: OpenCDALocalPlanner;
     gnss_noise: OpenCDAGnssNoise;
     vehicle_localization_debug_animation: boolean;
+<<<<<<< Updated upstream
     /** Default CAV color in vehicle_base.behavior (aim_check). */
     vehicle_base_color?: [number, number, number];
     v2x_enabled: boolean;
@@ -269,6 +282,12 @@ export type SimulationConfig = {
     /** Include map_manager, safety_manager, controller in exported YAML. */
     export_full_vehicle_base: boolean;
     /** standard = full template; aim_check = minimal blocks like aim_check.yaml */
+=======
+    vehicle_base_color?: [number, number, number];
+    v2x_enabled: boolean;
+    v2x_communication_range: number;
+    export_full_vehicle_base: boolean;
+>>>>>>> Stashed changes
     export_profile: 'standard' | 'aim_check';
     export_attacks: boolean;
     export_platoon_base: boolean;
