@@ -16,6 +16,7 @@ import UploadScenariosModal from '../../UploadScenariosModal';
 import SimConfigModal from '../../SimConfigModal';
 import AttackConfigModal from '../../AttackConfigModal';
 import ExportDialog from '../dialogs';
+import AttackConfigModal from '../../AttackConfigModal';
 
 function sanitizeDownloadFilename(name: string, fallback: string): string {
   const t = name.trim() || fallback;
@@ -107,6 +108,14 @@ export const EditorToolbar = () => {
           </IconButton>
         </Tooltip>
       </div>
+      <div style={EditorToolbarDivStyles}>
+        <Tooltip title="Attack settings">
+          <IconButton size="small" onClick={() => setAttackConfigOpen(true)}>
+            <SecurityIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      </div>
+
       <div style={EditorToolbarDivStyles}>
         <Tooltip title="Attack settings">
           <IconButton size="small" onClick={() => setAttackConfigOpen(true)}>

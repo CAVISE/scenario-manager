@@ -30,7 +30,7 @@ def arg_parse_default() -> argparse.Namespace:
     p.add_argument("-v", "--version", default="0.9.15")
     p.add_argument("--record", action="store_true", default=False)
     p.add_argument("--apply_ml", action="store_true")
-    p.add_argument("--max_ticks", type=int, default=1000)
+    p.add_argument("--max_ticks", type=int, default=3000)
     return p.parse_args()
 
 
@@ -42,7 +42,7 @@ def run_scenario(scenario_params, params):
     apply_ml = params["apply_ml"]
     record = params["record"]
     map_name = params["map_name"]
-    max_ticks = params.get("max_ticks", 1000)
+    max_ticks = params.get("max_ticks", 3000)
     xodr_path = f"{XODR_PATH}/{map_name}.xodr"
     if not os.path.exists(xodr_path):
         xodr_path = None

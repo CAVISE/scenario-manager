@@ -47,7 +47,10 @@ export type SumoStop = {
   duration: number;
 };
 
+<<<<<<< Updated upstream
 // ── OpenCDA per-CAV behavior services ────────────────────────────────────────
+=======
+>>>>>>> Stashed changes
 export type BehaviorServiceType =
   | 'self_informer'
   | 'aim_client'
@@ -85,7 +88,10 @@ export type CavBehaviorService =
 
 export type RsuBehaviorService = AIMServerService;
 
+<<<<<<< Updated upstream
 // ── OpenCDA per-CAV v2x override ─────────────────────────────────────────────
+=======
+>>>>>>> Stashed changes
 export type CavV2X = {
   enabled?: boolean;
   communication_range?: number;
@@ -101,11 +107,16 @@ export type Car = {
   scale: number;
   rotation: number;
   speed: number;
+<<<<<<< Updated upstream
   /** Numeric id in OpenCDA scenario (e.g. 100, 200). */
   opencda_id?: number;
   /** CARLA blueprint id override, e.g. vehicle.tesla.cybertruck */
   opencda_carla_model?: string;
   /** Override name in single_cav_list (default cav1, cav2, …). */
+=======
+  opencda_id?: number;
+  opencda_carla_model?: string;
+>>>>>>> Stashed changes
   opencda_name?: string;
   opencda_max_speed?: number;
   opencda_ignore_traffic_light?: boolean;
@@ -113,9 +124,13 @@ export type Car = {
   opencda_collision_time_ahead?: number;
   opencda_local_planner_debug?: boolean;
   opencda_local_planner_debug_trajectory?: boolean;
+<<<<<<< Updated upstream
   /** Merge-lane spawn ratio 0..1 (spawn_special). */
   opencda_spawn_special?: number;
   /** Per-CAV sensing/perception override block. */
+=======
+  opencda_spawn_special?: number;
+>>>>>>> Stashed changes
   opencda_sensing?: {
     perception_activate?: boolean;
     camera_visualize?: number;
@@ -124,11 +139,16 @@ export type Car = {
     lidar_channels?: number;
     lidar_range?: number;
   };
+<<<<<<< Updated upstream
   /** RGB color override for OpenCDA visualization e.g. [156, 255, 206] */
   opencda_color?: [number, number, number];
   /** Per-CAV v2x override */
   opencda_v2x?: CavV2X;
   /** Per-CAV behavior services list */
+=======
+  opencda_color?: [number, number, number];
+  opencda_v2x?: CavV2X;
+>>>>>>> Stashed changes
   opencda_behavior_services?: CavBehaviorService[];
 
   sumo_depart?: number;
@@ -174,9 +194,13 @@ export type RSU = {
   tilt: number;
   cam_interval: number;
   script: string;
+<<<<<<< Updated upstream
   /** Override name in rsu_list (default rsu1, rsu2, …). */
   opencda_name?: string;
   /** RSU id in OpenCDA (aim_check uses positive id, e.g. 1). */
+=======
+  opencda_name?: string;
+>>>>>>> Stashed changes
   opencda_id?: number;
   opencda_behavior_services?: RsuBehaviorService[];
   opencda_color?: [number, number, number];

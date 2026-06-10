@@ -129,6 +129,7 @@ import {
 } from '../../../../../../Editor/hooks/useApiHooks/useScenarioQueries';
 import { useEditorStore } from '../../../../../../../store';
 import { useStartSimulationMutation } from '../../../../../../Editor/hooks/useApiHooks/useSimulationMutation';
+import { ScenarioGroup } from '../../../../../../../api/types/IScenarioTypes';
 
 describe('handleLoad regression', () => {
   beforeEach(() => {
@@ -296,8 +297,14 @@ describe('buildScenarioPayload', () => {
     ];
     storeState.selectedId = 'car-1';
 
+<<<<<<< Updated upstream
     const groups = scenarioGroupsFromPayload(buildScenarioPayload().scenario);
     const carGroup = groups.find((g) => g.vehicle === 'car')!;
+=======
+    const payload = buildScenarioPayload();
+    const scenario = payload.scenario as ScenarioGroup[];
+    const carGroup = scenario.find((g) => g.vehicle === 'car')!;
+>>>>>>> Stashed changes
     const carPath = carGroup.path[0];
 
     expect(carPath.model).toBe('audi');
@@ -325,11 +332,17 @@ describe('buildScenarioPayload', () => {
     ];
     storeState.selectedId = 'car-1';
 
+<<<<<<< Updated upstream
     const groups = scenarioGroupsFromPayload(buildScenarioPayload().scenario);
     const carGroup = groups[0] as Extract<
       (typeof groups)[0],
       { vehicle: 'car' }
     >;
+=======
+    const payload = buildScenarioPayload();
+    const scenario = payload.scenario as ScenarioGroup[];
+    const carGroup = scenario.find((g) => g.vehicle === 'car')!;
+>>>>>>> Stashed changes
     const carPath = carGroup.path[0];
 
     expect(carPath.selected).toBe(false);
@@ -349,8 +362,14 @@ describe('buildScenarioPayload', () => {
       } as Partial<RSU> as RSU,
     ];
 
+<<<<<<< Updated upstream
     const groups = scenarioGroupsFromPayload(buildScenarioPayload().scenario);
     const rsuGroup = groups.find((g) => g.vehicle === 'RSU')!;
+=======
+    const payload = buildScenarioPayload();
+    const scenario = payload.scenario as ScenarioGroup[];
+    const rsuGroup = scenario.find((g) => g.vehicle === 'RSU')!;
+>>>>>>> Stashed changes
     const rsuPath = rsuGroup.path[0];
 
     expect(rsuPath.x).toBe(5);
@@ -374,8 +393,14 @@ describe('buildScenarioPayload', () => {
       } as Partial<RSU> as RSU,
     ];
 
+<<<<<<< Updated upstream
     const groups = scenarioGroupsFromPayload(buildScenarioPayload().scenario);
     const rsuGroup = groups.find((g) => g.vehicle === 'RSU')!;
+=======
+    const payload = buildScenarioPayload();
+    const scenario = payload.scenario as ScenarioGroup[];
+    const rsuGroup = scenario.find((g) => g.vehicle === 'RSU')!;
+>>>>>>> Stashed changes
     const rsuPath = rsuGroup.path[0];
     expect(rsuPath.script).toBeNull();
   });
@@ -392,8 +417,16 @@ describe('buildScenarioPayload', () => {
       } as Building,
     ];
 
+<<<<<<< Updated upstream
     const groups = scenarioGroupsFromPayload(buildScenarioPayload().scenario);
     const buildingGroup = groups.find((g) => g.vehicle === 'building')!;
+=======
+    const payload = buildScenarioPayload();
+    const scenario = payload.scenario as ScenarioGroup[];
+    const buildingGroup = scenario.find(
+      (g) => g.vehicle === 'building',
+    )!;
+>>>>>>> Stashed changes
     const building = buildingGroup.path[0];
 
     expect(building.id).toBe('b-1');
@@ -418,8 +451,14 @@ describe('buildScenarioPayload', () => {
       } as Pedestrian,
     ];
 
+<<<<<<< Updated upstream
     const groups = scenarioGroupsFromPayload(buildScenarioPayload().scenario);
     const pedGroup = groups.find((g) => g.vehicle === 'pedestrian')!;
+=======
+    const payload = buildScenarioPayload();
+    const scenario = payload.scenario as ScenarioGroup[];
+    const pedGroup = scenario.find((g) => g.vehicle === 'pedestrian')!;
+>>>>>>> Stashed changes
     const ped = pedGroup.path[0];
 
     expect(ped.id).toBe('ped-1');
@@ -519,11 +558,17 @@ describe('buildScenarioPayload', () => {
       } as Partial<Car> as Car,
     ];
 
+<<<<<<< Updated upstream
     const groups = scenarioGroupsFromPayload(buildScenarioPayload().scenario);
     const carGroup = groups[0] as Extract<
       (typeof groups)[0],
       { vehicle: 'car' }
     >;
+=======
+    const payload = buildScenarioPayload();
+    const scenario = payload.scenario as ScenarioGroup[];
+    const carGroup = scenario.find((g) => g.vehicle === 'car')!;
+>>>>>>> Stashed changes
     const carPath = carGroup.path[0];
     expect(carPath.rotation).toBe(0);
   });

@@ -81,12 +81,33 @@ export interface ScenarioStoredJson {
 }
 
 export interface ScenarioPayload {
+<<<<<<< Updated upstream
   scenario_id: string | null;
   name_of_scenario: string | null;
   description: string | null;
+=======
+  scenario_name?: string | null;
+  scenario_id: string | null;
+  name_of_scenario: string | null;
+  description?: string | null;
+>>>>>>> Stashed changes
   preview?: string | null;
   scenario: ScenarioGroup[] | ScenarioStoredJson;
   file_: string | null;
+  weather?: string | undefined;
+  map?: string | null;
+  id?: string | null;
+}
+
+export interface ScenarioDetail {
+  scenario_id: string;
+  name_of_scenario: string | null;
+  scenario_name?: string | null;
+  weather?: string | null;
+  description?: string | null;
+  preview?: string | null;
+  file_?: string | null;
+  scenario?: ScenarioGroup[] | ScenarioStoredJson | null;
 }
 
 export interface ScenarioDetail {

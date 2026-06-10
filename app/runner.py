@@ -31,7 +31,7 @@ def run_scenario(scenario_params, params):
     apply_ml  = params["apply_ml"]
     record    = params["record"]
     map_name  = params["map_name"]
-    max_ticks = params.get("max_ticks", 1000)
+    max_ticks = params.get("max_ticks", 3000)
 
     log.info("=== run_scenario START | map=%s max_ticks=%d carla=%s:%d ===",
              map_name, max_ticks, CARLA_HOST, CARLA_PORT)

@@ -13,6 +13,8 @@ import {
   RSUPath,
 } from '../../types/ScenarioControlWidgetTypes';
 import type { ScenarioGroup } from '../../types/ScenarioControlWidgetTypes';
+import type { ScenarioGroup as ApiScenarioGroup } from '../../../../../../../api/types/IScenarioTypes';
+
 import { queryClient } from '../../../../../../../api/queryClient';
 import {
   scenarioKeys,
@@ -219,11 +221,14 @@ export const handleCreate = async (
   try {
     const payload = buildScenarioPayload();
     const trimmedId = scenarioIdInput.trim();
+<<<<<<< Updated upstream
     const validation = validateUploadPayload(payload, trimmedId);
     if (!validation.ok) {
       setNotice(validation.message);
       return;
     }
+=======
+>>>>>>> Stashed changes
     await createMutation.mutateAsync({
       payload: {
         ...payload,
@@ -231,9 +236,12 @@ export const handleCreate = async (
       },
       scenarioIdInput: trimmedId,
     });
+<<<<<<< Updated upstream
     if (trimmedId) {
       useEditorStore.getState().updateScenario({ id: trimmedId });
     }
+=======
+>>>>>>> Stashed changes
     setNotice('Script saved (POST).');
   } catch (err) {
     console.error(err);
@@ -300,6 +308,7 @@ export const handleRunSimulation = async (
   setNotice: (value: string) => void,
   scenarioIdInput: string,
   startMutation: ReturnType<typeof useStartSimulationMutation>,
+  mapOffsets?: { x: number; y: number },
 ) => {
   const state = useEditorStore.getState();
   const scenario = state.Scenario;
@@ -310,10 +319,19 @@ export const handleRunSimulation = async (
     scenario_id: scenario.id || scenarioIdInput.trim() || '',
     scenario_name: scenario.name || 'Scenario',
     weather: scenario.weather || 'ClearNoon',
+<<<<<<< Updated upstream
     scenario: scenarioGroupsFromPayload(buildScenarioPayload().scenario),
     description: scenario.description || '',
     map: mapName.replace(/\.xodr$/i, ''),
     xodr,
+=======
+    scenario: buildScenarioPayload().scenario as ApiScenarioGroup[],
+    description: scenario.description || '',
+    map: useEditorStore.getState().simConfig?.carla?.map || 'Town10HD',
+    xodr: localStorage.getItem('cached_xodr') || undefined,
+    max_ticks: useEditorStore.getState().simConfig?.max_ticks ?? 2000,
+    map_offsets: mapOffsets,
+>>>>>>> Stashed changes
   };
 
   const simulationValidation = validateStartSimulationPayload(payload);
