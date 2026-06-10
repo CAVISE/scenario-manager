@@ -28,9 +28,9 @@ export default function PedestrianProperties({
       <Typography variant="subtitle1">Pedestrian</Typography>
 
       <FormLabel>Position</FormLabel>
-      <Grid container spacing={1}>
+      <Grid item container spacing={1}>
         {(['x', 'y', 'z'] as const).map((axis) => (
-          <Grid xs={4} key={axis}>
+          <Grid item xs={4} key={axis}>
             <FormControl>
               <FormLabel sx={formLabelStyles}>{axis.toUpperCase()}</FormLabel>
               <Input
@@ -110,8 +110,8 @@ export default function PedestrianProperties({
         V2X
       </Typography>
 
-      <Grid container spacing={1}>
-        <Grid xs={6}>
+      <Grid item container spacing={1}>
+        <Grid item xs={6}>
           <FormControl>
             <FormLabel>TX Power (mW)</FormLabel>
             <Input
@@ -127,7 +127,7 @@ export default function PedestrianProperties({
             />
           </FormControl>
         </Grid>
-        <Grid xs={6}>
+        <Grid item xs={6}>
           <FormControl>
             <FormLabel>Beacon interval (ms)</FormLabel>
             <Input

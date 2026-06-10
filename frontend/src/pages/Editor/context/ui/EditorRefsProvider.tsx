@@ -4,6 +4,7 @@ import { TransformControls } from 'three-stdlib';
 import { EditorRefsContext } from '../ui/EditorRefsContext';
 import { EditorRefs } from '../types/EditorRefsTypes';
 import { ThreeSetup } from '../../hooks/useOpenDriveUtils/useThreeSetup/types/useThreeSetupTypes';
+import { OpenDriveMapInstance } from '../../types/editorTypes';
 
 export const EditorRefsProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -34,6 +35,7 @@ export const EditorRefsProvider: React.FC<{ children: React.ReactNode }> = ({
       isAddedPoints: false,
     }),
     threeRef: useRef<ThreeSetup | null>(null),
+    odrMapRef: useRef<OpenDriveMapInstance | null>(null),
   };
 
   return (

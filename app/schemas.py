@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 
 class StartSimulationRequest(BaseModel):
     map: str = "Town10HD"
-    max_ticks: int = Field(default=1000, ge=1, le=10000)
+    max_ticks: int = Field(default=3000, ge=1, le=10000)
     scenario_name: str = ""
     description: str = ""
     weather: Optional[str] = None

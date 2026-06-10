@@ -1,16 +1,28 @@
 import {
+  Box,
+  Button,
   Divider,
+  FormControl,
   FormControlLabel,
+  FormLabel,
+  MenuItem,
+  Select,
   Stack,
   Switch,
   TextField,
   Typography,
 } from '@mui/material';
+import {
+  opencdaPanelPaperSx,
+  opencdaSectionLabelSx,
+} from '../../opencdaUiStyles';
 import { useEditorStore } from '../../../../../../store';
+import { AIM_CHECK_SIM_OVERRIDES } from '../../../../Generators/exporters/aimCheckDefaults';
 import {
   defaultSimConfig,
   mergeSimConfigWithDefaults,
 } from '../../../../Generators/types/configGeneratorsTypes';
+import OpenCDATabRareSections from './OpenCDATabRareSections';
 
 export default function OpenCDATab() {
   const simConfig = mergeSimConfigWithDefaults(
@@ -19,9 +31,107 @@ export default function OpenCDATab() {
   const updateSimConfigOpenCDA = useEditorStore(
     (s) => s.updateSimConfigOpenCDA,
   );
+  const updateSimConfig = useEditorStore((s) => s.updateSimConfig);
   const oc = simConfig.opencda ?? defaultSimConfig.opencda;
+  const baseColor = oc.vehicle_base_color ?? [122, 156, 111];
+
+  const applyAimCheckDefaults = () => {
+    const aimOc = AIM_CHECK_SIM_OVERRIDES.opencda!;
+    updateSimConfig({
+      carla: {
+        ...simConfig.carla,
+        map: AIM_CHECK_SIM_OVERRIDES.carla?.map ?? simConfig.carla.map,
+      },
+    });
+    updateSimConfigOpenCDA({
+      ...aimOc,
+      bp_class_sample_prob: {
+        ...oc.bp_class_sample_prob,
+        ...aimOc.bp_class_sample_prob,
+      },
+      local_planner: { ...oc.local_planner, ...aimOc.local_planner },
+      lidar_sim: { ...oc.lidar_sim, ...aimOc.lidar_sim },
+      gnss_noise: { ...oc.gnss_noise, ...aimOc.gnss_noise },
+    });
+  };
+
   return (
     <Stack spacing={2}>
+      <Box sx={opencdaPanelPaperSx}>
+        <Typography sx={{ ...opencdaSectionLabelSx, mb: 1.5 }}>
+          Export profile
+        </Typography>
+        <Stack spacing={1.5}>
+          <FormControl size="small" fullWidth>
+            <FormLabel>YAML layout</FormLabel>
+            <Select
+              value={oc.export_profile}
+              onChange={(e) =>
+                updateSimConfigOpenCDA({
+                  export_profile: e.target.value as 'standard' | 'aim_check',
+                })
+              }
+            >
+              <MenuItem value="standard">
+                Standard (full world + vehicle_base)
+              </MenuItem>
+              <MenuItem value="aim_check">
+                AIM check (aim_check.yaml layout)
+              </MenuItem>
+            </Select>
+          </FormControl>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={applyAimCheckDefaults}
+            sx={{ alignSelf: 'flex-start' }}
+          >
+            Load AIM check defaults
+          </Button>
+        </Stack>
+      </Box>
+
+      <FormControlLabel
+        control={
+          <Switch
+            checked={oc.vehicle_base_color != null}
+            onChange={(e) =>
+              updateSimConfigOpenCDA({
+                vehicle_base_color: e.target.checked
+                  ? ([122, 156, 111] as [number, number, number])
+                  : undefined,
+              })
+            }
+          />
+        }
+        label="vehicle_base.behavior.color (RGB)"
+      />
+      {oc.vehicle_base_color && (
+        <Stack direction="row" spacing={1}>
+          {([0, 1, 2] as const).map((idx) => (
+            <TextField
+              key={idx}
+              label={['R', 'G', 'B'][idx]}
+              type="number"
+              size="small"
+              value={baseColor[idx]}
+              onChange={(e) => {
+                const val = Math.max(
+                  0,
+                  Math.min(255, Number(e.target.value) || 0),
+                );
+                const next = [...baseColor] as [number, number, number];
+                next[idx] = val;
+                updateSimConfigOpenCDA({ vehicle_base_color: next });
+              }}
+              sx={{ width: 72 }}
+            />
+          ))}
+        </Stack>
+      )}
+
+      <Divider />
+
       <Typography variant="subtitle2" color="text.secondary">
         Blueprint
       </Typography>
@@ -70,6 +180,50 @@ export default function OpenCDATab() {
             />
           ),
         )}
+      </Stack>
+
+      <Divider />
+
+      <Typography variant="subtitle2" color="text.secondary">
+        Export / defaults
+      </Typography>
+      <FormControlLabel
+        control={
+          <Switch
+            checked={oc.export_full_vehicle_base}
+            onChange={(e) =>
+              updateSimConfigOpenCDA({
+                export_full_vehicle_base: e.target.checked,
+              })
+            }
+          />
+        }
+        label="Export map_manager, safety_manager, controller, v2x in vehicle_base"
+      />
+      <Stack direction="row" spacing={2}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={oc.v2x_enabled}
+              onChange={(e) =>
+                updateSimConfigOpenCDA({ v2x_enabled: e.target.checked })
+              }
+            />
+          }
+          label="Default V2X enabled"
+        />
+        <TextField
+          label="V2X range (m)"
+          type="number"
+          size="small"
+          value={oc.v2x_communication_range}
+          onChange={(e) =>
+            updateSimConfigOpenCDA({
+              v2x_communication_range: Number(e.target.value),
+            })
+          }
+          sx={{ maxWidth: 140 }}
+        />
       </Stack>
 
       <Divider />
@@ -769,7 +923,8 @@ export default function OpenCDATab() {
             label="Random spawn"
           />
           <Typography variant="caption" color="text.secondary">
-            Spawn range [x0,x1,y0,y1,z0,z1] + vehicle count below
+            Spawn range [x_min, x_max, y_min, y_max, x_step, y_step] + vehicle
+            count below
           </Typography>
           <Stack direction="row" spacing={2}>
             <TextField
@@ -837,31 +992,31 @@ export default function OpenCDATab() {
           </Stack>
           <Stack direction="row" spacing={2}>
             <TextField
-              label="Z min"
+              label="X step"
               type="number"
               size="small"
               fullWidth
-              value={oc.bg_spawn_range.z_min}
+              value={oc.bg_spawn_range.x_step}
               onChange={(e) =>
                 updateSimConfigOpenCDA({
                   bg_spawn_range: {
                     ...oc.bg_spawn_range,
-                    z_min: Number(e.target.value),
+                    x_step: Number(e.target.value),
                   },
                 })
               }
             />
             <TextField
-              label="Z max"
+              label="Y step"
               type="number"
               size="small"
               fullWidth
-              value={oc.bg_spawn_range.z_max}
+              value={oc.bg_spawn_range.y_step}
               onChange={(e) =>
                 updateSimConfigOpenCDA({
                   bg_spawn_range: {
                     ...oc.bg_spawn_range,
-                    z_max: Number(e.target.value),
+                    y_step: Number(e.target.value),
                   },
                 })
               }
@@ -975,6 +1130,8 @@ export default function OpenCDATab() {
           </Stack>
         </Stack>
       )}
+
+      <OpenCDATabRareSections oc={oc} update={updateSimConfigOpenCDA} />
     </Stack>
   );
 }

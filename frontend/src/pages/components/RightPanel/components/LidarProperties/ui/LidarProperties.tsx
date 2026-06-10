@@ -17,9 +17,9 @@ export default function LidarProperties({ lidar, onDelete }: ILidarProps) {
   return (
     <Stack spacing={1.5}>
       <FormLabel>Lidar (relative to car)</FormLabel>
-      <Grid container spacing={1}>
+      <Grid item container spacing={1}>
         {(['x', 'y', 'z'] as const).map((axis) => (
-          <Grid xs={4} key={axis}>
+          <Grid item xs={4} key={axis}>
             <FormControl>
               <FormLabel sx={{ fontSize: 'xs', mb: 0.5 }}>
                 {axis.toUpperCase()}

@@ -6,6 +6,8 @@ import {
   RSUPath,
 } from '../../types/ScenarioControlWidgetTypes';
 import type { ScenarioGroup } from '../../types/ScenarioControlWidgetTypes';
+import type { ScenarioGroup as ApiScenarioGroup } from '../../../../../../../api/types/IScenarioTypes';
+
 import { queryClient } from '../../../../../../../api/queryClient';
 import {
   scenarioKeys,
@@ -203,9 +205,18 @@ export const handleLoad = async ({
 export const handleCreate = async (
   setNotice: (value: string) => void,
   createMutation: ReturnType<typeof useScenarioCreateMutation>,
+  scenarioIdInput = '',
 ) => {
   try {
-    await createMutation.mutateAsync(buildScenarioPayload());
+    const payload = buildScenarioPayload();
+    const trimmedId = scenarioIdInput.trim();
+    await createMutation.mutateAsync({
+      payload: {
+        ...payload,
+        scenario_id: trimmedId || payload.scenario_id,
+      },
+      scenarioIdInput: trimmedId,
+    });
     setNotice('Script saved (POST).');
   } catch (err) {
     console.error(err);
@@ -259,16 +270,19 @@ export const handleRunSimulation = (
   setNotice: (value: string) => void,
   scenarioIdInput: string,
   startMutation: ReturnType<typeof useStartSimulationMutation>,
+  mapOffsets?: { x: number; y: number },
 ) => {
   const scenario = useEditorStore.getState().Scenario;
   const payload: StartSimulationPayload = {
     scenario_id: scenario.id || scenarioIdInput.trim() || '',
     scenario_name: scenario.name || 'Scenario',
     weather: scenario.weather || 'ClearNoon',
-    scenario: buildScenarioPayload().scenario || [],
+    scenario: buildScenarioPayload().scenario as ApiScenarioGroup[],
     description: scenario.description || '',
     map: useEditorStore.getState().simConfig?.carla?.map || 'Town10HD',
     xodr: localStorage.getItem('cached_xodr') || undefined,
+    max_ticks: useEditorStore.getState().simConfig?.max_ticks ?? 2000,
+    map_offsets: mapOffsets,
   };
   startMutation.mutate(payload, {
     onSuccess: () => setNotice('The simulation has started.'),

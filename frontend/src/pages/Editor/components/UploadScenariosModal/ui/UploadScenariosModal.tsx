@@ -165,7 +165,7 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
                 <CircularProgress />
               </Box>
             ) : (
-              <Grid container spacing={2}>
+              <Grid item container spacing={2}>
                 {scenarios.length === 0 && !isLoading ? (
                   <Grid item xs={12}>
                     <Typography color="text.secondary">
