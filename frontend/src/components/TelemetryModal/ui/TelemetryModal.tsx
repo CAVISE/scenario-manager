@@ -161,11 +161,7 @@ const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
     }
 
     return (
-<<<<<<< Updated upstream
-      <Grid container spacing={2}>
-=======
       <Grid item container spacing={2}>
->>>>>>> Stashed changes
         {tabImages.map((image) => (
           <Grid
             item

@@ -72,15 +72,9 @@ function AIMServerEditor({
       </FormControl>
 
       <FormLabel sx={formLabelStyles}>control_center_location</FormLabel>
-<<<<<<< Updated upstream
-      <Grid container spacing={1}>
-        {(['x', 'y', 'z'] as const).map((axis) => (
-          <Grid xs={4} key={axis}>
-=======
       <Grid item container spacing={1}>
         {(['x', 'y', 'z'] as const).map((axis) => (
           <Grid item xs={4} key={axis}>
->>>>>>> Stashed changes
             <FormControl>
               <FormLabel sx={formLabelStyles}>{axis.toUpperCase()}</FormLabel>
               <Input
@@ -427,19 +421,11 @@ export default function RSUProperties({ rsu, onDelete }: RSUPropertiesProps) {
         <Box
           sx={{ pl: 1, borderLeft: '2px solid', borderColor: 'primary.main' }}
         >
-<<<<<<< Updated upstream
-          <Grid container spacing={1}>
-            {([0, 1, 2] as const).map((idx) => {
-              const labels = ['R', 'G', 'B'];
-              return (
-                <Grid xs={4} key={idx}>
-=======
           <Grid item container spacing={1}>
             {([0, 1, 2] as const).map((idx) => {
               const labels = ['R', 'G', 'B'];
               return (
                 <Grid item xs={4} key={idx}>
->>>>>>> Stashed changes
                   <FormControl>
                     <FormLabel sx={formLabelStyles}>{labels[idx]}</FormLabel>
                     <Input
