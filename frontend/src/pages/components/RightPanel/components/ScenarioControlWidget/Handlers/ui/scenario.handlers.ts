@@ -1,10 +1,8 @@
 import { buildScenarioPayload } from './scenario.load.handler';
-import { scenarioGroupsFromPayload } from '../../../../../../../api/scenarioRequest';
 import {
   validateDeletePayload,
   validateStartSimulationPayload,
   validateUpdatePayload,
-  validateUploadPayload,
 } from '../../../../../../../api/scenarioValidation';
 import {
   BuildingPath,
@@ -33,11 +31,7 @@ import {
 import { StartSimulationPayload } from '../../../../../../Editor/hooks/useApiHooks/useSimulationMutation/types/useSimulationMutationTypes';
 import { getApiErrorMessage } from '../../../../../../../api/errors';
 import { LoadScenarioOptions } from '../types/scenario.load.handlerTypes';
-import {
-  fetchXodrText,
-  getStoredXodrName,
-  resolveXodrTextForSimulation,
-} from '../../../../../../Editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
+import { fetchXodrText } from '../../../../../../Editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
 
 export const handleLoad = async ({
   hasId,
@@ -221,14 +215,6 @@ export const handleCreate = async (
   try {
     const payload = buildScenarioPayload();
     const trimmedId = scenarioIdInput.trim();
-<<<<<<< Updated upstream
-    const validation = validateUploadPayload(payload, trimmedId);
-    if (!validation.ok) {
-      setNotice(validation.message);
-      return;
-    }
-=======
->>>>>>> Stashed changes
     await createMutation.mutateAsync({
       payload: {
         ...payload,
@@ -236,12 +222,9 @@ export const handleCreate = async (
       },
       scenarioIdInput: trimmedId,
     });
-<<<<<<< Updated upstream
     if (trimmedId) {
       useEditorStore.getState().updateScenario({ id: trimmedId });
     }
-=======
->>>>>>> Stashed changes
     setNotice('Script saved (POST).');
   } catch (err) {
     console.error(err);
@@ -312,26 +295,17 @@ export const handleRunSimulation = async (
 ) => {
   const state = useEditorStore.getState();
   const scenario = state.Scenario;
-  const mapName = getStoredXodrName(state.simConfig?.carla?.map);
-  const xodr = await resolveXodrTextForSimulation(state.simConfig?.carla?.map);
 
   const payload: StartSimulationPayload = {
     scenario_id: scenario.id || scenarioIdInput.trim() || '',
     scenario_name: scenario.name || 'Scenario',
     weather: scenario.weather || 'ClearNoon',
-<<<<<<< Updated upstream
-    scenario: scenarioGroupsFromPayload(buildScenarioPayload().scenario),
-    description: scenario.description || '',
-    map: mapName.replace(/\.xodr$/i, ''),
-    xodr,
-=======
     scenario: buildScenarioPayload().scenario as ApiScenarioGroup[],
     description: scenario.description || '',
     map: useEditorStore.getState().simConfig?.carla?.map || 'Town10HD',
     xodr: localStorage.getItem('cached_xodr') || undefined,
     max_ticks: useEditorStore.getState().simConfig?.max_ticks ?? 2000,
     map_offsets: mapOffsets,
->>>>>>> Stashed changes
   };
 
   const simulationValidation = validateStartSimulationPayload(payload);

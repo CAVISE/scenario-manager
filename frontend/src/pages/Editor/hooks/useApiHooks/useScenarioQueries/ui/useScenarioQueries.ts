@@ -51,13 +51,6 @@ export function useScenarioCreateMutation() {
       payload: ScenarioPayload;
       scenarioIdInput?: string;
     }) => scenariosApi.create(payload, scenarioIdInput),
-<<<<<<< Updated upstream
-    onSuccess: (_data, variables) => {
-      const id =
-        variables.scenarioIdInput?.trim() ||
-        variables.payload.scenario_id?.trim();
-      if (id) {
-=======
     onSuccess: (data, variables) => {
       const id =
         variables.scenarioIdInput?.trim() ||
@@ -65,7 +58,6 @@ export function useScenarioCreateMutation() {
         (data as unknown as { scenario_id?: string })?.scenario_id?.trim();
       if (id) {
         queryClient.setQueryData(scenarioKeys.detail(id), data);
->>>>>>> Stashed changes
         queryClient.invalidateQueries({ queryKey: scenarioKeys.detail(id) });
         queryClient.invalidateQueries({ queryKey: scenarioKeys.list() });
       }
@@ -83,27 +75,15 @@ export function useScenarioPatchMutation() {
       payload,
     }: {
       id: string;
-<<<<<<< Updated upstream
-      payload: Partial<ScenarioPayload>;
-=======
       payload: Partial<ScenarioPayload> & {
         weather?: string;
         file_?: string | null;
       };
->>>>>>> Stashed changes
     }) =>
       scenariosApi.update({
         ...payload,
         scenario_id: id,
       }),
-<<<<<<< Updated upstream
-    onSuccess: (_data, { id, payload }) => {
-      queryClient.invalidateQueries({ queryKey: scenarioKeys.detail(id) });
-      updateScenario({
-        id,
-        name: payload.name_of_scenario ?? undefined,
-        description: payload.description ?? undefined,
-=======
     onSuccess: (data, { id }) => {
       const d = data as unknown as {
         scenario_name?: string;
@@ -116,7 +96,6 @@ export function useScenarioPatchMutation() {
         name: d.scenario_name ?? undefined,
         weather: d.weather ?? undefined,
         file_: d.file_ ?? null,
->>>>>>> Stashed changes
       });
     },
   });
@@ -124,15 +103,10 @@ export function useScenarioPatchMutation() {
 
 export function useScenarioPutMutation() {
   const queryClient = useQueryClient();
-
+  const updateScenario = useEditorStore((s) => s.updateScenario);
   return useMutation({
     mutationFn: ({ id }: { id: string; payload: ScenarioPayload }) =>
       scenariosApi.replace(id),
-<<<<<<< Updated upstream
-    onSuccess: (_data, { id }) => {
-      queryClient.invalidateQueries({ queryKey: scenarioKeys.detail(id) });
-      queryClient.invalidateQueries({ queryKey: scenarioKeys.list() });
-=======
     onSuccess: (data, { id }) => {
       const d = data as unknown as {
         scenario_name?: string;
@@ -148,7 +122,6 @@ export function useScenarioPutMutation() {
         weather: d.weather ?? undefined,
         file_: d.file_ ?? null,
       });
->>>>>>> Stashed changes
     },
   });
 }

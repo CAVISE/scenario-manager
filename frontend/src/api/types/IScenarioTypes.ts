@@ -81,16 +81,10 @@ export interface ScenarioStoredJson {
 }
 
 export interface ScenarioPayload {
-<<<<<<< Updated upstream
-  scenario_id: string | null;
-  name_of_scenario: string | null;
-  description: string | null;
-=======
   scenario_name?: string | null;
   scenario_id: string | null;
   name_of_scenario: string | null;
   description?: string | null;
->>>>>>> Stashed changes
   preview?: string | null;
   scenario: ScenarioGroup[] | ScenarioStoredJson;
   file_: string | null;
