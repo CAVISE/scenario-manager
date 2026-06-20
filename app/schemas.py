@@ -11,9 +11,16 @@ from app.scenario_validation import (
     validate_scenario_name,
 )
 
+
+class MapOffsets(BaseModel):
+    x: float = 0.0
+    y: float = 0.0
+
+
 class StartSimulationRequest(BaseModel):
     map: str = Field(default="Town10HD", min_length=1, max_length=128)
     max_ticks: int = Field(default=1000, ge=1, le=10000)
+    map_offsets: MapOffsets = Field(default_factory=MapOffsets)
     scenario_name: str = Field(default="", max_length=200)
     description: str = Field(default="", max_length=4000)
     weather: Optional[str] = Field(default=None, max_length=64)

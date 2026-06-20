@@ -130,7 +130,7 @@ def json_to_single_cav_list(json_data: dict, carla_map=None) -> dict:
     rsu_list = []
 
     map_name = json_data.get("map", "Town10HD").replace(".xodr", "")
-    offset_x, offset_y = MAP_OFFSETS.get(map_name, (0.0, 0.0))
+    offset_x, offset_y = json_data.get("map_offsets", {}).get("x", 0.0), json_data.get("map_offsets", {}).get("y", 0.0)
     log.debug("map=%s offset_x=%s offset_y=%s", map_name, offset_x, offset_y)
 
     cav_index = 0
