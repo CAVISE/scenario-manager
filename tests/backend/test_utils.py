@@ -1,18 +1,18 @@
 import pytest
-from app.utils import json_to_single_cav_list, convert_coords, MAP_OFFSETS
+from app.utils import json_to_single_cav_list, convert_coords, MAP_OFFSETS, _FALLBACK_DEST_Z, _FALLBACK_SPAWN_Z
 
 def test_convert_coords_spawn():
-    result = convert_coords(10, 5, 2, 100, 50, is_spawn=True)
-    assert result == [110, 45, 3]  # x+offset_x, -y+offset_y, z+1
+    result = convert_coords(10, 5, 100, 50, is_spawn=True)
+    assert result == [110, 45, _FALLBACK_SPAWN_Z]  # x+offset_x, -y+offset_y, z+1
 
 
 def test_convert_coords_destination():
-    result = convert_coords(10, 5, 2, 100, 50, is_spawn=False)
-    assert result == [110, 45, 0.0]  
+    result = convert_coords(10, 5, 100, 50, is_spawn=False)
+    assert result == [110, 45, _FALLBACK_DEST_Z]  
 
 def test_convert_coords_zero_offset():
-    result = convert_coords(1, 2, 3, 0, 0, is_spawn=True)
-    assert result == [1, -2, 4]
+    result = convert_coords(1, 2, 0, 0, is_spawn=True)
+    assert result == [1, -2, _FALLBACK_SPAWN_Z]
 
 def test_raises_on_missing_scenario_key():
     with pytest.raises(ValueError, match="'scenario' must be a list"):
@@ -52,18 +52,21 @@ def test_car_without_points_uses_spawn_as_destination():
     }
     result = json_to_single_cav_list(payload)
     cav = result["scenario"]["single_cav_list"][0]
-    assert cav["spawn_position"][:3] == cav["destination"]
+    assert cav["spawn_position"][:2] == cav["destination"][:2]
+    assert cav["spawn_position"][2] == _FALLBACK_SPAWN_Z
+    assert cav["destination"][2] == _FALLBACK_DEST_Z
 
 
 def test_map_offset_applied_for_town01():
+    offset_x, offset_y = MAP_OFFSETS["Town01"]
     payload = {
         "map": "Town01",
+        "map_offsets": {"x": offset_x, "y": offset_y},
         "scenario": [{
             "vehicle": "car",
             "path": [{"x": 0, "y": 0, "z": 0, "points": []}]
         }]
     }
-    offset_x, offset_y = MAP_OFFSETS["Town01"]
     result = json_to_single_cav_list(payload)
     cav = result["scenario"]["single_cav_list"][0]
     assert cav["spawn_position"][0] == offset_x
