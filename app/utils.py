@@ -108,21 +108,7 @@ def _compute_yaw(sx: float, sy: float, sz: float,
 
 
 def json_to_single_cav_list(json_data: dict, carla_map=None) -> dict:
-    """
-    Convert the raw scenario payload (StartSimulationRequest.model_dump()) into
-    the nested dict structure expected by OpenCDA's ScenarioManager.
 
-    Parameters
-    ----------
-    json_data  : raw request body dict
-    carla_map  : carla.Map, optional — when provided, z and yaw are derived
-                 from road waypoints (accurate).  Pass None for the Phase-1
-                 bootstrap call; pass the real map for Phase-2.
-
-    Returns
-    -------
-    dict ready to be OmegaConf-merged with base.yaml
-    """
     if "scenario" not in json_data or not isinstance(json_data["scenario"], list):
         raise ValueError("Invalid payload: 'scenario' must be a list")
 
@@ -212,7 +198,44 @@ def json_to_single_cav_list(json_data: dict, carla_map=None) -> dict:
                         "frequency":           rsu.get("frequency", 5.9e9),
                         "protocol":            rsu.get("protocol", "ITS-G5"),
                         "beacon_interval":     rsu.get("beacon_interval", 1000),
-                    }
+                    },
+                    "sensing": {
+                        "perception": {
+                            "activate": rsu.get("opencda_perception_activate", False),
+                            "camera": {
+                                "visualize": rsu.get("opencda_camera_visualize", 4),
+                                "num":       rsu.get("opencda_camera_num", 4),
+                                "positions": rsu.get("opencda_camera_positions", [
+                                    [2.5,  0.0,  1.0,   0],
+                                    [0.0,  0.3,  1.8, 100],
+                                    [0.0, -0.3,  1.8, -100],
+                                    [-2.0, 0.0,  1.5, 180],
+                                ]),
+                            },
+                            "lidar": {
+                                "visualize":                  rsu.get("opencda_lidar_visualize", True),
+                                "channels":                   rsu.get("opencda_lidar_channels", 32),
+                                "range":                      rsu.get("opencda_lidar_range", 120),
+                                "points_per_second":          rsu.get("opencda_lidar_points_per_second", 1000000),
+                                "rotation_frequency":         rsu.get("opencda_lidar_rotation_frequency", 20),
+                                "upper_fov":                  rsu.get("opencda_lidar_upper_fov", 2),
+                                "lower_fov":                  rsu.get("opencda_lidar_lower_fov", -25),
+                                "dropoff_general_rate":       rsu.get("opencda_lidar_dropoff_general_rate", 0.3),
+                                "dropoff_intensity_limit":    rsu.get("opencda_lidar_dropoff_intensity_limit", 0.7),
+                                "dropoff_zero_intensity":     rsu.get("opencda_lidar_dropoff_zero_intensity", 0.4),
+                                "noise_stddev":               rsu.get("opencda_lidar_noise_stddev", 0.02),
+                            },
+                        },
+                        "localization": {
+                            "activate": rsu.get("opencda_localization_activate", True),
+                            "dt": "${world.fixed_delta_seconds}",
+                            "gnss": {
+                                "noise_alt_stddev": rsu.get("opencda_gnss_noise_alt_stddev", 0.05),
+                                "noise_lat_stddev": rsu.get("opencda_gnss_noise_lat_stddev", 3e-6),
+                                "noise_lon_stddev": rsu.get("opencda_gnss_noise_lon_stddev", 3e-6),
+                            },
+                        },
+                    },
                 }
                 rsu_list.append(rsu_entry)
 
