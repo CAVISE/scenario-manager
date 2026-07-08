@@ -191,6 +191,8 @@ class BehaviorAgent(object):
         # vehicles, these never move and don't need re-detecting every tick.
         self.static_obstacles = []
         self.static_obstacles_loaded = False
+        self._traffic_light_static_check_logged = False
+        self._traffic_light_static_hazard_logged = False
 
         # debug helper
         self.debug_helper = PlanDebugHelper(self.vehicle.id)
@@ -982,6 +984,23 @@ class BehaviorAgent(object):
             raise StopIteration('destination_reached')
 
         if self.traffic_light_manager(ego_vehicle_wp) != 0:
+            if collision_detector_enabled:
+                rx, ry, _, ryaw = self._local_planner.generate_path()
+                static_hazard, static_distance = self.static_obstacle_check(
+                    rx, ry, ryaw)
+                should_log = (
+                    static_hazard and
+                    not self._traffic_light_static_hazard_logged
+                ) or not self._traffic_light_static_check_logged
+                if should_log:
+                    print(f"[static_obstacles] actor {self.vehicle.id}: "
+                          f"traffic-light stop check "
+                          f"hazard={static_hazard} "
+                          f"distance={static_distance:.2f} "
+                          f"path_points={len(rx)}")
+                    self._traffic_light_static_check_logged = True
+                    if static_hazard:
+                        self._traffic_light_static_hazard_logged = True
             return 0, None
 
         if len(self.get_local_planner().get_waypoints_queue()) == 0 \

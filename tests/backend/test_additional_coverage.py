@@ -62,7 +62,7 @@ def test_spawn_yaw_is_zero_when_coords_identical():
             }]
         }]
     }
-    result = json_to_single_cav_list(payload)
+    result, _ = json_to_single_cav_list(payload)
     cav = result["scenario"]["single_cav_list"][0]
     assert cav["spawn_position"][4] == 0.0
 
@@ -76,7 +76,7 @@ def test_unknown_map_uses_zero_offset():
             "path": [{"x": 10, "y": 20, "z": 0, "points": []}]
         }]
     }
-    result = json_to_single_cav_list(payload)
+    result, _ = json_to_single_cav_list(payload)
     cav = result["scenario"]["single_cav_list"][0]
     assert cav["spawn_position"][0] == 10
     assert cav["spawn_position"][1] == -20 
