@@ -66,27 +66,17 @@ export function CoordinatesWidget() {
               {' '}
               | CARLA X{' '}
               <b>
-                {editorToCarla(
-                  coords.x,
-                  coords.y,
-                  coords.z,
-                  {
-                    x: odrMapRef.current.x_offs,
-                    y: odrMapRef.current.y_offs,
-                  },
-                ).x.toFixed(2)}
+                {editorToCarla(coords.x, coords.y, coords.z, {
+                  x: odrMapRef.current.x_offs,
+                  y: odrMapRef.current.y_offs,
+                }).x.toFixed(2)}
               </b>{' '}
               Y{' '}
               <b>
-                {editorToCarla(
-                  coords.x,
-                  coords.y,
-                  coords.z,
-                  {
-                    x: odrMapRef.current.x_offs,
-                    y: odrMapRef.current.y_offs,
-                  },
-                ).y.toFixed(2)}
+                {editorToCarla(coords.x, coords.y, coords.z, {
+                  x: odrMapRef.current.x_offs,
+                  y: odrMapRef.current.y_offs,
+                }).y.toFixed(2)}
               </b>
             </>
           )}

@@ -76,7 +76,7 @@ const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
             const imgs: Record<string, { default: string }> = {};
             for (const entry of data.files) {
               imgs[entry.filename] = {
-                default: `${API_URL}${entry.url}`,
+                default: `${API_URL}${entry.url.replace(/^\//, '')}`,
               };
             }
             setImages(imgs);

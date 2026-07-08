@@ -1,0 +1,103 @@
+***********Planning Evaluation Module***********
+Actor ID: 197
+Planned distance: 359.70533204078674
+Real distance: 22449.45736694336
+Cav world ticks elapsed: 1000
+Cav World time in seconds: 50.0
+Final GT distance to destination: 206.44979858398438
+Success or not: No
+--- Hazard summary (full run) ---
+Collisions: 503 tick(s), first at t=453, first hit: traffic.traffic_light
+Off-road events: 0
+Stuck events: 13 tick(s), first at t=988
+Ran traffic light events: 3 tick(s), first at t=224
+--- RSU cooperative perception ---
+Ticks with >=1 RSU in range: 1000/1001 (99.9%)
+Total objects merged from RSU perception: 488
+***********Planning Evaluation Module***********
+Actor ID: 202
+Planned distance: 471.7164697647095
+Real distance: 11032.168426275253
+Cav world ticks elapsed: 1000
+Cav World time in seconds: 50.0
+Final GT distance to destination: 3.32983136177063
+Success or not: Yes
+--- Hazard summary (full run) ---
+Collisions: 0
+Off-road events: 0
+Stuck events: 0
+Ran traffic light events: 1 tick(s), first at t=412
+--- RSU cooperative perception ---
+Ticks with >=1 RSU in range: 482/483 (99.8%)
+Total objects merged from RSU perception: 652
+***********Planning Evaluation Module***********
+Actor ID: 207
+Planned distance: 441.3294868469238
+Real distance: 12020.735063791275
+Cav world ticks elapsed: 1000
+Cav World time in seconds: 50.0
+Final GT distance to destination: 49.617252349853516
+Success or not: No
+--- Hazard summary (full run) ---
+Collisions: 0
+Off-road events: 1 tick(s), first at t=528
+Stuck events: 0
+Ran traffic light events: 2 tick(s), first at t=152
+--- RSU cooperative perception ---
+Ticks with >=1 RSU in range: 528/529 (99.8%)
+Total objects merged from RSU perception: 698
+***********Planning Evaluation Module***********
+Actor ID: 212
+Planned distance: 894.4851927757263
+Real distance: 13827.991475701332
+Cav world ticks elapsed: 1000
+Cav World time in seconds: 50.0
+Final GT distance to destination: 314.1579284667969
+Success or not: No
+--- Hazard summary (full run) ---
+Collisions: 0
+Off-road events: 2 tick(s), first at t=604
+Stuck events: 0
+Ran traffic light events: 4 tick(s), first at t=183
+--- RSU cooperative perception ---
+Ticks with >=1 RSU in range: 605/606 (99.8%)
+Total objects merged from RSU perception: 587
+***********Localization Module***********
+Actor ID: 197
+mean error for GNSS raw data on x-axis: 43.846973 (meter), mean error for GNSS raw data on y-axis: 104.928491 (meter),mean error for GNSS raw data on yaw : 0.078598 (degree) 
+mean error after data fusion on x-axis: 12.260401 (meter), mean error after data fusion  on y-axis: 89.779322 (meter),mean error after data fusion yaw : 0.812570 (degree) 
+
+Actor ID: 202
+mean error for GNSS raw data on x-axis: 44.094140 (meter), mean error for GNSS raw data on y-axis: 415.687182 (meter),mean error for GNSS raw data on yaw : 0.081233 (degree) 
+mean error after data fusion on x-axis: 12.026064 (meter), mean error after data fusion  on y-axis: 405.572434 (meter),mean error after data fusion yaw : 0.310962 (degree) 
+
+Actor ID: 207
+mean error for GNSS raw data on x-axis: 44.272620 (meter), mean error for GNSS raw data on y-axis: 191.063430 (meter),mean error for GNSS raw data on yaw : 0.079758 (degree) 
+mean error after data fusion on x-axis: 12.119841 (meter), mean error after data fusion  on y-axis: 189.772498 (meter),mean error after data fusion yaw : 123.404907 (degree) 
+
+Actor ID: 212
+mean error for GNSS raw data on x-axis: 44.356077 (meter), mean error for GNSS raw data on y-axis: 136.318641 (meter),mean error for GNSS raw data on yaw : 0.078557 (degree) 
+mean error after data fusion on x-axis: 12.791326 (meter), mean error after data fusion  on y-axis: 123.944694 (meter),mean error after data fusion yaw : 13.093385 (degree) 
+
+***********Kinematics Module***********
+Actor ID: 197
+Speed average: 9.732249 (m/s), Speed std: 12.103426 (m/s) 
+Acceleration average: -0.479017 (m/s), Acceleration std: 9.459265 (m/s) 
+TTC average: nan (m/s), TTC std: nan (m/s) 
+
+Actor ID: 202
+Speed average: 21.566986 (m/s), Speed std: 6.968049 (m/s) 
+Acceleration average: 0.054835 (m/s), Acceleration std: 4.410445 (m/s) 
+TTC average: nan (m/s), TTC std: nan (m/s) 
+
+Actor ID: 207
+Speed average: 18.329928 (m/s), Speed std: 6.652982 (m/s) 
+Acceleration average: -0.263485 (m/s), Acceleration std: 4.982999 (m/s) 
+TTC average: nan (m/s), TTC std: nan (m/s) 
+
+Actor ID: 212
+Speed average: 17.849530 (m/s), Speed std: 6.834136 (m/s) 
+Acceleration average: -0.365706 (m/s), Acceleration std: 4.868399 (m/s) 
+TTC average: 0.849812 (m/s), TTC std: 0.083053 (m/s) 
+
+***********Platooning Analysis***********

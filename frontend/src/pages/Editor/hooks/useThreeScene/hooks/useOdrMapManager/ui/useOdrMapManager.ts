@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback } from 'react';
 import * as THREE from 'three';
 import { OpenDriveMapInstance } from '../../../../../types/editorTypes';
 import {
@@ -45,14 +45,11 @@ export function useOdrMapManager({
   const moduleRef = useRef<OpenDriveModule | null>(null);
   const mapRef = useRef<OpenDriveMapInstance | null>(null);
 
-
-
   const loadOdrMap = useCallback(
     (clearMap = true, fitView = true) => {
       const three = threeRef.current;
       const Module = moduleRef.current;
       const OdrMap = mapRef.current;
-
       if (!three || !Module || !OdrMap) return;
 
       if (clearMap) {
@@ -152,7 +149,7 @@ export function useOdrMapManager({
         err instanceof Error ? err : new Error('Failed to reload the map'),
       );
     }
-  }, [loadOdrMap, setStep, setError]);
+  }, [loadOdrMap, setStep, setError, moduleRef, mapRef, odrMapRef]);
 
   return {
     getOdrMeshes: useCallback(() => odrMeshesRef.current, []),

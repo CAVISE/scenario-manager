@@ -81,10 +81,18 @@ export default function EditorModals() {
       description: scenario.description || '',
       map: mapName,
       scenario: buildScenarioPayload().scenario as ScenarioGroup[],
+      attacks: state.simConfig?.attacks ?? [],
       map_offsets: odrMapRef.current
-        ? { x: odrMapRef.current.x_offs, y: odrMapRef.current.y_offs }
+        ? { x: odrMapRef.current.x_offs, y: -odrMapRef.current.y_offs }
         : undefined,
     };
+
+    // eslint-disable-next-line no-console
+    console.debug('EditorModals start payload', {
+      attacks: payload.attacks?.length,
+      scenario_id: payload.scenario_id,
+      map: payload.map,
+    });
 
     const validation = validateStartSimulationPayload(payload);
     if (!validation.ok) {
@@ -104,7 +112,7 @@ export default function EditorModals() {
         );
       },
     });
-  }, [startSimulationMutation]);
+  }, [startSimulationMutation, odrMapRef]);
 
   return (
     <>

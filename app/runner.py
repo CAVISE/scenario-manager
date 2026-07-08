@@ -1,10 +1,12 @@
 import os
+import random
 import threading
 from dotenv import load_dotenv
 from omegaconf import OmegaConf
 import carla
 
-os.environ["QT_QPA_PLATFORM"] = "offscreen"
+# QT_QPA_PLATFORM=offscreen was removed — opencv-python-headless has no Qt
+# dependency, so no platform-plugin lookup occurs at all.
 
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 XODR_PATH = os.path.join(_BASE_DIR, "..", "assets", "xodrs")
@@ -35,7 +37,7 @@ def request_stop():
     _stop_event.set()
 
 
-def _build_scene_dict(scenario_raw: dict, carla_map=None) -> OmegaConf:
+def _build_scene_dict(scenario_raw: dict, carla_map=None) -> tuple:
     """
     Convert the raw frontend payload to a fully-merged OmegaConf scene dict.
 
@@ -46,10 +48,9 @@ def _build_scene_dict(scenario_raw: dict, carla_map=None) -> OmegaConf:
     """
     settings = get_settings()
     base_dict = OmegaConf.load(settings.cfg_dir / "base.yaml")
-    scenario_section = utils.json_to_single_cav_list(scenario_raw, carla_map=carla_map)
+    scenario_section, pedestrian_list = utils.json_to_single_cav_list(scenario_raw, carla_map=carla_map)
     scene_dict = OmegaConf.merge(base_dict, OmegaConf.create(scenario_section))
-    scene_dict = add_current_time(scene_dict)
-    return scene_dict
+    return scene_dict, pedestrian_list
 
 
 def _make_scenario_manager(scene_dict, apply_ml: bool, xodr_path, map_name: str,
@@ -62,6 +63,56 @@ def _make_scenario_manager(scene_dict, apply_ml: bool, xodr_path, map_name: str,
         town=map_name if xodr_path is None else None,
         cav_world=cav_world,
     )
+
+
+def _spawn_pedestrians(world, pedestrian_list: list) -> list:
+    """
+    Spawn Walker actors with AI controllers.
+    Returns list of (walker, controller) tuples for cleanup.
+    """
+    if not pedestrian_list:
+        return []
+
+    bp_lib = world.get_blueprint_library()
+    walker_bps = bp_lib.filter("walker.pedestrian.*")
+    controller_bp = bp_lib.find("controller.ai.walker")
+    spawned = []
+
+    for i, ped in enumerate(pedestrian_list, 1):
+        px, py, pz = ped["spawn"]
+        bp = random.choice(walker_bps)
+        if bp.has_attribute("is_invincible"):
+            bp.set_attribute("is_invincible", "true" if ped["is_invincible"] else "false")
+
+        spawn_tf = carla.Transform(carla.Location(x=px, y=py, z=pz + 0.5))
+        walker = world.try_spawn_actor(bp, spawn_tf)
+        if walker is None:
+            log.warning("PED%d: spawn failed at (%.1f, %.1f, %.1f) — skipping", i, px, py, pz)
+            continue
+
+        ctrl = world.spawn_actor(controller_bp, carla.Transform(), attach_to=walker)
+        world.tick()
+        ctrl.start()
+        ctrl.go_to_location(world.get_random_location_from_navigation())
+        ctrl.set_max_speed(ped["speed"])
+        spawned.append((walker, ctrl))
+        log.info("PED%d spawned id=%d speed=%.1f m/s", i, walker.id, ped["speed"])
+
+    log.info("Spawned %d/%d pedestrian(s)", len(spawned), len(pedestrian_list))
+    return spawned
+
+
+def _destroy_pedestrians(spawned_pedestrians: list) -> None:
+    for walker, ctrl in spawned_pedestrians:
+        try:
+            ctrl.stop()
+            ctrl.destroy()
+        except Exception as e:
+            log.warning("Failed to stop/destroy walker controller: %s", e)
+        try:
+            walker.destroy()
+        except Exception as e:
+            log.warning("Failed to destroy walker: %s", e)
 
 
 def run_scenario(scenario_raw: dict, params: dict):
@@ -86,36 +137,27 @@ def run_scenario(scenario_raw: dict, params: dict):
     client.set_timeout(10.0)
     log.info("CARLA server version: %s", client.get_server_version())
 
-    # ── Phase 1 ──────────────────────────────────────────────────────────────
-    # Build scene_dict with atan2 yaw (carla_map not yet available).
-    # Create a ScenarioManager solely to load the map and obtain carla.Map.
-    # We close it immediately — the world stays loaded in CARLA.
-    log.info("Phase 1: loading map to obtain carla_map ...")
-    cav_world_phase1 = CavWorld(apply_ml)
-    scene_dict_phase1 = _build_scene_dict(scenario_raw, carla_map=None)
+    # ── Load map once ─────────────────────────────────────────────────────────
+    log.info("Loading map once via client: %s ...", map_name)
+    if xodr_path:
+        with open(xodr_path) as f:
+            client.generate_opendrive_world(f.read())
+    else:
+        client.load_world(map_name)
 
-    sm_phase1 = _make_scenario_manager(
-        scene_dict_phase1, apply_ml, xodr_path, map_name, cav_world_phase1
-    )
-    carla_map = sm_phase1.carla_map
+    carla_map = client.get_world().get_map()
     log.info("carla_map obtained: %s", carla_map.name)
 
-    # Close phase-1 manager — restores world settings but leaves the map loaded.
-    sm_phase1.close()
-
-    # ── Phase 2 ──────────────────────────────────────────────────────────────
-    # Rebuild scene_dict with accurate road-waypoint yaw values.
-    log.info("Phase 2: rebuilding scene_dict with road yaw ...")
     cav_world = CavWorld(apply_ml)
-    scene_dict = _build_scene_dict(scenario_raw, carla_map=carla_map)
+    scene_dict, pedestrian_list = _build_scene_dict(scenario_raw, carla_map=carla_map)
 
-    # Override current_time to match the run_id that api.py already computed.
-    scene_dict_container = OmegaConf.to_container(scene_dict, resolve=True)
-    scene_dict_container["current_time"] = current_time
-    scene_dict = OmegaConf.create(scene_dict_container)
+    # Add current_time directly into the OmegaConf struct — no roundtrip needed.
+    # to_container(resolve=False) + OmegaConf.create() breaks interpolations like
+    # ${world.fixed_delta_seconds} because the new DictConfig loses the full world section.
+    OmegaConf.update(scene_dict, "current_time", current_time, merge=False)
 
     scenario_manager = _make_scenario_manager(
-        scene_dict, apply_ml, xodr_path, map_name, cav_world
+        scene_dict, apply_ml, xodr_path=None, map_name=None, cav_world=cav_world
     )
     log.info("ScenarioManager ready | map loaded: %s", map_name)
 
@@ -136,7 +178,6 @@ def run_scenario(scenario_raw: dict, params: dict):
                  i, cav.vehicle.id, loc.x, loc.y, loc.z,
                  f"({dest.x:.1f}, {dest.y:.1f})" if dest else "unknown")
 
-    # Spectator — центр между всеми CAV'ами
     if single_cav_list:
         locs     = [cav.vehicle.get_location() for cav in single_cav_list]
         center_x = sum(l.x for l in locs) / len(locs)
@@ -159,6 +200,9 @@ def run_scenario(scenario_raw: dict, params: dict):
     log.info("Creating background traffic ...")
     traffic_manager, bg_veh_list = scenario_manager.create_traffic_carla()
     log.info("Background vehicles: %d", len(bg_veh_list))
+
+    # ── Pedestrians ───────────────────────────────────────────────────────────
+    spawned_pedestrians = _spawn_pedestrians(scenario_manager.world, pedestrian_list)
 
     # ── Evaluation manager ────────────────────────────────────────────────────
     eval_manager = EvaluationManager(
@@ -183,6 +227,14 @@ def run_scenario(scenario_raw: dict, params: dict):
 
             active_cavs = [c for c in single_cav_list if c.vehicle.id not in finished_ids]
 
+            # Tick RSUs first — so their detected_objects are fresh
+            # when CAV V2XManager merges perception in update_info().
+            for rsu in rsu_list:
+                try:
+                    rsu.update_info()
+                except Exception as _rsu_err:
+                    log.warning("RSU id=%d update_info failed: %s", rsu.rid, _rsu_err)
+
             # Follow camera
             if active_cavs:
                 locs   = [cav.vehicle.get_location() for cav in active_cavs]
@@ -201,11 +253,18 @@ def run_scenario(scenario_raw: dict, params: dict):
             for cav in active_cavs:
                 loc = cav.vehicle.get_location()
 
-                # Off-road check
-                if not scenario_manager.carla_map.get_waypoint(
-                        loc,
-                        project_to_road=False,
-                        lane_type=carla.LaneType.Driving):
+                # Off-road check.
+                # project_to_road=True projects to the nearest driving lane,
+                # so it never returns None inside junction geometry.
+                # We then check distance — > 4 m from nearest lane = truly off-road.
+                # (project_to_road=False returned None at intersections even when
+                # the vehicle was correctly traversing them, stopping cars mid-route.)
+                _wp = scenario_manager.carla_map.get_waypoint(
+                    loc,
+                    project_to_road=True,
+                    lane_type=carla.LaneType.Driving,
+                )
+                if _wp is None or _wp.transform.location.distance(loc) > 4.0:
                     log.warning("CAV id=%d off-road at (%.1f, %.1f) — stopped",
                                 cav.vehicle.id, loc.x, loc.y)
                     cav.vehicle.apply_control(carla.VehicleControl(throttle=0.0, brake=1.0))
@@ -246,6 +305,14 @@ def run_scenario(scenario_raw: dict, params: dict):
                          tick_count, max_ticks,
                          100 * tick_count / max_ticks,
                          len(finished_ids), len(single_cav_list))
+                # RSU coverage metric (for V2X paper evaluation)
+                if rsu_list:
+                    covered = sum(
+                        1 for cav in active_cavs
+                        if cav.v2x_manager.rsu_nearby
+                    )
+                    log.info("RSU coverage: %d/%d active CAVs in communication range",
+                             covered, len(active_cavs))
 
         if stop_reason == "max_ticks" and _stop_event.is_set():
             stop_reason = "stop_event"
@@ -276,6 +343,7 @@ def run_scenario(scenario_raw: dict, params: dict):
                 rsu.destroy()
             except Exception as e:
                 log.warning("Failed to destroy RSU: %s", e)
+        _destroy_pedestrians(spawned_pedestrians)
 
         scenario_manager.close()
         log.info("=== run_scenario END | map=%s ticks=%d ===", map_name, tick_count)

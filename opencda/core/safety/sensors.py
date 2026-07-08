@@ -44,6 +44,10 @@ class CollisionSensor(object):
 
         self.collided = False
         self.collided_frame = -1
+        self.last_other_actor = None  
+        self.last_collision_loc = None
+        self.last_ego_loc = None
+        self._first_hit_logged = False
         self._history = deque(maxlen=params['history_size'])
         self._threshold = params['col_thresh']
 
@@ -58,12 +62,38 @@ class CollisionSensor(object):
         if intensity > self._threshold:
             self.collided = True
             self.collided_frame = event.frame
+            other = event.other_actor
+            self.last_other_actor = other.type_id if other is not None else 'unknown'
+            eloc = event.actor.get_location()
+            self.last_ego_loc = (eloc.x, eloc.y, eloc.z)
+            self.last_collision_loc = None
+            if other is not None:
+                oloc = other.get_location()
+                self.last_collision_loc = (oloc.x, oloc.y, oloc.z)
+            # Print once per actor lifetime, on the *first* contact only —
+            # sustained contact (e.g. stuck pushing into a pole) can refire
+            # this callback every physics step for hundreds of ticks, and
+            # only the first contact's geometry is diagnostically useful.
+            if not self._first_hit_logged:
+                self._first_hit_logged = True
+                loc_str = (f"({self.last_collision_loc[0]:.2f},"
+                          f"{self.last_collision_loc[1]:.2f})"
+                          if self.last_collision_loc else "unknown")
+                print(f"[collision] FIRST HIT actor={event.actor.id} "
+                      f"frame={event.frame} vs={self.last_other_actor} "
+                      f"other_loc={loc_str} "
+                      f"ego_loc=({eloc.x:.2f},{eloc.y:.2f})")
 
     def return_status(self):
         if self.collided:
-            self.collided = False  # reset and return
-            return {'collision': True}
-        return {'collision': False}
+            self.collided = False
+            return {
+                'collision': True,
+                'collision_with': self.last_other_actor,
+                'collision_loc': self.last_collision_loc,
+                'ego_loc_at_collision': self.last_ego_loc,
+            }
+        return {'collision': False, 'collision_with': None}
 
     def tick(self, data_dict):
         pass

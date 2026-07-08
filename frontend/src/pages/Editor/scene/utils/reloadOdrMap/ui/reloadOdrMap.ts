@@ -27,7 +27,7 @@ export function reloadOdrMap({
   }
   try {
     if (OpenDriveMap) OpenDriveMap.delete();
-    console.log("JFAOSJHFHSAF(HFHASF");
+    console.log('JFAOSJHFHSAF(HFHASF');
     OpenDriveMap = new ModuleOpenDrive.OpenDriveMap('./data.xodr', {
       with_lateralProfile: PARAMS.lateralProfile,
       with_laneHeight: PARAMS.laneHeight,
@@ -91,7 +91,7 @@ export function loadFile({
   try {
     ModuleOpenDrive.FS_createDataFile('.', 'data.xodr', file_text, true, true);
     if (OpenDriveMap) OpenDriveMap.delete();
-    console.log("JFAOSJHFHSAF(HFHASF");
+    console.log('JFAOSJHFHSAF(HFHASF');
     OpenDriveMap = new ModuleOpenDrive.OpenDriveMap('./data.xodr', {
       with_lateralProfile: PARAMS.lateralProfile,
       with_laneHeight: PARAMS.laneHeight,

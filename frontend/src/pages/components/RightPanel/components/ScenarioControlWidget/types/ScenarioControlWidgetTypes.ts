@@ -1,6 +1,7 @@
 import {
   Lidar,
   Point,
+  RsuBehaviorService,
 } from '../../../../../../store/types/useEditorStoreTypes';
 export interface CarPath {
   x: number;
@@ -25,6 +26,31 @@ export interface RSUPath {
   range?: number;
   protocol?: string;
   script?: string | null;
+  beacon_interval?: number;
+  opencda_name?: string;
+  opencda_id?: number;
+  opencda_color?: [number, number, number];
+  opencda_behavior_services?: RsuBehaviorService[];
+  opencda_perception_activate?: boolean;
+  opencda_detection_range?: number;
+  opencda_camera_visualize?: number;
+  opencda_camera_num?: number;
+  opencda_camera_positions?: [number, number, number, number][];
+  opencda_lidar_visualize?: boolean;
+  opencda_lidar_channels?: number;
+  opencda_lidar_range?: number;
+  opencda_lidar_points_per_second?: number;
+  opencda_lidar_rotation_frequency?: number;
+  opencda_lidar_upper_fov?: number;
+  opencda_lidar_lower_fov?: number;
+  opencda_lidar_dropoff_general_rate?: number;
+  opencda_lidar_dropoff_intensity_limit?: number;
+  opencda_lidar_dropoff_zero_intensity?: number;
+  opencda_lidar_noise_stddev?: number;
+  opencda_localization_activate?: boolean;
+  opencda_gnss_noise_alt_stddev?: number;
+  opencda_gnss_noise_lat_stddev?: number;
+  opencda_gnss_noise_lon_stddev?: number;
 }
 
 export interface BuildingPath {

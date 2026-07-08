@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { nanoid } from 'nanoid';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Box,
   Button,
+  Chip,
   Divider,
   IconButton,
   Modal,
@@ -15,13 +17,24 @@ import AddIcon from '@mui/icons-material/Add';
 import { useEditorStore } from '../../../../../store';
 import {
   mergeSimConfigWithDefaults,
+  normalizeAttackStages,
   type OpenCDAAttackConfig,
+  type OpenCDAAttackStage,
 } from '../../../Generators/types/configGeneratorsTypes';
 import {
   attackModalSx,
   defaultAttackConfig,
   type AttackConfigModalProps,
 } from '../types/AttackConfigModalTypes';
+
+const GNSS_SPOOFER_PRESET: OpenCDAAttackConfig = {
+  name: 'gnss_spoof',
+  requirements: {},
+  start_trigger: {},
+  stop_trigger: {},
+  targets: {},
+  stages: [{ id: nanoid(6), type: 'spoofer', params: { intensity: 'high' } }],
+};
 
 function JsonField({
   label,
@@ -34,14 +47,17 @@ function JsonField({
   onChange: (value: Record<string, unknown> | undefined) => void;
   minRows?: number;
 }) {
-  const [raw, setRaw] = useState(() =>
-    value == null ? '' : JSON.stringify(value, null, 2),
-  );
+  const valueRef = useRef(value == null ? '' : JSON.stringify(value, null, 2));
+  const [raw, setRaw] = useState(() => valueRef.current);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    setRaw(value == null ? '' : JSON.stringify(value, null, 2));
-    setError('');
+    const next = value == null ? '' : JSON.stringify(value, null, 2);
+    if (next !== valueRef.current) {
+      valueRef.current = next;
+      setRaw(next);
+      setError('');
+    }
   }, [value]);
 
   return (
@@ -73,7 +89,71 @@ function JsonField({
             return;
           }
           setError('');
+          valueRef.current = JSON.stringify(parsed, null, 2);
           onChange(parsed as Record<string, unknown>);
+        } catch {
+          setError('Invalid JSON');
+        }
+      }}
+    />
+  );
+}
+
+// Отдельный компонент со своим локальным стейтом — не сбрасывает текст при печати
+
+function StagesField({
+  value,
+  onChange,
+}: {
+  value: OpenCDAAttackStage[] | undefined;
+  onChange: (stages: OpenCDAAttackStage[]) => void;
+}) {
+  const valueRef = useRef(JSON.stringify(value ?? [], null, 2));
+  const [raw, setRaw] = useState(() => valueRef.current);
+  const [error, setError] = useState('');
+
+  // Sync только когда внешнее значение реально меняется (пресет, переключение атаки),
+  // а не на каждый ререндер от собственного onChange этого поля.
+  useEffect(() => {
+    const next = JSON.stringify(value ?? [], null, 2);
+    if (next !== valueRef.current) {
+      valueRef.current = next;
+      setRaw(next);
+      setError('');
+    }
+  }, [value]);
+
+  return (
+    <TextField
+      label="stages (JSON array)"
+      multiline
+      minRows={6}
+      fullWidth
+      size="small"
+      value={raw}
+      error={Boolean(error)}
+      helperText={
+        error ||
+        'Array of stage objects — e.g. [{"id":"s1","type":"spoofer","params":{"intensity":"high"}}]'
+      }
+      onChange={(e) => {
+        const next = e.target.value;
+        setRaw(next);
+        if (next.trim() === '' || next.trim() === '[]') {
+          setError('');
+          onChange([]);
+          return;
+        }
+        try {
+          const parsed = JSON.parse(next) as unknown;
+          if (!Array.isArray(parsed)) {
+            setError('Must be a JSON array');
+            return;
+          }
+          const normalized = normalizeAttackStages(parsed);
+          setError('');
+          valueRef.current = JSON.stringify(normalized, null, 2);
+          onChange(normalized);
         } catch {
           setError('Invalid JSON');
         }
@@ -103,12 +183,32 @@ export default function AttackConfigModal({
     patch: Partial<OpenCDAAttackConfig>,
   ) => {
     const next = [...attacks];
-    next[index] = { ...next[index], ...patch };
+    const current = next[index] ?? {};
+    const stages = patch.stages
+      ? normalizeAttackStages(patch.stages)
+      : normalizeAttackStages(current.stages);
+    next[index] = { ...current, ...patch, stages };
     updateSimConfig({ attacks: next });
   };
 
   const addAttack = () => {
     const next = [...attacks, defaultAttackConfig()];
+    updateSimConfig({
+      attacks: next,
+      opencda: { ...simConfig.opencda, export_attacks: true },
+    });
+    setSelectedAttack(next.length - 1);
+  };
+
+  const addGnssSpoofer = () => {
+    const preset = {
+      ...GNSS_SPOOFER_PRESET,
+      name: `gnss_spoof_${attacks.length + 1}`,
+      stages: [
+        { id: nanoid(6), type: 'spoofer', params: { intensity: 'high' } },
+      ],
+    };
+    const next = [...attacks, preset];
     updateSimConfig({
       attacks: next,
       opencda: { ...simConfig.opencda, export_attacks: true },
@@ -135,11 +235,20 @@ export default function AttackConfigModal({
           <Stack direction="row" spacing={1}>
             <Button
               size="small"
+              variant="contained"
+              color="warning"
+              startIcon={<AddIcon />}
+              onClick={addGnssSpoofer}
+            >
+              + GNSS Spoofer
+            </Button>
+            <Button
+              size="small"
               variant="outlined"
               startIcon={<AddIcon />}
               onClick={addAttack}
             >
-              Add attack
+              Add blank
             </Button>
             <Button onClick={onClose} variant="outlined" size="small">
               Close
@@ -158,7 +267,7 @@ export default function AttackConfigModal({
 
         {attacks.length === 0 ? (
           <Typography color="text.secondary">
-            No attacks configured. Click “Add attack”.
+            No attacks configured. Click "+ GNSS Spoofer" or "Add blank".
           </Typography>
         ) : (
           <Stack spacing={2}>
@@ -169,6 +278,16 @@ export default function AttackConfigModal({
                   size="small"
                   variant={idx === selectedAttack ? 'contained' : 'outlined'}
                   onClick={() => setSelectedAttack(idx)}
+                  endIcon={
+                    (attack.stages?.length ?? 0) > 0 ? (
+                      <Chip
+                        label={attack.stages![0].type}
+                        size="small"
+                        color="success"
+                        sx={{ height: 16, fontSize: 10 }}
+                      />
+                    ) : undefined
+                  }
                 >
                   {attack.name || `attack_${idx + 1}`}
                 </Button>
@@ -222,31 +341,12 @@ export default function AttackConfigModal({
                     updateAttackAt(selectedAttack, { targets: value })
                   }
                 />
-                <TextField
-                  label="stages (JSON array)"
-                  multiline
-                  minRows={6}
-                  fullWidth
-                  size="small"
-                  value={JSON.stringify(current.stages ?? [], null, 2)}
-                  helperText="Array of stage objects"
-                  onChange={(e) => {
-                    const raw = e.target.value.trim();
-                    if (!raw) {
-                      updateAttackAt(selectedAttack, { stages: [] });
-                      return;
-                    }
-                    try {
-                      const parsed = JSON.parse(raw) as unknown;
-                      if (Array.isArray(parsed)) {
-                        updateAttackAt(selectedAttack, {
-                          stages: parsed as OpenCDAAttackConfig['stages'],
-                        });
-                      }
-                    } catch {
-                      // Keep draft text; we don't overwrite state on invalid JSON.
-                    }
-                  }}
+                <StagesField
+                  key={selectedAttack}
+                  value={current.stages}
+                  onChange={(stages) =>
+                    updateAttackAt(selectedAttack, { stages })
+                  }
                 />
               </Stack>
             )}

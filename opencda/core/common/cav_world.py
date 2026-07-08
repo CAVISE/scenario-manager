@@ -60,7 +60,7 @@ class CavWorld(object):
         for vehicle_manager in self._vehicle_manager_dict.values():
             vehicle_manager.destroy()
         for rsu_manager in self._rsu_manager_dict.values():
-            rsu_manager.destory()
+            rsu_manager.destroy()
 
     def update_vehicle_manager(self, vehicle_manager):
         """
