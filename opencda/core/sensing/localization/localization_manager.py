@@ -241,17 +241,42 @@ class LocalizationManager(object):
             speed_true = get_speed(self.vehicle)
             speed_noise = self.add_speed_noise(speed_true)
 
-            x, y, z = geo_to_transform(self.gnss.lat,
-                                       self.gnss.lon,
-                                       self.gnss.alt,
-                                       self._geo_ref_lat,
-                                       self._geo_ref_lon, 0.0)
+            true_transform = self.vehicle.get_transform()
+            location = true_transform.location
+            rotation = true_transform.rotation
 
-            # only use this for debugging purpose
-            location = self.vehicle.get_transform().location
+            true_geo = self.map.transform_to_geolocation(location)
+            gnss_lat = self.gnss.lat
+            gnss_lon = self.gnss.lon
+            gnss_alt = self.gnss.alt
+            if (self.gnss.timestamp == 0.0 and
+                    gnss_lat == 0.0 and
+                    gnss_lon == 0.0):
+                gnss_lat = true_geo.latitude
+                gnss_lon = true_geo.longitude
+                gnss_alt = true_geo.altitude
+
+            raw_x, raw_y, raw_z = geo_to_transform(gnss_lat,
+                                                  gnss_lon,
+                                                  gnss_alt,
+                                                  self._geo_ref_lat,
+                                                  self._geo_ref_lon,
+                                                  0.0)
+            ref_x, ref_y, ref_z = geo_to_transform(true_geo.latitude,
+                                                  true_geo.longitude,
+                                                  true_geo.altitude,
+                                                  self._geo_ref_lat,
+                                                  self._geo_ref_lon,
+                                                  0.0)
+
+            # Use the GNSS-vs-GT delta as the noisy sensor measurement in
+            # CARLA coordinates. This avoids comparing two absolute origins
+            # when a map has an imperfect georeference anchor.
+            x = location.x + raw_x - ref_x
+            y = location.y + raw_y - ref_y
+            z = location.z + raw_z - ref_z
 
             # We add synthetic noise to the heading direction
-            rotation = self.vehicle.get_transform().rotation
             heading_angle = self.add_heading_direction_noise(rotation.yaw)
 
             # assume the initial position is accurate

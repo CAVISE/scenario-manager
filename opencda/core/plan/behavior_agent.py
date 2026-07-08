@@ -61,7 +61,7 @@ class _StaticCollisionProxy(object):
     margin here.
     """
 
-    DEFAULT_EXTENT = 1.2  # meters, half-width/half-length; tune if needed
+    DEFAULT_EXTENT = 2.5  # meters, covers pole plus mast-arm traffic lights
 
     def __init__(self, actor, extent=None):
         self._location = actor.get_location()
@@ -197,6 +197,7 @@ class BehaviorAgent(object):
         self.static_obstacles_loaded = False
         self._traffic_light_static_check_logged = False
         self._traffic_light_static_hazard_logged = False
+        self._static_obstacle_path_hazard_logged = False
 
         # debug helper
         self.debug_helper = PlanDebugHelper(self.vehicle.id)
@@ -636,11 +637,28 @@ class BehaviorAgent(object):
         for obs in self.static_obstacles:
             oloc = obs.get_location()
             for i in range(0, lookahead, 5):
-                if math.hypot(rx[i] - oloc.x, ry[i] - oloc.y) < detect_radius:
+                center_distance = math.hypot(rx[i] - oloc.x, ry[i] - oloc.y)
+                if center_distance < detect_radius:
                     hazard = True
                     d = positive(oloc.distance(self._ego_pos.location) - 3)
                     if d < min_distance:
                         min_distance = d
+                    if not self._static_obstacle_path_hazard_logged:
+                        self._static_obstacle_path_hazard_logged = True
+                        log.warning(
+                            "[static_obstacles] actor %s: path hazard "
+                            "obstacle_loc=(%.2f,%.2f,%.2f) "
+                            "path_point=(%.2f,%.2f) center_distance=%.2f "
+                            "ego_distance=%.2f detect_radius=%.2f",
+                            self.vehicle.id,
+                            oloc.x,
+                            oloc.y,
+                            oloc.z,
+                            rx[i],
+                            ry[i],
+                            center_distance,
+                            d,
+                            detect_radius)
                     break
 
         return hazard, min_distance
