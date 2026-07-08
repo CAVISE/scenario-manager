@@ -7,6 +7,10 @@ Utility functions for evaluation.
 # License: TDG-Attribution-NonCommercial-NoDistrib
 
 import sys
+import logging
+
+
+log = logging.getLogger(__name__)
 
 
 def lprint(logfile, *argv):
@@ -30,3 +34,4 @@ def lprint(logfile, *argv):
 
     with open(logfile, 'a') as out:
         out.write(arg_all + '\n')
+    log.info(arg_all)

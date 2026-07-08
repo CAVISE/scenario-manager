@@ -10,6 +10,7 @@
 import math
 import random
 import sys
+import logging
 
 import numpy as np
 import carla
@@ -20,6 +21,9 @@ from opencda.core.plan.local_planner_behavior import LocalPlanner
 from opencda.core.plan.global_route_planner import GlobalRoutePlanner
 from opencda.core.plan.global_route_planner_dao import GlobalRoutePlannerDAO
 from opencda.core.plan.planer_debug_helper import PlanDebugHelper
+
+
+log = logging.getLogger(__name__)
 
 
 class _SimpleBoundingBox(object):
@@ -572,8 +576,8 @@ class BehaviorAgent(object):
         tl_list = world.get_actors().filter('traffic.traffic_light*')
         self.static_obstacles = [_StaticCollisionProxy(tl) for tl in tl_list]
         self.static_obstacles_loaded = True
-        print(f"[static_obstacles] actor {self.vehicle.id}: loaded "
-              f"{len(self.static_obstacles)} traffic light pole(s)")
+        log.info("[static_obstacles] actor %s: loaded %d traffic light pole(s)",
+                 self.vehicle.id, len(self.static_obstacles))
 
     def static_obstacle_check(self, rx, ry, ryaw):
         """
@@ -993,11 +997,13 @@ class BehaviorAgent(object):
                     not self._traffic_light_static_hazard_logged
                 ) or not self._traffic_light_static_check_logged
                 if should_log:
-                    print(f"[static_obstacles] actor {self.vehicle.id}: "
-                          f"traffic-light stop check "
-                          f"hazard={static_hazard} "
-                          f"distance={static_distance:.2f} "
-                          f"path_points={len(rx)}")
+                    log.info("[static_obstacles] actor %s: "
+                             "traffic-light stop check hazard=%s "
+                             "distance=%.2f path_points=%d",
+                             self.vehicle.id,
+                             static_hazard,
+                             static_distance,
+                             len(rx))
                     self._traffic_light_static_check_logged = True
                     if static_hazard:
                         self._traffic_light_static_hazard_logged = True
