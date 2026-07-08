@@ -1,5 +1,19 @@
 import pytest
-from app.utils import json_to_single_cav_list, convert_coords, MAP_OFFSETS, _FALLBACK_DEST_Z, _FALLBACK_SPAWN_Z
+from app.utils import (
+    json_to_single_cav_list,
+    convert_coords,
+    MAP_OFFSETS,
+    _FALLBACK_DEST_Z,
+    _FALLBACK_SPAWN_Z,
+    _GNSS_BASELINE,
+    _ensure_localization_baseline,
+)
+
+
+def _scenario_result(payload):
+    result, _ = json_to_single_cav_list(payload)
+    return result
+
 
 def test_convert_coords_spawn():
     result = convert_coords(10, 5, 100, 50, is_spawn=True)
@@ -27,6 +41,7 @@ def test_raises_on_non_list_scenario():
 def test_car_with_points_sets_destination():
     payload = {
         "map": "Town03",
+        "map_offsets": {"x": 0, "y": 0},
         "scenario": [{
             "vehicle": "car",
             "path": [{
@@ -35,7 +50,7 @@ def test_car_with_points_sets_destination():
             }]
         }]
     }
-    result = json_to_single_cav_list(payload)
+    result = _scenario_result(payload)
     cav = result["scenario"]["single_cav_list"][0]
     assert cav["name"] == "cav1"
     assert cav["spawn_position"][0] == 10
@@ -50,7 +65,7 @@ def test_car_without_points_uses_spawn_as_destination():
             "path": [{"x": 5, "y": 5, "z": 0, "points": []}]
         }]
     }
-    result = json_to_single_cav_list(payload)
+    result = _scenario_result(payload)
     cav = result["scenario"]["single_cav_list"][0]
     assert cav["spawn_position"][:2] == cav["destination"][:2]
     assert cav["spawn_position"][2] == _FALLBACK_SPAWN_Z
@@ -67,7 +82,7 @@ def test_map_offset_applied_for_town01():
             "path": [{"x": 0, "y": 0, "z": 0, "points": []}]
         }]
     }
-    result = json_to_single_cav_list(payload)
+    result = _scenario_result(payload)
     cav = result["scenario"]["single_cav_list"][0]
     assert cav["spawn_position"][0] == offset_x
     assert cav["spawn_position"][1] == offset_y
@@ -85,7 +100,7 @@ def test_lidar_config_added_when_present():
             }]
         }]
     }
-    result = json_to_single_cav_list(payload)
+    result = _scenario_result(payload)
     cav = result["scenario"]["single_cav_list"][0]
     assert cav["sensing"]["perception"]["lidar"]["channels"] == 64
     assert cav["sensing"]["perception"]["lidar"]["range"] == 100
@@ -99,9 +114,9 @@ def test_lidar_not_added_when_absent():
             "path": [{"x": 0, "y": 0, "z": 0, "points": [], "lidars": []}]
         }]
     }
-    result = json_to_single_cav_list(payload)
+    result = _scenario_result(payload)
     cav = result["scenario"]["single_cav_list"][0]
-    assert "sensing" not in cav
+    assert "perception" not in cav["sensing"]
 
 
 def test_rsu_added_to_rsu_list():
@@ -112,7 +127,7 @@ def test_rsu_added_to_rsu_list():
             "path": [{"x": 10, "y": 20, "z": 5, "range": 300, "tx_power": 30, "frequency": 5.9e9, "protocol": "ITS-G5"}]
         }]
     }
-    result = json_to_single_cav_list(payload)
+    result = _scenario_result(payload)
     rsu_list = result["scenario"]["rsu_list"]
     assert len(rsu_list) == 1
     assert rsu_list[0]["name"] == "rsu1"
@@ -128,7 +143,7 @@ def test_rsu_not_in_result_when_absent():
             "path": [{"x": 0, "y": 0, "z": 0, "points": []}]
         }]
     }
-    result = json_to_single_cav_list(payload)
+    result = _scenario_result(payload)
     assert "rsu_list" not in result["scenario"]
 
 
@@ -144,19 +159,44 @@ def test_multiple_cars_named_correctly():
             ]
         }]
     }
-    result = json_to_single_cav_list(payload)
+    result = _scenario_result(payload)
     names = [c["name"] for c in result["scenario"]["single_cav_list"]]
     assert names == ["cav1", "cav2", "cav3"]
 
 
 def test_world_town_set_correctly():
     payload = {"map": "Town05", "scenario": []}
-    result = json_to_single_cav_list(payload)
+    result = _scenario_result(payload)
     assert result["world"]["town"] == "Town05"
     assert result["scenario"]["map"] == "Town05"
 
 
 def test_empty_scenario_returns_empty_cav_list():
     payload = {"map": "Town03", "scenario": []}
-    result = json_to_single_cav_list(payload)
+    result = _scenario_result(payload)
     assert result["scenario"]["single_cav_list"] == []
+
+
+def test_localization_baseline_overwrites_stale_gnss_values():
+    cav_list = [{
+        "sensing": {
+            "localization": {
+                "activate": False,
+                "dt": 0.2,
+                "gnss": {
+                    "noise_alt_stddev": 15.0,
+                    "noise_lat_stddev": 5e-4,
+                    "noise_lon_stddev": 5e-4,
+                    "heading_direction_stddev": 9.0,
+                    "speed_stddev": 9.0,
+                },
+            }
+        }
+    }]
+
+    _ensure_localization_baseline(cav_list)
+
+    loc = cav_list[0]["sensing"]["localization"]
+    assert loc["activate"] is True
+    assert loc["dt"] == 0.05
+    assert loc["gnss"] == _GNSS_BASELINE

@@ -371,6 +371,8 @@ _GNSS_BASELINE = {
     "noise_alt_stddev": 0.001,
     "noise_lat_stddev": 1.0e-6,
     "noise_lon_stddev": 1.0e-6,
+    "heading_direction_stddev": 0.1,
+    "speed_stddev": 0.2,
 }
 
 
@@ -390,16 +392,10 @@ def _ensure_localization_baseline(cav_list: list[dict]) -> None:
         gnss = loc.setdefault("gnss", {})
 
         loc["activate"] = True
-        loc.setdefault("dt", 0.05)
+        loc["dt"] = 0.05
 
         for key, val in _GNSS_BASELINE.items():
-            gnss.setdefault(key, val)
-        # heading_direction_stddev/speed_stddev live inside gnss{} too —
-        # LocalizationManager.localize() reads them as
-        # config_yaml['gnss']['heading_direction_stddev'] / ['speed_stddev'],
-        # confirmed against both base.yaml and localization_manager.py.
-        gnss.setdefault("heading_direction_stddev", 0.1)
-        gnss.setdefault("speed_stddev", 0.2)
+            gnss[key] = val
 
 
 def _normalize_attack_stages(stages: object) -> list[dict]:
