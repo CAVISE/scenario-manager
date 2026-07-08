@@ -2,12 +2,16 @@
 Sensors related to safety status check
 """
 import math
+import logging
 import numpy as np
 import carla
 import weakref
 import shapely
 from collections import deque
 from typing import List
+
+
+log = logging.getLogger(__name__)
 
 
 class CollisionSensor(object):
@@ -116,17 +120,24 @@ class CollisionSensor(object):
                              if other_transform is not None else None)
                 other_yaw_str = (f"{other_yaw:.1f}"
                                  if other_yaw is not None else "unknown")
-                print(f"[collision] FIRST HIT actor={event.actor.id} "
-                      f"frame={event.frame} vs={self.last_other_actor} "
-                      f"other_id={self.last_other_actor_id} "
-                      f"impulse={intensity:.2f} "
-                      f"event_loc={self._fmt_xyz(self.last_collision_event_loc)} "
-                      f"ego_loc={self._fmt_xyz(self.last_ego_loc)} "
-                      f"ego_yaw={ego_transform.rotation.yaw:.1f} "
-                      f"ego_extent={self._fmt_xyz(self.last_ego_extent)} "
-                      f"other_loc={self._fmt_xyz(self.last_collision_loc)} "
-                      f"other_yaw={other_yaw_str} "
-                      f"other_extent={self._fmt_xyz(self.last_other_extent)}")
+                log.warning(
+                    "[collision] FIRST HIT actor=%s frame=%s vs=%s "
+                    "other_id=%s impulse=%.2f event_loc=%s ego_loc=%s "
+                    "ego_yaw=%.1f ego_extent=%s other_loc=%s "
+                    "other_yaw=%s other_extent=%s",
+                    event.actor.id,
+                    event.frame,
+                    self.last_other_actor,
+                    self.last_other_actor_id,
+                    intensity,
+                    self._fmt_xyz(self.last_collision_event_loc),
+                    self._fmt_xyz(self.last_ego_loc),
+                    ego_transform.rotation.yaw,
+                    self._fmt_xyz(self.last_ego_extent),
+                    self._fmt_xyz(self.last_collision_loc),
+                    other_yaw_str,
+                    self._fmt_xyz(self.last_other_extent),
+                )
 
     def return_status(self):
         if self.collided:
