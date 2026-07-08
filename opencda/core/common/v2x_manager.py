@@ -181,16 +181,25 @@ class V2XManager(object):
         anchor_pos = self.true_pos if self.true_pos is not None \
             else self.ego_pos[-1]
 
+        self.cav_nearby = {}
+        self.rsu_nearby = {}
+
         for vid, vm in vehicle_manager_dict.items():
-            # avoid the Nonetype error at the first simulation step
-            if not vm.v2x_manager.get_ego_pos():
+            other_v2x = vm.v2x_manager
+            other_pos = other_v2x.true_pos
+            if other_pos is None:
+                # avoid the NoneType error at the first simulation step
+                if not other_v2x.ego_pos:
+                    continue
+                other_pos = other_v2x.ego_pos[-1]
+            if other_pos is None:
                 continue
             # avoid add itself as the cav nearby
             if vid == self.vid:
                 continue
             distance = compute_distance(
                 anchor_pos.location,
-                vm.v2x_manager.get_ego_pos().location)
+                other_pos.location)
 
             if distance < self.communication_range:
                 self.cav_nearby.update({vid: vm})
@@ -211,9 +220,6 @@ class V2XManager(object):
                                  self.communication_range)
             if distance < rsu_range:
                 self.rsu_nearby[rid] = rsu
-            elif rid in self.rsu_nearby:
-                # RSU moved out of range (shouldn't happen, but clean up)
-                del self.rsu_nearby[rid]
     """
     -----------------------------------------------------------
                  Below is platooning related 
