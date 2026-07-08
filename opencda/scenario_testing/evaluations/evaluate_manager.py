@@ -43,7 +43,7 @@ class EvaluationManager(object):
         self.cav_world = cav_world
         self.fixed_delta_seconds = 0.05
         self.skip_head = 60
-
+        self.dest_reach_threshold = 5.0  # meters
         current_path = os.path.dirname(os.path.realpath(__file__))
 
         self.eval_save_path = os.path.join(
@@ -145,27 +145,56 @@ class EvaluationManager(object):
         return fig
 
     @staticmethod
-    def plot_routes(real_route_transforms, planned_route_transforms):
-        fig, ax = plt.subplots(figsize=(10, 6))
-        real_x_coords = [t.location.x for t in real_route_transforms]
-        real_y_coords = [t.location.y for t in real_route_transforms]
-        planned_x_coords = [t.location.x for t in planned_route_transforms]
-        planned_y_coords = [t.location.y for t in planned_route_transforms]
-        ax.scatter(real_y_coords, real_x_coords, marker='o', s=10, label='Real Route Points')
-        ax.scatter(planned_y_coords, planned_x_coords, marker='x', color='r', s=50, label='Planned Route Points')
+    def plot_routes(real_route_transforms, planned_route_transforms,
+                    gt_route_transforms=None):
+        """
+        Plot three layers on one figure:
+          - Red ×   : initial planned route waypoints
+          - Green ─  : ground-truth physical path (what the vehicle actually did)
+          - Blue ·   : GNSS-reported path (what the vehicle *thought* it was doing)
+
+        When gt_route_transforms is None (no attack / legacy call) only the
+        first two layers are drawn and the title stays generic.
+        """
+        fig, ax = plt.subplots(figsize=(10, 7))
+
+        # --- GNSS-reported (noisy) path ---
+        real_x = [t.location.x for t in real_route_transforms]
+        real_y = [t.location.y for t in real_route_transforms]
+        ax.scatter(real_y, real_x, marker='o', s=8, alpha=0.5,
+                   color='steelblue', label='GNSS-reported position (spoofed)')
+
+        # --- planned route ---
+        plan_x = [t.location.x for t in planned_route_transforms]
+        plan_y = [t.location.y for t in planned_route_transforms]
+        ax.scatter(plan_y, plan_x, marker='x', color='red', s=50,
+                   label='Planned route waypoints')
+
+        # --- ground-truth physical path ---
+        if gt_route_transforms:
+            gt_x = [t.location.x for t in gt_route_transforms]
+            gt_y = [t.location.y for t in gt_route_transforms]
+            ax.plot(gt_y, gt_x, color='green', linewidth=1.5, alpha=0.85,
+                    label='Actual physical path (ground truth)')
+            title = ('Route Comparison Under GNSS Spoofing Attack\n'
+                     'Green = actual path  |  Blue = spoofed GNSS report  |  Red = planned')
+        else:
+            title = 'Actual Route / Initial Planned Route'
+
         ax.set_xlabel('Y (meters)')
         ax.set_ylabel('X (meters)')
-        ax.set_title('Actual Route / Initial Planned Route')
-        ax.legend()
-        ax.grid()
+        ax.set_title(title)
+        ax.legend(loc='best', fontsize=8)
+        ax.grid(True, alpha=0.3)
 
-        all_x = real_x_coords + planned_x_coords
-        all_y = real_y_coords + planned_y_coords
+        all_x = real_x + plan_x + (gt_x if gt_route_transforms else [])
+        all_y = real_y + plan_y + (gt_y if gt_route_transforms else [])
         if all_x and all_y:
             x_margin = max((max(all_x) - min(all_x)) * 0.1, 5)
             y_margin = max((max(all_y) - min(all_y)) * 0.1, 5)
             ax.set_xlim(min(all_y) - y_margin, max(all_y) + y_margin)
             ax.set_ylim(min(all_x) - x_margin, max(all_x) + x_margin)
+
         return fig
 
     def planning_eval(self, log_file):
@@ -177,31 +206,39 @@ class EvaluationManager(object):
         """
         all_vms = self.cav_world.get_vehicle_managers()
         if not all_vms:
-            print("WARNING: No vehicle managers found, skipping planning eval.")
+            lprint(log_file, "WARNING: No vehicle managers found, skipping planning eval.")
             return
 
         for vid, vm in all_vms.items():
-            self._planning_eval_single(vm)
-    def _planning_eval_single(self, vm):
+            self._planning_eval_single(vm, log_file)
+    def _planning_eval_single(self, vm, log_file):
         """Run planning evaluation for a single vehicle manager."""
         planned_route = vm.agent.initial_global_route
         real_route = vm.v2x_manager.ego_dynamic_trace
+        gt_route = list(vm.gt_dynamic_trace) if hasattr(vm, 'gt_dynamic_trace') else []
         if not planned_route:
-            print(f"WARNING: initial_global_route is None for CAV {vm.vehicle.id}, skipping.")
+            lprint(log_file, f"WARNING: initial_global_route is None for CAV {vm.vehicle.id}, skipping.")
             return
         if not real_route:
-            print(f"WARNING: ego_dynamic_trace is empty for CAV {vm.vehicle.id}, skipping.")
+            lprint(log_file, f"WARNING: ego_dynamic_trace is empty for CAV {vm.vehicle.id}, skipping.")
             return
         planned_dist = self.calculate_route_dist(planned_route)
         real_dist = self.calculate_route_dist(real_route)
-        print("***********Planning Evaluation Module***********")
-        print(f"Planned distance: {planned_dist}")
-        print(f"Real distance: {real_dist}")
-        print(f"Cav world ticks elapsed: {self.cav_world.global_clock}")
-        print(f"Cav World time in seconds: {self.cav_world.global_clock * self.fixed_delta_seconds}")
-        print(f"Calculated success threshold (with 10km/h or 2.77m/s): {planned_dist / 2.77778}")
-        print("Success or not: ", "Yes" if self.cav_world.global_clock * self.fixed_delta_seconds < planned_dist / 2.77778 else "No")
+        elapsed_s = self.cav_world.global_clock * self.fixed_delta_seconds
         actor_id = vm.vehicle.id
+        lprint(log_file, "***********Planning Evaluation Module***********")
+        lprint(log_file, f"Actor ID: {actor_id}")
+        lprint(log_file, f"Planned distance: {planned_dist}")
+        lprint(log_file, f"Real distance: {real_dist}")
+        lprint(log_file, f"Cav world ticks elapsed: {self.cav_world.global_clock}")
+        lprint(log_file, f"Cav World time in seconds: {elapsed_s}")
+        if gt_route:
+            dest_loc = planned_route[-1][0].transform.location
+            dist_to_dest = gt_route[-1].location.distance(dest_loc)
+            lprint(log_file, f"Final GT distance to destination: {dist_to_dest}")
+            lprint(log_file, "Success or not: ", "Yes" if dist_to_dest < self.dest_reach_threshold else "No")
+        else:
+            lprint(log_file, "Success or not: UNKNOWN (no gt_dynamic_trace on this vm)")
         timestamps = list(map(lambda e: e[2], real_route))
         imu_data = list(vm.safety_manager.imu_sensor.imu_data)
         safety_data = list(vm.safety_manager.status_queue)
@@ -245,9 +282,44 @@ class EvaluationManager(object):
         fig_hazard.savefig(os.path.join(self.eval_save_path, f'{actor_id}_hazard.png'), dpi=100)
         plt.close(fig_hazard)
 
+        # Hazard totals over the FULL run (not the plot's skip_head-trimmed
+        # slice) — this is the numeric answer to "did it actually break,
+        # and when" without having to eyeball *_hazard.png.
+        lprint(log_file, "--- Hazard summary (full run) ---")
+        for key, label in (('collision', 'Collisions'),
+                           ('offroad', 'Off-road events'),
+                           ('stuck', 'Stuck events'),
+                           ('ran_light', 'Ran traffic light events')):
+            flags = [bool(e[1][key]) for e in safety_data]
+            count = sum(flags)
+            if count:
+                first_idx = flags.index(True)
+                first_t = safety_data[first_idx][0]
+                extra = ""
+                if key == 'collision':
+                    other = safety_data[first_idx][1].get('collision_with')
+                    if other:
+                        extra = f", first hit: {other}"
+                lprint(log_file, f"{label}: {count} tick(s), first at t={first_t}{extra}")
+            else:
+                lprint(log_file, f"{label}: 0")
+
+        # RSU cooperative-perception participation — lets you tell "RSU had
+        # nothing new to add" apart from "RSU never registered as nearby"
+        # when comparing an RSU-present run against an RSU-absent one.
+        rs = vm.rsu_merge_stats
+        pct_in_range = (100.0 * rs['ticks_rsu_in_range'] / rs['ticks_total']
+                        if rs['ticks_total'] else 0.0)
+        lprint(log_file, "--- RSU cooperative perception ---")
+        lprint(log_file, f"Ticks with >=1 RSU in range: {rs['ticks_rsu_in_range']}/{rs['ticks_total']} ({pct_in_range:.1f}%)")
+        lprint(log_file, f"Total objects merged from RSU perception: {rs['objects_merged_total']}")
+
+        gt_route = list(vm.gt_dynamic_trace) if hasattr(vm, 'gt_dynamic_trace') else []
+
         fig_routes = self.plot_routes(
             list(map(lambda e: e[0], real_route_trimmed)),
             list(map(lambda e: e[0].transform, planned_route)),
+            gt_route_transforms=gt_route if gt_route else None,
         )
         fig_routes.savefig(os.path.join(self.eval_save_path, f'{actor_id}_routes.png'), dpi=100)
         plt.close(fig_routes)

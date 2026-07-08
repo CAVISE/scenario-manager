@@ -436,6 +436,12 @@ class PerceptionManager:
         self.traffic_thresh = config_yaml['traffic_light_thresh'] \
             if 'traffic_light_thresh' in config_yaml else 50
 
+        # Detection range for deactivate_mode server-side queries.
+        # Configurable via perception.detection_range in YAML.
+        # RSUs can set a larger range (e.g. 100m) to cover intersections.
+        # Default: 50m for moving CAVs, same for RSU unless overridden.
+        self.detection_range = config_yaml.get('detection_range', 50)
+
     def dist(self, a):
         """
         A fast method to retrieve the obstacle distance the ego
@@ -581,8 +587,7 @@ class PerceptionManager:
         world = self.carla_world
 
         vehicle_list = world.get_actors().filter("*vehicle*")
-        # todo: hard coded
-        thresh = 50 if not self.data_dump else 120
+        thresh = self.detection_range
 
         vehicle_list = [v for v in vehicle_list if self.dist(v) < thresh and
                         v.id != self.id]

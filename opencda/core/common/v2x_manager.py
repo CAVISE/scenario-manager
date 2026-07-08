@@ -57,6 +57,8 @@ class V2XManager(object):
 
         # found CAVs nearby
         self.cav_nearby = {}
+        # found RSUs nearby
+        self.rsu_nearby = {}
 
         # used for cooperative perception.
         self._recieved_buffer = {}
@@ -70,6 +72,11 @@ class V2XManager(object):
         # ego position buffer. use deque so we can simulate lagging
         self.ego_pos = deque(maxlen=100)
         self.ego_spd = deque(maxlen=100)
+        # True (ground-truth) ego position, used only for range/reachability
+        # checks in search(). Whether a real RSU/CAV radio is in range
+        # depends on true physical distance, not on what this vehicle's own
+        # (possibly GNSS-spoofed) receiver believes its position is.
+        self.true_pos = None
         # ego position and ego speed recorded for evaluate planning algorithm
         self.ego_dynamic_trace = deque()
         # used to exclude the cav self during searching
@@ -91,12 +98,18 @@ class V2XManager(object):
         if 'lag' in config_yaml:
             self.lag = config_yaml['lag']
 
-    def update_info(self, ego_pos, ego_spd):
+    def update_info(self, ego_pos, ego_spd, true_pos=None):
         """
         Update all communication plugins with current localization info.
+
+        true_pos : carla.Transform, optional
+            Ground-truth position, used for range gating in search().
+            Defaults to ego_pos for callers that don't track a separate
+            ground truth (e.g. RSUs, which are never GNSS-spoofed anyway).
         """
         self.ego_pos.append(ego_pos)
         self.ego_spd.append(ego_spd)
+        self.true_pos = true_pos if true_pos is not None else ego_pos
         # used for planning
         self.ego_dynamic_trace.append((ego_pos, ego_spd, self.cav_world.global_clock))
         # evaluation
@@ -155,9 +168,18 @@ class V2XManager(object):
 
     def search(self):
         """
-        Search the CAVs nearby.
+        Search the CAVs nearby and RSUs in communication range.
         """
         vehicle_manager_dict = self.cav_world.get_vehicle_managers()
+
+        # Anchor for OUR side of every range check below. Must be the true
+        # position: whether a real radio link is in range depends on real
+        # physical distance, not on this vehicle's own (possibly
+        # GNSS-spoofed) belief about where it is. Falls back to the noisy
+        # ego_pos only if update_info() was somehow never called (shouldn't
+        # happen, since search() is only ever invoked from update_info()).
+        anchor_pos = self.true_pos if self.true_pos is not None \
+            else self.ego_pos[-1]
 
         for vid, vm in vehicle_manager_dict.items():
             # avoid the Nonetype error at the first simulation step
@@ -167,11 +189,31 @@ class V2XManager(object):
             if vid == self.vid:
                 continue
             distance = compute_distance(
-                self.ego_pos[-1].location,
+                anchor_pos.location,
                 vm.v2x_manager.get_ego_pos().location)
 
             if distance < self.communication_range:
                 self.cav_nearby.update({vid: vm})
+
+        # Search nearby RSUs — they broadcast position and perceived objects.
+        # Use the RSU's own configured range (not the CAV's) since the RSU's
+        # "range" setting is what the user actually controls for coverage.
+        rsu_manager_dict = self.cav_world._rsu_manager_dict
+        for rid, rsu in rsu_manager_dict.items():
+            rsu_pos = rsu.localizer.get_ego_pos()
+            if rsu_pos is None:
+                continue
+            distance = compute_distance(
+                anchor_pos.location,
+                rsu_pos.location,
+            )
+            rsu_range = getattr(rsu, 'communication_range',
+                                 self.communication_range)
+            if distance < rsu_range:
+                self.rsu_nearby[rid] = rsu
+            elif rid in self.rsu_nearby:
+                # RSU moved out of range (shouldn't happen, but clean up)
+                del self.rsu_nearby[rid]
     """
     -----------------------------------------------------------
                  Below is platooning related 
@@ -238,7 +280,7 @@ class V2XManager(object):
         vm : opencda object
             The target vehicle manager.
         """
-        self.platooning_plugin.rear_vechile = vm
+        self.platooning_plugin.rear_vehicle = vm
 
     def add_platoon_blacklist(self, pmid):
         """
@@ -308,4 +350,4 @@ class V2XManager(object):
             Rear vehicle of the ego vehicle in the platoon.
         """
         return self.platooning_plugin.front_vehicle, \
-               self.platooning_plugin.rear_vechile
+               self.platooning_plugin.rear_vehicle

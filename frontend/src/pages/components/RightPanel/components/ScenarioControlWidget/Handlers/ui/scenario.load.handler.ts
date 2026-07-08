@@ -20,7 +20,8 @@ export function buildScenarioPayload(): ScenarioPayload {
   return {
     scenario_id: s.Scenario?.id || null,
     scenario_name: s.Scenario?.name || localStorage.getItem('scenario_name'),
-    weather: s.Scenario?.weather || localStorage.getItem('weather') || undefined,
+    weather:
+      s.Scenario?.weather || localStorage.getItem('weather') || undefined,
     map: s.simConfig?.carla?.map || 'town10',
     id: s.Scenario?.id || null,
     name_of_scenario: s.Scenario?.name || null,
@@ -39,6 +40,18 @@ export function buildScenarioPayload(): ScenarioPayload {
             scale: car.scale,
             rotation: Math.floor((car.rotation ?? 0) * 57.32),
             selected: car.id === s.selectedId,
+            opencda_max_speed: car.opencda_max_speed,
+            opencda_ignore_traffic_light: car.opencda_ignore_traffic_light,
+            opencda_overtake_allowed: car.opencda_overtake_allowed,
+            opencda_collision_time_ahead: car.opencda_collision_time_ahead,
+            opencda_local_planner_debug: car.opencda_local_planner_debug,
+            opencda_local_planner_debug_trajectory:
+              car.opencda_local_planner_debug_trajectory,
+            opencda_v2x_enabled: car.opencda_v2x?.enabled,
+            opencda_v2x_communication_range:
+              car.opencda_v2x?.communication_range,
+            opencda_carla_model: car.opencda_carla_model,
+            opencda_color: car.opencda_color,
             points: s.points
               .filter((p: Point) => p.carId === car.id)
               .map((p: Point, i: number) => ({
@@ -70,7 +83,42 @@ export function buildScenarioPayload(): ScenarioPayload {
             frequency: r.frequency,
             range: r.range,
             protocol: r.protocol,
+            beacon_interval: r.beacon_interval,
+            opencda_name: r.opencda_name,
+            opencda_id: r.opencda_id,
+            opencda_color: r.opencda_color,
+            opencda_behavior_services: r.opencda_behavior_services,
             script: r.script || null,
+            opencda_perception_activate: r.opencda_sensing?.perception_activate,
+            opencda_detection_range: r.opencda_sensing?.detection_range,
+            opencda_camera_visualize: r.opencda_sensing?.camera_visualize,
+            opencda_camera_num: r.opencda_sensing?.camera_num,
+            opencda_camera_positions: r.opencda_sensing?.camera_positions,
+            opencda_lidar_visualize: r.opencda_sensing?.lidar_visualize,
+            opencda_lidar_channels: r.opencda_sensing?.lidar_channels,
+            opencda_lidar_range: r.opencda_sensing?.lidar_range,
+            opencda_lidar_points_per_second:
+              r.opencda_sensing?.lidar_points_per_second,
+            opencda_lidar_rotation_frequency:
+              r.opencda_sensing?.lidar_rotation_frequency,
+            opencda_lidar_upper_fov: r.opencda_sensing?.lidar_upper_fov,
+            opencda_lidar_lower_fov: r.opencda_sensing?.lidar_lower_fov,
+            opencda_lidar_dropoff_general_rate:
+              r.opencda_sensing?.lidar_dropoff_general_rate,
+            opencda_lidar_dropoff_intensity_limit:
+              r.opencda_sensing?.lidar_dropoff_intensity_limit,
+            opencda_lidar_dropoff_zero_intensity:
+              r.opencda_sensing?.lidar_dropoff_zero_intensity,
+            opencda_lidar_noise_stddev: r.opencda_sensing?.lidar_noise_stddev,
+            // OpenCDA sensing — localization
+            opencda_localization_activate:
+              r.opencda_sensing?.localization_activate,
+            opencda_gnss_noise_alt_stddev:
+              r.opencda_sensing?.gnss_noise_alt_stddev,
+            opencda_gnss_noise_lat_stddev:
+              r.opencda_sensing?.gnss_noise_lat_stddev,
+            opencda_gnss_noise_lon_stddev:
+              r.opencda_sensing?.gnss_noise_lon_stddev,
           })),
         },
         {

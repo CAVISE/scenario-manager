@@ -25,6 +25,7 @@ class StartSimulationRequest(BaseModel):
     description: str = Field(default="", max_length=4000)
     weather: Optional[str] = Field(default=None, max_length=64)
     scenario: list[dict] = Field(default_factory=list)
+    attacks: list[dict] = Field(default_factory=list)
     xodr: Optional[str] = Field(default=None, max_length=5_000_000)
     scenario_id: Optional[str] = None
 

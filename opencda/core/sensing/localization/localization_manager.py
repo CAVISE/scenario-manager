@@ -174,6 +174,29 @@ class LocalizationManager(object):
         self.geo_ref = self.map.transform_to_geolocation(
             carla.Location(x=0, y=0, z=0))
 
+        # Guard against a degenerate geo-reference. Maps without a proper
+        # OpenDRIVE <geoReference> tag can have transform_to_geolocation()
+        # fall back to a latitude near +/-90 degrees. geo_to_transform()'s
+        # Mercator-style y-formula has no cos(lat_0) scale factor left at
+        # the reference point (it cancels out algebraically — see
+        # coordinate_transform.py), while its linear x-formula for
+        # longitude IS scaled by cos(lat_0). So as lat_0 approaches a
+        # pole, x-sensitivity to GNSS noise collapses toward zero while
+        # y-sensitivity is essentially unaffected — silently producing
+        # wildly asymmetric localization error between axes even for
+        # perfectly symmetric noise_lat_stddev/noise_lon_stddev config.
+        # The simulation only needs internal (relative) coordinate
+        # consistency, not a real geographic anchor, so falling back to
+        # latitude 0 here is safe and keeps both axes equally sensitive.
+        self._geo_ref_lat = self.geo_ref.latitude
+        self._geo_ref_lon = self.geo_ref.longitude
+        if abs(self._geo_ref_lat) > 89.0:
+            print(f"[geo_ref] WARNING: degenerate map geo-reference "
+                  f"latitude={self._geo_ref_lat:.4f} (near a pole) for "
+                  f"actor {vehicle.id} — falling back to 0.0 to avoid "
+                  f"asymmetric x/y GNSS noise sensitivity")
+            self._geo_ref_lat = 0.0
+
         # speed and transform and current timestamp
         self._ego_pos = None
         self._speed = 0
@@ -221,8 +244,8 @@ class LocalizationManager(object):
             x, y, z = geo_to_transform(self.gnss.lat,
                                        self.gnss.lon,
                                        self.gnss.alt,
-                                       self.geo_ref.latitude,
-                                       self.geo_ref.longitude, 0.0)
+                                       self._geo_ref_lat,
+                                       self._geo_ref_lon, 0.0)
 
             # only use this for debugging purpose
             location = self.vehicle.get_transform().location
@@ -303,9 +326,28 @@ class LocalizationManager(object):
 
     def get_ego_pos(self):
         """
-        Retrieve ego vehicle position
+        Retrieve ego vehicle position (may be GNSS-noisy when activate=True).
+        Used for localization error metrics only.
         """
         return self._ego_pos
+
+    def get_true_ego_pos(self):
+        """
+        Retrieve ground-truth ego vehicle position directly from CARLA.
+        Always accurate regardless of localization.activate setting.
+        Used by the behavior agent for navigation so that GNSS spoofing
+        disrupts reported position metrics without breaking vehicle movement.
+        """
+        return self.vehicle.get_transform()
+
+    def get_true_ego_spd(self):
+        """
+        Ground-truth speed, mirrors get_true_ego_pos(). Speed and heading share
+        the same KF state as position — under large spoofing the fused speed
+        can diverge even though the raw speed measurement is fine. Controller
+        needs the real value, not the (possibly diverged) fused one.
+        """
+        return get_speed(self.vehicle)
 
     def get_ego_spd(self):
         """
