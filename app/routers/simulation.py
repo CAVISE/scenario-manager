@@ -159,7 +159,7 @@ async def list_results(request: Request, run_id: str):
             url=f"/evaluation_outputs/{run_id}/{f}",
         )
         for f in sorted(os.listdir(path))
-        if f.endswith(".png")
+        if f.endswith((".png", ".txt", ".log"))
     ]
     return ResultsResponse(files=files, run_id=run_id)
 
