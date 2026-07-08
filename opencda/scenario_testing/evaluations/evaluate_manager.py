@@ -63,6 +63,40 @@ class EvaluationManager(object):
             return f"({value.x:.2f},{value.y:.2f},{value.z:.2f})"
         return f"({value[0]:.2f},{value[1]:.2f},{value[2]:.2f})"
 
+    def _collision_extra(self, status):
+        details = []
+        other = status.get('collision_with')
+        if other:
+            details.append(f"first hit: {other}")
+        other_id = status.get('collision_with_id')
+        if other_id is not None:
+            details.append(f"other_id={other_id}")
+        for label_name, status_key in (
+                ('event_loc', 'collision_event_loc'),
+                ('ego_loc', 'ego_loc_at_collision'),
+                ('other_loc', 'collision_loc')):
+            loc_text = self._fmt_xyz(status.get(status_key))
+            if loc_text:
+                details.append(f"{label_name}={loc_text}")
+        return ", " + ", ".join(details) if details else ""
+
+    @staticmethod
+    def _late_collision_status(vm):
+        safety_manager = getattr(vm, 'safety_manager', None)
+        for sensor in getattr(safety_manager, 'sensors', []):
+            frame = getattr(sensor, 'collided_frame', -1)
+            if frame == -1:
+                continue
+            return {
+                'collision_with': getattr(sensor, 'last_other_actor', None),
+                'collision_with_id': getattr(sensor, 'last_other_actor_id', None),
+                'collision_loc': getattr(sensor, 'last_collision_loc', None),
+                'collision_event_loc': getattr(sensor, 'last_collision_event_loc', None),
+                'ego_loc_at_collision': getattr(sensor, 'last_ego_loc', None),
+                'collision_frame': frame,
+            }
+        return None
+
     def evaluate(self):
         """
         Evaluate performance of all modules by plotting and writing the
@@ -85,8 +119,8 @@ class EvaluationManager(object):
     def calculate_route_dist(self, route):
         route_dist = 0.0
         for i in range(len(route) - 1):
-            prev = route[i][0]
-            cur = route[i + 1][0]
+            prev = route[i][0] if isinstance(route[i], (list, tuple)) else route[i]
+            cur = route[i + 1][0] if isinstance(route[i + 1], (list, tuple)) else route[i + 1]
             if isinstance(prev, carla.libcarla.Waypoint):
                 route_dist += prev.transform.location.distance(cur.transform.location)
             else:
@@ -222,22 +256,28 @@ class EvaluationManager(object):
     def _planning_eval_single(self, vm, log_file):
         """Run planning evaluation for a single vehicle manager."""
         planned_route = vm.agent.initial_global_route
-        real_route = vm.v2x_manager.ego_dynamic_trace
+        gnss_route = vm.v2x_manager.ego_dynamic_trace
         gt_route = list(vm.gt_dynamic_trace) if hasattr(vm, 'gt_dynamic_trace') else []
         if not planned_route:
             lprint(log_file, f"WARNING: initial_global_route is None for CAV {vm.vehicle.id}, skipping.")
             return
-        if not real_route:
+        if not gnss_route:
             lprint(log_file, f"WARNING: ego_dynamic_trace is empty for CAV {vm.vehicle.id}, skipping.")
             return
         planned_dist = self.calculate_route_dist(planned_route)
-        real_dist = self.calculate_route_dist(real_route)
+        # Real distance must be physical ground-truth distance. The V2X trace
+        # intentionally carries GNSS/spoofed ego_pos and can explode under an
+        # attack; keep it only as a separate diagnostic.
+        real_dist = self.calculate_route_dist(gt_route) if gt_route else self.calculate_route_dist(gnss_route)
+        gnss_dist = self.calculate_route_dist(gnss_route)
         elapsed_s = self.cav_world.global_clock * self.fixed_delta_seconds
         actor_id = vm.vehicle.id
         lprint(log_file, "***********Planning Evaluation Module***********")
         lprint(log_file, f"Actor ID: {actor_id}")
         lprint(log_file, f"Planned distance: {planned_dist}")
         lprint(log_file, f"Real distance: {real_dist}")
+        if gt_route:
+            lprint(log_file, f"GNSS-reported distance: {gnss_dist}")
         lprint(log_file, f"Cav world ticks elapsed: {self.cav_world.global_clock}")
         lprint(log_file, f"Cav World time in seconds: {elapsed_s}")
         if gt_route:
@@ -247,14 +287,14 @@ class EvaluationManager(object):
             lprint(log_file, "Success or not: ", "Yes" if dist_to_dest < self.dest_reach_threshold else "No")
         else:
             lprint(log_file, "Success or not: UNKNOWN (no gt_dynamic_trace on this vm)")
-        timestamps = list(map(lambda e: e[2], real_route))
+        timestamps = list(map(lambda e: e[2], gnss_route))
         imu_data = list(vm.safety_manager.imu_sensor.imu_data)
         safety_data = list(vm.safety_manager.status_queue)
 
         n = min(len(timestamps), len(imu_data))
         timestamps = timestamps[:n]
         imu_data = imu_data[:n]
-        real_route_trimmed = list(real_route)[:n]
+        real_route_trimmed = list(gnss_route)[:n]
 
         skip = min(self.skip_head, max(10, len(timestamps) // 10))
 
@@ -306,29 +346,23 @@ class EvaluationManager(object):
                 extra = ""
                 status = safety_data[first_idx][1]
                 if key == 'collision':
-                    details = []
-                    other = status.get('collision_with')
-                    if other:
-                        details.append(f"first hit: {other}")
-                    other_id = status.get('collision_with_id')
-                    if other_id is not None:
-                        details.append(f"other_id={other_id}")
-                    for label_name, status_key in (
-                            ('event_loc', 'collision_event_loc'),
-                            ('ego_loc', 'ego_loc_at_collision'),
-                            ('other_loc', 'collision_loc')):
-                        loc_text = self._fmt_xyz(status.get(status_key))
-                        if loc_text:
-                            details.append(f"{label_name}={loc_text}")
-                    if details:
-                        extra = ", " + ", ".join(details)
+                    extra = self._collision_extra(status)
                 elif key == 'offroad':
                     loc_text = self._fmt_xyz(status.get('offroad_loc'))
                     if loc_text:
                         extra = f", loc={loc_text}"
                 lprint(log_file, f"{label}: {count} tick(s), first at t={first_t}{extra}")
             else:
-                lprint(log_file, f"{label}: 0")
+                late_collision = None
+                if key == 'collision':
+                    late_collision = self._late_collision_status(vm)
+                if late_collision:
+                    extra = self._collision_extra(late_collision)
+                    frame = late_collision.get('collision_frame')
+                    frame_text = f", first frame={frame}" if frame is not None else ""
+                    lprint(log_file, f"{label}: 1 late/unqueued event{frame_text}{extra}")
+                else:
+                    lprint(log_file, f"{label}: 0")
 
         # RSU cooperative-perception participation — lets you tell "RSU had
         # nothing new to add" apart from "RSU never registered as nearby"
