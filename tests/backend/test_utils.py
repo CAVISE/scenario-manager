@@ -7,6 +7,7 @@ from app.utils import (
     _FALLBACK_SPAWN_Z,
     _GNSS_BASELINE,
     _ensure_localization_baseline,
+    _compute_yaw,
 )
 
 
@@ -175,6 +176,83 @@ def test_empty_scenario_returns_empty_cav_list():
     payload = {"map": "Town03", "scenario": []}
     result = _scenario_result(payload)
     assert result["scenario"]["single_cav_list"] == []
+
+
+class _FakeLocation:
+    def __init__(self, x, y, z=0, waypoint=None):
+        self.x = x
+        self.y = y
+        self.z = z
+        self.waypoint = waypoint
+
+
+class _FakeRotation:
+    def __init__(self, yaw):
+        self.yaw = yaw
+
+
+class _FakeTransform:
+    def __init__(self, waypoint, yaw):
+        self.location = _FakeLocation(waypoint.road_id, waypoint.lane_id, waypoint=waypoint)
+        self.rotation = _FakeRotation(yaw)
+
+
+class _FakeWaypoint:
+    lane_type = "Driving"
+
+    def __init__(self, road_id, lane_id, yaw):
+        self.road_id = road_id
+        self.lane_id = lane_id
+        self.section_id = 0
+        self.transform = _FakeTransform(self, yaw)
+        self._left = None
+        self._right = None
+        self._next = []
+
+    def get_left_lane(self):
+        return self._left
+
+    def get_right_lane(self):
+        return self._right
+
+    def next_until_lane_end(self, _):
+        return []
+
+    def next(self, _):
+        return self._next
+
+
+class _FakeMap:
+    def __init__(self, spawn, dest):
+        self.spawn = spawn
+        self.dest = dest
+
+    def get_waypoint(self, location, **_):
+        if getattr(location, "waypoint", None) is not None:
+            return location.waypoint
+        return self.spawn if location.x == 0 else self.dest
+
+
+def test_compute_yaw_prefers_shorter_reachable_route(monkeypatch):
+    import carla
+
+    monkeypatch.setattr(carla, "LaneType", type("LaneType", (), {"Driving": "Driving"}), raising=False)
+
+    dest = _FakeWaypoint(50, 1, 90)
+    slow_mid_1 = _FakeWaypoint(20, -1, 0)
+    slow_mid_2 = _FakeWaypoint(30, -1, 0)
+    spawn = _FakeWaypoint(10, -1, 0)
+    left = _FakeWaypoint(10, 1, 180)
+
+    spawn._left = left
+    spawn._next = [slow_mid_1]
+    slow_mid_1._next = [slow_mid_2]
+    slow_mid_2._next = [dest]
+    left._next = [dest]
+
+    yaw = _compute_yaw(0, 0, 0, -10, 1, carla_map=_FakeMap(spawn, dest))
+
+    assert yaw == 180
 
 
 def test_localization_baseline_overwrites_stale_gnss_values():

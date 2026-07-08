@@ -102,9 +102,9 @@ def _angle_diff(a: float, b: float) -> float:
     return (a - b + 180.0) % 360.0 - 180.0
 
 
-def _wp_leads_to_dest(start_wp, dest_wp, max_steps: int = _BFS_MAX_STEPS) -> bool:
+def _wp_route_depth_to_dest(start_wp, dest_wp, max_steps: int = _BFS_MAX_STEPS) -> int | None:
     """
-    Road-level BFS: returns True if start_wp can reach dest_wp's road+lane
+    Road-level BFS: returns transition depth if start_wp can reach dest_wp's road+lane
     within max_steps road transitions.  Uses (road_id, lane_id) as visited
     key (section_id omitted — most CARLA roads have section_id=0 for all
     their waypoints, so including it would prevent the BFS from ever leaving
@@ -120,11 +120,11 @@ def _wp_leads_to_dest(start_wp, dest_wp, max_steps: int = _BFS_MAX_STEPS) -> boo
     target_lane = dest_wp.lane_id
 
     visited: set = set()
-    queue = [start_wp]
+    queue = [(start_wp, 0)]
     steps = 0
 
     while queue and steps < max_steps:
-        current = queue.pop(0)
+        current, depth = queue.pop(0)
         key = (current.road_id, current.lane_id)   # section_id removed
         if key in visited:
             continue
@@ -132,10 +132,10 @@ def _wp_leads_to_dest(start_wp, dest_wp, max_steps: int = _BFS_MAX_STEPS) -> boo
 
         if current.road_id == target_road and current.lane_id == target_lane:
             log.debug(
-                "BFS: reached target road=%d lane=%d in %d steps (%d nodes visited)",
-                target_road, target_lane, steps, len(visited),
+                "BFS: reached target road=%d lane=%d at depth=%d after %d expansions (%d nodes visited)",
+                target_road, target_lane, depth, steps, len(visited),
             )
-            return True
+            return depth
 
         steps += 1
 
@@ -147,13 +147,18 @@ def _wp_leads_to_dest(start_wp, dest_wp, max_steps: int = _BFS_MAX_STEPS) -> boo
             pivot = end_wps[-1] if end_wps else current
         except Exception:
             pivot = current
-        queue.extend(pivot.next(_BFS_STEP_M))
+        queue.extend((wp, depth + 1) for wp in pivot.next(_BFS_STEP_M))
 
     log.debug(
         "BFS: exhausted after %d steps (%d nodes visited) — target road=%d lane=%d NOT reached",
         steps, len(visited), target_road, target_lane,
     )
-    return False
+    return None
+
+
+def _wp_leads_to_dest(start_wp, dest_wp, max_steps: int = _BFS_MAX_STEPS) -> bool:
+    """Compatibility wrapper for callers that only need reachability."""
+    return _wp_route_depth_to_dest(start_wp, dest_wp, max_steps) is not None
 
 
 def _compute_yaw(sx: float, sy: float, sz: float,
@@ -170,8 +175,8 @@ def _compute_yaw(sx: float, sy: float, sz: float,
          neighbour.  For each, also check the 180°-flipped twin (same
          physical point, opposite direction) so we cover both driving
          directions on any road.
-      4. BFS from each candidate to wp_dest.  Return the yaw of the first
-         candidate that reaches dest.
+      4. BFS from each candidate to wp_dest.  Return the yaw of the reachable
+         candidate with the shortest road-transition depth.
       5. If no candidate reaches dest fall back to: flip wp_spawn yaw if the
          atan2 vector disagrees by >90°, otherwise keep wp_spawn yaw.
       6. Ultimate fallback: atan2(spawn→dest).
@@ -245,17 +250,45 @@ def _compute_yaw(sx: float, sy: float, sz: float,
              for wp, lbl in candidates],
         )
 
+        to_dest_yaw = math.degrees(math.atan2(dy - sy, dx - sx))
+        reachable = []
+        seen_candidate_keys = set()
         for wp_cand, label in candidates:
-            if _wp_leads_to_dest(wp_cand, wp_dest):
-                yaw = wp_cand.transform.rotation.yaw
-                log.info("yaw=%.1f deg (BFS route found, candidate=%s)", yaw, label)
-                return yaw
-            else:
-                log.debug("yaw BFS: candidate=%s → NO route", label)
+            key = (
+                wp_cand.road_id,
+                getattr(wp_cand, "section_id", None),
+                wp_cand.lane_id,
+                round(wp_cand.transform.rotation.yaw, 1),
+            )
+            if key in seen_candidate_keys:
+                continue
+            seen_candidate_keys.add(key)
+
+            depth = _wp_route_depth_to_dest(wp_cand, wp_dest)
+            if depth is None:
+                log.debug("yaw BFS: candidate=%s -> NO route", label)
+                continue
+
+            yaw = wp_cand.transform.rotation.yaw
+            yaw_error = abs(_angle_diff(yaw, to_dest_yaw))
+            reachable.append((depth, yaw_error, label, wp_cand))
+            log.debug(
+                "yaw BFS: candidate=%s -> route depth=%d yaw_error=%.1f",
+                label, depth, yaw_error,
+            )
+
+        if reachable:
+            reachable.sort(key=lambda item: (item[0], item[1]))
+            depth, yaw_error, label, wp_cand = reachable[0]
+            yaw = wp_cand.transform.rotation.yaw
+            log.info(
+                "yaw=%.1f deg (BFS best route, candidate=%s, depth=%d, yaw_error=%.1f)",
+                yaw, label, depth, yaw_error,
+            )
+            return yaw
 
         # BFS found no route — best-effort: compare wp_spawn yaw vs atan2
         yaw = wp_spawn.transform.rotation.yaw
-        to_dest_yaw = math.degrees(math.atan2(dy - sy, dx - sx))
         if abs(_angle_diff(yaw, to_dest_yaw)) > 90.0:
             # Flip 180° and normalise into [-180, 180]
             yaw = (yaw + 180.0 + 180.0) % 360.0 - 180.0
