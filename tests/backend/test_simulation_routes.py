@@ -112,12 +112,14 @@ def test_results_returns_404_when_not_found(client, tmp_path):
     assert response.status_code == 404
 
 
-def test_results_returns_png_files(client, tmp_path):
+def test_results_returns_artifact_files(client, tmp_path):
     run_id = "Town01_20250101"
     run_dir = tmp_path / run_id
     run_dir.mkdir()
     (run_dir / "result.png").write_bytes(b"fake")
-    (run_dir / "other.txt").write_bytes(b"ignore")
+    (run_dir / "log.txt").write_text("evaluation")
+    (run_dir / "forensic.log").write_text("forensic")
+    (run_dir / "other.csv").write_text("ignore")
 
     with patch("app.routers.simulation.get_settings") as mock_settings:
         mock_settings.return_value.eval_dir = tmp_path
@@ -126,8 +128,11 @@ def test_results_returns_png_files(client, tmp_path):
     assert response.status_code == 200
     data = response.json()
     assert data["run_id"] == run_id
-    assert len(data["files"]) == 1
-    assert data["files"][0]["filename"] == "result.png"
+    assert [item["filename"] for item in data["files"]] == [
+        "forensic.log",
+        "log.txt",
+        "result.png",
+    ]
 
 def test_delete_results_404_when_not_found(client, tmp_path):
     with patch("app.routers.simulation.get_settings") as mock_settings:

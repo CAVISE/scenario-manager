@@ -16,7 +16,7 @@ CARLA_HOST = os.getenv("CARLA_HOST", "localhost")
 CARLA_PORT = int(os.getenv("CARLA_PORT", "2000"))
 _stop_event = threading.Event()
 
-from app.log_config import get_logger
+from app.log_config import add_run_file_handler, get_logger, remove_run_file_handler
 log = get_logger(__name__)
 
 from opencda.core.common.cav_world import CavWorld
@@ -115,15 +115,130 @@ def _destroy_pedestrians(spawned_pedestrians: list) -> None:
             log.warning("Failed to destroy walker: %s", e)
 
 
+def _run_output_dir(map_name: str, current_time: str) -> str:
+    return os.path.abspath(os.path.join(
+        _BASE_DIR, "..", "evaluation_outputs", f"{map_name}_{current_time}"))
+
+
+def _fmt_loc(loc) -> str:
+    if loc is None:
+        return "None"
+    return f"({loc.x:.2f},{loc.y:.2f},{loc.z:.2f})"
+
+
+def _speed_kmh(vehicle) -> float:
+    v = vehicle.get_velocity()
+    return (v.x**2 + v.y**2 + v.z**2) ** 0.5 * 3.6
+
+
+def _latest_safety_status(cav):
+    status_queue = getattr(cav.safety_manager, "status_queue", None)
+    if not status_queue:
+        return None, {}
+    tick, status = status_queue[-1]
+    return tick, status
+
+
+def _destination_distance(cav) -> float | None:
+    try:
+        dest = cav.agent.end_waypoint.transform.location
+        return cav.vehicle.get_location().distance(dest)
+    except Exception:
+        return None
+
+
+def _log_cav_forensic(tick_count: int, cav, control=None, note: str = "") -> None:
+    gt_transform = cav.vehicle.get_transform()
+    gt_loc = gt_transform.location
+    gnss_transform = cav.localizer.get_ego_pos()
+    gnss_loc = gnss_transform.location if gnss_transform is not None else None
+
+    if gnss_loc is not None:
+        dx = gnss_loc.x - gt_loc.x
+        dy = gnss_loc.y - gt_loc.y
+        dz = gnss_loc.z - gt_loc.z
+        loc_err = (dx**2 + dy**2 + dz**2) ** 0.5
+        loc_error_text = f"dx={dx:.2f} dy={dy:.2f} dz={dz:.2f} norm={loc_err:.2f}"
+    else:
+        loc_error_text = "unknown"
+
+    safety_tick, status = _latest_safety_status(cav)
+    hazards = [
+        key for key in ("collision", "offroad", "stuck", "ran_light")
+        if status.get(key)
+    ]
+    hazard_text = ",".join(hazards) if hazards else "none"
+    ctrl_text = (
+        f"thr={control.throttle:.3f} brake={control.brake:.3f} "
+        f"steer={control.steer:.3f}"
+        if control is not None else "None"
+    )
+    dest_dist = _destination_distance(cav)
+    rs = cav.rsu_merge_stats
+
+    log.debug(
+        "[forensic] tick=%d cav=%d note=%s gt_pos=%s gt_yaw=%.2f "
+        "gnss_pos=%s loc_error=(%s) gt_speed=%.2f loc_speed=%.2f "
+        "control=(%s) dest_dist=%s safety_tick=%s hazards=%s "
+        "rsu_nearby=%d rsu_ticks=%d/%d rsu_merged_total=%d",
+        tick_count,
+        cav.vehicle.id,
+        note or "-",
+        _fmt_loc(gt_loc),
+        gt_transform.rotation.yaw,
+        _fmt_loc(gnss_loc),
+        loc_error_text,
+        _speed_kmh(cav.vehicle),
+        cav.localizer.get_ego_spd(),
+        ctrl_text,
+        f"{dest_dist:.2f}" if dest_dist is not None else "unknown",
+        safety_tick,
+        hazard_text,
+        len(cav.v2x_manager.rsu_nearby),
+        rs["ticks_rsu_in_range"],
+        rs["ticks_total"],
+        rs["objects_merged_total"],
+    )
+
+
+def _log_rsu_forensic(tick_count: int, rsu) -> None:
+    objects = rsu.get_detected_objects()
+    counts = {key: len(value) for key, value in objects.items()
+              if isinstance(value, list)}
+    ego_pos = rsu.localizer.get_ego_pos()
+    loc = ego_pos.location if ego_pos is not None else None
+    log.debug(
+        "[forensic] tick=%d rsu=%s pos=%s range=%.2f detected=%s",
+        tick_count,
+        rsu.rid,
+        _fmt_loc(loc),
+        rsu.communication_range,
+        counts,
+    )
+
+
 def run_scenario(scenario_raw: dict, params: dict):
     apply_ml  = params["apply_ml"]
     record    = params["record"]
     map_name  = params["map_name"]
     max_ticks = params.get("max_ticks", 3000)
     current_time = params["current_time"]
+    run_output_dir = _run_output_dir(map_name, current_time)
+    forensic_log_file = os.path.join(run_output_dir, "forensic.log")
+    forensic_log_handler = add_run_file_handler(forensic_log_file)
 
     log.info("=== run_scenario START | map=%s max_ticks=%d carla=%s:%d ===",
              map_name, max_ticks, CARLA_HOST, CARLA_PORT)
+    log.info("Per-run forensic log: %s", forensic_log_file)
+    log.debug(
+        "[forensic] run_config params=%s scenario_items=%d attacks=%s "
+        "xodr_present=%s xodr_length=%d",
+        params,
+        len(scenario_raw.get("scenario", [])),
+        scenario_raw.get("attacks", []),
+        bool(scenario_raw.get("xodr")),
+        len(scenario_raw.get("xodr") or ""),
+    )
 
     xodr_path = os.path.join(XODR_PATH, f"{map_name}.xodr")
     if not os.path.exists(xodr_path) or map_name in STANDARD_MAPS:
@@ -232,6 +347,7 @@ def run_scenario(scenario_raw: dict, params: dict):
             for rsu in rsu_list:
                 try:
                     rsu.update_info()
+                    _log_rsu_forensic(tick_count, rsu)
                 except Exception as _rsu_err:
                     log.warning("RSU id=%d update_info failed: %s", rsu.rid, _rsu_err)
 
@@ -264,10 +380,22 @@ def run_scenario(scenario_raw: dict, params: dict):
                     project_to_road=True,
                     lane_type=carla.LaneType.Driving,
                 )
-                if _wp is None or _wp.transform.location.distance(loc) > 4.0:
+                road_distance = (_wp.transform.location.distance(loc)
+                                 if _wp is not None else None)
+                if _wp is None or road_distance > 4.0:
                     log.warning("CAV id=%d off-road at (%.1f, %.1f) — stopped",
                                 cav.vehicle.id, loc.x, loc.y)
-                    cav.vehicle.apply_control(carla.VehicleControl(throttle=0.0, brake=1.0))
+                    log.warning("CAV id=%d off-road road_distance=%s",
+                                cav.vehicle.id,
+                                f"{road_distance:.2f}" if road_distance is not None else "None")
+                    stop_control = carla.VehicleControl(throttle=0.0, brake=1.0)
+                    cav.vehicle.apply_control(stop_control)
+                    _log_cav_forensic(
+                        tick_count,
+                        cav,
+                        stop_control,
+                        note="runner_offroad_stop",
+                    )
                     finished_ids.add(cav.vehicle.id)
                     continue
 
@@ -275,6 +403,7 @@ def run_scenario(scenario_raw: dict, params: dict):
                     cav.update_info()
                     ctrl = cav.run_step()
                     cav.vehicle.apply_control(ctrl)
+                    _log_cav_forensic(tick_count, cav, ctrl, note="post_control")
 
                     if tick_count % log_interval == 0:
                         v   = cav.vehicle.get_velocity()
@@ -345,5 +474,10 @@ def run_scenario(scenario_raw: dict, params: dict):
                 log.warning("Failed to destroy RSU: %s", e)
         _destroy_pedestrians(spawned_pedestrians)
 
-        scenario_manager.close()
+        try:
+            scenario_manager.close()
+        except Exception as e:
+            log.warning("Failed to close ScenarioManager: %s", e)
         log.info("=== run_scenario END | map=%s ticks=%d ===", map_name, tick_count)
+        log.info("Per-run forensic log saved at: %s", forensic_log_file)
+        remove_run_file_handler(forensic_log_handler)
