@@ -17,7 +17,7 @@ import carla
 
 from opencda.core.common.misc import get_speed, positive, cal_distance_angle
 from opencda.core.plan.collision_check import CollisionChecker
-from opencda.core.plan.local_planner_behavior import LocalPlanner
+from opencda.core.plan.local_planner_behavior import LocalPlanner, RoadOption
 from opencda.core.plan.global_route_planner import GlobalRoutePlanner
 from opencda.core.plan.global_route_planner_dao import GlobalRoutePlannerDAO
 from opencda.core.plan.planer_debug_helper import PlanDebugHelper
@@ -309,6 +309,86 @@ class BehaviorAgent(object):
 
         return new_obstacle_list
 
+    @staticmethod
+    def _waypoint_key(waypoint):
+        return (
+            waypoint.road_id,
+            getattr(waypoint, 'section_id', None),
+            waypoint.lane_id,
+        )
+
+    def _end_waypoint_candidates(self, end_waypoint):
+        candidates = []
+        seen = set()
+        for label, candidate in (
+                ('nearest', end_waypoint),
+                ('left', end_waypoint.get_left_lane() if end_waypoint else None),
+                ('right', end_waypoint.get_right_lane() if end_waypoint else None)):
+            if candidate is None or candidate.lane_type != carla.LaneType.Driving:
+                continue
+            key = self._waypoint_key(candidate)
+            if key in seen:
+                continue
+            seen.add(key)
+            candidates.append((label, candidate))
+        return candidates
+
+    @staticmethod
+    def _route_distance(route_trace):
+        distance = 0.0
+        previous = None
+        for waypoint, _ in route_trace:
+            loc = waypoint.transform.location
+            if previous is not None:
+                distance += previous.distance(loc)
+            previous = loc
+        return distance
+
+    def _select_destination_route(self, raw_end_waypoint, requested_end_location):
+        """
+        Pick the reachable destination lane with the shortest traced route.
+
+        CARLA's get_waypoint() may snap a clicked destination to the lane that
+        is physically nearest but has the wrong driving direction. The previous
+        code only tried get_left_lane(), which misses maps where the opposite
+        lane is returned by get_right_lane().
+        """
+        best = None
+        for label, candidate in self._end_waypoint_candidates(raw_end_waypoint):
+            route_trace = self._trace_route(self.start_waypoint, candidate)
+            if not route_trace:
+                log.warning(
+                    "[set_destination] candidate=%s road=%s lane=%s produced empty route",
+                    label, candidate.road_id, candidate.lane_id,
+                )
+                continue
+
+            route_distance = self._route_distance(route_trace)
+            snap_distance = candidate.transform.location.distance(requested_end_location)
+            same_sign = self.start_waypoint.lane_id * candidate.lane_id > 0
+            score = (route_distance, snap_distance, 0 if same_sign else 1)
+            log.info(
+                "[set_destination] candidate=%s road=%s lane=%s route_len=%d route_dist=%.1f snap_dist=%.1f same_sign=%s",
+                label, candidate.road_id, candidate.lane_id, len(route_trace),
+                route_distance, snap_distance, same_sign,
+            )
+            if best is None or score < best[0]:
+                best = (score, label, candidate, route_trace)
+
+        if best is None:
+            log.warning(
+                "[set_destination] no reachable destination lane for road=%s lane=%s; using raw waypoint",
+                raw_end_waypoint.road_id, raw_end_waypoint.lane_id,
+            )
+            return raw_end_waypoint, self._trace_route(self.start_waypoint, raw_end_waypoint)
+
+        _, label, end_waypoint, route_trace = best
+        log.info(
+            "[set_destination] selected candidate=%s road=%s lane=%s route_len=%d",
+            label, end_waypoint.road_id, end_waypoint.lane_id, len(route_trace),
+        )
+        return end_waypoint, route_trace
+
     def set_destination(
             self,
             start_location,
@@ -374,27 +454,33 @@ class BehaviorAgent(object):
                 self.start_waypoint.transform.location, cur_loc, cur_yaw)
             _steps += 1
 
-        end_waypoint = self._map.get_waypoint(end_location)
-        # If end_waypoint landed on the opposite lane, flip to the correct side
-        if self.start_waypoint.lane_id * end_waypoint.lane_id < 0:
-            left = end_waypoint.get_left_lane()
-            if left and left.lane_type == carla.LaneType.Driving and \
-               left.lane_id * self.start_waypoint.lane_id > 0:
-                end_waypoint = left
+        raw_end_waypoint = self._map.get_waypoint(end_location)
+        end_waypoint, route_trace = self._select_destination_route(
+            raw_end_waypoint, end_location)
         if end_reset:
             self.end_waypoint = end_waypoint
 
-        print(f"[set_destination] start_wp=({self.start_waypoint.transform.location.x:.2f},"
-              f"{self.start_waypoint.transform.location.y:.2f})"
-              f" road={self.start_waypoint.road_id} lane={self.start_waypoint.lane_id}")
-        print(f"[set_destination] end_wp=({end_waypoint.transform.location.x:.2f},"
-              f"{end_waypoint.transform.location.y:.2f})"
-              f" road={end_waypoint.road_id} lane={end_waypoint.lane_id}")
-
-        route_trace = self._trace_route(self.start_waypoint, end_waypoint)
-
-        print(f"[set_destination] route_trace length={len(route_trace)}, "
-              f"initial_global_route={'already set' if self.initial_global_route is not None else 'None'}")
+        log.info(
+            "[set_destination] start_wp=(%.2f,%.2f) road=%s lane=%s",
+            self.start_waypoint.transform.location.x,
+            self.start_waypoint.transform.location.y,
+            self.start_waypoint.road_id,
+            self.start_waypoint.lane_id,
+        )
+        log.info(
+            "[set_destination] end_wp=(%.2f,%.2f) raw_road=%s raw_lane=%s selected_road=%s selected_lane=%s",
+            end_waypoint.transform.location.x,
+            end_waypoint.transform.location.y,
+            raw_end_waypoint.road_id,
+            raw_end_waypoint.lane_id,
+            end_waypoint.road_id,
+            end_waypoint.lane_id,
+        )
+        log.info(
+            "[set_destination] route_trace length=%d initial_global_route=%s",
+            len(route_trace),
+            'already set' if self.initial_global_route is not None else 'None',
+        )
 
         # TODO: why is the last waypoint not showing in the trace_route return results
         if self.initial_global_route is None:
@@ -456,18 +542,26 @@ class BehaviorAgent(object):
 
         start_loc = start_waypoint.transform.location
         end_loc = end_waypoint.transform.location
-        print(f"[_trace_route] start=({start_loc.x:.2f},{start_loc.y:.2f},{start_loc.z:.2f})"
-              f" road_id={start_waypoint.road_id} lane_id={start_waypoint.lane_id}")
-        print(f"[_trace_route] end=({end_loc.x:.2f},{end_loc.y:.2f},{end_loc.z:.2f})"
-              f" road_id={end_waypoint.road_id} lane_id={end_waypoint.lane_id}")
+        log.info(
+            "[_trace_route] start=(%.2f,%.2f,%.2f) road_id=%s lane_id=%s",
+            start_loc.x, start_loc.y, start_loc.z,
+            start_waypoint.road_id, start_waypoint.lane_id,
+        )
+        log.info(
+            "[_trace_route] end=(%.2f,%.2f,%.2f) road_id=%s lane_id=%s",
+            end_loc.x, end_loc.y, end_loc.z,
+            end_waypoint.road_id, end_waypoint.lane_id,
+        )
 
         try:
+            if hasattr(self._global_planner, '_previous_decision'):
+                self._global_planner._previous_decision = RoadOption.VOID
             route = self._global_planner.trace_route(start_loc, end_loc)
         except Exception as e:
-            print(f"[_trace_route] ERROR in trace_route: {e}")
+            log.warning("[_trace_route] ERROR in trace_route: %s", e)
             return []
 
-        print(f"[_trace_route] route length={len(route)}")
+        log.info("[_trace_route] route length=%d", len(route))
         return route
 
     def traffic_light_manager(self, waypoint):

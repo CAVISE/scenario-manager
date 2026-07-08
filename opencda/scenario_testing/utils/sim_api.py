@@ -8,6 +8,7 @@ please use cosim_api.py.
 # License: TDG-Attribution-NonCommercial-NoDistrib
 
 import math
+import logging
 import os
 import random
 import sys
@@ -26,6 +27,9 @@ from opencda.core.application.platooning.platooning_manager import PlatooningMan
 from opencda.core.common.rsu_manager import RSUManager
 from opencda.core.common.cav_world import CavWorld
 from opencda.scenario_testing.utils.customized_map_api import load_customized_world, bcolors
+
+
+log = logging.getLogger(__name__)
 
 
 def car_blueprint_filter(blueprint_library, carla_version='0.9.11'):
@@ -339,16 +343,40 @@ class ScenarioManager:
                 project_to_road=True,
                 lane_type=carla.LaneType.Driving
             )
-            # If the waypoint yaw differs from spawn yaw by more than 90 deg,
-            # try the opposite lane (get_left_lane keeps same road).
-            import math as _math
             def _yaw_diff(a, b):
                 d = abs(a - b) % 360
                 return d if d <= 180 else 360 - d
-            if _yaw_diff(wp.transform.rotation.yaw, spawn_yaw) > 90:
-                left = wp.get_left_lane()
-                if left and left.lane_type == carla.LaneType.Driving:
-                    wp = left
+
+            candidates = []
+            seen = set()
+            for label, candidate in (
+                    ('nearest', wp),
+                    ('left', wp.get_left_lane() if wp else None),
+                    ('right', wp.get_right_lane() if wp else None)):
+                if candidate is None or candidate.lane_type != carla.LaneType.Driving:
+                    continue
+                key = (
+                    candidate.road_id,
+                    getattr(candidate, 'section_id', None),
+                    candidate.lane_id,
+                )
+                if key in seen:
+                    continue
+                seen.add(key)
+                candidates.append((label, candidate, _yaw_diff(candidate.transform.rotation.yaw, spawn_yaw)))
+
+            if candidates:
+                label, wp, diff = min(candidates, key=lambda item: item[2])
+                log.info(
+                    "Spawn snap for %s: selected %s road=%s lane=%s yaw=%.1f requested_yaw=%.1f yaw_diff=%.1f",
+                    cav_config.get('name', i),
+                    label,
+                    wp.road_id,
+                    wp.lane_id,
+                    wp.transform.rotation.yaw,
+                    spawn_yaw,
+                    diff,
+                )
             spawn_transform = wp.transform
             spawn_transform.location.z += 0.3
 
