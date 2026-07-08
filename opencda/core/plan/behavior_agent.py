@@ -61,7 +61,10 @@ class _StaticCollisionProxy(object):
     margin here.
     """
 
-    DEFAULT_EXTENT = 2.5  # meters, covers pole plus mast-arm traffic lights
+    # Effective check radius is DEFAULT_EXTENT + 1.1 below. Logs from the
+    # first runtime test showed false positives at 3.38-3.56m from actor
+    # origin, while the CAV197 traffic-light contact was about 2.98m away.
+    DEFAULT_EXTENT = 1.95
 
     def __init__(self, actor, extent=None):
         self._location = actor.get_location()
@@ -198,6 +201,14 @@ class BehaviorAgent(object):
         self._traffic_light_static_check_logged = False
         self._traffic_light_static_hazard_logged = False
         self._static_obstacle_path_hazard_logged = False
+        # Current static traffic-light geometry is diagnostic-only by
+        # default: CARLA traffic-light actor origins are not reliable
+        # physical obstacle centers, and using them for control caused
+        # false full-stop hazards on normal routes. Keep the check available
+        # for experiments via config, but do not let it steer/brake by
+        # default until the physical geometry model is fixed.
+        self.static_obstacle_avoidance_enabled = config_yaml.get(
+            'static_obstacle_avoidance_enabled', False)
 
         # debug helper
         self.debug_helper = PlanDebugHelper(self.vehicle.id)
@@ -1079,7 +1090,9 @@ class BehaviorAgent(object):
             # car-following-only (i.e. just slow/stop, never overtake).
             static_hazard, static_distance = self.static_obstacle_check(
                 rx, ry, ryaw)
-            if static_hazard and (not is_hazard or static_distance < distance):
+            if self.static_obstacle_avoidance_enabled and \
+                    static_hazard and \
+                    (not is_hazard or static_distance < distance):
                 is_hazard = True
                 distance = static_distance
                 obstacle_vehicle = None
