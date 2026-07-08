@@ -81,13 +81,11 @@ async def start_opencda(request: Request, body: StartSimulationRequest):
 
     log.debug("start_opencda map=%s max_ticks=%d", map_name, body.max_ticks)
 
-    # Сохраняем xodr файл если пришёл с фронтенда
     if body.xodr:
         xodr_dir = settings.xodr_dir
         xodr_dir.mkdir(parents=True, exist_ok=True)
         (xodr_dir / f"{map_name}.xodr").write_text(body.xodr)
 
-    # current_time для run_id — формат совпадает с add_current_time из OpenCDA
     current_time = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
     run_id = f"{map_name}_{current_time}"
 
@@ -95,10 +93,24 @@ async def start_opencda(request: Request, body: StartSimulationRequest):
         simulation_state["map"] = map_name
         simulation_state["run_id"] = run_id
 
-    # Передаём сырой payload — runner сам вызовет json_to_single_cav_list
-    # дважды: сначала без carla_map (чтобы получить карту), потом с carla_map
-    # (чтобы взять yaw из road waypoint).
     scenario_raw = body.model_dump()
+    # Detailed logging for debugging payload transfer from frontend
+    try:
+        keys = list(scenario_raw.keys())
+        xodr_info = None
+        if scenario_raw.get("xodr"):
+            try:
+                xodr_len = len(scenario_raw.get("xodr") or "")
+                xodr_info = f"present (length={xodr_len})"
+            except Exception:
+                xodr_info = "present (length=?)"
+        else:
+            xodr_info = "absent"
+
+        log.info("Received payload keys: %s | xodr: %s", keys, xodr_info)
+        log.info("Received attacks field from request: %s", scenario_raw.get("attacks"))
+    except Exception:
+        log.exception("Failed to log request payload for debugging")
 
     params = {
         "apply_ml": False,
@@ -183,8 +195,7 @@ async def ws_simulation(websocket: WebSocket):
     try:
         await websocket.send_json(simulation_state)
         while True:
-            await asyncio.sleep(1)
-            await websocket.send_json(simulation_state)
+            await websocket.receive_text()
     except WebSocketDisconnect:
         pass
     finally:

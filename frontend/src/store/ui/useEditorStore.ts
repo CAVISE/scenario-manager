@@ -231,6 +231,7 @@ const storeCreator: StateCreator<EditorState> = (set) => ({
           azimuth: 0,
           tilt: 0,
           cam_interval: 100,
+          beacon_interval: 1000,
           script: '',
         },
       ],
@@ -331,3 +332,9 @@ const storeCreator: StateCreator<EditorState> = (set) => ({
 export const useEditorStore = create<EditorState>()(
   persist(storeCreator, persistOptions),
 );
+
+// Dev helper: expose the store to window for quick console inspection
+if (import.meta.env.DEV && typeof window !== 'undefined') {
+  // @ts-ignore
+  window.useEditorStore = useEditorStore;
+}

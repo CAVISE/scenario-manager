@@ -84,19 +84,18 @@ export function useScenarioPatchMutation() {
         ...payload,
         scenario_id: id,
       }),
-    onSuccess: (data, { id }) => {
-      const d = data as unknown as {
-        scenario_name?: string;
-        weather?: string;
-        file_?: string | null;
-      };
+    onSuccess: (_data, { id, payload }) => {
+      const p = payload as Record<string, unknown>;
       queryClient.invalidateQueries({ queryKey: scenarioKeys.detail(id) });
-      updateScenario({
-        id,
-        name: d.scenario_name ?? undefined,
-        weather: d.weather ?? undefined,
-        file_: d.file_ ?? null,
-      });
+
+      const update: Record<string, unknown> = { id };
+      const name = p.name_of_scenario ?? p.scenario_name ?? p.name;
+      if (name !== undefined) update.name = name;
+      if (p.description !== undefined) update.description = p.description;
+      if (p.weather !== undefined) update.weather = p.weather;
+      if (p.file_ !== undefined) update.file_ = p.file_;
+
+      updateScenario(update as Parameters<typeof updateScenario>[0]);
     },
   });
 }

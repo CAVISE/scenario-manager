@@ -138,6 +138,21 @@ class VehicleManager(object):
 
         cav_world.update_vehicle_manager(self)
 
+        # Ground-truth position trace recorded in update_info() alongside the
+        # noisy ego_dynamic_trace in v2x_manager. Used by evaluate_manager to
+        # overlay actual physical path on the GNSS-reported path plot.
+        from collections import deque as _deque
+        self.gt_dynamic_trace = _deque()
+
+        # RSU cooperative-perception participation stats, dumped to log.txt
+        # by evaluate_manager. Lets us tell "RSU had nothing to add" apart
+        # from "RSU never registered as nearby" when comparing runs.
+        self.rsu_merge_stats = {
+            'ticks_total': 0,
+            'ticks_rsu_in_range': 0,
+            'objects_merged_total': 0,
+        }
+
     def set_destination(
             self,
             start_location,
@@ -173,37 +188,91 @@ class VehicleManager(object):
         Call perception and localization module to
         retrieve surrounding info an ego position.
         """
-        # localization
         self.localizer.localize()
 
+        # ego_pos: may be GNSS-noisy when localization.activate=True (attack).
+        # Used ONLY for localization error metrics and V2X sharing — anything
+        # that models a physical sensor or a real hazard check must use
+        # nav_pos instead (see below).
         ego_pos = self.localizer.get_ego_pos()
         ego_spd = self.localizer.get_ego_spd()
 
-        # object detection
-        objects = self.perception_manager.detect(ego_pos)
+        # nav_pos: always ground-truth from CARLA.
+        nav_pos = self.localizer.get_true_ego_pos()
+        nav_spd = self.localizer.get_true_ego_spd()
 
-        # update the ego pose for map manager
-        self.map_manager.update_information(ego_pos)
+        # object detection: physical lidar/camera see the world from where
+        # the vehicle actually is, not from its (possibly spoofed) GNSS fix.
+        objects = self.perception_manager.detect(nav_pos)
 
-        # this is required by safety manager
+        # map/BEV rendering feeds OffRoadDetector's hazard check (sensors.py
+        # reads map_manager.static_bev) — that check must be ground-truth,
+        # not "is the spoofed point on-road".
+        self.map_manager.update_information(nav_pos)
+
         safety_input = {
-            'ego_pos': ego_pos,
-            'ego_speed': ego_spd,
+            'ego_pos': nav_pos,
+            'ego_speed': nav_spd,
             'objects': objects,
             'carla_map': self.carla_map,
             'world': self.vehicle.get_world(),
             'static_bev': self.map_manager.static_bev,
-            'vis_bev': self.map_manager.vis_bev
+            'vis_bev': self.map_manager.vis_bev,
         }
         self.safety_manager.update_info(safety_input)
 
-        # update ego position and speed to v2x manager,
-        # and then v2x manager will search the nearby cavs
-        self.v2x_manager.update_info(ego_pos, ego_spd)
+        # V2X: share noisy ego_pos so other CAVs receive falsified position
+        # (this is the observable effect of the spoofing attack on the fleet).
+        # true_pos=nav_pos is passed separately so search() can gate RSU/CAV
+        # range on real distance instead of the (possibly spoofed) ego_pos.
+        self.v2x_manager.update_info(ego_pos, ego_spd, nav_pos)
 
-        self.agent.update_information(ego_pos, ego_spd, objects)
-        # pass position and speed info to controller
-        self.controller.update_info(ego_pos, ego_spd)
+        self.gt_dynamic_trace.append(nav_pos)
+
+        self.rsu_merge_stats['ticks_total'] += 1
+        if self.v2x_manager.rsu_nearby:
+            self.rsu_merge_stats['ticks_rsu_in_range'] += 1
+        objects = self._merge_rsu_perception(objects)
+
+        self.agent.update_information(nav_pos, nav_spd, objects)
+        self.controller.update_info(nav_pos, nav_spd)
+
+    def _merge_rsu_perception(self, objects: dict) -> dict:
+        """
+        Merge vehicle detections from nearby RSUs into the local objects dict.
+
+        RSUs act as infrastructure sensors — they see vehicles that may be
+        outside the ego CAV's own perception range (e.g. around corners or
+        at intersections). The merged list is deduplicated by CARLA actor id.
+
+        Returns a new dict so the original is not mutated.
+        """
+        if not self.v2x_manager.rsu_nearby:
+            return objects
+
+        existing_ids: set = {
+            v.carla_id
+            for v in objects.get('vehicles', [])
+            if v.carla_id != -1
+        }
+
+        extra_vehicles = []
+        for rsu in self.v2x_manager.rsu_nearby.values():
+            rsu_objects = rsu.get_detected_objects()
+            for v in rsu_objects.get('vehicles', []):
+                if v.carla_id == -1:
+                    continue
+                if v.carla_id == self.vehicle.id:
+                    continue  # skip self
+                if v.carla_id not in existing_ids:
+                    extra_vehicles.append(v)
+                    existing_ids.add(v.carla_id)
+
+        self.rsu_merge_stats['objects_merged_total'] += len(extra_vehicles)
+
+        merged = dict(objects)
+        merged['vehicles'] = list(objects.get('vehicles', [])) + extra_vehicles
+        return merged
 
     def run_step(self, target_speed=None):
         """

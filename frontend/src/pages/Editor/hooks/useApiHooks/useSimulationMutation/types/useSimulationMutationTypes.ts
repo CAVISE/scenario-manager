@@ -1,4 +1,5 @@
 import { ScenarioGroup } from '../../../../../../api/types/IScenarioTypes';
+import { OpenCDAAttackConfig } from '../../../../Generators/types/configGeneratorsTypes';
 
 export interface StartSimulationPayload {
   scenario_id: string;
@@ -10,4 +11,5 @@ export interface StartSimulationPayload {
   xodr?: string | undefined;
   max_ticks?: number;
   map_offsets?: { x: number; y: number };
+  attacks?: OpenCDAAttackConfig[];
 }

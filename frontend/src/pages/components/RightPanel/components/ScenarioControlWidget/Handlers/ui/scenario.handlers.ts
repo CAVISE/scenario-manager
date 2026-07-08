@@ -127,6 +127,35 @@ export const handleLoad = async ({
             range: rsu.range,
             protocol: rsu.protocol as RSU['protocol'] | undefined,
             script: rsu.script ?? '',
+            beacon_interval: rsu.beacon_interval,
+            opencda_name: rsu.opencda_name,
+            opencda_id: rsu.opencda_id,
+            opencda_color: rsu.opencda_color,
+            opencda_behavior_services: rsu.opencda_behavior_services,
+            opencda_sensing: {
+              perception_activate: rsu.opencda_perception_activate,
+              detection_range: rsu.opencda_detection_range,
+              camera_visualize: rsu.opencda_camera_visualize,
+              camera_num: rsu.opencda_camera_num,
+              camera_positions: rsu.opencda_camera_positions,
+              lidar_visualize: rsu.opencda_lidar_visualize,
+              lidar_channels: rsu.opencda_lidar_channels,
+              lidar_range: rsu.opencda_lidar_range,
+              lidar_points_per_second: rsu.opencda_lidar_points_per_second,
+              lidar_rotation_frequency: rsu.opencda_lidar_rotation_frequency,
+              lidar_upper_fov: rsu.opencda_lidar_upper_fov,
+              lidar_lower_fov: rsu.opencda_lidar_lower_fov,
+              lidar_dropoff_general_rate: rsu.opencda_lidar_dropoff_general_rate,
+              lidar_dropoff_intensity_limit:
+                rsu.opencda_lidar_dropoff_intensity_limit,
+              lidar_dropoff_zero_intensity:
+                rsu.opencda_lidar_dropoff_zero_intensity,
+              lidar_noise_stddev: rsu.opencda_lidar_noise_stddev,
+              localization_activate: rsu.opencda_localization_activate,
+              gnss_noise_alt_stddev: rsu.opencda_gnss_noise_alt_stddev,
+              gnss_noise_lat_stddev: rsu.opencda_gnss_noise_lat_stddev,
+              gnss_noise_lon_stddev: rsu.opencda_gnss_noise_lon_stddev,
+            },
           });
       });
     }
@@ -215,6 +244,13 @@ export const handleCreate = async (
   try {
     const payload = buildScenarioPayload();
     const trimmedId = scenarioIdInput.trim();
+
+    const scenarioName = payload.name_of_scenario ?? payload.scenario_name;
+    if (!scenarioName || !scenarioName.trim()) {
+      setNotice('Scenario name is required.');
+      return;
+    }
+
     await createMutation.mutateAsync({
       payload: {
         ...payload,
@@ -306,7 +342,21 @@ export const handleRunSimulation = async (
     xodr: localStorage.getItem('cached_xodr') || undefined,
     max_ticks: useEditorStore.getState().simConfig?.max_ticks ?? 2000,
     map_offsets: mapOffsets,
+    attacks: useEditorStore.getState().simConfig?.attacks ?? [],
   };
+
+  // Frontend debug: log payload but omit large xodr content
+  try {
+    const debugPayload = {
+      ...payload,
+      xodr: payload.xodr ? `<omitted, length=${payload.xodr.length}>` : undefined,
+    } as unknown;
+    // eslint-disable-next-line no-console
+    console.debug('Start simulation payload (frontend):', debugPayload);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.debug('Failed to stringify start payload for debug', e);
+  }
 
   const simulationValidation = validateStartSimulationPayload(payload);
   if (!simulationValidation.ok) {

@@ -142,7 +142,7 @@ export default function ScenarioControlWidget() {
             odrMapRef.current
               ? {
                   x: odrMapRef.current.x_offs,
-                  y: odrMapRef.current.y_offs,
+                  y: -odrMapRef.current.y_offs,
                 }
               : undefined,
           )

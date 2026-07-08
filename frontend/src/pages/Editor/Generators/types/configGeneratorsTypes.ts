@@ -68,6 +68,32 @@ export type OpenCDAAttackConfig = {
   targets?: Record<string, unknown>;
   stages?: OpenCDAAttackStage[];
 };
+
+// Flattens a stages value into a flat OpenCDAAttackStage[]. Needed in two
+// places: live edits in AttackConfigModal's StagesField (onChange), and here
+// in mergeSimConfigWithDefaults, which also runs on Zustand persist
+// rehydration (page load) — a path live-edit normalization never touches.
+// Without running it here too, nested stages saved to localStorage before
+// this guard existed (e.g. [[{...}]] instead of [{...}]) keep getting
+// rehydrated unflattened and sent to the backend, crashing _apply_attacks.
+export function normalizeAttackStages(value: unknown): OpenCDAAttackStage[] {
+  if (!Array.isArray(value)) return [];
+  return value.reduce<OpenCDAAttackStage[]>((acc, item) => {
+    if (Array.isArray(item)) {
+      item.forEach((inner) => {
+        if (inner && typeof inner === 'object' && !Array.isArray(inner)) {
+          acc.push(inner as OpenCDAAttackStage);
+        }
+      });
+      return acc;
+    }
+    if (item && typeof item === 'object' && !Array.isArray(item)) {
+      acc.push(item as OpenCDAAttackStage);
+    }
+    return acc;
+  }, []);
+}
+
 export type MPCConfig = {
   NX: number;
   NU: number;
@@ -554,7 +580,10 @@ export function mergeSimConfigWithDefaults(
   return {
     ...defaultSimConfig,
     ...p,
-    attacks: p.attacks ?? defaultSimConfig.attacks,
+    attacks: (p.attacks ?? defaultSimConfig.attacks).map((attack) => ({
+      ...attack,
+      stages: normalizeAttackStages(attack.stages),
+    })),
     omnet,
     artery: { ...defaultSimConfig.artery, ...p.artery },
     sumo: {

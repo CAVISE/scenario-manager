@@ -22,6 +22,52 @@ from opencda.core.plan.global_route_planner_dao import GlobalRoutePlannerDAO
 from opencda.core.plan.planer_debug_helper import PlanDebugHelper
 
 
+class _SimpleBoundingBox(object):
+    """
+    Minimal stand-in for carla.BoundingBox — CollisionChecker.
+    collision_circle_check() only ever reads .extent.x / .extent.y off
+    obstacle_vehicle.bounding_box, so that's all this needs to provide.
+    """
+
+    def __init__(self, extent_x, extent_y):
+        self.extent = carla.Vector3D(x=extent_x, y=extent_y, z=0)
+
+
+class _StaticCollisionProxy(object):
+    """
+    Adapts a static (non-vehicle) CARLA actor — currently traffic lights —
+    to the .get_location() / .bounding_box.extent interface that
+    CollisionChecker.collision_circle_check() expects from an
+    "obstacle_vehicle" argument, so static obstacles can be run through
+    the same circle-check geometry used for vehicle obstacles.
+
+    Deliberately uses actor.get_location() (world-space actor origin),
+    NOT TrafficLight.get_trafficlight_trigger_location() from
+    static_obstacle.py / perception_manager's objects['traffic_lights'] —
+    that is the logical trigger *zone* positioned over the lane the light
+    governs (driving through it is correct); this proxy needs the pole's
+    own physical footprint instead, since that's the actual collision
+    mesh a CAV can drive into.
+
+    Extent is a fixed, deliberately generous circular footprint rather
+    than the actor's own mesh bounding box: CARLA's bounding_box.location
+    frame (actor-local vs. world-relative) is inconsistent enough across
+    static prop/sign actor types that trusting it silently would risk
+    being wrong in a way that's harder to notice than an oversized safety
+    margin here.
+    """
+
+    DEFAULT_EXTENT = 1.2  # meters, half-width/half-length; tune if needed
+
+    def __init__(self, actor, extent=None):
+        self._location = actor.get_location()
+        ext = extent if extent is not None else self.DEFAULT_EXTENT
+        self.bounding_box = _SimpleBoundingBox(ext, ext)
+
+    def get_location(self):
+        return self._location
+
+
 class BehaviorAgent(object):
     """
     A modulized version of carla BehaviorAgent.
@@ -139,6 +185,12 @@ class BehaviorAgent(object):
         self.white_list = []
         self.obstacle_vehicles = []
         self.objects = {}
+
+        # static (world-fixed) obstacles — currently traffic light poles.
+        # Loaded once lazily (see _load_static_obstacles) since, unlike
+        # vehicles, these never move and don't need re-detecting every tick.
+        self.static_obstacles = []
+        self.static_obstacles_loaded = False
 
         # debug helper
         self.debug_helper = PlanDebugHelper(self.vehicle.id)
@@ -277,17 +329,32 @@ class BehaviorAgent(object):
 
         self.start_waypoint = self._map.get_waypoint(start_location)
 
-        # make sure the start waypoint is behind the vehicle
-        if self._ego_pos:
-            cur_loc = self._ego_pos.location
-            cur_yaw = self._ego_pos.rotation.yaw
+        # make sure the start waypoint is behind the vehicle.
+        # Use start_location (the ground-truth vehicle.get_location() passed
+        # in by the caller) — NOT self._ego_pos.location, which may be a
+        # heavily noise-corrupted GNSS reading when localization.activate=True
+        # (GNSS spoofing attack). Using self._ego_pos would put cur_loc tens
+        # of metres away from the vehicle, causing angle > 90 permanently and
+        # hanging the process in an infinite loop during spawn.
+        # start_location is always accurate; self._ego_pos is only valid for
+        # measuring the *effect* of the attack, not for route geometry.
+        cur_loc = start_location
+        cur_yaw = (self._ego_pos.rotation.yaw
+                   if self._ego_pos else
+                   self.start_waypoint.transform.rotation.yaw)
+        _, angle = cal_distance_angle(
+            self.start_waypoint.transform.location, cur_loc, cur_yaw)
+
+        _max_steps = 200
+        _steps = 0
+        while angle > 90 and _steps < _max_steps:
+            candidates = self.start_waypoint.next(1)
+            if not candidates:
+                break  # dead-end road: stop rather than IndexError
+            self.start_waypoint = candidates[0]
             _, angle = cal_distance_angle(
                 self.start_waypoint.transform.location, cur_loc, cur_yaw)
-
-            while angle > 90:
-                self.start_waypoint = self.start_waypoint.next(1)[0]
-                _, angle = cal_distance_angle(
-                    self.start_waypoint.transform.location, cur_loc, cur_yaw)
+            _steps += 1
 
         end_waypoint = self._map.get_waypoint(end_location)
         # If end_waypoint landed on the opposite lane, flip to the correct side
@@ -481,6 +548,96 @@ class BehaviorAgent(object):
                     target_vehicle = vehicle
 
         return vehicle_state, target_vehicle, min_distance
+
+    def _load_static_obstacles(self):
+        """
+        One-time collection of static, world-fixed obstacles (currently:
+        traffic light poles) for path-clearance checking against the
+        planned trajectory. Traffic lights never move, so — unlike vehicle
+        perception — this only needs to run once per agent lifetime rather
+        than every tick.
+
+        Without this, collision_manager()'s circle-check only ever
+        considers self.obstacle_vehicles (built from objects['vehicles']);
+        objects['traffic_lights'] is populated too, but is only ever used
+        for traffic_light_manager() (red/green stop logic) and
+        is_intersection() — never checked against the physical path. A CAV
+        can pass a green light cleanly on that logic and still clip the
+        pole itself if the global route geometry happens to run close to
+        it, since nothing upstream of this ever tests for that.
+        """
+        world = self.vehicle.get_world()
+        tl_list = world.get_actors().filter('traffic.traffic_light*')
+        self.static_obstacles = [_StaticCollisionProxy(tl) for tl in tl_list]
+        self.static_obstacles_loaded = True
+        print(f"[static_obstacles] actor {self.vehicle.id}: loaded "
+              f"{len(self.static_obstacles)} traffic light pole(s)")
+
+    def static_obstacle_check(self, rx, ry, ryaw):
+        """
+        Check the planned path against static obstacles.
+
+        Deliberately does NOT reuse CollisionChecker.collision_circle_check()
+        (see collision_check.py). That method computes the obstacle's
+        rotation via carla_map.get_waypoint(obstacle_loc).transform.rotation.yaw
+        — i.e. the heading of the *nearest driving lane* to the obstacle.
+        That's a sound proxy for a real vehicle (which sits in a lane and
+        points along it), but meaningless for a traffic light pole, which
+        isn't in any lane and has no heading of its own. Depending on which
+        lane happens to be nearest, cos(yaw) or sin(yaw) in that function
+        can land near zero and collapse the rotated corner offsets down onto
+        the exact-center point along that axis — silently shrinking the
+        pole's effective checked footprint to a near-zero-width sliver in
+        an unpredictable direction. That degeneracy is consistent with
+        CAV197 clipping a pole this check never flagged as a hazard. A pole
+        has no heading to get wrong, so a direct, yaw-independent Euclidean
+        distance check against the path is both simpler and more robust.
+
+        Parameters
+        ----------
+        rx, ry, ryaw : list
+            Planned path coordinates / yaw, same as collision_manager().
+
+        Returns
+        -------
+        hazard : boolean
+            Whether a static obstacle blocks the path ahead.
+        min_distance : float
+            Distance to the nearest blocking static obstacle (large
+            sentinel value if none).
+        """
+        if not self.static_obstacles_loaded:
+            self._load_static_obstacles()
+
+        if not self.static_obstacles:
+            return False, 100000
+
+        speed = self._ego_speed / 3.6
+        # same lookahead sizing rule as collision_circle_check(): at least
+        # 90 path points (~9m at the ~0.1m sample spacing), more at higher
+        # speed, capped to the path length actually available.
+        lookahead = min(
+            max(int(self._collision_check.time_ahead * speed / 0.1), 90),
+            len(rx))
+        # pole radius (DEFAULT_EXTENT) + rough ego half-width + margin.
+        # Tune together with _StaticCollisionProxy.DEFAULT_EXTENT if this
+        # over- or under-triggers once tested against real town geometry.
+        detect_radius = _StaticCollisionProxy.DEFAULT_EXTENT + 1.1
+
+        hazard = False
+        min_distance = 100000
+
+        for obs in self.static_obstacles:
+            oloc = obs.get_location()
+            for i in range(0, lookahead, 5):
+                if math.hypot(rx[i] - oloc.x, ry[i] - oloc.y) < detect_radius:
+                    hazard = True
+                    d = positive(oloc.distance(self._ego_pos.location) - 3)
+                    if d < min_distance:
+                        min_distance = d
+                    break
+
+        return hazard, min_distance
 
     def overtake_management(self, obstacle_vehicle):
         """
@@ -864,9 +1021,26 @@ class BehaviorAgent(object):
 
         # 3. Collision check
         is_hazard = False
+        obstacle_vehicle = None
+        distance = 100000
+        static_only_hazard = False
         if collision_detector_enabled:
             is_hazard, obstacle_vehicle, distance = self.collision_manager(
                 rx, ry, ryaw, ego_vehicle_wp)
+
+            # Static obstacles (traffic light poles, etc.) — separate check,
+            # see static_obstacle_check() docstring for why this can't just
+            # be folded into self.obstacle_vehicles. Whichever hazard is
+            # nearer wins; a nearer vehicle still goes through the normal
+            # overtake path below, a nearer (or sole) static obstacle forces
+            # car-following-only (i.e. just slow/stop, never overtake).
+            static_hazard, static_distance = self.static_obstacle_check(
+                rx, ry, ryaw)
+            if static_hazard and (not is_hazard or static_distance < distance):
+                is_hazard = True
+                distance = static_distance
+                obstacle_vehicle = None
+                static_only_hazard = True
         car_following_flag = False
 
         if not is_hazard:
@@ -895,6 +1069,7 @@ class BehaviorAgent(object):
         # allowed or it is doing overtaking the second condition is to
         # prevent successive overtaking
         elif is_hazard and (not self.overtake_allowed or
+                            static_only_hazard or
                             self.overtake_counter > 0
                             or self.get_local_planner().potential_curved_road):
             car_following_flag = True
@@ -924,7 +1099,13 @@ class BehaviorAgent(object):
             if distance < max(self.break_distance, 3):
                 return 0, None
 
-            target_speed = self.car_following_manager(obstacle_vehicle, distance, target_speed)
+            if obstacle_vehicle is not None:
+                target_speed = self.car_following_manager(obstacle_vehicle, distance, target_speed)
+            else:
+                # static obstacle: no lead "vehicle" to pace off of — come
+                # to a full stop. car_following_manager() calls get_speed()
+                # on obstacle_vehicle and would crash on None.
+                target_speed = 0
             target_speed, target_loc = self._local_planner.run_step(
                 rx, ry, rk, target_speed=target_speed)
             return target_speed, target_loc
