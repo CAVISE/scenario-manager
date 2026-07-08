@@ -55,6 +55,14 @@ class EvaluationManager(object):
     def dist(self, p, q):
         return p.transform.location.distance(q.transform.location)
 
+    @staticmethod
+    def _fmt_xyz(value):
+        if value is None:
+            return None
+        if hasattr(value, 'x'):
+            return f"({value.x:.2f},{value.y:.2f},{value.z:.2f})"
+        return f"({value[0]:.2f},{value[1]:.2f},{value[2]:.2f})"
+
     def evaluate(self):
         """
         Evaluate performance of all modules by plotting and writing the
@@ -296,10 +304,28 @@ class EvaluationManager(object):
                 first_idx = flags.index(True)
                 first_t = safety_data[first_idx][0]
                 extra = ""
+                status = safety_data[first_idx][1]
                 if key == 'collision':
-                    other = safety_data[first_idx][1].get('collision_with')
+                    details = []
+                    other = status.get('collision_with')
                     if other:
-                        extra = f", first hit: {other}"
+                        details.append(f"first hit: {other}")
+                    other_id = status.get('collision_with_id')
+                    if other_id is not None:
+                        details.append(f"other_id={other_id}")
+                    for label_name, status_key in (
+                            ('event_loc', 'collision_event_loc'),
+                            ('ego_loc', 'ego_loc_at_collision'),
+                            ('other_loc', 'collision_loc')):
+                        loc_text = self._fmt_xyz(status.get(status_key))
+                        if loc_text:
+                            details.append(f"{label_name}={loc_text}")
+                    if details:
+                        extra = ", " + ", ".join(details)
+                elif key == 'offroad':
+                    loc_text = self._fmt_xyz(status.get('offroad_loc'))
+                    if loc_text:
+                        extra = f", loc={loc_text}"
                 lprint(log_file, f"{label}: {count} tick(s), first at t={first_t}{extra}")
             else:
                 lprint(log_file, f"{label}: 0")
