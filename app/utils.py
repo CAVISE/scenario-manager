@@ -278,6 +278,14 @@ def _compute_yaw(sx: float, sy: float, sz: float,
             )
 
         if reachable:
+            aligned = [item for item in reachable if item[1] <= 90.0]
+            if aligned:
+                reachable = aligned
+            else:
+                log.warning(
+                    "yaw BFS: no reachable candidate faces the route target; "
+                    "falling back to shortest reachable lane"
+                )
             reachable.sort(key=lambda item: (item[0], item[1]))
             depth, yaw_error, label, wp_cand = reachable[0]
             yaw = wp_cand.transform.rotation.yaw
@@ -563,24 +571,33 @@ def json_to_single_cav_list(json_data: dict, carla_map=None) -> tuple[dict, list
             for car in group["path"]:
                 cav_index += 1
                 points = car.get("points", [])
-                dest   = points[-1] if points else None
 
                 sx, sy, sz = convert_coords(
                     car["x"], car["y"], offset_x, offset_y,
                     carla_map=carla_map, is_spawn=True,
                 )
-                if dest:
-                    dx, dy, dz = convert_coords(
-                        dest["x"], dest["y"], offset_x, offset_y,
+                route_points = [
+                    convert_coords(
+                        point["x"], point["y"], offset_x, offset_y,
                         carla_map=carla_map, is_spawn=False,
                     )
+                    for point in points
+                ]
+                if route_points:
+                    dx, dy, dz = route_points[-1]
                 else:
                     dx, dy, dz = sx, sy, _FALLBACK_DEST_Z
 
                 log.info("CAV%d spawn=(%.2f, %.2f, %.2f) dest=(%.2f, %.2f, %.2f)",
                          cav_index, sx, sy, sz, dx, dy, dz)
 
-                spawn_yaw = _compute_yaw(sx, sy, sz, dx, dy, carla_map=carla_map)
+                yaw_tx, yaw_ty = dx, dy
+                for route_x, route_y, _ in route_points:
+                    if math.hypot(route_x - sx, route_y - sy) > 1.0:
+                        yaw_tx, yaw_ty = route_x, route_y
+                        break
+
+                spawn_yaw = _compute_yaw(sx, sy, sz, yaw_tx, yaw_ty, carla_map=carla_map)
                 log.info("CAV%d spawn_yaw=%.1f deg", cav_index, spawn_yaw)
 
                 # Guard: if both coords snap to the same waypoint, OpenCDA
@@ -590,15 +607,18 @@ def json_to_single_cav_list(json_data: dict, carla_map=None) -> tuple[dict, list
                     dx, dy, dz = _nudge_dest_if_same_waypoint(
                         sx, sy, sz, dx, dy, dz, cav_index, carla_map
                     )
+                    if route_points:
+                        route_points[-1] = [dx, dy, dz]
 
                 log.info(
                     "=== CAV%d FINAL === "
                     "spawn=(%.2f, %.2f, %.2f) yaw=%.1f°  dest=(%.2f, %.2f, %.2f)  "
-                    "dist_xy=%.1fm",
+                    "dist_xy=%.1fm route_points=%d",
                     cav_index,
                     sx, sy, sz, spawn_yaw,
                     dx, dy, dz,
                     math.hypot(dx - sx, dy - sy),
+                    len(route_points),
                 )
 
                 destination_value = [dx, dy, dz]
@@ -630,6 +650,7 @@ def json_to_single_cav_list(json_data: dict, carla_map=None) -> tuple[dict, list
                     "name": f"cav{cav_index}",
                     "spawn_position": [sx, sy, sz, 0, spawn_yaw, 0],
                     "destination": destination_value,
+                    "route_points": route_points,
                     "behavior": behavior,
                     "v2x": v2x,
                 }
