@@ -403,15 +403,28 @@ class ScenarioManager:
             destination = carla.Location(x=cav_config['destination'][0],
                                          y=cav_config['destination'][1],
                                          z=cav_config['destination'][2])
+            route_points = cav_config.get('route_points') or []
+            route_locations = [
+                carla.Location(x=point[0], y=point[1], z=point[2])
+                for point in route_points
+            ]
             vehicle_manager.update_info()
-            vehicle_manager.set_destination(
-                vehicle_manager.vehicle.get_location(),
-                destination,
-                clean=True)
+            if route_locations:
+                vehicle_manager.set_route(
+                    vehicle_manager.vehicle.get_location(),
+                    route_locations,
+                    clean=True)
+                print(f"DEBUG: CAV {cav_config.get('name', i)} route_points="
+                      f"{len(route_locations)} final destination {destination}.")
+            else:
+                vehicle_manager.set_destination(
+                    vehicle_manager.vehicle.get_location(),
+                    destination,
+                    clean=True)
 
             buf_len = len(vehicle_manager.agent.get_local_planner().get_waypoint_buffer())
             if buf_len == 0:
-                print(f"WARNING: waypoint buffer empty after set_destination for CAV "
+                print(f"WARNING: waypoint buffer empty after route setup for CAV "
                       f"{cav_config.get('name', i)}. "
                       f"Destination {destination} may be unreachable. "
                       f"Check coordinate conversion in utils.py.")
@@ -459,11 +472,22 @@ class ScenarioManager:
         destination = carla.Location(x=cav_config['destination'][0],
                                      y=cav_config['destination'][1],
                                      z=cav_config['destination'][2])
+        route_points = cav_config.get('route_points') or []
+        route_locations = [
+            carla.Location(x=point[0], y=point[1], z=point[2])
+            for point in route_points
+        ]
         vehicle_manager.update_info()
-        vehicle_manager.set_destination(
-            vehicle_manager.vehicle.get_location(),
-            destination,
-            clean=True)
+        if route_locations:
+            vehicle_manager.set_route(
+                vehicle_manager.vehicle.get_location(),
+                route_locations,
+                clean=True)
+        else:
+            vehicle_manager.set_destination(
+                vehicle_manager.vehicle.get_location(),
+                destination,
+                clean=True)
 
         return [vehicle_manager]
 
