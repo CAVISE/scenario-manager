@@ -72,9 +72,9 @@ vehicle_base:
       light_dist_thresh: 20
 
   behavior:
-    max_speed: 111
-    tailgate_speed: 121
-    speed_lim_dist: 3
+    max_speed: 45
+    tailgate_speed: 55
+    speed_lim_dist: 5
     speed_decrease: 15
     safety_time: 4
     emergency_param: 0.4
@@ -82,7 +82,7 @@ vehicle_base:
     overtake_allowed: true
     collision_time_ahead: 1.5
     overtake_counter_recover: 35
-    sample_resolution: 4.5
+    sample_resolution: 2.0
     local_planner:
       buffer_size: 12
       trajectory_update_freq: 15
@@ -107,7 +107,7 @@ vehicle_base:
       dt: ${world.fixed_delta_seconds}
       max_brake: 1.0
       max_throttle: 1.0
-      max_steering: 0.3
+      max_steering: 0.45
   v2x:
     enabled: true
     communication_range: 35
