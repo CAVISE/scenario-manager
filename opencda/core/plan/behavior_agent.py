@@ -344,11 +344,7 @@ class BehaviorAgent(object):
             previous = loc
         return distance
 
-    def _select_destination_route(
-            self,
-            raw_end_waypoint,
-            requested_end_location,
-            start_waypoint=None):
+    def _select_destination_route(self, raw_end_waypoint, requested_end_location):
         """
         Pick the reachable destination lane with the shortest traced route.
 
@@ -357,10 +353,9 @@ class BehaviorAgent(object):
         code only tried get_left_lane(), which misses maps where the opposite
         lane is returned by get_right_lane().
         """
-        start_waypoint = start_waypoint or self.start_waypoint
         best = None
         for label, candidate in self._end_waypoint_candidates(raw_end_waypoint):
-            route_trace = self._trace_route(start_waypoint, candidate)
+            route_trace = self._trace_route(self.start_waypoint, candidate)
             if not route_trace:
                 log.warning(
                     "[set_destination] candidate=%s road=%s lane=%s produced empty route",
@@ -370,7 +365,7 @@ class BehaviorAgent(object):
 
             route_distance = self._route_distance(route_trace)
             snap_distance = candidate.transform.location.distance(requested_end_location)
-            same_sign = start_waypoint.lane_id * candidate.lane_id > 0
+            same_sign = self.start_waypoint.lane_id * candidate.lane_id > 0
             score = (route_distance, snap_distance, 0 if same_sign else 1)
             log.info(
                 "[set_destination] candidate=%s road=%s lane=%s route_len=%d route_dist=%.1f snap_dist=%.1f same_sign=%s",
@@ -385,7 +380,7 @@ class BehaviorAgent(object):
                 "[set_destination] no reachable destination lane for road=%s lane=%s; using raw waypoint",
                 raw_end_waypoint.road_id, raw_end_waypoint.lane_id,
             )
-            return raw_end_waypoint, self._trace_route(start_waypoint, raw_end_waypoint)
+            return raw_end_waypoint, self._trace_route(self.start_waypoint, raw_end_waypoint)
 
         _, label, end_waypoint, route_trace = best
         log.info(
@@ -393,31 +388,6 @@ class BehaviorAgent(object):
             label, end_waypoint.road_id, end_waypoint.lane_id, len(route_trace),
         )
         return end_waypoint, route_trace
-
-    def _select_start_waypoint(self, start_location):
-        start_waypoint = self._map.get_waypoint(start_location)
-
-        # Keep route geometry tied to ground-truth start_location. The
-        # localization pose can be GNSS-noisy during spoofing experiments.
-        cur_loc = start_location
-        cur_yaw = (self._ego_pos.rotation.yaw
-                   if self._ego_pos else
-                   start_waypoint.transform.rotation.yaw)
-        _, angle = cal_distance_angle(
-            start_waypoint.transform.location, cur_loc, cur_yaw)
-
-        max_steps = 200
-        steps = 0
-        while angle > 90 and steps < max_steps:
-            candidates = start_waypoint.next(1)
-            if not candidates:
-                break
-            start_waypoint = candidates[0]
-            _, angle = cal_distance_angle(
-                start_waypoint.transform.location, cur_loc, cur_yaw)
-            steps += 1
-
-        return start_waypoint
 
     def set_destination(
             self,
@@ -455,7 +425,7 @@ class BehaviorAgent(object):
         if clean_history:
             self.get_local_planner().get_history_buffer().clear()
 
-        self.start_waypoint = self._select_start_waypoint(start_location)
+        self.start_waypoint = self._map.get_waypoint(start_location)
 
         # make sure the start waypoint is behind the vehicle.
         # Use start_location (the ground-truth vehicle.get_location() passed
@@ -466,6 +436,24 @@ class BehaviorAgent(object):
         # hanging the process in an infinite loop during spawn.
         # start_location is always accurate; self._ego_pos is only valid for
         # measuring the *effect* of the attack, not for route geometry.
+        cur_loc = start_location
+        cur_yaw = (self._ego_pos.rotation.yaw
+                   if self._ego_pos else
+                   self.start_waypoint.transform.rotation.yaw)
+        _, angle = cal_distance_angle(
+            self.start_waypoint.transform.location, cur_loc, cur_yaw)
+
+        _max_steps = 200
+        _steps = 0
+        while angle > 90 and _steps < _max_steps:
+            candidates = self.start_waypoint.next(1)
+            if not candidates:
+                break  # dead-end road: stop rather than IndexError
+            self.start_waypoint = candidates[0]
+            _, angle = cal_distance_angle(
+                self.start_waypoint.transform.location, cur_loc, cur_yaw)
+            _steps += 1
+
         raw_end_waypoint = self._map.get_waypoint(end_location)
         end_waypoint, route_trace = self._select_destination_route(
             raw_end_waypoint, end_location)
@@ -500,112 +488,6 @@ class BehaviorAgent(object):
             # self.initial_global_route.append((end_waypoint, None))
 
         self._local_planner.set_global_plan(route_trace, clean)
-
-    def set_route(
-            self,
-            start_location,
-            route_locations,
-            clean=False,
-            end_reset=True,
-            clean_history=False):
-        """
-        Build one global route that passes through every requested location.
-
-        Frontend scenarios provide a polyline, not just a final point. CARLA's
-        planner still owns lane-level routing, but we force it to route each
-        segment in order: start -> p1 -> p2 -> ... -> pN.
-        """
-        if not route_locations:
-            return
-
-        if len(route_locations) == 1:
-            self.set_destination(
-                start_location,
-                route_locations[0],
-                clean=clean,
-                end_reset=end_reset,
-                clean_history=clean_history)
-            return
-
-        if clean:
-            self.get_local_planner().get_waypoints_queue().clear()
-            self.get_local_planner().get_trajectory().clear()
-            self.get_local_planner().get_waypoint_buffer().clear()
-        if clean_history:
-            self.get_local_planner().get_history_buffer().clear()
-
-        current_start = self._select_start_waypoint(start_location)
-        self.start_waypoint = current_start
-        full_route = []
-        final_end_waypoint = None
-
-        log.info("[set_route] building segmented route with %d point(s)",
-                 len(route_locations))
-
-        for index, end_location in enumerate(route_locations, 1):
-            raw_end_waypoint = self._map.get_waypoint(end_location)
-            if raw_end_waypoint is None:
-                log.warning(
-                    "[set_route] segment %d skipped: no waypoint at (%.2f,%.2f,%.2f)",
-                    index, end_location.x, end_location.y, end_location.z)
-                continue
-
-            if (current_start is not None and
-                    getattr(current_start, 'id', None) == getattr(raw_end_waypoint, 'id', None)):
-                log.info(
-                    "[set_route] segment %d skipped: start and end snap to waypoint id=%s",
-                    index, getattr(raw_end_waypoint, 'id', None))
-                continue
-
-            end_waypoint, route_trace = self._select_destination_route(
-                raw_end_waypoint,
-                end_location,
-                start_waypoint=current_start)
-            if not route_trace:
-                log.warning(
-                    "[set_route] segment %d produced empty route to road=%s lane=%s",
-                    index, raw_end_waypoint.road_id, raw_end_waypoint.lane_id)
-                continue
-
-            if full_route and route_trace:
-                previous_wp = full_route[-1][0]
-                first_wp = route_trace[0][0]
-                if getattr(previous_wp, 'id', None) == getattr(first_wp, 'id', None):
-                    route_trace = route_trace[1:]
-
-            full_route.extend(route_trace)
-            final_end_waypoint = end_waypoint
-            current_start = end_waypoint
-            log.info(
-                "[set_route] segment %d accepted: route_len=%d total_len=%d end_road=%s end_lane=%s",
-                index, len(route_trace), len(full_route),
-                end_waypoint.road_id, end_waypoint.lane_id)
-
-        if not full_route or final_end_waypoint is None:
-            log.warning(
-                "[set_route] no usable segmented route; falling back to final destination")
-            self.set_destination(
-                start_location,
-                route_locations[-1],
-                clean=False,
-                end_reset=end_reset,
-                clean_history=False)
-            return
-
-        if end_reset:
-            self.end_waypoint = final_end_waypoint
-
-        log.info(
-            "[set_route] final route length=%d final_road=%s final_lane=%s initial_global_route=%s",
-            len(full_route),
-            final_end_waypoint.road_id,
-            final_end_waypoint.lane_id,
-            'already set' if self.initial_global_route is not None else 'None')
-
-        if self.initial_global_route is None:
-            self.initial_global_route = list(full_route)
-
-        self._local_planner.set_global_plan(full_route, clean)
 
     def get_local_planner(self):
         """
