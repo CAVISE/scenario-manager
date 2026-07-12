@@ -183,18 +183,6 @@ class VehicleManager(object):
         self.agent.set_destination(
             start_location, end_location, clean, end_reset)
 
-    def set_route(
-            self,
-            start_location,
-            route_locations,
-            clean=False,
-            end_reset=True):
-        """
-        Set a global route through multiple requested locations.
-        """
-        self.agent.set_route(
-            start_location, route_locations, clean, end_reset)
-
     def update_info(self):
         """
         Call perception and localization module to
