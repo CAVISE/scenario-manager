@@ -81,8 +81,7 @@ export const handleLoad = async ({
     [...s.pedestrians].forEach((p) => s.removePedestrian(p.id));
 
     const carGroup = scenarioText?.find((g) => g.vehicle === 'car') as
-      | ScenarioGroup<CarPath>
-      | undefined;
+      ScenarioGroup<CarPath> | undefined;
     if (carGroup) {
       carGroup.path.forEach((car: CarPath) => {
         const carId = s.addCar(
@@ -114,8 +113,7 @@ export const handleLoad = async ({
     }
 
     const rsuGroup = scenarioText?.find((g) => g.vehicle === 'RSU') as
-      | ScenarioGroup<RSUPath>
-      | undefined;
+      ScenarioGroup<RSUPath> | undefined;
     if (rsuGroup) {
       rsuGroup.path.forEach((rsu: RSUPath) => {
         s.addRSU(rsu.x, rsu.y, rsu.z);
@@ -146,7 +144,8 @@ export const handleLoad = async ({
               lidar_rotation_frequency: rsu.opencda_lidar_rotation_frequency,
               lidar_upper_fov: rsu.opencda_lidar_upper_fov,
               lidar_lower_fov: rsu.opencda_lidar_lower_fov,
-              lidar_dropoff_general_rate: rsu.opencda_lidar_dropoff_general_rate,
+              lidar_dropoff_general_rate:
+                rsu.opencda_lidar_dropoff_general_rate,
               lidar_dropoff_intensity_limit:
                 rsu.opencda_lidar_dropoff_intensity_limit,
               lidar_dropoff_zero_intensity:
@@ -162,8 +161,7 @@ export const handleLoad = async ({
     }
 
     const pedGroup = scenarioText?.find((g) => g.vehicle === 'pedestrian') as
-      | ScenarioGroup<PedestrianPath>
-      | undefined;
+      ScenarioGroup<PedestrianPath> | undefined;
     if (pedGroup) {
       pedGroup.path.forEach((p: PedestrianPath) => {
         const pedId = s.addPedestrian(p.x, p.y, p.z);
@@ -180,8 +178,7 @@ export const handleLoad = async ({
     }
 
     const bldGroup = scenarioText?.find((g) => g.vehicle === 'building') as
-      | ScenarioGroup<BuildingPath>
-      | undefined;
+      ScenarioGroup<BuildingPath> | undefined;
     if (bldGroup) {
       bldGroup.path.forEach((b: BuildingPath) => {
         s.addBuilding(b.x, b.y, b.z);
@@ -219,8 +216,7 @@ export const handleLoad = async ({
     }
 
     const meta = data.scenario as
-      | { scenario_id?: string; name_of_scenario?: string }
-      | undefined;
+      { scenario_id?: string; name_of_scenario?: string } | undefined;
     s.updateScenario({
       id: String(meta?.scenario_id ?? id),
       name: meta?.name_of_scenario ?? '',
@@ -351,7 +347,9 @@ export const handleRunSimulation = async (
   try {
     const debugPayload = {
       ...payload,
-      xodr: payload.xodr ? `<omitted, length=${payload.xodr.length}>` : undefined,
+      xodr: payload.xodr
+        ? `<omitted, length=${payload.xodr.length}>`
+        : undefined,
     } as unknown;
     // eslint-disable-next-line no-console
     console.debug('Start simulation payload (frontend):', debugPayload);

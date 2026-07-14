@@ -16,9 +16,6 @@ import json
 from random import shuffle
 from omegaconf import OmegaConf
 from omegaconf.listconfig import ListConfig
-from dotenv import load_dotenv
-from pathlib import Path
-load_dotenv(Path(__file__).resolve().parents[4] / ".env.local")
 import carla
 import numpy as np
 
@@ -189,11 +186,11 @@ class ScenarioManager:
 
         self.client = \
             carla.Client(
-                os.environ.get('CARLA_HOST', 'localhost'),
+                os.environ['CARLA_HOST'],
                 simulation_config['client_port']
             )
-        print(f"DEBUG: connecting to {os.environ.get('CARLA_HOST', 'localhost')}:{simulation_config['client_port']}")
-        self.client.set_timeout(60.0)
+        print(f"DEBUG: connecting to {os.environ['CARLA_HOST']}:{simulation_config['client_port']}")
+        self.client.set_timeout(float(os.environ['CARLA_TIMEOUT_SECONDS']))
 
         if xodr_path:
             self.world = load_customized_world(xodr_path, self.client)

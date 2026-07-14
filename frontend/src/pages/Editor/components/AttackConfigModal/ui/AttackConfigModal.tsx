@@ -267,7 +267,8 @@ export default function AttackConfigModal({
 
         {attacks.length === 0 ? (
           <Typography color="text.secondary">
-            No attacks configured. Click "+ GNSS Spoofer" or "Add blank".
+            No attacks configured. Click &quot;+ GNSS Spoofer&quot; or &quot;Add
+            blank&quot;.
           </Typography>
         ) : (
           <Stack spacing={2}>

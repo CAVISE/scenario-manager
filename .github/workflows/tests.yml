@@ -14,11 +14,40 @@ jobs:
       coverage: true
 
   backend:
-    uses: CAVISE/pipelines/.github/workflows/python-pytest.yml@main
-    with:
-      python-versions: '["3.12"]'
-      cache-dependency-path: requirements-dev.txt
-      requirements-file: requirements-dev.txt
-      pytest-test-path: tests/backend
-      coverage: true
-      coverage-paths: '["app", "simulation/app"]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - name: Install backend dependencies
+        run: uv sync --frozen
+      - name: Test backend
+        run: |
+          mkdir -p reports
+          uv run --frozen pytest tests/backend \
+            --cov=app \
+            --cov-report=term-missing \
+            --cov-report=xml:reports/coverage.xml \
+            --cov-report=html:reports/htmlcov
+      - name: Add coverage summary
+        if: always()
+        run: |
+          echo "## Backend coverage" >> "$GITHUB_STEP_SUMMARY"
+          if [[ -f .coverage ]]; then
+            uv run --frozen coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Coverage data was not generated." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: backend-coverage
+          path: |
+            reports/coverage.xml
+            reports/htmlcov
+          if-no-files-found: warn
+          retention-days: 14

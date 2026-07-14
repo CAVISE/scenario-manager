@@ -1,6 +1,5 @@
 import sys
 import types
-import shutil
 import pytest
 from datetime import datetime, timedelta
 from pathlib import Path

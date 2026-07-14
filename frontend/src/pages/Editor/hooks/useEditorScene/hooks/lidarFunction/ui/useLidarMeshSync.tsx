@@ -33,8 +33,7 @@ export function useLidarMeshSync() {
 
       lidars.forEach((lidar) => {
         const wrapper = carMeshes.find((m) => m.userData.id === lidar.carId) as
-          | THREE.Group
-          | undefined;
+          THREE.Group | undefined;
         if (!wrapper) return;
 
         const existing = existingGroups.get(lidar.id);

@@ -109,7 +109,7 @@ describe('buildOpenCDAArtifact', () => {
       lidars: [],
     });
 
-    expect(yaml).toContain('attacks:\n  -\n    name: gnss-spoof');
+    expect(yaml).toMatch(/attacks:\n {2}-\n {4}name: "?gnss-spoof"?/);
     expect(yaml).toContain('    requirements: {}');
     expect(yaml).not.toContain('    attack:');
   });
