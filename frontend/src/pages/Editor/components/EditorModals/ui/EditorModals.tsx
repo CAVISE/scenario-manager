@@ -24,6 +24,7 @@ import {
 import { CARLA_MAPS } from '../../SimConfigModal/types/SimConfigModalTypes';
 import { useEditorRefs, useHooks } from '../../../context';
 import { ScenarioGroup } from '../../../../../api/types/IScenarioTypes';
+import { buildOpenCDAArtifact } from '../../../Generators/configGenerators';
 
 export default function EditorModals() {
   const [telemetryModalOpen, setTelemetryModalOpen] = useState(false);
@@ -79,6 +80,7 @@ export default function EditorModals() {
       scenario_name: scenario.name || 'Scenario',
       weather: scenario.weather || 'ClearNoon',
       description: scenario.description || '',
+      opencda_config_yaml: buildOpenCDAArtifact(state),
       map: mapName,
       scenario: buildScenarioPayload().scenario as ScenarioGroup[],
       attacks: state.simConfig?.attacks ?? [],

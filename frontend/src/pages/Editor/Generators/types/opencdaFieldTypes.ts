@@ -69,7 +69,7 @@ export const defaultOpenCDAMapManager: OpenCDAMapManager = {
   pixels_per_meter: 2,
   raster_size: [224, 224],
   lane_sample_resolution: 0.1,
-  visualize: true,
+  visualize: false,
   activate: true,
 };
 
@@ -93,7 +93,7 @@ export const defaultOpenCDAController: OpenCDAControllerPid = {
   dynamic: false,
   max_brake: 1.0,
   max_throttle: 1.0,
-  max_steering: 0.3,
+  max_steering: 0.45,
 };
 
 export const defaultOpenCDAPlatoonBase: OpenCDAPlatoonBase = {

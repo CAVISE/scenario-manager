@@ -2,7 +2,6 @@
 """
 Evaluation manager.
 """
-import itertools
 import matplotlib
 matplotlib.use('Agg')  # headless backend — no display required
 import math
@@ -39,9 +38,11 @@ class EvaluationManager(object):
 
     """
 
-    def __init__(self, cav_world, script_name, current_time):
+    def __init__(
+            self, cav_world, script_name, current_time,
+            fixed_delta_seconds=0.05):
         self.cav_world = cav_world
-        self.fixed_delta_seconds = 0.05
+        self.fixed_delta_seconds = fixed_delta_seconds
         self.skip_head = 60
         self.dest_reach_threshold = 5.0  # meters
         current_path = os.path.dirname(os.path.realpath(__file__))

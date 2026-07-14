@@ -32,6 +32,7 @@ import { StartSimulationPayload } from '../../../../../../Editor/hooks/useApiHoo
 import { getApiErrorMessage } from '../../../../../../../api/errors';
 import { LoadScenarioOptions } from '../types/scenario.load.handlerTypes';
 import { fetchXodrText } from '../../../../../../Editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
+import { buildOpenCDAArtifact } from '../../../../../../Editor/Generators/configGenerators';
 
 export const handleLoad = async ({
   hasId,
@@ -338,6 +339,7 @@ export const handleRunSimulation = async (
     weather: scenario.weather || 'ClearNoon',
     scenario: buildScenarioPayload().scenario as ApiScenarioGroup[],
     description: scenario.description || '',
+    opencda_config_yaml: buildOpenCDAArtifact(state),
     map: useEditorStore.getState().simConfig?.carla?.map || 'Town10HD',
     xodr: localStorage.getItem('cached_xodr') || undefined,
     max_ticks: useEditorStore.getState().simConfig?.max_ticks ?? 2000,

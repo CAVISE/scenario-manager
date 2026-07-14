@@ -1,7 +1,12 @@
 from typing import Any, Optional, Union
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
+from app.opencda_config import (
+    MAX_OPEN_CDA_CONFIG_LENGTH,
+    parse_open_cda_yaml,
+    validate_config_object_counts,
+)
 from app.scenario_validation import (
     extract_scenario_groups,
     validate_file_reference,
@@ -23,6 +28,11 @@ class StartSimulationRequest(BaseModel):
     map_offsets: MapOffsets = Field(default_factory=MapOffsets)
     scenario_name: str = Field(default="", max_length=200)
     description: str = Field(default="", max_length=4000)
+    opencda_config_yaml: str = Field(
+        ...,
+        min_length=1,
+        max_length=MAX_OPEN_CDA_CONFIG_LENGTH,
+    )
     weather: Optional[str] = Field(default=None, max_length=64)
     scenario: list[dict] = Field(default_factory=list)
     attacks: list[dict] = Field(default_factory=list)
@@ -60,6 +70,12 @@ class StartSimulationRequest(BaseModel):
         if not has_routable_car:
             raise ValueError("at least one car must have route points")
         return value
+
+    @model_validator(mode="after")
+    def validate_open_cda_config(self):
+        config = parse_open_cda_yaml(self.opencda_config_yaml)
+        validate_config_object_counts(config, self.scenario)
+        return self
 
 
 class SimulationStatusResponse(BaseModel):

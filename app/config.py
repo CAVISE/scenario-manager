@@ -19,7 +19,6 @@ class Settings(BaseSettings):
     db_encoding: str = "UTF8"
 
     base_dir: Path = BASE_DIR
-    cfg_dir: Path = BASE_DIR / "assets" / "opencda"
     xodr_dir: Path = BASE_DIR / "assets" / "xodrs"
     eval_dir: Path = BASE_DIR / "evaluation_outputs"
     log_dir: Path = BASE_DIR / "logs"

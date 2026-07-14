@@ -10,7 +10,6 @@ import carla
 
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 XODR_PATH = os.path.join(_BASE_DIR, "..", "assets", "xodrs")
-CFG_DIR   = os.path.join(_BASE_DIR, "..", "assets", "opencda")
 load_dotenv(".env.local")
 CARLA_HOST = os.getenv("CARLA_HOST", "localhost")
 CARLA_PORT = int(os.getenv("CARLA_PORT", "2000"))
@@ -22,10 +21,9 @@ log = get_logger(__name__)
 from opencda.core.common.cav_world import CavWorld
 from opencda.scenario_testing.utils import customized_map_api as map_api
 from opencda.scenario_testing.utils import sim_api
-from opencda.scenario_testing.utils.yaml_utils import add_current_time
 from opencda.scenario_testing.evaluations.evaluate_manager import EvaluationManager
 from app.config import get_settings
-from app import utils
+from app.opencda_config import compile_open_cda_config, write_open_cda_artifacts
 
 STANDARD_MAPS = {
     'Town01', 'Town02', 'Town03', 'Town04', 'Town05',
@@ -38,19 +36,12 @@ def request_stop():
 
 
 def _build_scene_dict(scenario_raw: dict, carla_map=None) -> tuple:
-    """
-    Convert the raw frontend payload to a fully-merged OmegaConf scene dict.
-
-    When carla_map is provided, spawn yaw values are taken from road waypoints
-    (accurate).  On the first call carla_map is None and yaw falls back to the
-    atan2 heuristic — that dict is used only to boot ScenarioManager so we can
-    obtain the real carla.Map; it is then discarded.
-    """
-    settings = get_settings()
-    base_dict = OmegaConf.load(settings.cfg_dir / "base.yaml")
-    scenario_section, pedestrian_list = utils.json_to_single_cav_list(scenario_raw, carla_map=carla_map)
-    scene_dict = OmegaConf.merge(base_dict, OmegaConf.create(scenario_section))
-    return scene_dict, pedestrian_list
+    """Compile the canonical frontend YAML for the loaded CARLA map."""
+    return compile_open_cda_config(
+        scenario_raw,
+        get_settings(),
+        carla_map=carla_map,
+    )
 
 
 def _make_scenario_manager(scene_dict, apply_ml: bool, xodr_path, map_name: str,
@@ -264,12 +255,28 @@ def run_scenario(scenario_raw: dict, params: dict):
     log.info("carla_map obtained: %s", carla_map.name)
 
     cav_world = CavWorld(apply_ml)
-    scene_dict, pedestrian_list = _build_scene_dict(scenario_raw, carla_map=carla_map)
+    scene_dict, pedestrian_list, config_overrides = _build_scene_dict(
+        scenario_raw,
+        carla_map=carla_map,
+    )
 
     # Add current_time directly into the OmegaConf struct — no roundtrip needed.
     # to_container(resolve=False) + OmegaConf.create() breaks interpolations like
     # ${world.fixed_delta_seconds} because the new DictConfig loses the full world section.
     OmegaConf.update(scene_dict, "current_time", current_time, merge=False)
+    config_overrides.append({
+        "path": "current_time",
+        "source": None,
+        "effective": current_time,
+        "reason": "identify artifacts produced by this simulation run",
+    })
+    write_open_cda_artifacts(
+        run_output_dir,
+        scenario_raw["opencda_config_yaml"],
+        scene_dict,
+        config_overrides,
+    )
+    log.info("OpenCDA configs saved: %s", run_output_dir)
 
     scenario_manager = _make_scenario_manager(
         scene_dict, apply_ml, xodr_path=None, map_name=None, cav_world=cav_world
@@ -324,6 +331,7 @@ def run_scenario(scenario_raw: dict, params: dict):
         scenario_manager.cav_world,
         script_name=map_name,
         current_time=current_time,
+        fixed_delta_seconds=float(scene_dict.world.fixed_delta_seconds),
     )
 
     spectator = scenario_manager.world.get_spectator()

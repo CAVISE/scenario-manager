@@ -304,8 +304,7 @@ class ScenarioManager:
         default_model = 'vehicle.lincoln.mkz2017' \
             if self.carla_version == '0.9.11' else 'vehicle.lincoln.mkz_2017'
 
-        cav_vehicle_bp = \
-            self.world.get_blueprint_library().find(default_model)
+        blueprint_library = self.world.get_blueprint_library()
         single_cav_list = []
 
         for i, cav_config in enumerate(
@@ -316,6 +315,16 @@ class ScenarioManager:
             cav_config = OmegaConf.merge(self.scenario_params['vehicle_base'],
                                          platoon_base,
                                          cav_config)
+            requested_model = cav_config.get('model', default_model)
+            try:
+                cav_vehicle_bp = blueprint_library.find(requested_model)
+            except (IndexError, RuntimeError):
+                log.warning(
+                    "CAV model %s is unavailable; using %s",
+                    requested_model,
+                    default_model,
+                )
+                cav_vehicle_bp = blueprint_library.find(default_model)
             # if the spawn position is a single scalar, we need to use map
             # helper to transfer to spawn transform
             if 'spawn_special' not in cav_config:
@@ -332,7 +341,16 @@ class ScenarioManager:
                 spawn_transform = map_helper(self.carla_version,
                                              *cav_config['spawn_special'])
 
-            cav_vehicle_bp.set_attribute('color', '0, 0, 255')
+            behavior_config = cav_config.get('behavior', {})
+            color = cav_config.get(
+                'color',
+                behavior_config.get('color', [0, 0, 255]),
+            )
+            if cav_vehicle_bp.has_attribute('color'):
+                cav_vehicle_bp.set_attribute(
+                    'color',
+                    ', '.join(str(int(channel)) for channel in color),
+                )
             # Snap spawn point to the nearest drivable waypoint.
             # get_waypoint may return a waypoint on the oncoming lane (positive
             # lane_id in CARLA = wrong direction). We pick the waypoint whose
@@ -646,16 +664,34 @@ class ScenarioManager:
                     ego_vehicle_bp.set_attribute('color', color)
 
             vehicle = self.world.spawn_actor(ego_vehicle_bp, spawn_transform)
-            vehicle.set_autopilot(True, 8000)
+            vehicle.set_autopilot(True, traffic_config['port'])
 
-            if 'vehicle_speed_perc' in vehicle_config:
-                tm.vehicle_percentage_speed_difference(
-                    vehicle, vehicle_config['vehicle_speed_perc'])
-            tm.auto_lane_change(vehicle, traffic_config['auto_lane_change'])
+            speed_difference = vehicle_config.get(
+                'vehicle_speed_perc',
+                traffic_config['global_speed_perc'],
+            )
+            tm.vehicle_percentage_speed_difference(vehicle, speed_difference)
+            self.configure_traffic_vehicle(tm, vehicle, traffic_config)
 
             bg_list.append(vehicle)
 
         return bg_list
+
+    @staticmethod
+    def configure_traffic_vehicle(tm, vehicle, traffic_config):
+        tm.auto_lane_change(vehicle, traffic_config['auto_lane_change'])
+        tm.ignore_lights_percentage(
+            vehicle, traffic_config['ignore_lights_percentage'])
+        tm.ignore_signs_percentage(
+            vehicle, traffic_config['ignore_signs_percentage'])
+        tm.ignore_walkers_percentage(
+            vehicle, traffic_config['ignore_walkers_percentage'])
+        tm.ignore_vehicles_percentage(
+            vehicle, traffic_config['ignore_vehicles_percentage'])
+        tm.random_left_lanechange_percentage(
+            vehicle, traffic_config['random_left_lanechange_percentage'])
+        tm.random_right_lanechange_percentage(
+            vehicle, traffic_config['random_right_lanechange_percentage'])
 
     def spawn_vehicle_by_range(self, tm, traffic_config, bg_list):
         """
@@ -754,13 +790,8 @@ class ScenarioManager:
             if not vehicle:
                 continue
 
-            vehicle.set_autopilot(True, 8000)
-            tm.auto_lane_change(vehicle, traffic_config['auto_lane_change'])
-
-            if 'ignore_lights_percentage' in traffic_config:
-                tm.ignore_lights_percentage(vehicle,
-                                            traffic_config[
-                                                'ignore_lights_percentage'])
+            vehicle.set_autopilot(True, traffic_config['port'])
+            self.configure_traffic_vehicle(tm, vehicle, traffic_config)
 
             # each vehicle have slight different speed
             tm.vehicle_percentage_speed_difference(
@@ -786,7 +817,7 @@ class ScenarioManager:
         """
         print('Spawning CARLA traffic flow.')
         traffic_config = self.scenario_params['carla_traffic_manager']
-        tm = self.client.get_trafficmanager(8100)
+        tm = self.client.get_trafficmanager(traffic_config['port'])
 
         tm.set_global_distance_to_leading_vehicle(
             traffic_config['global_distance'])

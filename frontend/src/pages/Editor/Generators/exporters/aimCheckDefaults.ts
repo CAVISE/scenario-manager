@@ -54,7 +54,6 @@ export const AIM_CHECK_SIM_OVERRIDES: {
     },
     vehicle_base_color: [122, 156, 111],
     export_profile: 'aim_check',
-    export_full_vehicle_base: false,
     v2x_enabled: false,
   },
 };

@@ -38,17 +38,39 @@ def test_delete_requires_valid_scenario_id():
         DeleteScenarioRequest(scenario_id="")
 
 
-def test_start_simulation_requires_car_with_route():
+def test_start_simulation_requires_car_with_route(open_cda_yaml):
     with pytest.raises(ValidationError):
         StartSimulationRequest(
             map="Town10HD",
+            opencda_config_yaml=open_cda_yaml,
             scenario=[{"vehicle": "car", "path": [{"x": 0, "y": 0, "z": 0}]}],
         )
 
 
-def test_start_simulation_accepts_valid_payload():
+def test_start_simulation_requires_open_cda_yaml():
+    with pytest.raises(ValidationError):
+        StartSimulationRequest(
+            map="Town10HD",
+            scenario=[
+                {
+                    "vehicle": "car",
+                    "path": [
+                        {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "points": [{"x": 10, "y": 0, "z": 0}],
+                        }
+                    ],
+                }
+            ],
+        )
+
+
+def test_start_simulation_accepts_valid_payload(open_cda_yaml):
     body = StartSimulationRequest(
         map="Town10HD",
+        opencda_config_yaml=open_cda_yaml,
         scenario=[
             {
                 "vehicle": "car",

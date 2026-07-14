@@ -6,21 +6,17 @@ import {
   SimulatorProps,
 } from '../types/SimulationTypes';
 import { useEditorStore } from '../../../../../../../../store';
+import { buildOpenCDAArtifact } from '../../../../../../Generators/configGenerators';
+import { generateCarlaYaml } from '../../../../../../Generators/exporters';
 import { mergeSimConfigWithDefaults } from '../../../../../../Generators/types/configGeneratorsTypes';
-import {
-  generateCarlaYaml,
-  generateOpenCDAConfig,
-} from '../../../../../../Generators/exporters';
 
 export default function DrivingExportSection({
   openExportDialog,
 }: SimulatorProps) {
   const handleExportOpenCDA = () => {
-    openExportDialog('opencda_config.yaml', () => {
-      const { simConfig: raw, cars, RSUs, points } = useEditorStore.getState();
-      const simConfig = mergeSimConfigWithDefaults(raw);
-      return generateOpenCDAConfig(simConfig, cars, RSUs, points);
-    });
+    openExportDialog('opencda_config.yaml', () =>
+      buildOpenCDAArtifact(useEditorStore.getState()),
+    );
   };
   const handleExportCarla = () => {
     openExportDialog('carla_config.yaml', () => {
