@@ -10,6 +10,7 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
 
 .vscode/*
 !.vscode/extensions.json
@@ -28,5 +29,16 @@ env/
 ENV/
 
 __pycache__/
-*.pyc
-# evaluation_outputs/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage/
+reports/
+plots/
+
+evaluation_outputs/
+assets/xodrs/
+frontend/coverage/
+frontend/test-results/
+frontend/stats.html

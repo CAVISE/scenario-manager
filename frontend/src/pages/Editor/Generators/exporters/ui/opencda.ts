@@ -513,12 +513,8 @@ export function generateOpenCDAConfig(
   lines.push(`  random: ${oc.bg_traffic_random}`);
   lines.push(`  ignore_lights_percentage: ${oc.ignore_lights_percentage}`);
   lines.push(`  ignore_signs_percentage: ${oc.bg_ignore_signs_percentage}`);
-  lines.push(
-    `  ignore_walkers_percentage: ${oc.bg_ignore_walkers_percentage}`,
-  );
-  lines.push(
-    `  ignore_vehicles_percentage: ${oc.ignore_vehicles_percentage}`,
-  );
+  lines.push(`  ignore_walkers_percentage: ${oc.bg_ignore_walkers_percentage}`);
+  lines.push(`  ignore_vehicles_percentage: ${oc.ignore_vehicles_percentage}`);
   lines.push(
     `  random_left_lanechange_percentage: ${oc.random_left_lanechange_percentage}`,
   );
@@ -538,9 +534,7 @@ export function generateOpenCDAConfig(
   lines.push('');
 
   lines.push('traffic_manager:');
-  lines.push(
-    `  global_distance_to_leading_vehicle: ${oc.bg_global_distance}`,
-  );
+  lines.push(`  global_distance_to_leading_vehicle: ${oc.bg_global_distance}`);
   lines.push(`  synchronous_mode: ${carla.synchronous_mode}`);
   lines.push('');
 

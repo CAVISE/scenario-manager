@@ -335,6 +335,6 @@ export const useEditorStore = create<EditorState>()(
 
 // Dev helper: expose the store to window for quick console inspection
 if (import.meta.env.DEV && typeof window !== 'undefined') {
-  // @ts-ignore
+  // @ts-expect-error Exposed only as a development console helper.
   window.useEditorStore = useEditorStore;
 }

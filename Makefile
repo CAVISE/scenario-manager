@@ -1,31 +1,30 @@
-ifeq ($(OS),Windows_NT)
-	PYTHON_EXEC=venv\\Scripts\\python.exe
-else
-	PYTHON_EXEC=venv/bin/python
-endif
-
-setup:
-	python3 -m venv venv
+.PHONY: sync sync-simulation dev test frontend frontend-test low low-d epic
 
 sync:
-	$(PYTHON_EXEC) -m pip install -r requirements.txt
-	
+	uv sync
+
+sync-simulation:
+	uv sync --extra simulation
+
 dev:
-	$(PYTHON_EXEC) -m fastapi dev --port 1234
+	docker compose up --build backend
+
+test:
+	uv run pytest tests/backend -q
 
 frontend:
-	cd frontend && yarn run dev
+	yarn --cwd frontend dev
 
-low: 
+frontend-test:
+	yarn --cwd frontend test
+
+low:
 	export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json && \
 	CarlaUE4 -quality-level=Low -vulkan -carla-server
 
-low-d: 
+low-d:
 	export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json && \
 	CarlaUE4 -quality-level=Low -RenderOffScreen -vulkan -carla-server
 
 epic:
 	CarlaUE4 -quality-level=Epic -carla-server -windowed -ResX=1280 -ResY=720 -benchmark -fps=20
-
-opencda:
-	$(PYTHON_EXEC) opencda_playground.py

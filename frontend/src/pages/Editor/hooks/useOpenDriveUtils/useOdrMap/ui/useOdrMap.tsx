@@ -211,7 +211,7 @@ export function buildOdrScene(p: LoadOdrMapParams): OdrMapMeshes {
 
   if (import.meta.env.DEV) {
     console.log(`Heap: ${(Module.HEAP8.length / 1024 / 1024) | 0} MB`);
-    console.log(JSON.stringify(useEditorStore.getState()))
+    console.log(JSON.stringify(useEditorStore.getState()));
   }
 
   return {

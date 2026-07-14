@@ -1,22 +1,52 @@
 [project]
 name = "scenario-manager"
 version = "0.1.0"
-requires-python = ">=3.10"
+requires-python = ">=3.11,<3.13"
 dependencies = [
+    "alembic>=1.16",
     "fastapi>=0.139.0",
     "omegaconf>=2.3.1",
-    "psycopg2-binary>=2.9.12",
+    "psycopg[binary]>=3.2",
     "pydantic>=2.13.4",
     "pydantic-settings>=2.14.2",
     "python-dotenv>=1.2.2",
     "pyyaml>=6.0.3",
     "slowapi>=0.1.10",
+    "sqlalchemy>=2.0",
+    "uvicorn[standard]>=0.46.0",
+]
+
+[project.optional-dependencies]
+simulation = [
+    "addict==2.4.0",
+    "antlr4-python3-runtime==4.9.3",
+    "carla==0.9.16",
+    "configargparse==1.7.5",
+    "matplotlib==3.10.9",
+    "networkx==3.6.1",
+    "numpy==2.4.5",
+    "open3d==0.19.0",
+    "opencv-python-headless==4.13.0.92",
+    "pandas==3.0.3",
+    "pyquaternion==0.9.9",
+    "requests==2.34.2",
+    "scikit-learn==1.8.0",
+    "scipy==1.17.1",
+    "shapely==2.1.2",
+    "tqdm==4.67.3",
 ]
 
 [dependency-groups]
 dev = [
     "httpx>=0.28.1",
+    "ipython",
+    "mypy",
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
     "pytest-cov>=7.1.0",
+    "ruff",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
