@@ -2,19 +2,31 @@ services:
   backend:
     build:
       context: .
-      dockerfile: Dockerfile.backend
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     volumes:
-      - static_maps:/app/static/maps
       - eval_outputs:/app/evaluation_outputs
+    env_file:
+      - ./.env
+    environment:
+      RUN_MIGRATIONS: "1"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - cavise
     restart: unless-stopped
-    command: >
-      sh -c "python main.py --host 0.0.0.0 --port 8000"
+    depends_on:
+      db:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          urllib.request.urlopen('http://localhost:8000/health', timeout=5)
       interval: 30s
       timeout: 10s
       retries: 3
@@ -23,13 +35,11 @@ services:
   frontend-prod:
     profiles: [prod]
     build:
-      context: .
-      dockerfile: Dockerfile.frontend
+      context: frontend
+      dockerfile: Dockerfile
       target: production
     ports:
       - "80:80"
-    volumes:
-      - static_maps:/usr/share/nginx/html/maps:ro
     networks:
       - cavise
     depends_on:
@@ -37,9 +47,29 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${DB_USER:?DB_USER must be set in .env}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set in .env}
+      POSTGRES_DB: ${DB_NAME:?DB_NAME must be set in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - cavise
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
-  static_maps:
   eval_outputs:
+  postgres_data:
 
 networks:
   cavise:

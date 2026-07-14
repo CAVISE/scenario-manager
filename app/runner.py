@@ -1,29 +1,26 @@
 import os
 import random
 import threading
-from dotenv import load_dotenv
-from omegaconf import OmegaConf
+
 import carla
+from omegaconf import OmegaConf
+
+from app.config import get_settings
+from app.log_config import add_run_file_handler, get_logger, remove_run_file_handler
+from app.opencda_config import compile_open_cda_config, write_open_cda_artifacts
+from opencda.core.common.cav_world import CavWorld
+from opencda.scenario_testing.evaluations.evaluate_manager import EvaluationManager
+from opencda.scenario_testing.utils import customized_map_api as map_api
+from opencda.scenario_testing.utils import sim_api
 
 # QT_QPA_PLATFORM=offscreen was removed — opencv-python-headless has no Qt
 # dependency, so no platform-plugin lookup occurs at all.
 
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 XODR_PATH = os.path.join(_BASE_DIR, "..", "assets", "xodrs")
-load_dotenv(".env.local")
-CARLA_HOST = os.getenv("CARLA_HOST", "localhost")
-CARLA_PORT = int(os.getenv("CARLA_PORT", "2000"))
 _stop_event = threading.Event()
 
-from app.log_config import add_run_file_handler, get_logger, remove_run_file_handler
 log = get_logger(__name__)
-
-from opencda.core.common.cav_world import CavWorld
-from opencda.scenario_testing.utils import customized_map_api as map_api
-from opencda.scenario_testing.utils import sim_api
-from opencda.scenario_testing.evaluations.evaluate_manager import EvaluationManager
-from app.config import get_settings
-from app.opencda_config import compile_open_cda_config, write_open_cda_artifacts
 
 STANDARD_MAPS = {
     'Town01', 'Town02', 'Town03', 'Town04', 'Town05',
@@ -209,6 +206,7 @@ def _log_rsu_forensic(tick_count: int, rsu) -> None:
 
 
 def run_scenario(scenario_raw: dict, params: dict):
+    settings = get_settings()
     apply_ml  = params["apply_ml"]
     record    = params["record"]
     map_name  = params["map_name"]
@@ -219,7 +217,7 @@ def run_scenario(scenario_raw: dict, params: dict):
     forensic_log_handler = add_run_file_handler(forensic_log_file)
 
     log.info("=== run_scenario START | map=%s max_ticks=%d carla=%s:%d ===",
-             map_name, max_ticks, CARLA_HOST, CARLA_PORT)
+             map_name, max_ticks, settings.carla_host, settings.carla_port)
     log.info("Per-run forensic log: %s", forensic_log_file)
     log.debug(
         "[forensic] run_config params=%s scenario_items=%d attacks=%s "
@@ -238,9 +236,9 @@ def run_scenario(scenario_raw: dict, params: dict):
 
     _stop_event.clear()
 
-    log.info("Connecting to CARLA %s:%d ...", CARLA_HOST, CARLA_PORT)
-    client = carla.Client(CARLA_HOST, CARLA_PORT)
-    client.set_timeout(10.0)
+    log.info("Connecting to CARLA %s:%d ...", settings.carla_host, settings.carla_port)
+    client = carla.Client(settings.carla_host, settings.carla_port)
+    client.set_timeout(settings.carla_timeout_seconds)
     log.info("CARLA server version: %s", client.get_server_version())
 
     # ── Load map once ─────────────────────────────────────────────────────────
@@ -302,8 +300,8 @@ def run_scenario(scenario_raw: dict, params: dict):
 
     if single_cav_list:
         locs     = [cav.vehicle.get_location() for cav in single_cav_list]
-        center_x = sum(l.x for l in locs) / len(locs)
-        center_y = sum(l.y for l in locs) / len(locs)
+        center_x = sum(location.x for location in locs) / len(locs)
+        center_y = sum(location.y for location in locs) / len(locs)
         spectator = scenario_manager.world.get_spectator()
         spectator.set_transform(carla.Transform(
             carla.Location(x=center_x, y=center_y, z=500),
@@ -362,11 +360,13 @@ def run_scenario(scenario_raw: dict, params: dict):
             # Follow camera
             if active_cavs:
                 locs   = [cav.vehicle.get_location() for cav in active_cavs]
-                cx     = sum(l.x for l in locs) / len(locs)
-                cy     = sum(l.y for l in locs) / len(locs)
+                cx     = sum(location.x for location in locs) / len(locs)
+                cy     = sum(location.y for location in locs) / len(locs)
                 spread = max(
-                    max(l.x for l in locs) - min(l.x for l in locs),
-                    max(l.y for l in locs) - min(l.y for l in locs),
+                    max(location.x for location in locs)
+                    - min(location.x for location in locs),
+                    max(location.y for location in locs)
+                    - min(location.y for location in locs),
                 )
                 z = max(80, spread * 1.2)
                 spectator.set_transform(carla.Transform(

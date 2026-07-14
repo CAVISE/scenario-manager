@@ -104,17 +104,6 @@ export interface ScenarioDetail {
   scenario?: ScenarioGroup[] | ScenarioStoredJson | null;
 }
 
-export interface ScenarioDetail {
-  scenario_id: string;
-  name_of_scenario: string | null;
-  scenario_name?: string | null;
-  weather?: string | null;
-  description?: string | null;
-  preview?: string | null;
-  file_?: string | null;
-  scenario?: ScenarioGroup[] | ScenarioStoredJson | null;
-}
-
 export interface ScenarioListItem {
   id: number;
   scenario_id: string;

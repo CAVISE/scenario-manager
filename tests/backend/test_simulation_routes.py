@@ -154,6 +154,7 @@ def test_delete_results_removes_directory(client, tmp_path):
     assert not run_dir.exists()
 
 def test_health_returns_ok(client):
-    response = client.get("/health")
+    with patch("main.database_is_ready", return_value=True):
+        response = client.get("/health")
     assert response.status_code == 200
     assert response.json()["status"] == "ok"

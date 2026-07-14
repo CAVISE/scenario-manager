@@ -12,6 +12,7 @@
 # ==================================================================================================
 
 import logging
+import os
 
 import carla  # pylint: disable=import-error
 
@@ -29,7 +30,7 @@ class CarlaSimulation(object):
     """
     def __init__(self, host, port, step_length, xdor_path):
         self.client = carla.Client(host, port)
-        self.client.set_timeout(2.0)
+        self.client.set_timeout(float(os.environ['CARLA_TIMEOUT_SECONDS']))
 
         self.world = load_customized_world(xdor_path, self.client)
         self.blueprint_library = self.world.get_blueprint_library()

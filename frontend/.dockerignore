@@ -1,0 +1,13 @@
+.git
+.idea
+.vscode
+.env*
+!.env.production
+node_modules
+dist
+coverage
+test-results
+stats.html
+*.log
+Dockerfile
+README.md

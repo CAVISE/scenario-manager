@@ -1,8 +1,23 @@
+import os
 import sys
 import types
 
 import pytest
 import yaml
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
+from sqlalchemy.pool import StaticPool
+
+os.environ.setdefault("DB_NAME", "scenario_manager_test")
+os.environ.setdefault("DB_USER", "scenario_manager_test")
+os.environ.setdefault("DB_PASSWORD", "scenario_manager_test")
+os.environ.setdefault("DB_HOST", "db")
+os.environ.setdefault("DB_PORT", "5432")
+os.environ.setdefault("DB_ENCODING", "UTF8")
+os.environ.setdefault("CARLA_HOST", "localhost")
+os.environ.setdefault("CARLA_PORT", "2000")
+os.environ.setdefault("CARLA_TIMEOUT_SECONDS", "60")
 
 def _build_fake_carla_module() -> types.ModuleType:
   carla = types.ModuleType("carla")
@@ -83,6 +98,37 @@ def _build_fake_carla_module() -> types.ModuleType:
 
 sys.modules["carla"] = _build_fake_carla_module()
 sys.modules["carla.libcarla"] = types.ModuleType("carla.libcarla")
+
+
+@pytest.fixture
+def db_session():
+  from app.models import Base
+
+  engine = create_engine(
+    "sqlite+pysqlite:///:memory:",
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
+  )
+  Base.metadata.create_all(engine)
+  with Session(engine, expire_on_commit=False) as session:
+    yield session
+  Base.metadata.drop_all(engine)
+  engine.dispose()
+
+
+@pytest.fixture
+def scenario_client(db_session):
+  from app.database import get_session
+  from main import app
+
+  def override_session():
+    yield db_session
+
+  app.dependency_overrides[get_session] = override_session
+  client = TestClient(app)
+  yield client
+  client.close()
+  app.dependency_overrides.pop(get_session, None)
 
 
 def make_open_cda_config(cav_count=1, rsu_count=0, attacks=None):
