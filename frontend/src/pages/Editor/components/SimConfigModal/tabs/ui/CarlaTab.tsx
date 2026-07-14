@@ -16,6 +16,7 @@ import { CarlaWeather } from '../../../../../../store/types/useEditorStoreTypes'
 import { useEditorStore } from '../../../../../../store';
 import { useEffect, useMemo } from 'react';
 import { getStoredXodrName } from '../../../../hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
+import { weatherParamsFromPreset } from '../../../../Generators/exporters/opencdaWeather';
 
 const WEATHER_KEYS = [
   'sun_altitude_angle',
@@ -90,6 +91,7 @@ export default function CarlaTab() {
             onChange={(e) =>
               updateSimConfigCarla({
                 weather_preset: e.target.value as CarlaWeather,
+                weather_override: {},
               })
             }
           >
@@ -194,7 +196,9 @@ export default function CarlaTab() {
             checked={customWeatherEnabled}
             onChange={(e) =>
               updateSimConfigCarla({
-                weather_override: e.target.checked ? {} : undefined,
+                weather_override: e.target.checked
+                  ? weatherParamsFromPreset(simConfig.carla.weather_preset)
+                  : {},
               })
             }
           />

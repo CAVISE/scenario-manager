@@ -1,5 +1,3 @@
-import sys
-import types
 import asyncio
 import pytest
 from unittest.mock import MagicMock, patch
@@ -49,9 +47,12 @@ def test_update_scenario_with_none_fields(client):
 
     assert response.status_code == 200
 
-def test_spawn_yaw_is_zero_when_coords_identical():
-    from app.utils import json_to_single_cav_list
+def test_spawn_yaw_is_zero_when_coords_identical(open_cda_config_factory):
+    from app.utils import yaml_to_runtime_scenario
 
+    config = open_cda_config_factory()
+    config["scenario"]["single_cav_list"][0]["spawn_position"] = [5, 5, 0, 0, 0, 0]
+    config["scenario"]["single_cav_list"][0]["destination"] = [5, 5, 0]
     payload = {
         "map": "Town03",
         "scenario": [{
@@ -62,13 +63,15 @@ def test_spawn_yaw_is_zero_when_coords_identical():
             }]
         }]
     }
-    result, _ = json_to_single_cav_list(payload)
+    result, _, _ = yaml_to_runtime_scenario(config, payload)
     cav = result["scenario"]["single_cav_list"][0]
     assert cav["spawn_position"][4] == 0.0
 
-def test_unknown_map_uses_zero_offset():
-    from app.utils import json_to_single_cav_list
+def test_unknown_map_uses_zero_offset(open_cda_config_factory):
+    from app.utils import yaml_to_runtime_scenario
 
+    config = open_cda_config_factory()
+    config["scenario"]["single_cav_list"][0]["spawn_position"] = [10, 20, 0, 0, 0, 0]
     payload = {
         "map": "UnknownMap",
         "scenario": [{
@@ -76,7 +79,7 @@ def test_unknown_map_uses_zero_offset():
             "path": [{"x": 10, "y": 20, "z": 0, "points": []}]
         }]
     }
-    result, _ = json_to_single_cav_list(payload)
+    result, _, _ = yaml_to_runtime_scenario(config, payload)
     cav = result["scenario"]["single_cav_list"][0]
     assert cav["spawn_position"][0] == 10
     assert cav["spawn_position"][1] == -20 

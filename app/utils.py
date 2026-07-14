@@ -1,3 +1,4 @@
+import copy
 import math
 import logging
 log = logging.getLogger(__name__)
@@ -390,47 +391,6 @@ _GNSS_SPOOF_LEVELS = {
     "high":   {"noise_alt_stddev": 15.0, "noise_lat_stddev": 5e-4,  "noise_lon_stddev": 5e-4},
 }
 
-# Baseline (non-attack) GNSS noise — mirrors assets/opencda/base.yaml's
-# sensing.localization.gnss block. base.yaml ships localization.activate:
-# false by default, which makes LocalizationManager.localize() bypass the
-# GNSS sensor entirely (vehicle.get_transform() straight to _ego_pos) —
-# fine for OpenCDA's stock use case, but it means an attack-free run and
-# an attack run aren't otherwise comparable: one has a real sensor+KF
-# stack in the loop and the other doesn't. _ensure_localization_baseline
-# turns the stack on for every CAV unconditionally, so "no attack" means
-# "ordinary GNSS noise" rather than "no GNSS sensor at all", and the only
-# difference an active attack introduces is the amplified stddev below.
-_GNSS_BASELINE = {
-    "noise_alt_stddev": 0.001,
-    "noise_lat_stddev": 1.0e-6,
-    "noise_lon_stddev": 1.0e-6,
-    "heading_direction_stddev": 0.1,
-    "speed_stddev": 0.2,
-}
-
-
-def _ensure_localization_baseline(cav_list: list[dict]) -> None:
-    """
-    Force sensing.localization.activate=True with stock (non-attack) GNSS
-    noise on every CAV, before any attack is applied.
-
-    Must run before _apply_attacks() so that attacked CAVs simply have
-    their gnss stddevs overwritten by the higher attack-intensity values
-    (see _apply_attacks) on top of an already-active localization stack,
-    rather than _apply_attacks being the sole place activate gets set.
-    """
-    for cav in cav_list:
-        sensing = cav.setdefault("sensing", {})
-        loc = sensing.setdefault("localization", {})
-        gnss = loc.setdefault("gnss", {})
-
-        loc["activate"] = True
-        loc["dt"] = 0.05
-
-        for key, val in _GNSS_BASELINE.items():
-            gnss[key] = val
-
-
 def _normalize_attack_stages(stages: object) -> list[dict]:
     """
     Flatten a `stages` value into a flat list[dict].
@@ -454,7 +414,11 @@ def _normalize_attack_stages(stages: object) -> list[dict]:
     return flat
 
 
-def _apply_attacks(cav_list: list[dict], attacks: list[dict]) -> None:
+def _apply_attacks(
+    cav_list: list[dict],
+    attacks: list[dict],
+    fixed_delta_seconds: float = 0.05,
+) -> None:
     """
     Inject attack parameters into CAV sensing.localization blocks.
 
@@ -507,7 +471,7 @@ def _apply_attacks(cav_list: list[dict], attacks: list[dict]) -> None:
             # bypassing the GNSS sensor entirely — noise has zero effect and
             # localization_eval metrics stay at 0.000000.
             loc["activate"] = True
-            loc.setdefault("dt", 0.05)
+            loc.setdefault("dt", fixed_delta_seconds)
 
             gnss["noise_alt_stddev"] = noise["noise_alt_stddev"]
             gnss["noise_lat_stddev"] = noise["noise_lat_stddev"]
@@ -527,251 +491,181 @@ def _apply_attacks(cav_list: list[dict], attacks: list[dict]) -> None:
 # Main conversion entry point
 # ---------------------------------------------------------------------------
 
-def json_to_single_cav_list(json_data: dict, carla_map=None) -> tuple[dict, list]:
 
+def _raw_group_items(json_data: dict, vehicle_type: str) -> list[dict]:
+    return [
+        item
+        for group in json_data.get("scenario", [])
+        if group.get("vehicle") == vehicle_type
+        for item in group.get("path", [])
+    ]
+
+
+def _source_xyz(value: object, label: str) -> tuple[float, float, float]:
+    if not isinstance(value, (list, tuple)) or len(value) < 3:
+        raise ValueError(f"{label} must contain at least three coordinates")
+    try:
+        return float(value[0]), float(value[1]), float(value[2])
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{label} coordinates must be numeric") from exc
+
+
+def _record_config_override(
+    overrides: list[dict],
+    path: str,
+    source: object,
+    effective: object,
+    reason: str,
+) -> None:
+    if source == effective:
+        return
+    overrides.append({
+        "path": path,
+        "source": source,
+        "effective": effective,
+        "reason": reason,
+    })
+
+
+def yaml_to_runtime_scenario(
+    source_config: dict,
+    json_data: dict,
+    carla_map=None,
+) -> tuple[dict, list, list[dict]]:
+    """Compile the frontend YAML scenario into CARLA world coordinates."""
     if "scenario" not in json_data or not isinstance(json_data["scenario"], list):
         raise ValueError("Invalid payload: 'scenario' must be a list")
 
-    cav_list = []
-    rsu_list = []
-    pedestrian_list = []
-
     map_name = json_data.get("map", "Town10HD").replace(".xodr", "")
-    _req      = json_data.get("map_offsets") or {}
-    _fallback = MAP_OFFSETS.get(map_name, (0.0, 0.0))
-    offset_x  = _req.get("x", _fallback[0])
-    offset_y  = _req.get("y", _fallback[1])
-    _offset_src = "frontend" if _req else "MAP_OFFSETS fallback"
-    log.info(
-        "=== SCENARIO SETUP === map=%s  offset_x=%.4f  offset_y=%.4f  source=%s",
-        map_name, offset_x, offset_y, _offset_src,
+    request_offsets = json_data.get("map_offsets") or {}
+    fallback_offsets = MAP_OFFSETS.get(map_name, (0.0, 0.0))
+    offset_x = request_offsets.get("x", fallback_offsets[0])
+    offset_y = request_offsets.get("y", fallback_offsets[1])
+    source_scenario = copy.deepcopy(source_config.get("scenario") or {})
+    source_cavs = source_scenario.get("single_cav_list") or []
+    source_rsus = source_scenario.get("rsu_list") or []
+    raw_cavs = _raw_group_items(json_data, "car")
+    raw_rsus = _raw_group_items(json_data, "RSU")
+    overrides: list[dict] = []
+
+    if len(source_cavs) != len(raw_cavs) or len(source_rsus) != len(raw_rsus):
+        raise ValueError("OpenCDA YAML object counts do not match the scenario payload")
+
+    fixed_delta_seconds = float(
+        (source_config.get("world") or {}).get("fixed_delta_seconds", 0.05)
     )
-    if not _req:
-        log.warning(
-            "No map_offsets received from frontend — using hardcoded fallback "
-            "MAP_OFFSETS[%r] = (%.4f, %.4f). Check ScenarioControlWidget.tsx.",
-            map_name, _fallback[0], _fallback[1],
+    cav_list = []
+    for index, source_cav in enumerate(source_cavs, 1):
+        if not isinstance(source_cav, dict):
+            raise ValueError(f"scenario.single_cav_list[{index - 1}] must be an object")
+        cav = copy.deepcopy(source_cav)
+        source_destination = cav["destination"]
+        dx_raw, dy_raw, _ = _source_xyz(
+            source_destination, f"CAV{index} destination"
         )
-    else:
-        log.debug("map_offsets payload: %s  fallback would have been: %s", _req, _fallback)
+        dx, dy, dz = convert_coords(
+            dx_raw,
+            dy_raw,
+            offset_x,
+            offset_y,
+            carla_map=carla_map,
+            is_spawn=False,
+        )
 
-    cav_index = 0
-    for group in json_data["scenario"]:
-        vehicle_type = group.get("vehicle")
-
-        if vehicle_type == "car":
-            for car in group["path"]:
-                cav_index += 1
-                points = car.get("points", [])
-                dest   = points[-1] if points else None
-
-                sx, sy, sz = convert_coords(
-                    car["x"], car["y"], offset_x, offset_y,
-                    carla_map=carla_map, is_spawn=True,
+        if "spawn_special" not in cav:
+            source_spawn = cav["spawn_position"]
+            sx_raw, sy_raw, _ = _source_xyz(source_spawn, f"CAV{index} spawn")
+            sx, sy, sz = convert_coords(
+                sx_raw,
+                sy_raw,
+                offset_x,
+                offset_y,
+                carla_map=carla_map,
+                is_spawn=True,
+            )
+            spawn_yaw = _compute_yaw(
+                sx, sy, sz, dx, dy, carla_map=carla_map
+            )
+            if carla_map is not None:
+                dx, dy, dz = _nudge_dest_if_same_waypoint(
+                    sx, sy, sz, dx, dy, dz, index, carla_map
                 )
-                if dest:
-                    dx, dy, dz = convert_coords(
-                        dest["x"], dest["y"], offset_x, offset_y,
-                        carla_map=carla_map, is_spawn=False,
-                    )
-                else:
-                    dx, dy, dz = sx, sy, _FALLBACK_DEST_Z
+            effective_spawn = [sx, sy, sz, 0, spawn_yaw, 0]
+            _record_config_override(
+                overrides,
+                f"scenario.single_cav_list[{index - 1}].spawn_position",
+                source_spawn,
+                effective_spawn,
+                "convert editor coordinates and align yaw to the CARLA road graph",
+            )
+            cav["spawn_position"] = effective_spawn
 
-                log.info("CAV%d spawn=(%.2f, %.2f, %.2f) dest=(%.2f, %.2f, %.2f)",
-                         cav_index, sx, sy, sz, dx, dy, dz)
+        effective_destination = [dx, dy, dz]
+        _record_config_override(
+            overrides,
+            f"scenario.single_cav_list[{index - 1}].destination",
+            source_destination,
+            effective_destination,
+            "convert editor coordinates and snap the destination to the CARLA road",
+        )
+        cav["destination"] = effective_destination
+        cav_list.append(cav)
 
-                spawn_yaw = _compute_yaw(sx, sy, sz, dx, dy, carla_map=carla_map)
-                log.info("CAV%d spawn_yaw=%.1f deg", cav_index, spawn_yaw)
-
-                # Guard: if both coords snap to the same waypoint, OpenCDA
-                # would see an empty route and hold brake=1.0 indefinitely.
-                # Nudge dest forward along the lane to fix this.
-                if carla_map is not None:
-                    dx, dy, dz = _nudge_dest_if_same_waypoint(
-                        sx, sy, sz, dx, dy, dz, cav_index, carla_map
-                    )
-
-                log.info(
-                    "=== CAV%d FINAL === "
-                    "spawn=(%.2f, %.2f, %.2f) yaw=%.1f°  dest=(%.2f, %.2f, %.2f)  "
-                    "dist_xy=%.1fm",
-                    cav_index,
-                    sx, sy, sz, spawn_yaw,
-                    dx, dy, dz,
-                    math.hypot(dx - sx, dy - sy),
-                )
-
-                destination_value = [dx, dy, dz]
-
-                behavior: dict = {
-                    "local_planner": {
-                        "debug_trajectory": car.get("opencda_local_planner_debug_trajectory", True),
-                        "debug":            car.get("opencda_local_planner_debug", True),
-                    }
-                }
-                if car.get("opencda_max_speed") is not None:
-                    behavior["max_speed"] = car["opencda_max_speed"]
-                elif car.get("max_speed") is not None:
-                    behavior["max_speed"] = car["max_speed"]
-                if car.get("opencda_ignore_traffic_light") is not None:
-                    behavior["ignore_traffic_light"] = car["opencda_ignore_traffic_light"]
-                if car.get("opencda_overtake_allowed") is not None:
-                    behavior["overtake_allowed"] = car["opencda_overtake_allowed"]
-                if car.get("opencda_collision_time_ahead") is not None:
-                    behavior["collision_time_ahead"] = car["opencda_collision_time_ahead"]
-
-                v2x: dict = {"communication_range": 45}
-                if car.get("opencda_v2x_communication_range") is not None:
-                    v2x["communication_range"] = car["opencda_v2x_communication_range"]
-                if car.get("opencda_v2x_enabled") is not None:
-                    v2x["enabled"] = car["opencda_v2x_enabled"]
-
-                cav: dict = {
-                    "name": f"cav{cav_index}",
-                    "spawn_position": [sx, sy, sz, 0, spawn_yaw, 0],
-                    "destination": destination_value,
-                    "behavior": behavior,
-                    "v2x": v2x,
-                }
-
-                if car.get("opencda_carla_model"):
-                    cav["carla_model"] = car["opencda_carla_model"]
-                if car.get("opencda_color") is not None:
-                    cav["color"] = car["opencda_color"]
-
-                lidars = car.get("lidars", [])
-                if lidars:
-                    lidar = lidars[0]
-                    cav["sensing"] = {
-                        "perception": {
-                            "activate": True,
-                            "lidar": {
-                                "channels":           lidar.get("channels", 32),
-                                "range":              lidar.get("range", 50),
-                                "rotation_frequency": lidar.get("rotation_frequency", 10),
-                                "visualize":          lidar.get("visualize", False),
-                            }
-                        }
-                    }
-
-                cav_list.append(cav)
-
-        elif vehicle_type == "RSU":
-            for i, rsu in enumerate(group["path"], 1):
-                log.debug(
-                    "RSU%d: editor coords=(%.4f, %.4f)",
-                    i, rsu["x"], rsu["y"],
-                )
-                rx, ry, rz = convert_coords(
-                    rsu["x"], rsu["y"], offset_x, offset_y,
-                    carla_map=carla_map, is_spawn=True,
-                )
-                log.info("=== RSU%d FINAL === spawn=(%.2f, %.2f, %.2f)", i, rx, ry, rz)
-
-                rsu_entry = {
-                    "name": rsu.get("opencda_name") or f"rsu{i}",
-                    "spawn_position": [rx, ry, rz, 0, 0, 0],
-                    "id": rsu.get("opencda_id") if rsu.get("opencda_id") is not None else i,
-                    "v2x": {
-                        "communication_range": rsu.get("range", 45),
-                        "tx_power":            rsu.get("tx_power", 23),
-                        "frequency":           rsu.get("frequency", 5.9e9),
-                        "protocol":            rsu.get("protocol", "ITS-G5"),
-                        "beacon_interval":     rsu.get("beacon_interval", 1000),
-                    },
-                    "sensing": {
-                        "perception": {
-                            "activate": rsu.get("opencda_perception_activate", False),
-                            # detection_range: radius (metres) for server-side
-                            # vehicle queries in deactivate_mode.
-                            # RSUs default to 100 m (wider than moving CAVs at 50 m)
-                            # so they contribute vehicles at intersections.
-                            # Changing this in the UI directly changes what RSU sees.
-                            "detection_range": rsu.get("opencda_detection_range", 100),
-                            "camera": {
-                                "visualize": rsu.get("opencda_camera_visualize", False),  # False = headless-safe (was 4 — truthy copy-paste from `num` below, crashed cv2.imshow every tick in deactivate_mode)
-                                "num":       rsu.get("opencda_camera_num", 4),
-                                "positions": rsu.get("opencda_camera_positions", [
-                                    [2.5,  0.0,  1.0,   0],
-                                    [0.0,  0.3,  1.8, 100],
-                                    [0.0, -0.3,  1.8, -100],
-                                    [-2.0, 0.0,  1.5, 180],
-                                ]),
-                            },
-                            "lidar": {
-                                "visualize":               rsu.get("opencda_lidar_visualize", False),  # False = headless-safe
-                                "channels":                rsu.get("opencda_lidar_channels", 32),
-                                "range":                   rsu.get("opencda_lidar_range", 120),
-                                "points_per_second":       rsu.get("opencda_lidar_points_per_second", 1000000),
-                                "rotation_frequency":      rsu.get("opencda_lidar_rotation_frequency", 20),
-                                "upper_fov":               rsu.get("opencda_lidar_upper_fov", 2),
-                                "lower_fov":               rsu.get("opencda_lidar_lower_fov", -25),
-                                "dropoff_general_rate":    rsu.get("opencda_lidar_dropoff_general_rate", 0.3),
-                                "dropoff_intensity_limit": rsu.get("opencda_lidar_dropoff_intensity_limit", 0.7),
-                                "dropoff_zero_intensity":  rsu.get("opencda_lidar_dropoff_zero_intensity", 0.4),
-                                "noise_stddev":            rsu.get("opencda_lidar_noise_stddev", 0.02),
-                            },
-                        },
-                        "localization": {
-                            "activate": rsu.get("opencda_localization_activate", True),
-                            "dt": 0.05,  # literal value — OmegaConf interpolation breaks after merge
-                            "gnss": {
-                                "noise_alt_stddev": rsu.get("opencda_gnss_noise_alt_stddev", 0.05),
-                                "noise_lat_stddev": rsu.get("opencda_gnss_noise_lat_stddev", 3e-6),
-                                "noise_lon_stddev": rsu.get("opencda_gnss_noise_lon_stddev", 3e-6),
-                            },
-                        },
-                    },
-                }
-                if rsu.get("opencda_color") is not None:
-                    rsu_entry["color"] = rsu["opencda_color"]
-                if rsu.get("opencda_behavior_services"):
-                    rsu_entry["behavior_services"] = rsu["opencda_behavior_services"]
-                rsu_list.append(rsu_entry)
-
-        elif vehicle_type == "pedestrian":
-            for i, ped in enumerate(group["path"], 1):
-                px, py, pz = convert_coords(
-                    ped["x"], ped["y"], offset_x, offset_y,
-                    carla_map=carla_map, is_spawn=True,
-                )
-                log.info("=== PED%d FINAL === spawn=(%.2f, %.2f, %.2f)", i, px, py, pz)
-                pedestrian_list.append({
-                    "spawn": [px, py, pz],
-                    "speed":         ped.get("speed", 1.4),
-                    "cross_factor":  ped.get("cross_factor", 0.0),
-                    "is_invincible": ped.get("is_invincible", True),
-                })
-
-        else:
-            log.debug("Skipping unsupported vehicle type: %s", vehicle_type)
-
-    # Force localization.activate=True with stock GNSS noise on every CAV,
-    # attacked or not — base.yaml defaults activate to False, which bypasses
-    # the GNSS+KF stack entirely (see _ensure_localization_baseline
-    # docstring). Must run before _apply_attacks so attack runs simply
-    # overwrite these stddevs with amplified values on an already-active
-    # stack, keeping "no attack" and "attack" runs comparable.
-    _ensure_localization_baseline(cav_list)
-
-    # Apply attacks after all CAVs are built
-    attacks = json_data.get("attacks", [])
-    log.info("Attacks in payload: %d → %s", len(attacks), [a.get("name", "?") for a in attacks])
+    attacks = source_config.get("attacks") or []
     if attacks:
-        _apply_attacks(cav_list, attacks)
+        _apply_attacks(cav_list, attacks, fixed_delta_seconds)
 
-    scenario_section: dict = {
-        "world": {
-            "town": map_name,
-        },
-        "scenario": {
-            "name":            json_data.get("scenario_name", "scenario"),
-            "map":             map_name,
-            "single_cav_list": cav_list,
-        },
-    }
+    rsu_list = []
+    for index, source_rsu in enumerate(source_rsus, 1):
+        if not isinstance(source_rsu, dict):
+            raise ValueError(f"scenario.rsu_list[{index - 1}] must be an object")
+        rsu = copy.deepcopy(source_rsu)
+        source_spawn = rsu["spawn_position"]
+        rx_raw, ry_raw, _ = _source_xyz(source_spawn, f"RSU{index} spawn")
+        rx, ry, rz = convert_coords(
+            rx_raw,
+            ry_raw,
+            offset_x,
+            offset_y,
+            carla_map=carla_map,
+            is_spawn=True,
+        )
+        effective_spawn = [rx, ry, rz, 0, 0, 0]
+        _record_config_override(
+            overrides,
+            f"scenario.rsu_list[{index - 1}].spawn_position",
+            source_spawn,
+            effective_spawn,
+            "convert editor coordinates and snap the RSU to the CARLA road",
+        )
+        rsu["spawn_position"] = effective_spawn
+        rsu_list.append(rsu)
 
-    if rsu_list:
-        scenario_section["scenario"]["rsu_list"] = rsu_list
+    pedestrian_list = []
+    for raw_pedestrian in _raw_group_items(json_data, "pedestrian"):
+        px, py, pz = convert_coords(
+            raw_pedestrian["x"],
+            raw_pedestrian["y"],
+            offset_x,
+            offset_y,
+            carla_map=carla_map,
+            is_spawn=True,
+        )
+        pedestrian_list.append({
+            "spawn": [px, py, pz],
+            "speed": raw_pedestrian.get("speed", 1.4),
+            "cross_factor": raw_pedestrian.get("cross_factor", 0.0),
+            "is_invincible": raw_pedestrian.get("is_invincible", True),
+        })
 
-    return scenario_section, pedestrian_list
+    source_scenario["name"] = json_data.get("scenario_name", "scenario")
+    source_scenario["map"] = map_name
+    source_scenario["single_cav_list"] = cav_list
+    if source_rsus or "rsu_list" in source_scenario:
+        source_scenario["rsu_list"] = rsu_list
+
+    return (
+        {"scenario": source_scenario},
+        pedestrian_list,
+        overrides,
+    )

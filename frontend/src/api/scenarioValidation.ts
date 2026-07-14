@@ -160,6 +160,12 @@ export function validateStartSimulationPayload(
   if (!map) {
     return { ok: false, message: 'Map is required to start simulation.' };
   }
+  if (!payload.opencda_config_yaml?.trim()) {
+    return {
+      ok: false,
+      message: 'OpenCDA YAML is required to start simulation.',
+    };
+  }
 
   const groups = payload.scenario ?? [];
   const cars = groups.filter((g) => g.vehicle === 'car');

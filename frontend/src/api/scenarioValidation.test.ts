@@ -41,6 +41,7 @@ describe('scenarioValidation', () => {
       scenario_name: 'S',
       weather: 'ClearNoon',
       description: '',
+      opencda_config_yaml: 'world: {}',
       scenario: [],
     });
     expect(result.ok).toBe(false);

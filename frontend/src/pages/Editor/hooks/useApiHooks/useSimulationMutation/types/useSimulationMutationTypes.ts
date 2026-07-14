@@ -7,6 +7,7 @@ export interface StartSimulationPayload {
   weather: string;
   scenario: ScenarioGroup[];
   description: string;
+  opencda_config_yaml: string;
   map: string;
   xodr?: string | undefined;
   max_ticks?: number;
