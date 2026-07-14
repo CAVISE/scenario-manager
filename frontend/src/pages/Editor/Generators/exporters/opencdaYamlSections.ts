@@ -1,5 +1,5 @@
 import type { SimulationConfig } from '../types/configGeneratorsTypes';
-import type { Car } from '../../../../store/types/useEditorStoreTypes';
+import type { Car, Lidar } from '../../../../store/types/useEditorStoreTypes';
 
 const OMEGA_DT = '${world.fixed_delta_seconds}';
 
@@ -153,37 +153,48 @@ export function pushCavSensingOverride(
   lines: string[],
   car: Car,
   indent: string,
+  lidar?: Lidar,
 ): void {
   const s = car.opencda_sensing;
-  if (!s) return;
+  if (!s && !lidar) return;
   lines.push(`${indent}sensing:`);
   lines.push(`${indent}  perception:`);
-  if (s.perception_activate != null) {
+  if (s?.perception_activate != null) {
     lines.push(`${indent}    activate: ${s.perception_activate}`);
+  } else if (lidar) {
+    lines.push(`${indent}    activate: true`);
   }
-  if (s.camera_visualize != null || s.camera_num != null) {
+  if (s?.camera_visualize != null || s?.camera_num != null) {
     lines.push(`${indent}    camera:`);
-    if (s.camera_visualize != null) {
+    if (s?.camera_visualize != null) {
       lines.push(`${indent}      visualize: ${s.camera_visualize}`);
     }
-    if (s.camera_num != null) {
+    if (s?.camera_num != null) {
       lines.push(`${indent}      num: ${s.camera_num}`);
     }
   }
   if (
-    s.lidar_visualize != null ||
-    s.lidar_channels != null ||
-    s.lidar_range != null
+    s?.lidar_visualize != null ||
+    s?.lidar_channels != null ||
+    s?.lidar_range != null ||
+    lidar != null
   ) {
     lines.push(`${indent}    lidar:`);
-    if (s.lidar_visualize != null) {
+    if (s?.lidar_visualize != null) {
       lines.push(`${indent}      visualize: ${s.lidar_visualize}`);
     }
-    if (s.lidar_channels != null) {
-      lines.push(`${indent}      channels: ${s.lidar_channels}`);
+    const channels = s?.lidar_channels ?? lidar?.channels;
+    if (channels != null) {
+      lines.push(`${indent}      channels: ${channels}`);
     }
-    if (s.lidar_range != null) {
-      lines.push(`${indent}      range: ${s.lidar_range}`);
+    const range = s?.lidar_range ?? lidar?.range;
+    if (range != null) {
+      lines.push(`${indent}      range: ${range}`);
+    }
+    if (lidar?.rotation_frequency != null) {
+      lines.push(
+        `${indent}      rotation_frequency: ${lidar.rotation_frequency}`,
+      );
     }
   }
 }

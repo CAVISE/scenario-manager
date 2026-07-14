@@ -63,7 +63,7 @@ export default function OpenCDATab() {
         </Typography>
         <Stack spacing={1.5}>
           <FormControl size="small" fullWidth>
-            <FormLabel>YAML layout</FormLabel>
+            <FormLabel>Configuration profile</FormLabel>
             <Select
               value={oc.export_profile}
               onChange={(e) =>
@@ -72,12 +72,8 @@ export default function OpenCDATab() {
                 })
               }
             >
-              <MenuItem value="standard">
-                Standard (full world + vehicle_base)
-              </MenuItem>
-              <MenuItem value="aim_check">
-                AIM check (aim_check.yaml layout)
-              </MenuItem>
+              <MenuItem value="standard">Standard</MenuItem>
+              <MenuItem value="aim_check">AIM check</MenuItem>
             </Select>
           </FormControl>
           <Button
@@ -187,19 +183,6 @@ export default function OpenCDATab() {
       <Typography variant="subtitle2" color="text.secondary">
         Export / defaults
       </Typography>
-      <FormControlLabel
-        control={
-          <Switch
-            checked={oc.export_full_vehicle_base}
-            onChange={(e) =>
-              updateSimConfigOpenCDA({
-                export_full_vehicle_base: e.target.checked,
-              })
-            }
-          />
-        }
-        label="Export map_manager, safety_manager, controller, v2x in vehicle_base"
-      />
       <Stack direction="row" spacing={2}>
         <FormControlLabel
           control={
