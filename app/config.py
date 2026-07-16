@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     db_name: str
     db_user: str
     db_password: str
-    db_host: Literal["db"]
+    db_host: str
     db_port: int
     db_encoding: str
 
