@@ -138,13 +138,24 @@ def _destination_distance(cav) -> float | None:
 def _log_cav_forensic(tick_count: int, cav, control=None, note: str = "") -> None:
     gt_transform = cav.vehicle.get_transform()
     gt_loc = gt_transform.location
-    gnss_transform = cav.localizer.get_ego_pos()
-    gnss_loc = gnss_transform.location if gnss_transform is not None else None
+    estimated_transform = cav.localizer.get_estimated_ego_pos()
+    estimated_loc = (
+        estimated_transform.location if estimated_transform is not None
+        else None
+    )
+    navigation_pose = getattr(cav, "navigation_pose", None)
+    navigation_loc = (
+        navigation_pose.location if navigation_pose is not None else None
+    )
+    transmitted_pose = getattr(cav, "transmitted_pose", None)
+    transmitted_loc = (
+        transmitted_pose.location if transmitted_pose is not None else None
+    )
 
-    if gnss_loc is not None:
-        dx = gnss_loc.x - gt_loc.x
-        dy = gnss_loc.y - gt_loc.y
-        dz = gnss_loc.z - gt_loc.z
+    if estimated_loc is not None:
+        dx = estimated_loc.x - gt_loc.x
+        dy = estimated_loc.y - gt_loc.y
+        dz = estimated_loc.z - gt_loc.z
         loc_err = (dx**2 + dy**2 + dz**2) ** 0.5
         loc_error_text = f"dx={dx:.2f} dy={dy:.2f} dz={dz:.2f} norm={loc_err:.2f}"
     else:
@@ -166,7 +177,8 @@ def _log_cav_forensic(tick_count: int, cav, control=None, note: str = "") -> Non
 
     log.debug(
         "[forensic] tick=%d cav=%d note=%s gt_pos=%s gt_yaw=%.2f "
-        "gnss_pos=%s loc_error=(%s) gt_speed=%.2f loc_speed=%.2f "
+        "estimated_pos=%s navigation_pos=%s transmitted_pos=%s "
+        "loc_error=(%s) gt_speed=%.2f loc_speed=%.2f "
         "control=(%s) dest_dist=%s safety_tick=%s hazards=%s "
         "rsu_nearby=%d rsu_ticks=%d/%d rsu_merged_total=%d",
         tick_count,
@@ -174,7 +186,9 @@ def _log_cav_forensic(tick_count: int, cav, control=None, note: str = "") -> Non
         note or "-",
         _fmt_loc(gt_loc),
         gt_transform.rotation.yaw,
-        _fmt_loc(gnss_loc),
+        _fmt_loc(estimated_loc),
+        _fmt_loc(navigation_loc),
+        _fmt_loc(transmitted_loc),
         loc_error_text,
         _speed_kmh(cav.vehicle),
         cav.localizer.get_ego_spd(),

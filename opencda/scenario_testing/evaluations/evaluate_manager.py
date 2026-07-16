@@ -194,18 +194,18 @@ class EvaluationManager(object):
         Plot three layers on one figure:
           - Red ×   : initial planned route waypoints
           - Green ─  : ground-truth physical path (what the vehicle actually did)
-          - Blue ·   : GNSS-reported path (what the vehicle *thought* it was doing)
+          - Blue: position transmitted by the vehicle over V2X
 
         When gt_route_transforms is None (no attack / legacy call) only the
         first two layers are drawn and the title stays generic.
         """
         fig, ax = plt.subplots(figsize=(10, 7))
 
-        # --- GNSS-reported (noisy) path ---
+        # --- V2X-transmitted path ---
         real_x = [t.location.x for t in real_route_transforms]
         real_y = [t.location.y for t in real_route_transforms]
         ax.scatter(real_y, real_x, marker='o', s=8, alpha=0.5,
-                   color='steelblue', label='GNSS-reported position (spoofed)')
+                   color='steelblue', label='V2X-transmitted position')
 
         # --- planned route ---
         plan_x = [t.location.x for t in planned_route_transforms]
@@ -219,8 +219,8 @@ class EvaluationManager(object):
             gt_y = [t.location.y for t in gt_route_transforms]
             ax.plot(gt_y, gt_x, color='green', linewidth=1.5, alpha=0.85,
                     label='Actual physical path (ground truth)')
-            title = ('Route Comparison Under GNSS Spoofing Attack\n'
-                     'Green = actual path  |  Blue = spoofed GNSS report  |  Red = planned')
+            title = ('Route and V2X Position Comparison\n'
+                     'Green = actual | Blue = transmitted | Red = planned')
         else:
             title = 'Actual Route / Initial Planned Route'
 
@@ -257,20 +257,25 @@ class EvaluationManager(object):
     def _planning_eval_single(self, vm, log_file):
         """Run planning evaluation for a single vehicle manager."""
         planned_route = vm.agent.initial_global_route
-        gnss_route = vm.v2x_manager.ego_dynamic_trace
+        transmitted_route = vm.v2x_manager.transmitted_dynamic_trace
         gt_route = list(vm.gt_dynamic_trace) if hasattr(vm, 'gt_dynamic_trace') else []
         if not planned_route:
             lprint(log_file, f"WARNING: initial_global_route is None for CAV {vm.vehicle.id}, skipping.")
             return
-        if not gnss_route:
-            lprint(log_file, f"WARNING: ego_dynamic_trace is empty for CAV {vm.vehicle.id}, skipping.")
+        if not transmitted_route:
+            lprint(
+                log_file,
+                f"WARNING: transmitted_dynamic_trace is empty for "
+                f"CAV {vm.vehicle.id}, skipping.",
+            )
             return
         planned_dist = self.calculate_route_dist(planned_route)
-        # Real distance must be physical ground-truth distance. The V2X trace
-        # intentionally carries GNSS/spoofed ego_pos and can explode under an
-        # attack; keep it only as a separate diagnostic.
-        real_dist = self.calculate_route_dist(gt_route) if gt_route else self.calculate_route_dist(gnss_route)
-        gnss_dist = self.calculate_route_dist(gnss_route)
+        # Real distance must be physical ground-truth distance. The transmitted
+        # trace can carry an attacked estimate, so keep it diagnostic-only.
+        real_dist = self.calculate_route_dist(
+            gt_route) if gt_route else self.calculate_route_dist(
+                transmitted_route)
+        transmitted_dist = self.calculate_route_dist(transmitted_route)
         elapsed_s = self.cav_world.global_clock * self.fixed_delta_seconds
         actor_id = vm.vehicle.id
         lprint(log_file, "***********Planning Evaluation Module***********")
@@ -278,7 +283,10 @@ class EvaluationManager(object):
         lprint(log_file, f"Planned distance: {planned_dist}")
         lprint(log_file, f"Real distance: {real_dist}")
         if gt_route:
-            lprint(log_file, f"GNSS-reported distance: {gnss_dist}")
+            lprint(
+                log_file,
+                f"V2X-transmitted distance: {transmitted_dist}",
+            )
         lprint(log_file, f"Cav world ticks elapsed: {self.cav_world.global_clock}")
         lprint(log_file, f"Cav World time in seconds: {elapsed_s}")
         if gt_route:
@@ -288,14 +296,14 @@ class EvaluationManager(object):
             lprint(log_file, "Success or not: ", "Yes" if dist_to_dest < self.dest_reach_threshold else "No")
         else:
             lprint(log_file, "Success or not: UNKNOWN (no gt_dynamic_trace on this vm)")
-        timestamps = list(map(lambda e: e[2], gnss_route))
+        timestamps = list(map(lambda e: e[2], transmitted_route))
         imu_data = list(vm.safety_manager.imu_sensor.imu_data)
         safety_data = list(vm.safety_manager.status_queue)
 
         n = min(len(timestamps), len(imu_data))
         timestamps = timestamps[:n]
         imu_data = imu_data[:n]
-        real_route_trimmed = list(gnss_route)[:n]
+        real_route_trimmed = list(transmitted_route)[:n]
 
         skip = min(self.skip_head, max(10, len(timestamps) // 10))
 

@@ -207,6 +207,21 @@ export default function OpenCDATab() {
           }
           sx={{ maxWidth: 140 }}
         />
+        <FormControl size="small" sx={{ minWidth: 190 }}>
+          <FormLabel>V2X position source</FormLabel>
+          <Select
+            value={oc.v2x_position_source}
+            onChange={(e) =>
+              updateSimConfigOpenCDA({
+                v2x_position_source: e.target.value as
+                  'estimated' | 'ground_truth',
+              })
+            }
+          >
+            <MenuItem value="estimated">Estimated</MenuItem>
+            <MenuItem value="ground_truth">Ground truth</MenuItem>
+          </Select>
+        </FormControl>
       </Stack>
 
       <Divider />
@@ -596,6 +611,21 @@ export default function OpenCDATab() {
           }
           label="Localization"
         />
+        <FormControl size="small" sx={{ minWidth: 190 }}>
+          <FormLabel>Navigation position</FormLabel>
+          <Select
+            value={oc.localization_navigation_source}
+            onChange={(e) =>
+              updateSimConfigOpenCDA({
+                localization_navigation_source: e.target.value as
+                  'estimated' | 'ground_truth',
+              })
+            }
+          >
+            <MenuItem value="estimated">Estimated</MenuItem>
+            <MenuItem value="ground_truth">Ground truth</MenuItem>
+          </Select>
+        </FormControl>
         <FormControlLabel
           control={
             <Switch

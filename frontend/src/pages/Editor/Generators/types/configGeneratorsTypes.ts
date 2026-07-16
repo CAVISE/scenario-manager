@@ -266,6 +266,7 @@ export type SimulationConfig = {
     vehicle_cam_num: number;
     perception_activate: boolean;
     localization_activate: boolean;
+    localization_navigation_source: 'estimated' | 'ground_truth';
     enable_background_traffic: boolean;
     global_speed_perc: number;
     auto_lane_change: boolean;
@@ -288,6 +289,7 @@ export type SimulationConfig = {
     vehicle_base_color?: [number, number, number];
     v2x_enabled: boolean;
     v2x_communication_range: number;
+    v2x_position_source: 'estimated' | 'ground_truth';
     export_profile: 'standard' | 'aim_check';
     export_attacks: boolean;
     export_platoon_base: boolean;
@@ -430,6 +432,7 @@ export const defaultSimConfig: SimulationConfig = {
     vehicle_cam_num: 1,
     perception_activate: false,
     localization_activate: true,
+    localization_navigation_source: 'estimated',
     enable_background_traffic: false,
     global_speed_perc: -100,
     auto_lane_change: false,
@@ -473,6 +476,7 @@ export const defaultSimConfig: SimulationConfig = {
     vehicle_base_color: undefined,
     v2x_enabled: true,
     v2x_communication_range: 35,
+    v2x_position_source: 'estimated',
     export_profile: 'standard',
     export_attacks: true,
     export_platoon_base: false,

@@ -94,6 +94,12 @@ class VehicleManager(object):
         behavior_config = config_yaml['behavior']
         control_config = config_yaml['controller']
         v2x_config = config_yaml['v2x']
+        localization_config = sensing_config['localization']
+
+        self.navigation_source = localization_config.get(
+            'navigation_source', 'ground_truth')
+        self.v2x_position_source = v2x_config.get(
+            'position_source', 'estimated')
 
         # v2x module
         self.v2x_manager = V2XManager(cav_world, v2x_config, self.vid)
@@ -138,11 +144,14 @@ class VehicleManager(object):
 
         cav_world.update_vehicle_manager(self)
 
-        # Ground-truth position trace recorded in update_info() alongside the
-        # noisy ego_dynamic_trace in v2x_manager. Used by evaluate_manager to
-        # overlay actual physical path on the GNSS-reported path plot.
+        # Ground-truth position trace recorded alongside the V2X-transmitted
+        # trace so evaluation can compare physical and reported movement.
         from collections import deque as _deque
         self.gt_dynamic_trace = _deque()
+        self.ground_truth_pose = None
+        self.estimated_pose = None
+        self.navigation_pose = None
+        self.transmitted_pose = None
 
         # RSU cooperative-perception participation stats, dumped to log.txt
         # by evaluate_manager. Lets us tell "RSU had nothing to add" apart
@@ -190,29 +199,40 @@ class VehicleManager(object):
         """
         self.localizer.localize()
 
-        # ego_pos: may be GNSS-noisy when localization.activate=True (attack).
-        # Used ONLY for localization error metrics and V2X sharing — anything
-        # that models a physical sensor or a real hazard check must use
-        # nav_pos instead (see below).
-        ego_pos = self.localizer.get_ego_pos()
-        ego_spd = self.localizer.get_ego_spd()
+        # Estimated pose comes from the GNSS/IMU/KF localization stack.
+        self.estimated_pose = self.localizer.get_estimated_ego_pos()
+        estimated_spd = self.localizer.get_estimated_ego_spd()
 
-        # nav_pos: always ground-truth from CARLA.
-        nav_pos = self.localizer.get_true_ego_pos()
-        nav_spd = self.localizer.get_true_ego_spd()
+        # Ground truth is reserved for simulator physics and evaluation.
+        self.ground_truth_pose = self.localizer.get_true_ego_pos()
+        ground_truth_spd = self.localizer.get_true_ego_spd()
+
+        if self.navigation_source == 'estimated':
+            self.navigation_pose = self.estimated_pose
+            navigation_spd = estimated_spd
+        else:
+            self.navigation_pose = self.ground_truth_pose
+            navigation_spd = ground_truth_spd
+
+        if self.v2x_position_source == 'ground_truth':
+            self.transmitted_pose = self.ground_truth_pose
+            transmitted_spd = ground_truth_spd
+        else:
+            self.transmitted_pose = self.estimated_pose
+            transmitted_spd = estimated_spd
 
         # object detection: physical lidar/camera see the world from where
         # the vehicle actually is, not from its (possibly spoofed) GNSS fix.
-        objects = self.perception_manager.detect(nav_pos)
+        objects = self.perception_manager.detect(self.ground_truth_pose)
 
         # map/BEV rendering feeds OffRoadDetector's hazard check (sensors.py
         # reads map_manager.static_bev) — that check must be ground-truth,
         # not "is the spoofed point on-road".
-        self.map_manager.update_information(nav_pos)
+        self.map_manager.update_information(self.ground_truth_pose)
 
         safety_input = {
-            'ego_pos': nav_pos,
-            'ego_speed': nav_spd,
+            'ego_pos': self.ground_truth_pose,
+            'ego_speed': ground_truth_spd,
             'objects': objects,
             'carla_map': self.carla_map,
             'world': self.vehicle.get_world(),
@@ -221,21 +241,24 @@ class VehicleManager(object):
         }
         self.safety_manager.update_info(safety_input)
 
-        # V2X: share noisy ego_pos so other CAVs receive falsified position
-        # (this is the observable effect of the spoofing attack on the fleet).
-        # true_pos=nav_pos is passed separately so search() can gate RSU/CAV
-        # range on real distance instead of the (possibly spoofed) ego_pos.
-        self.v2x_manager.update_info(ego_pos, ego_spd, nav_pos)
+        # Communication reachability still depends on physical distance.
+        self.v2x_manager.update_info(
+            self.transmitted_pose,
+            transmitted_spd,
+            self.ground_truth_pose,
+        )
 
-        self.gt_dynamic_trace.append(nav_pos)
+        self.gt_dynamic_trace.append(self.ground_truth_pose)
 
         self.rsu_merge_stats['ticks_total'] += 1
         if self.v2x_manager.rsu_nearby:
             self.rsu_merge_stats['ticks_rsu_in_range'] += 1
         objects = self._merge_rsu_perception(objects)
 
-        self.agent.update_information(nav_pos, nav_spd, objects)
-        self.controller.update_info(nav_pos, nav_spd)
+        self.agent.update_information(
+            self.navigation_pose, navigation_spd, objects)
+        self.controller.update_info(
+            self.navigation_pose, navigation_spd)
 
     def _merge_rsu_perception(self, objects: dict) -> dict:
         """

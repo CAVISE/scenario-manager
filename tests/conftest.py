@@ -152,6 +152,7 @@ def make_open_cda_config(cav_count=1, rsu_count=0, attacks=None):
   }
   localization = {
     "activate": True,
+    "navigation_source": "estimated",
     "dt": "${world.fixed_delta_seconds}",
     "gnss": {
       "noise_alt_stddev": 0.001,
@@ -262,7 +263,11 @@ def make_open_cda_config(cav_count=1, rsu_count=0, attacks=None):
           "max_steering": 0.45,
         },
       },
-      "v2x": {"enabled": True, "communication_range": 35},
+      "v2x": {
+        "enabled": True,
+        "communication_range": 35,
+        "position_source": "estimated",
+      },
     },
     "rsu_base": {
       "sensing": {"perception": perception, "localization": localization},
