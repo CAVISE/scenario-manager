@@ -315,6 +315,15 @@ def _validate_complete_config(config: dict[str, Any]) -> None:
             )
 
     traffic = config["carla_traffic_manager"]
+    traffic_port = traffic["port"]
+    if (
+        not isinstance(traffic_port, int)
+        or isinstance(traffic_port, bool)
+        or not 1 <= traffic_port <= 65535
+    ):
+        raise OpenCDAConfigError(
+            "carla_traffic_manager.port must be an integer between 1 and 65535"
+        )
     if traffic["vehicle_list"] is not None and not isinstance(
         traffic["vehicle_list"], list
     ):
@@ -455,6 +464,13 @@ def apply_environment_overrides(
         "world.client_port",
         settings.carla_port,
         "use the backend CARLA port",
+        overrides,
+    )
+    _set_override(
+        config,
+        "carla_traffic_manager.port",
+        settings.carla_traffic_manager_port,
+        "use the backend traffic manager port and avoid service port conflicts",
         overrides,
     )
     _set_override(
