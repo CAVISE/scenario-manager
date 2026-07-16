@@ -39,8 +39,6 @@ export function scenarioToStoredJson(
   return { scenario_text: scenarioGroupsFromPayload(scenario) };
 }
 
-const MAX_PREVIEW_CHARS = 500_000;
-
 export function toUploadScenarioBody(
   payload: ScenarioPayload,
   scenarioIdInput = '',
@@ -51,16 +49,12 @@ export function toUploadScenarioBody(
   }
 
   const name = payload.name_of_scenario?.trim() ?? '';
-  const preview =
-    payload.preview && payload.preview.length <= MAX_PREVIEW_CHARS
-      ? payload.preview
-      : undefined;
   return {
     scenario_id:
       scenarioIdInput.trim() || payload.scenario_id?.trim() || undefined,
     name_of_scenario: name,
     description: payload.description ?? undefined,
-    preview,
+    preview: payload.preview ?? undefined,
     file_: payload.file_ ?? undefined,
     scenario: scenarioToStoredJson(payload.scenario),
   };
@@ -80,7 +74,10 @@ export function toUpdateScenarioBody(
     scenario_name: payload.name_of_scenario ?? undefined,
     annotation: payload.description ?? undefined,
     preview: payload.preview ?? undefined,
-    ...(groups.length > 0 ? { scenario: scenarioToStoredJson(groups) } : {}),
+    file_: payload.file_ ?? undefined,
+    ...(payload.scenario !== undefined
+      ? { scenario: scenarioToStoredJson(groups) }
+      : {}),
   };
 }
 
