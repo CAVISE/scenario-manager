@@ -31,7 +31,12 @@ import {
 import { StartSimulationPayload } from '../../../../../../Editor/hooks/useApiHooks/useSimulationMutation/types/useSimulationMutationTypes';
 import { getApiErrorMessage } from '../../../../../../../api/errors';
 import { LoadScenarioOptions } from '../types/scenario.load.handlerTypes';
-import { fetchXodrText } from '../../../../../../Editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
+import {
+  fetchXodrText,
+  isOpenDrive,
+  resolveXodrTextForSimulation,
+  setStoredXodrName,
+} from '../../../../../../Editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
 import { buildOpenCDAArtifact } from '../../../../../../Editor/Generators/configGenerators';
 
 export const handleLoad = async ({
@@ -62,8 +67,8 @@ export const handleLoad = async ({
     });
     const xodr = data.file_ ?? (data.scenario as unknown as Scenario)?.file_;
     if (xodr) {
-      const xodrText = await fetchXodrText(xodr);
-      localStorage.setItem('cached_xodr', xodr);
+      const xodrText = isOpenDrive(xodr) ? xodr : await fetchXodrText(xodr);
+      if (!isOpenDrive(xodr)) setStoredXodrName(xodr);
       loadFile(xodrText, true);
     }
     const rawScenario = data.scenario as unknown as {
@@ -328,6 +333,8 @@ export const handleRunSimulation = async (
 ) => {
   const state = useEditorStore.getState();
   const scenario = state.Scenario;
+  const map = state.simConfig?.carla?.map || 'Town10HD';
+  const xodr = await resolveXodrTextForSimulation(map);
 
   const payload: StartSimulationPayload = {
     scenario_id: scenario.id || scenarioIdInput.trim() || '',
@@ -336,8 +343,8 @@ export const handleRunSimulation = async (
     scenario: buildScenarioPayload().scenario as ApiScenarioGroup[],
     description: scenario.description || '',
     opencda_config_yaml: buildOpenCDAArtifact(state),
-    map: useEditorStore.getState().simConfig?.carla?.map || 'Town10HD',
-    xodr: localStorage.getItem('cached_xodr') || undefined,
+    map,
+    xodr,
     max_ticks: useEditorStore.getState().simConfig?.max_ticks ?? 2000,
     map_offsets: mapOffsets,
     attacks: useEditorStore.getState().simConfig?.attacks ?? [],

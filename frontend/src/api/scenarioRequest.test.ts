@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   scenarioGroupsFromPayload,
+  toUpdateScenarioBody,
   toUploadScenarioBody,
 } from './scenarioRequest';
 import type { ScenarioPayload } from './types/IScenarioTypes';
@@ -51,5 +52,25 @@ describe('toUploadScenarioBody', () => {
     });
     expect(groups).toHaveLength(1);
     expect(groups[0]?.vehicle).toBe('RSU');
+  });
+});
+
+describe('toUpdateScenarioBody', () => {
+  it('includes OpenDRIVE content and allows clearing scenario groups', () => {
+    const file = '<OpenDRIVE></OpenDRIVE>';
+    expect(
+      toUpdateScenarioBody({
+        scenario_id: 'sc-1',
+        file_: file,
+        scenario: [],
+      }),
+    ).toEqual({
+      scenario_id: 'sc-1',
+      scenario_name: undefined,
+      annotation: undefined,
+      preview: undefined,
+      file_: file,
+      scenario: { scenario_text: [] },
+    });
   });
 });

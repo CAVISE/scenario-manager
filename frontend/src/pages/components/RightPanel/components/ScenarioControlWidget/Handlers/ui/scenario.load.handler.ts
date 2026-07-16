@@ -11,6 +11,7 @@ import {
   Point,
   RSU,
 } from '../../../../../../../store/types/useEditorStoreTypes';
+import { getCachedXodrContent } from '../../../../../../Editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
 
 export function buildScenarioPayload(): ScenarioPayload {
   const s = useEditorStore.getState();
@@ -26,7 +27,7 @@ export function buildScenarioPayload(): ScenarioPayload {
     id: s.Scenario?.id || null,
     name_of_scenario: s.Scenario?.name || null,
     preview: canvas?.toDataURL('image/png') ?? null,
-    file_: localStorage.getItem('cached_xodr') ?? null,
+    file_: getCachedXodrContent(),
     scenario: (
       [
         {

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  getCachedXodrContent,
   setStoredXodrName,
   getStoredXodrName,
   fetchXodrText,
@@ -51,7 +52,7 @@ describe('setStoredXodrName', () => {
     const result = setStoredXodrName('Town10HD');
     expect(result).toBe('Town10HD.xodr');
     expect(localStorageMock.setItem).toHaveBeenCalledWith(
-      'cached_xodr',
+      'cached_xodr_name',
       'Town10HD.xodr',
     );
   });
@@ -60,7 +61,7 @@ describe('setStoredXodrName', () => {
     const result = setStoredXodrName('Town03.xodr');
     expect(result).toBe('Town03.xodr');
     expect(localStorageMock.setItem).toHaveBeenCalledWith(
-      'cached_xodr',
+      'cached_xodr_name',
       'Town03.xodr',
     );
   });
@@ -97,7 +98,19 @@ describe('getStoredXodrName', () => {
 
   it('ignores stored raw XML and uses fallback', () => {
     localStorageMock.setItem('cached_xodr', '<OpenDRIVE>\n</OpenDRIVE>');
-    expect(getStoredXodrName('Town01')).toBe('data.xodr');
+    expect(getStoredXodrName('Town01')).toBe('Town01.xodr');
+  });
+});
+
+describe('getCachedXodrContent', () => {
+  it('returns full OpenDRIVE content from cached_xodr', () => {
+    localStorageMock.setItem('cached_xodr', VALID_OPENDRIVE);
+    expect(getCachedXodrContent()).toBe(VALID_OPENDRIVE);
+  });
+
+  it('reads content stored by the transitional implementation', () => {
+    localStorageMock.setItem('cached_xodr_content', VALID_OPENDRIVE);
+    expect(getCachedXodrContent()).toBe(VALID_OPENDRIVE);
   });
 });
 
