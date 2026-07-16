@@ -1,6 +1,3 @@
-import pytest
-from pydantic import ValidationError
-
 from app.config import Settings
 
 
@@ -27,6 +24,6 @@ def test_settings_accept_docker_database_and_carla_timeout():
     assert settings.carla_timeout_seconds == 60
 
 
-def test_settings_reject_external_database_host():
-    with pytest.raises(ValidationError):
-        Settings(**settings_values(db_host="external.example.com"))
+def test_settings_accepts_configured_database_host():
+    settings = Settings(**settings_values(db_host="external.example.com"))
+    assert settings.db_host == "external.example.com"

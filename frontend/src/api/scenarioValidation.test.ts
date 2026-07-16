@@ -6,12 +6,14 @@ import {
 } from './scenarioValidation';
 import type { ScenarioPayload } from './types/IScenarioTypes';
 
+const OPENDRIVE = '<?xml version="1.0"?>\n<OpenDRIVE></OpenDRIVE>';
+
 const basePayload = (): ScenarioPayload => ({
   scenario_id: 'sc-1',
   name_of_scenario: 'Test scenario',
   description: null,
   preview: null,
-  file_: 'Town10HD.xodr',
+  file_: OPENDRIVE,
   scenario: [
     {
       vehicle: 'car',
@@ -31,6 +33,11 @@ describe('scenarioValidation', () => {
 
   it('rejects upload without name', () => {
     const payload = { ...basePayload(), name_of_scenario: '  ' };
+    expect(validateUploadPayload(payload).ok).toBe(false);
+  });
+
+  it('rejects a file name instead of OpenDRIVE content', () => {
+    const payload = { ...basePayload(), file_: 'Town10HD.xodr' };
     expect(validateUploadPayload(payload).ok).toBe(false);
   });
 

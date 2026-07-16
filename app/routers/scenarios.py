@@ -136,6 +136,8 @@ def update_scenario(body: UpdateScenarioRequest, session: DatabaseSession):
         row.preview = body.preview
     if body.annotation is not None:
         row.annotation = body.annotation
+    if body.file_ is not None:
+        row.file_ = body.file_
     session.commit()
 
     return ScenarioMutationResponse(

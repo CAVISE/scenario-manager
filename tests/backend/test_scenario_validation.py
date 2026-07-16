@@ -1,7 +1,11 @@
 import pytest
 from pydantic import ValidationError
 
-from app.schemas import DeleteScenarioRequest, StartSimulationRequest, UploadScenarioRequest
+from app.schemas import (
+    DeleteScenarioRequest,
+    StartSimulationRequest,
+    UploadScenarioRequest,
+)
 
 
 def test_upload_rejects_empty_name():
@@ -17,12 +21,17 @@ def test_upload_rejects_invalid_scenario_id():
         )
 
 
-def test_upload_rejects_opendrive_in_file_ref():
+def test_upload_accepts_opendrive_in_file_field():
+    body = UploadScenarioRequest(
+        name_of_scenario="Test",
+        file_="<?xml version='1.0'?><OpenDRIVE></OpenDRIVE>",
+    )
+    assert body.file_.startswith("<?xml")
+
+
+def test_upload_rejects_file_name_in_file_field():
     with pytest.raises(ValidationError):
-        UploadScenarioRequest(
-            name_of_scenario="Test",
-            file_="<?xml version='1.0'?><OpenDRIVE></OpenDRIVE>",
-        )
+        UploadScenarioRequest(name_of_scenario="Test", file_="Town10HD.xodr")
 
 
 def test_upload_rejects_invalid_vehicle_type():
