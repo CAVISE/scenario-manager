@@ -75,6 +75,8 @@ describe('buildOpenCDAArtifact', () => {
     expect(yaml).toContain('  port: 8001');
     expect(yaml).toContain('traffic_manager:');
     expect(yaml).toContain('    max_speed: 45');
+    expect(yaml).toContain('      debug: true');
+    expect(yaml).toContain('      debug_trajectory: true');
     expect(yaml).toContain('      activate: true');
     expect(yaml).toContain('  vehicle_list: []');
     expect(yaml).toContain('  range: []');

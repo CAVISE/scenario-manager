@@ -457,8 +457,8 @@ export const defaultSimConfig: SimulationConfig = {
       waypoint_update_freq: 9,
       min_dist: 3,
       trajectory_dt: 0.2,
-      debug: false,
-      debug_trajectory: false,
+      debug: true,
+      debug_trajectory: true,
     },
     gnss_noise: {
       alt_stddev: 0.001,
