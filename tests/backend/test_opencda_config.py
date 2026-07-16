@@ -44,6 +44,34 @@ def test_parser_rejects_incomplete_config(open_cda_config_factory):
         parse_open_cda_yaml(yaml.safe_dump(config, sort_keys=False))
 
 
+@pytest.mark.parametrize(
+    ("path", "message"),
+    [
+        (
+            ("vehicle_base", "sensing", "localization", "navigation_source"),
+            "navigation_source",
+        ),
+        (
+            ("vehicle_base", "v2x", "position_source"),
+            "position_source",
+        ),
+    ],
+)
+def test_parser_rejects_invalid_position_sources(
+    open_cda_config_factory,
+    path,
+    message,
+):
+    config = open_cda_config_factory()
+    target = config
+    for key in path[:-1]:
+        target = target[key]
+    target[path[-1]] = "invalid"
+
+    with pytest.raises(OpenCDAConfigError, match=message):
+        parse_open_cda_yaml(yaml.safe_dump(config, sort_keys=False))
+
+
 def test_parser_rejects_unsafe_yaml():
     with pytest.raises(OpenCDAConfigError, match="Invalid OpenCDA YAML"):
         parse_open_cda_yaml("!!python/object/apply:os.system ['echo unsafe']")

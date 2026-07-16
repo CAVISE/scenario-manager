@@ -72,13 +72,15 @@ class V2XManager(object):
         # ego position buffer. use deque so we can simulate lagging
         self.ego_pos = deque(maxlen=100)
         self.ego_spd = deque(maxlen=100)
+        self.transmitted_pose = None
         # True (ground-truth) ego position, used only for range/reachability
         # checks in search(). Whether a real RSU/CAV radio is in range
         # depends on true physical distance, not on what this vehicle's own
         # (possibly GNSS-spoofed) receiver believes its position is.
         self.true_pos = None
-        # ego position and ego speed recorded for evaluate planning algorithm
-        self.ego_dynamic_trace = deque()
+        # Position actually broadcast over V2X, recorded for evaluation.
+        self.transmitted_dynamic_trace = deque()
+        self.ego_dynamic_trace = self.transmitted_dynamic_trace
         # used to exclude the cav self during searching
         self.vid = vid
 
@@ -107,11 +109,13 @@ class V2XManager(object):
             Defaults to ego_pos for callers that don't track a separate
             ground truth (e.g. RSUs, which are never GNSS-spoofed anyway).
         """
+        self.transmitted_pose = ego_pos
         self.ego_pos.append(ego_pos)
         self.ego_spd.append(ego_spd)
         self.true_pos = true_pos if true_pos is not None else ego_pos
         # used for planning
-        self.ego_dynamic_trace.append((ego_pos, ego_spd, self.cav_world.global_clock))
+        self.transmitted_dynamic_trace.append(
+            (ego_pos, ego_spd, self.cav_world.global_clock))
         # evaluation
         self.search()
 

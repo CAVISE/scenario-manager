@@ -351,26 +351,30 @@ class LocalizationManager(object):
 
     def get_ego_pos(self):
         """
-        Retrieve ego vehicle position (may be GNSS-noisy when activate=True).
-        Used for localization error metrics only.
+        Retrieve the estimated ego pose produced by localization.
+
+        Kept as the legacy accessor for callers that have not migrated to
+        get_estimated_ego_pos().
         """
+        return self._ego_pos
+
+    def get_estimated_ego_pos(self):
+        """Retrieve the GNSS/IMU/KF estimate of the ego pose."""
         return self._ego_pos
 
     def get_true_ego_pos(self):
         """
         Retrieve ground-truth ego vehicle position directly from CARLA.
         Always accurate regardless of localization.activate setting.
-        Used by the behavior agent for navigation so that GNSS spoofing
-        disrupts reported position metrics without breaking vehicle movement.
+        Used for simulator physics, safety checks and evaluation. Navigation
+        may select this pose explicitly through configuration.
         """
         return self.vehicle.get_transform()
 
     def get_true_ego_spd(self):
         """
-        Ground-truth speed, mirrors get_true_ego_pos(). Speed and heading share
-        the same KF state as position — under large spoofing the fused speed
-        can diverge even though the raw speed measurement is fine. Controller
-        needs the real value, not the (possibly diverged) fused one.
+        Ground-truth speed mirrors get_true_ego_pos(). Navigation may select
+        this value explicitly through configuration.
         """
         return get_speed(self.vehicle)
 
@@ -378,6 +382,10 @@ class LocalizationManager(object):
         """
         Retrieve ego vehicle speed
         """
+        return self._speed
+
+    def get_estimated_ego_spd(self):
+        """Retrieve the speed estimate produced by localization."""
         return self._speed
 
     def destroy(self):
