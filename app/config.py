@@ -1,6 +1,5 @@
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal
 
 from dotenv import load_dotenv
 from pydantic import Field
@@ -41,6 +40,7 @@ class Settings(BaseSettings):
     @property
     def cors_origins_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",")]
+
 
 @lru_cache
 def get_settings() -> Settings:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import re
 from typing import Any
 
@@ -10,12 +11,12 @@ ALLOWED_VEHICLE_TYPES = frozenset({"car", "RSU", "building", "pedestrian"})
 MAX_SCENARIO_NAME_LEN = 200
 MAX_SCENARIO_ID_LEN = 128
 MAX_DESCRIPTION_LEN = 4000
-MAX_FILE_REF_LEN = 512
-MAX_PREVIEW_LEN = 500_000
+MAX_OPENDRIVE_LEN = 32_000_000
+MAX_PREVIEW_LEN = 10_000_000
 MAX_SCENARIO_GROUPS = 50
 MAX_PATH_ITEMS_PER_GROUP = 500
 
-OPENDRIVE_MARKERS = ("<OpenDRIVE", "<opendrive")
+OPENDRIVE_RE = re.compile(r"<\s*OpenDRIVE(?:\s|>)", re.IGNORECASE)
 
 
 def normalize_optional_str(value: Any) -> str | None:
@@ -32,7 +33,9 @@ def validate_scenario_id(value: Any, *, required: bool = False) -> str | None:
             raise ValueError("scenario_id is required")
         return None
     if len(normalized) > MAX_SCENARIO_ID_LEN:
-        raise ValueError(f"scenario_id must be at most {MAX_SCENARIO_ID_LEN} characters")
+        raise ValueError(
+            f"scenario_id must be at most {MAX_SCENARIO_ID_LEN} characters"
+        )
     if not SCENARIO_ID_RE.match(normalized):
         raise ValueError(
             "scenario_id must start with a letter or digit and contain only "
@@ -64,17 +67,18 @@ def validate_optional_text(
     return normalized
 
 
-def validate_file_reference(value: Any) -> str | None:
-    normalized = validate_optional_text(
-        value, field_name="file_", max_len=MAX_FILE_REF_LEN
-    )
-    if not normalized:
+def validate_opendrive(value: Any) -> str | None:
+    if value is None:
         return None
-    if any(marker in normalized for marker in OPENDRIVE_MARKERS):
-        raise ValueError("file_ must be a map file name, not OpenDRIVE XML content")
-    if "\n" in normalized or "\r" in normalized:
-        raise ValueError("file_ must be a single-line map reference")
-    return normalized
+    if not isinstance(value, str):
+        raise ValueError("file_ must contain OpenDRIVE XML")
+    if not value.strip():
+        return None
+    if len(value) > MAX_OPENDRIVE_LEN:
+        raise ValueError(f"file_ must be at most {MAX_OPENDRIVE_LEN} characters")
+    if not OPENDRIVE_RE.search(value):
+        raise ValueError("file_ must contain OpenDRIVE XML")
+    return value
 
 
 def validate_preview(value: Any) -> str | None:
@@ -102,7 +106,9 @@ def extract_scenario_groups(scenario: Any) -> list[dict[str, Any]]:
         raise ValueError("scenario must be an object or array")
 
     if len(groups) > MAX_SCENARIO_GROUPS:
-        raise ValueError(f"scenario cannot contain more than {MAX_SCENARIO_GROUPS} groups")
+        raise ValueError(
+            f"scenario cannot contain more than {MAX_SCENARIO_GROUPS} groups"
+        )
 
     for index, group in enumerate(groups):
         if not isinstance(group, dict):
@@ -135,11 +141,16 @@ def extract_scenario_groups(scenario: Any) -> list[dict[str, Any]]:
                         f"missing coordinate '{coord}'"
                     )
                 try:
-                    float(item[coord])
+                    coordinate = float(item[coord])
                 except (TypeError, ValueError) as exc:
                     raise ValueError(
                         f"scenario group #{index + 1} path item #{path_index + 1} "
                         f"coordinate '{coord}' must be a number"
                     ) from exc
+                if not math.isfinite(coordinate):
+                    raise ValueError(
+                        f"scenario group #{index + 1} path item #{path_index + 1} "
+                        f"coordinate '{coord}' must be finite"
+                    )
 
     return groups

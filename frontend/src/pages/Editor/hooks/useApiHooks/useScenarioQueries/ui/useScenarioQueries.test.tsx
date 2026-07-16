@@ -248,7 +248,7 @@ describe('useScenarioQueries', () => {
       scenario_id: 'sc-1',
       scenario_name: 'My Scenario',
       weather: 'ClearNoon',
-      file_: 'map.xodr',
+      file_: '<OpenDRIVE></OpenDRIVE>',
     });
     const queryClient = new QueryClient();
     const { result } = renderHook(() => useScenarioDetailQuery('sc-1'), {
@@ -259,7 +259,7 @@ describe('useScenarioQueries', () => {
       id: 'sc-1',
       name: 'My Scenario',
       weather: 'ClearNoon',
-      file_: 'map.xodr',
+      file_: '<OpenDRIVE></OpenDRIVE>',
     });
   });
 });

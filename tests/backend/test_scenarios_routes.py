@@ -12,7 +12,7 @@ def add_scenario(db_session, **overrides) -> Scenario:
         "scenario_text": json.dumps({"key": "val"}),
         "preview": "preview",
         "annotation": "note",
-        "file_": "file.xodr",
+        "file_": "<OpenDRIVE></OpenDRIVE>",
     }
     values.update(overrides)
     scenario = Scenario(**values)
@@ -71,9 +71,12 @@ def test_upload_scenario_success(scenario_client, db_session):
 
     assert response.status_code == 200
     assert response.json()["status"] == "success"
-    assert db_session.scalar(
-        select(Scenario.name_of_scenario).where(Scenario.scenario_id == "sc-new")
-    ) == "New Scenario"
+    assert (
+        db_session.scalar(
+            select(Scenario.name_of_scenario).where(Scenario.scenario_id == "sc-new")
+        )
+        == "New Scenario"
+    )
 
 
 def test_upload_scenario_409_when_id_exists(scenario_client, db_session):
@@ -123,9 +126,28 @@ def test_update_scenario_success(scenario_client, db_session):
     assert response.status_code == 200
     assert response.json()["scenario_id"] == "sc-1"
     db_session.expire_all()
-    assert db_session.scalar(
-        select(Scenario.name_of_scenario).where(Scenario.scenario_id == "sc-1")
-    ) == "Updated Name"
+    assert (
+        db_session.scalar(
+            select(Scenario.name_of_scenario).where(Scenario.scenario_id == "sc-1")
+        )
+        == "Updated Name"
+    )
+
+
+def test_update_scenario_updates_opendrive(scenario_client, db_session):
+    add_scenario(db_session)
+    file_content = "<OpenDRIVE><road name='updated'/></OpenDRIVE>"
+    response = scenario_client.post(
+        "/api/update_scenario",
+        json={"scenario_id": "sc-1", "file_": file_content},
+    )
+
+    assert response.status_code == 200
+    db_session.expire_all()
+    assert (
+        db_session.scalar(select(Scenario.file_).where(Scenario.scenario_id == "sc-1"))
+        == file_content
+    )
 
 
 def test_update_scenario_404_when_missing(scenario_client):

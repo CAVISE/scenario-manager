@@ -7,8 +7,8 @@ export type ValidationResult = { ok: true } | { ok: false; message: string };
 const SCENARIO_ID_RE = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/;
 const MAX_NAME_LEN = 200;
 const MAX_DESCRIPTION_LEN = 4000;
-const MAX_PREVIEW_LEN = 500_000;
-const MAX_FILE_REF_LEN = 512;
+const MAX_PREVIEW_LEN = 10_000_000;
+const MAX_OPENDRIVE_LEN = 32_000_000;
 const ALLOWED_VEHICLES = new Set(['car', 'RSU', 'building', 'pedestrian']);
 
 export function validateScenarioId(
@@ -59,18 +59,20 @@ function validateDescription(
   return { ok: true };
 }
 
-function validateFileRef(fileRef: string | null | undefined): ValidationResult {
-  if (!fileRef) return { ok: true };
-  if (fileRef.length > MAX_FILE_REF_LEN) {
+function validateOpenDrive(
+  fileContent: string | null | undefined,
+): ValidationResult {
+  if (!fileContent) return { ok: true };
+  if (fileContent.length > MAX_OPENDRIVE_LEN) {
     return {
       ok: false,
-      message: `Map reference is too long (max ${MAX_FILE_REF_LEN} characters).`,
+      message: `OpenDRIVE map is too large (max ${MAX_OPENDRIVE_LEN} characters).`,
     };
   }
-  if (/<\s*OpenDRIVE/i.test(fileRef) || fileRef.includes('\n')) {
+  if (!/<\s*OpenDRIVE[\s>]/i.test(fileContent)) {
     return {
       ok: false,
-      message: 'Map reference must be a file name, not OpenDRIVE XML.',
+      message: 'Map file must contain OpenDRIVE XML.',
     };
   }
   return { ok: true };
@@ -99,7 +101,7 @@ function validateScenarioGroups(groups: ScenarioGroup[]): ValidationResult {
       const item = group.path[j];
       for (const coord of ['x', 'y', 'z'] as const) {
         const value = item[coord];
-        if (typeof value !== 'number' || Number.isNaN(value)) {
+        if (typeof value !== 'number' || !Number.isFinite(value)) {
           return {
             ok: false,
             message: `Group ${i + 1}, item ${j + 1}: coordinate "${coord}" must be a number.`,
@@ -125,7 +127,7 @@ export function validateUploadPayload(
     validateScenarioId(scenarioId),
     validateScenarioName(payload.name_of_scenario),
     validateDescription(payload.description),
-    validateFileRef(payload.file_),
+    validateOpenDrive(payload.file_),
     validatePreview(payload.preview),
     validateScenarioGroups(scenarioGroupsFromPayload(payload.scenario)),
   );
@@ -141,7 +143,7 @@ export function validateUpdatePayload(
       ? validateScenarioName(payload.name_of_scenario)
       : { ok: true },
     validateDescription(payload.description),
-    validateFileRef(payload.file_ ?? null),
+    validateOpenDrive(payload.file_ ?? null),
     validatePreview(payload.preview),
     payload.scenario != null
       ? validateScenarioGroups(scenarioGroupsFromPayload(payload.scenario))
@@ -159,6 +161,9 @@ export function validateStartSimulationPayload(
   const map = payload.map?.trim() ?? '';
   if (!map) {
     return { ok: false, message: 'Map is required to start simulation.' };
+  }
+  if (map.length > 128) {
+    return { ok: false, message: 'Map name is too long (max 128 characters).' };
   }
   if (!payload.opencda_config_yaml?.trim()) {
     return {
@@ -189,6 +194,8 @@ export function validateStartSimulationPayload(
   }
 
   return firstFailure(
+    validateDescription(payload.description),
+    validateOpenDrive(payload.xodr),
     validateScenarioGroups(groups),
     payload.scenario_id
       ? validateScenarioId(payload.scenario_id)

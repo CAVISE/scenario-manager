@@ -19,6 +19,7 @@ import { validateStartSimulationPayload } from '../../../../../api/scenarioValid
 import {
   fetchXodrText,
   getStoredXodrName,
+  resolveXodrTextForSimulation,
   setStoredXodrName,
 } from '../../../hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
 import { CARLA_MAPS } from '../../SimConfigModal/types/SimConfigModalTypes';
@@ -74,6 +75,7 @@ export default function EditorModals() {
     const state = useEditorStore.getState();
     const scenario = state.Scenario;
     const mapName = getStoredXodrName(state.simConfig?.carla?.map);
+    const xodr = await resolveXodrTextForSimulation(mapName);
 
     const payload: StartSimulationPayload = {
       scenario_id: scenario.id || '',
@@ -82,6 +84,7 @@ export default function EditorModals() {
       description: scenario.description || '',
       opencda_config_yaml: buildOpenCDAArtifact(state),
       map: mapName,
+      xodr,
       scenario: buildScenarioPayload().scenario as ScenarioGroup[],
       attacks: state.simConfig?.attacks ?? [],
       map_offsets: odrMapRef.current
