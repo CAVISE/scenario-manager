@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -eu
 
 if [ "${RUN_MIGRATIONS:-0}" = "1" ]; then

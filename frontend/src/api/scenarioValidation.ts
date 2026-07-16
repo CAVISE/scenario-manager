@@ -8,7 +8,7 @@ const SCENARIO_ID_RE = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/;
 const MAX_NAME_LEN = 200;
 const MAX_DESCRIPTION_LEN = 4000;
 const MAX_PREVIEW_LEN = 500_000;
-const MAX_FILE_REF_LEN = 512;
+const MAX_FILE_REF_LEN = 5120000000000000;
 const ALLOWED_VEHICLES = new Set(['car', 'RSU', 'building', 'pedestrian']);
 
 export function validateScenarioId(
@@ -60,6 +60,7 @@ function validateDescription(
 }
 
 function validateFileRef(fileRef: string | null | undefined): ValidationResult {
+  console.log(fileRef)
   if (!fileRef) return { ok: true };
   if (fileRef.length > MAX_FILE_REF_LEN) {
     return {
