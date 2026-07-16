@@ -45,7 +45,7 @@ const persistOptions: PersistOptions<EditorState, EditorPersist> = {
     lidars: state.lidars,
     points: state.points,
     buildings: state.buildings,
-    Scenario: state.Scenario,
+    Scenario: { ...state.Scenario, file_: null },
     simConfig: state.simConfig,
     selectedId: state.selectedId,
     selectedObject: state.selectedObject,
@@ -60,8 +60,7 @@ const persistOptions: PersistOptions<EditorState, EditorPersist> = {
       Scenario: {
         ...current.Scenario,
         ...p?.Scenario,
-        file_:
-          p?.Scenario?.file_ ?? localStorage.getItem('cached_xodr') ?? null,
+        file_: null,
       },
       simConfig: mergeSimConfigWithDefaults(p?.simConfig),
     };
@@ -87,7 +86,7 @@ const storeCreator: StateCreator<EditorState> = (set) => ({
     name: 'Default Scenario',
     weather: 'ClearNoon',
     description: '',
-    file_: localStorage.getItem('cached_xodr'),
+    file_: null,
   },
 
   removeSelectedId: () => set({ selectedId: null, selectedObject: null }),

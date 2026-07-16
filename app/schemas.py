@@ -8,8 +8,9 @@ from app.opencda_config import (
     validate_config_object_counts,
 )
 from app.scenario_validation import (
+    MAX_OPENDRIVE_LEN,
     extract_scenario_groups,
-    validate_file_reference,
+    validate_opendrive,
     validate_optional_text,
     validate_preview,
     validate_scenario_id,
@@ -36,7 +37,7 @@ class StartSimulationRequest(BaseModel):
     weather: Optional[str] = Field(default=None, max_length=64)
     scenario: list[dict] = Field(default_factory=list)
     attacks: list[dict] = Field(default_factory=list)
-    xodr: Optional[str] = Field(default=None, max_length=5_000_000)
+    xodr: Optional[str] = Field(default=None, max_length=MAX_OPENDRIVE_LEN)
     scenario_id: Optional[str] = None
 
     @field_validator("map", mode="before")
@@ -52,6 +53,11 @@ class StartSimulationRequest(BaseModel):
     def validate_optional_scenario_id(cls, value: Any) -> str | None:
         return validate_scenario_id(value, required=False)
 
+    @field_validator("xodr", mode="before")
+    @classmethod
+    def validate_xodr(cls, value: Any) -> str | None:
+        return validate_opendrive(value)
+
     @field_validator("scenario")
     @classmethod
     def validate_scenario_list(cls, value: list[dict]) -> list[dict]:
@@ -62,7 +68,9 @@ class StartSimulationRequest(BaseModel):
         has_routable_car = any(
             isinstance(car.get("path"), list)
             and any(
-                isinstance(point, dict) and isinstance(point.get("points"), list) and point["points"]
+                isinstance(point, dict)
+                and isinstance(point.get("points"), list)
+                and point["points"]
                 for point in car["path"]
             )
             for car in cars
@@ -80,7 +88,7 @@ class StartSimulationRequest(BaseModel):
 
 class SimulationStatusResponse(BaseModel):
     running: bool
-    status: str         
+    status: str
     error: Optional[str]
     map: Optional[str]
     run_id: Optional[str]
@@ -93,6 +101,7 @@ class StopSimulationResponse(BaseModel):
 class StartSimulationResponse(BaseModel):
     status: str
     map: str
+
 
 class ResultFile(BaseModel):
     filename: str
@@ -164,7 +173,7 @@ class UploadScenarioRequest(BaseModel):
     @field_validator("file_", mode="before")
     @classmethod
     def validate_file_field(cls, value: Any) -> str | None:
-        return validate_file_reference(value)
+        return validate_opendrive(value)
 
     @field_validator("scenario", mode="before")
     @classmethod
@@ -179,6 +188,7 @@ class UpdateScenarioRequest(BaseModel):
     scenario: Optional[Union[dict, list]] = None
     preview: Optional[str] = None
     annotation: Optional[str] = None
+    file_: Optional[str] = None
 
     @field_validator("scenario_id", mode="before")
     @classmethod
@@ -203,6 +213,11 @@ class UpdateScenarioRequest(BaseModel):
     @classmethod
     def validate_preview_field(cls, value: Any) -> str | None:
         return validate_preview(value)
+
+    @field_validator("file_", mode="before")
+    @classmethod
+    def validate_file_field(cls, value: Any) -> str | None:
+        return validate_opendrive(value)
 
     @field_validator("scenario", mode="before")
     @classmethod
