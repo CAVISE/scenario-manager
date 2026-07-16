@@ -217,7 +217,7 @@ response schemas are documented at `/docs`.
 - `docker compose logs -f backend` contains service startup, API, runner, and
   simulation process output.
 - Evaluation reports and detailed per-run diagnostics are written under
-  `evaluation_outputs/`; Docker stores them in the `eval_outputs` named volume.
+  `evaluation_outputs/`, which is bind-mounted into the backend container.
 - PostgreSQL data is stored in the `postgres_data` named volume.
 - Uploaded custom OpenDRIVE maps are written under `assets/xodrs/`.
 - Run artifacts are also available through `/api/results/{run_id}`.
