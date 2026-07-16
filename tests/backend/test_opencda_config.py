@@ -70,7 +70,11 @@ def test_runtime_config_uses_yaml_then_environment_overrides(
     config = open_cda_config_factory()
     config["vehicle_base"]["behavior"]["max_speed"] = 31
     config_yaml = yaml.safe_dump(config, sort_keys=False)
-    settings = SimpleNamespace(carla_port=2345, base_dir=Path.cwd())
+    settings = SimpleNamespace(
+        carla_port=2345,
+        carla_traffic_manager_port=8001,
+        base_dir=Path.cwd(),
+    )
 
     scene, pedestrians, overrides = compile_open_cda_config(
         _scenario_payload(config_yaml),
@@ -81,12 +85,22 @@ def test_runtime_config_uses_yaml_then_environment_overrides(
     assert scene.vehicle_base.behavior.max_speed == 31
     assert scene.world.town == "Town01"
     assert scene.world.client_port == 2345
+    assert scene.carla_traffic_manager.port == 8001
     assert scene.scenario.single_cav_list[0].spawn_position[:3] == [0, 0, 0.5]
     assert {item["path"] for item in overrides} >= {
         "world.town",
         "world.client_port",
+        "carla_traffic_manager.port",
         "scenario.single_cav_list[0].spawn_position",
     }
+
+
+def test_parser_rejects_invalid_traffic_manager_port(open_cda_config_factory):
+    config = open_cda_config_factory()
+    config["carla_traffic_manager"]["port"] = 0
+
+    with pytest.raises(OpenCDAConfigError, match="port must be an integer"):
+        parse_open_cda_yaml(yaml.safe_dump(config, sort_keys=False))
 
 
 def test_config_artifacts_preserve_exact_source(open_cda_yaml, tmp_path):
