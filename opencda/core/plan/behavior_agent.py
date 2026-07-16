@@ -184,6 +184,8 @@ class BehaviorAgent(object):
         self.car_following_flag = False
         # lane change allowed flag
         self.lane_change_allowed = True
+        # set only when an adjacent-lane collision blocks a planned lane change
+        self.lane_change_blocked = False
         # destination temp push flag
         self.destination_push_flag = 0
 
@@ -1000,6 +1002,8 @@ class BehaviorAgent(object):
 
 
         """
+        self.lane_change_blocked = False
+
         # the lane change is forbidden if driving within a large curve
         if len(rk) > 2 and np.mean(np.abs(np.array(rk))) > 0.04:
             lane_change_allowed = False
@@ -1013,9 +1017,10 @@ class BehaviorAgent(object):
                                    self.get_local_planner().lane_lateral_change and \
                                    self.overtake_counter <= 0 and \
                                    not self.destination_push_flag
-        if lane_change_enabled_flag:
-            lane_change_allowed = lane_change_allowed and self.lane_change_management()
-            if not lane_change_allowed:
+        if lane_change_enabled_flag and lane_change_allowed:
+            lane_change_allowed = self.lane_change_management()
+            self.lane_change_blocked = not lane_change_allowed
+            if self.lane_change_blocked:
                 print("lane change not allowed")
 
         return lane_change_allowed
@@ -1199,7 +1204,7 @@ class BehaviorAgent(object):
         # 4. push case. Push the car to a temporary destination when original lane change action can't be executed
         # The case that the vehicle is doing lane change as planned
         # but found vehicle blocking on the other lane
-        if not self.lane_change_allowed and \
+        if self.lane_change_blocked and \
                 self.get_local_planner().potential_curved_road \
                 and not self.destination_push_flag and \
                 self.overtake_counter <= 0:
