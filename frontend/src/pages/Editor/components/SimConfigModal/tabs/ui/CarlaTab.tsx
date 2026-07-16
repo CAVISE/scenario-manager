@@ -166,6 +166,7 @@ export default function CarlaTab() {
           type="number"
           size="small"
           fullWidth
+          inputProps={{ min: 1, max: 65535, step: 1 }}
           value={simConfig.carla.traffic_manager_port}
           onChange={(e) =>
             updateSimConfigCarla({

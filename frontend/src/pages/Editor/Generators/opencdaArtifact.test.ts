@@ -72,7 +72,7 @@ describe('buildOpenCDAArtifact', () => {
     expect(yaml).toContain('  controller:');
     expect(yaml).toContain('rsu_base:');
     expect(yaml).toContain('carla_traffic_manager:');
-    expect(yaml).toContain('  port: 8000');
+    expect(yaml).toContain('  port: 8001');
     expect(yaml).toContain('traffic_manager:');
     expect(yaml).toContain('    max_speed: 45');
     expect(yaml).toContain('      activate: true');
