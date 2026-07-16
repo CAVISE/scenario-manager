@@ -388,7 +388,7 @@ export const defaultSimConfig: SimulationConfig = {
     num_vehicles: 50,
     num_pedestrians: 20,
     fixed_delta_seconds: 0.05,
-    traffic_manager_port: 8000,
+    traffic_manager_port: 8001,
     synchronous_mode: true,
     sensors: { camera: true, lidar: true, radar: false, gnss: true, imu: true },
     lidar_channels: 32,
