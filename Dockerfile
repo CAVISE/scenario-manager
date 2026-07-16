@@ -23,13 +23,12 @@ COPY --from=builder /app/.venv /app/.venv
 COPY app ./app
 COPY migrations ./migrations
 COPY opencda ./opencda
-COPY assets ./assets
 COPY alembic.ini ./
 COPY main.py ./
-COPY --chmod=755 entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY --chmod=755 entrypoint.sh entrypoint.sh
 
 RUN mkdir -p evaluation_outputs logs assets/xodrs
 
 EXPOSE 8000
-ENTRYPOINT ["entrypoint.sh"]
+ENTRYPOINT ["./entrypoint.sh"]
 CMD ["python", "main.py"]
