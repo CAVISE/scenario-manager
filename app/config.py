@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     # CARLA
     carla_host: str
     carla_port: int = Field(ge=1, le=65535)
+    carla_traffic_manager_port: int = Field(default=8001, ge=1, le=65535)
     carla_timeout_seconds: float = Field(gt=0)
 
     db_name: str

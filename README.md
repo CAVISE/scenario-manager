@@ -169,6 +169,7 @@ start PostgreSQL when the required database values are missing.
 | `DB_ENCODING` | Database client encoding. | `UTF8` |
 | `CARLA_HOST` | CARLA host reachable from the backend container. | `host.docker.internal` |
 | `CARLA_PORT` | CARLA RPC port. | `2000` |
+| `CARLA_TRAFFIC_MANAGER_PORT` | Traffic Manager RPC port inside the backend container. | `8001` |
 | `CARLA_TIMEOUT_SECONDS` | CARLA connection timeout. | `60` |
 | `RUN_MIGRATIONS` | Run `alembic upgrade head` on backend startup when set to `1`. | `1` |
 
