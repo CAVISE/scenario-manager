@@ -21,6 +21,7 @@ def test_settings_accept_docker_database_and_carla_timeout():
     settings = Settings(**settings_values())
     assert settings.db_host == "db"
     assert settings.db_port == 5432
+    assert settings.carla_traffic_manager_port == 8001
     assert settings.carla_timeout_seconds == 60
 
 
