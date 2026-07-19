@@ -40,6 +40,8 @@ services:
       target: production
     ports:
       - "80:80"
+    volumes:
+      - ./evaluation_outputs:/var/www/html/evaluation_outputs:ro
     networks:
       - cavise
     depends_on:
@@ -53,6 +55,8 @@ services:
       POSTGRES_USER: ${DB_USER:?DB_USER must be set in .env}
       POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set in .env}
       POSTGRES_DB: ${DB_NAME:?DB_NAME must be set in .env}
+    ports:
+      - 5432:5432
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
