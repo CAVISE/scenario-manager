@@ -80,6 +80,7 @@ vehicle_base:
 
     localization:
       activate: false # when not activated, ego position will be retrieved from server directly
+      navigation_source: estimated # estimated | ground_truth
       dt: ${world.fixed_delta_seconds} # used for kalman filter
       gnss: # gnss sensor configuration
         noise_alt_stddev: 0.001
@@ -151,6 +152,7 @@ vehicle_base:
   v2x:  # communication related
     enabled: true
     communication_range: 35
+    position_source: estimated # estimated | ground_truth
 
 
 # define the background traffic control by carla

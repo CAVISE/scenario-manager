@@ -176,6 +176,7 @@ def _validate_complete_config(config: dict[str, Any]) -> None:
         },
         "vehicle_base.sensing.localization": {
             "activate",
+            "navigation_source",
             "dt",
             "gnss",
             "debug_helper",
@@ -250,7 +251,11 @@ def _validate_complete_config(config: dict[str, Any]) -> None:
         },
         "vehicle_base.controller.args.lat": {"k_p", "k_d", "k_i"},
         "vehicle_base.controller.args.lon": {"k_p", "k_d", "k_i"},
-        "vehicle_base.v2x": {"enabled", "communication_range"},
+        "vehicle_base.v2x": {
+            "enabled",
+            "communication_range",
+            "position_source",
+        },
         "rsu_base.sensing.perception": {"activate", "camera", "lidar"},
         "rsu_base.sensing.perception.camera": {"visualize", "num"},
         "rsu_base.sensing.perception.lidar": {
@@ -295,6 +300,22 @@ def _validate_complete_config(config: dict[str, Any]) -> None:
     fixed_delta = config["world"]["fixed_delta_seconds"]
     if not isinstance(fixed_delta, (int, float)) or fixed_delta <= 0:
         raise OpenCDAConfigError("world.fixed_delta_seconds must be positive")
+
+    navigation_source = config["vehicle_base"]["sensing"]["localization"][
+        "navigation_source"
+    ]
+    if navigation_source not in {"estimated", "ground_truth"}:
+        raise OpenCDAConfigError(
+            "vehicle_base.sensing.localization.navigation_source must be "
+            "'estimated' or 'ground_truth'"
+        )
+
+    position_source = config["vehicle_base"]["v2x"]["position_source"]
+    if position_source not in {"estimated", "ground_truth"}:
+        raise OpenCDAConfigError(
+            "vehicle_base.v2x.position_source must be "
+            "'estimated' or 'ground_truth'"
+        )
 
     for camera_path in (
         "vehicle_base.sensing.perception.camera",
