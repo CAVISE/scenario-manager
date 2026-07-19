@@ -158,10 +158,16 @@ function pushLocalizationBlock(
   activate: boolean,
   debugAnimation: boolean,
   includeMetrics: boolean,
+  includeNavigationSource = true,
 ): void {
   const gn = oc.gnss_noise;
   lines.push(`${indent}localization:`);
   lines.push(`${indent}  activate: ${activate}`);
+  if (includeNavigationSource) {
+    lines.push(
+      `${indent}  navigation_source: ${oc.localization_navigation_source}`,
+    );
+  }
   lines.push(`${indent}  dt: ${OMEGA_DT}`);
   if (includeMetrics) {
     pushLocalizationMetrics(
@@ -245,7 +251,12 @@ function pushExtendedVehicleBase(
   pushMapManager(lines, oc.map_manager);
   pushSafetyManager(lines, oc.safety_manager);
   pushController(lines, oc.controller_pid);
-  pushV2xBlock(lines, oc.v2x_enabled, oc.v2x_communication_range);
+  pushV2xBlock(
+    lines,
+    oc.v2x_enabled,
+    oc.v2x_communication_range,
+    oc.v2x_position_source,
+  );
   if (oc.export_vehicle_behavior_services) {
     pushVehicleBehaviorServices(lines, oc.vehicle_behavior_services);
   }
@@ -463,6 +474,7 @@ export function generateOpenCDAConfig(
     '    ',
     oc,
     oc.localization_activate,
+    false,
     false,
     false,
   );
