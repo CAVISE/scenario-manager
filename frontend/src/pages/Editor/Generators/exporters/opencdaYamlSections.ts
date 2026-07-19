@@ -62,11 +62,13 @@ export function pushV2xBlock(
   lines: string[],
   enabled: boolean,
   range: number,
+  positionSource: 'estimated' | 'ground_truth',
   indent = '  ',
 ): void {
   lines.push(`${indent}v2x:`);
   lines.push(`${indent}  enabled: ${enabled}`);
   lines.push(`${indent}  communication_range: ${range}`);
+  lines.push(`${indent}  position_source: ${positionSource}`);
 }
 
 export function pushVehicleBehaviorServices(

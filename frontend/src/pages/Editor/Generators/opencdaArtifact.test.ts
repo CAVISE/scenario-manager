@@ -67,6 +67,8 @@ describe('buildOpenCDAArtifact', () => {
 
     expect(yaml).toContain('world:');
     expect(yaml).toContain('vehicle_base:');
+    expect(yaml).toContain('navigation_source: estimated');
+    expect(yaml).toContain('position_source: estimated');
     expect(yaml).toContain('  map_manager:');
     expect(yaml).toContain('  safety_manager:');
     expect(yaml).toContain('  controller:');
