@@ -170,6 +170,34 @@ def test_attack_configuration_comes_from_yaml(open_cda_config_factory):
     assert "sensing" not in second
 
 
+def test_drift_attack_is_compiled_as_runtime_spoofing(
+    open_cda_config_factory,
+):
+    params = {
+        "mode": "drift",
+        "start_time": 10,
+        "ramp_duration": 8,
+        "lateral_offset": 1.8,
+        "longitudinal_offset": 0.5,
+        "drift_rate": 0.08,
+        "jitter_stddev": 0.08,
+        "max_offset": 3,
+    }
+    attack = {
+        "name": "gnss_drift",
+        "targets": {"cav_index": 2},
+        "stages": [{"id": "drift", "type": "spoofer", "params": params}],
+    }
+    config = open_cda_config_factory(cav_count=2, attacks=[attack])
+
+    result, _, _ = yaml_to_runtime_scenario(config, _payload(cav_count=2))
+
+    first, second = result["scenario"]["single_cav_list"]
+    assert "sensing" not in first
+    assert second["sensing"]["localization"]["gnss_spoofing"] == params
+    assert second["sensing"]["localization"]["activate"] is True
+
+
 def test_yaml_compiler_rejects_object_count_mismatch(open_cda_config_factory):
     with pytest.raises(ValueError, match="object counts"):
         yaml_to_runtime_scenario(
