@@ -27,13 +27,24 @@ import {
   type AttackConfigModalProps,
 } from '../types/AttackConfigModalTypes';
 
+const GNSS_DRIFT_PARAMS = {
+  mode: 'drift',
+  start_time: 10,
+  ramp_duration: 8,
+  lateral_offset: 1.8,
+  longitudinal_offset: 0.5,
+  drift_rate: 0.08,
+  jitter_stddev: 0.08,
+  max_offset: 3,
+} as const;
+
 const GNSS_SPOOFER_PRESET: OpenCDAAttackConfig = {
   name: 'gnss_spoof',
   requirements: {},
   start_trigger: {},
   stop_trigger: {},
-  targets: {},
-  stages: [{ id: nanoid(6), type: 'spoofer', params: { intensity: 'high' } }],
+  targets: { cav_index: 1 },
+  stages: [{ id: nanoid(6), type: 'spoofer', params: GNSS_DRIFT_PARAMS }],
 };
 
 function JsonField({
@@ -134,7 +145,7 @@ function StagesField({
       error={Boolean(error)}
       helperText={
         error ||
-        'Array of stage objects — e.g. [{"id":"s1","type":"spoofer","params":{"intensity":"high"}}]'
+        'Array of stage objects, including the attack type and parameters'
       }
       onChange={(e) => {
         const next = e.target.value;
@@ -204,9 +215,7 @@ export default function AttackConfigModal({
     const preset = {
       ...GNSS_SPOOFER_PRESET,
       name: `gnss_spoof_${attacks.length + 1}`,
-      stages: [
-        { id: nanoid(6), type: 'spoofer', params: { intensity: 'high' } },
-      ],
+      stages: [{ id: nanoid(6), type: 'spoofer', params: GNSS_DRIFT_PARAMS }],
     };
     const next = [...attacks, preset];
     updateSimConfig({

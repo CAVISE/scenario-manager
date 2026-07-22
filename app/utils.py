@@ -423,14 +423,16 @@ def _apply_attacks(
     Inject attack parameters into CAV sensing.localization blocks.
 
     Supported attack types:
-      spoofer — amplifies GNSS noise to simulate position falsification.
+      spoofer — applies a runtime drift or legacy white-noise profile.
 
     Attack schema (matches OpenCDAAttackConfig on the frontend):
       {
         "name": "gnss_spoof",
         "type": "spoofer",
         "targets": {"cav_index": 1},   # 1-based; omit or null → all CAVs
-        "stages": [{"type": "spoofer", "params": {"intensity": "high"}}]
+        "stages": [{"type": "spoofer", "params": {
+            "mode": "drift", "start_time": 10, "max_offset": 3
+        }}]
       }
 
     `stages` is defensively normalized via _normalize_attack_stages since
@@ -451,8 +453,7 @@ def _apply_attacks(
 
         # Resolve params: top-level or first stage
         params = attack.get("params") or (stages[0].get("params") or {} if stages else {})
-        intensity = str(params.get("intensity", "medium")).lower()
-        noise = _GNSS_SPOOF_LEVELS.get(intensity, _GNSS_SPOOF_LEVELS["medium"])
+        mode = str(params.get("mode", "noise")).lower()
 
         # Resolve targets
         targets = attack.get("targets") or {}
@@ -464,21 +465,58 @@ def _apply_attacks(
 
             sensing = cav.setdefault("sensing", {})
             loc = sensing.setdefault("localization", {})
-            gnss = loc.setdefault("gnss", {})
 
-            # CRITICAL: activate=True is required.
-            # Without it, localize() calls vehicle.get_transform() directly,
-            # bypassing the GNSS sensor entirely — noise has zero effect and
-            # localization_eval metrics stay at 0.000000.
+            # activate=True is required; otherwise localization bypasses both
+            # the GNSS sensor and the runtime spoofing model.
             loc["activate"] = True
             loc.setdefault("dt", fixed_delta_seconds)
 
-            gnss["noise_alt_stddev"] = noise["noise_alt_stddev"]
-            gnss["noise_lat_stddev"] = noise["noise_lat_stddev"]
-            gnss["noise_lon_stddev"] = noise["noise_lon_stddev"]
+            if mode == "drift":
+                spoofing = {
+                    "mode": "drift",
+                    "start_time": float(params.get("start_time", 10.0)),
+                    "ramp_duration": float(params.get("ramp_duration", 8.0)),
+                    "lateral_offset": float(params.get("lateral_offset", 1.8)),
+                    "longitudinal_offset": float(
+                        params.get("longitudinal_offset", 0.5)
+                    ),
+                    "drift_rate": float(params.get("drift_rate", 0.08)),
+                    "jitter_stddev": float(params.get("jitter_stddev", 0.08)),
+                    "max_offset": float(params.get("max_offset", 3.0)),
+                }
+                for key in (
+                    "start_time", "ramp_duration", "drift_rate",
+                    "jitter_stddev", "max_offset",
+                ):
+                    if spoofing[key] < 0:
+                        raise ValueError(
+                            "GNSS spoofing %s must be non-negative" % key)
+                loc["gnss_spoofing"] = spoofing
+                log.info(
+                    "ATTACK spoofer -> CAV%d | mode=drift start=%.2fs "
+                    "ramp=%.2fs lateral=%.2fm longitudinal=%.2fm "
+                    "rate=%.3fm/s max=%.2fm jitter=%.2fm",
+                    idx,
+                    spoofing["start_time"],
+                    spoofing["ramp_duration"],
+                    spoofing["lateral_offset"],
+                    spoofing["longitudinal_offset"],
+                    spoofing["drift_rate"],
+                    spoofing["max_offset"],
+                    spoofing["jitter_stddev"],
+                )
+                continue
 
+            if mode != "noise":
+                raise ValueError("Unsupported GNSS spoofing mode: %s" % mode)
+
+            intensity = str(params.get("intensity", "medium")).lower()
+            noise = _GNSS_SPOOF_LEVELS.get(
+                intensity, _GNSS_SPOOF_LEVELS["medium"])
+            gnss = loc.setdefault("gnss", {})
+            gnss.update(noise)
             log.info(
-                "ATTACK spoofer → CAV%d | intensity=%s | "
+                "ATTACK spoofer -> CAV%d | mode=noise intensity=%s | "
                 "alt_std=%.2f lat_std=%.2e lon_std=%.2e",
                 idx, intensity,
                 noise["noise_alt_stddev"],

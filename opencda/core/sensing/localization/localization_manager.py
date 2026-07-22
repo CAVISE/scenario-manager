@@ -5,6 +5,7 @@ Localization module
 # Author: Runsheng Xu <rxx3386@ucla.edu>
 # License: TDG-Attribution-NonCommercial-NoDistrib
 
+import logging
 import weakref
 from collections import deque
 
@@ -17,6 +18,11 @@ from opencda.core.sensing.localization.localization_debug_helper \
 from opencda.core.sensing.localization.kalman_filter import KalmanFilter
 from opencda.core.sensing.localization.coordinate_transform \
     import geo_to_transform
+from opencda.core.sensing.localization.gnss_spoofer \
+    import GnssDriftSpoofer
+
+
+log = logging.getLogger(__name__)
 
 
 class GnssSensor(object):
@@ -214,6 +220,29 @@ class LocalizationManager(object):
         self.speed_noise_std = config_yaml['gnss']['speed_stddev']
 
         self.dt = config_yaml['dt']
+        spoofing_config = config_yaml.get('gnss_spoofing')
+        self.gnss_spoofer = None
+        self._gnss_spoofer_active = False
+        if spoofing_config:
+            mode = spoofing_config.get('mode', 'drift')
+            if mode != 'drift':
+                raise ValueError(
+                    'Unsupported runtime GNSS spoofing mode: %s' % mode)
+            self.gnss_spoofer = GnssDriftSpoofer(
+                spoofing_config, self.dt)
+            log.info(
+                '[gnss_spoofer] actor=%s configured start=%.2fs '
+                'ramp=%.2fs lateral=%.2fm longitudinal=%.2fm '
+                'rate=%.3fm/s max=%.2fm jitter=%.2fm',
+                vehicle.id,
+                self.gnss_spoofer.start_time,
+                self.gnss_spoofer.ramp_duration,
+                self.gnss_spoofer.lateral_offset,
+                self.gnss_spoofer.longitudinal_offset,
+                self.gnss_spoofer.drift_rate,
+                self.gnss_spoofer.max_offset,
+                self.gnss_spoofer.jitter_stddev,
+            )
         # Kalman Filter
         self.kf = KalmanFilter(self.dt)
 
@@ -275,6 +304,17 @@ class LocalizationManager(object):
             x = location.x + raw_x - ref_x
             y = location.y + raw_y - ref_y
             z = location.z + raw_z - ref_z
+
+            if self.gnss_spoofer is not None:
+                x, y, bias_x, bias_y, elapsed, active = \
+                    self.gnss_spoofer.apply(
+                        x, y, rotation.yaw, self.gnss.timestamp)
+                if active and not self._gnss_spoofer_active:
+                    self._gnss_spoofer_active = True
+                    log.info(
+                        '[gnss_spoofer] actor=%s activated at %.2fs '
+                        'bias=(%.2f, %.2f)m',
+                        self.vehicle.id, elapsed, bias_x, bias_y)
 
             # We add synthetic noise to the heading direction
             heading_angle = self.add_heading_direction_noise(rotation.yaw)
