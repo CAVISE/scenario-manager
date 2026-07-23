@@ -11,6 +11,12 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 
+def angle_difference_degrees(first, second):
+    """Return the shortest signed angular difference in degrees."""
+    difference = np.asarray(first) - np.asarray(second)
+    return (difference + 180.0) % 360.0 - 180.0
+
+
 class LocDebugHelper(object):
     """
     This class aims to help users debugging their localization algorithms.
@@ -223,10 +229,20 @@ class LocDebugHelper(object):
         axis[2, 0].set_title("error curve on y coordinates")
 
         # error curve on yaw
-        axis[2, 1].plot(np.arange(len(self.gnss_yaw)), np.array(
-            self.gt_yaw) - np.array(self.gnss_yaw), "-g", label='gnss')
-        axis[2, 1].plot(np.arange(len(self.filter_yaw)), np.array(
-            self.gt_yaw) - np.array(self.filter_yaw), "-r", label='filter')
+        gnss_yaw_error = angle_difference_degrees(
+            self.gt_yaw, self.gnss_yaw)
+        filter_yaw_error = angle_difference_degrees(
+            self.gt_yaw, self.filter_yaw)
+        axis[2, 1].plot(
+            np.arange(len(self.gnss_yaw)),
+            gnss_yaw_error,
+            "-g",
+            label='gnss')
+        axis[2, 1].plot(
+            np.arange(len(self.filter_yaw)),
+            filter_yaw_error,
+            "-r",
+            label='filter')
         axis[2, 1].legend()
         axis[2, 1].set_title("error curve on yaw angle")
 
@@ -244,12 +260,7 @@ class LocDebugHelper(object):
                     self.gt_y) -
                 np.array(
                     self.gnss_y)))
-        yaw_error_mean = np.mean(
-            np.abs(
-                np.array(
-                    self.gt_yaw) -
-                np.array(
-                    self.gnss_yaw)))
+        yaw_error_mean = np.mean(np.abs(gnss_yaw_error))
 
         perform_txt = 'mean error for GNSS raw data on x-axis: %f (meter), ' \
                       'mean error for GNSS raw data on y-axis: %f (meter),' \
@@ -270,12 +281,7 @@ class LocDebugHelper(object):
                     self.gt_y) -
                 np.array(
                     self.filter_y)))
-        yaw_error_mean = np.mean(
-            np.abs(
-                np.array(
-                    self.gt_yaw) -
-                np.array(
-                    self.filter_yaw)))
+        yaw_error_mean = np.mean(np.abs(filter_yaw_error))
 
         perform_txt += 'mean error after data fusion on x-axis: %f (meter), ' \
                        'mean error after data fusion  on y-axis: %f (meter),' \
