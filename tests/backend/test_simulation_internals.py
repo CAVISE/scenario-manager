@@ -177,13 +177,10 @@ def test_v2x_search_uses_true_positions_and_rebuilds_nearby():
         }
 
         v2x_a.update_info(transform(0, 0), 0, true_pos=transform(0, 0))
-        # Spoofed ego_pos is far away, but true_pos is physically in range.
         v2x_b.update_info(transform(1000, 0), 0, true_pos=transform(3, 0))
         v2x_a.search()
         assert "b" in v2x_a.cav_nearby
 
-        # Spoofed ego_pos is now near, but true_pos moved out of radio range.
-        # The nearby map must be rebuilt instead of keeping stale entries.
         v2x_b.update_info(transform(1, 0), 0, true_pos=transform(100, 0))
         v2x_a.search()
         assert "b" not in v2x_a.cav_nearby

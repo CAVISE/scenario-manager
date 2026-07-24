@@ -75,9 +75,7 @@ class RSUManager(object):
         sensing_config['perception']['global_position'] = \
             config_yaml['spawn_position']
 
-        # RSU's own broadcast/detection radius (metres). This is what nearby
-        # CAVs check against in V2XManager.search() to decide whether they
-        # can "hear" this RSU — independent of the CAV's own antenna range.
+        # V2XManager uses the RSU range for coverage checks.
         v2x_config = config_yaml.get('v2x', {})
         self.communication_range = v2x_config.get('communication_range', 45) \
             if v2x_config else 45
@@ -100,7 +98,6 @@ class RSUManager(object):
         else:
             self.data_dumper = None
 
-        # Objects detected by this RSU, shared with nearby CAVs via V2XManager.
         self.detected_objects: dict = {}
 
         cav_world.update_rsu_manager(self)
@@ -116,7 +113,6 @@ class RSUManager(object):
         ego_pos = self.localizer.get_ego_pos()
         ego_spd = self.localizer.get_ego_spd()
 
-        # object detection — store result so nearby CAVs can read via V2X
         objects = self.perception_manager.detect(ego_pos)
         self.detected_objects = objects
 

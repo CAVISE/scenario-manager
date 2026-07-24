@@ -14,15 +14,12 @@ MAP_OFFSETS = {
     'Town10HD': (-8.377,    28.583),
 }
 
-# Fallback z when carla_map is not yet available.
 _FALLBACK_SPAWN_Z = 0.5
 _FALLBACK_DEST_Z  = 0.0
 
-# BFS params
 _BFS_STEP_M    = 5.0   # metres between waypoints in BFS
 _BFS_MAX_STEPS = 300   # ~1.5 km max route search depth
 
-# Nudge applied when spawn and dest snap to the same waypoint
 _NUDGE_DIST_M = 30.0
 
 
@@ -86,10 +83,6 @@ def convert_coords(x, y, offset_x, offset_y, carla_map=None, is_spawn=True):
     return [carla_x, carla_y, carla_z]
 
 
-# ---------------------------------------------------------------------------
-# Yaw helpers
-# ---------------------------------------------------------------------------
-
 def _yaw_atan2(sx: float, sy: float, dx: float, dy: float) -> float:
     """Fallback yaw from spawn→dest vector."""
     cdx, cdy = dx - sx, dy - sy
@@ -105,17 +98,9 @@ def _angle_diff(a: float, b: float) -> float:
 
 def _wp_route_depth_to_dest(start_wp, dest_wp, max_steps: int = _BFS_MAX_STEPS) -> int | None:
     """
-    Road-level BFS: returns transition depth if start_wp can reach dest_wp's road+lane
-    within max_steps road transitions.  Uses (road_id, lane_id) as visited
-    key (section_id omitted — most CARLA roads have section_id=0 for all
-    their waypoints, so including it would prevent the BFS from ever leaving
-    the starting road).
+    Return the road-transition depth from start_wp to dest_wp.
 
-    At each step we advance to the END of the current lane via
-    next_until_lane_end(), then call next() on the last waypoint to obtain
-    waypoints on the *connecting* roads.  This ensures every BFS step
-    corresponds to a genuine road transition rather than a 5 m shuffle
-    within the same road segment.
+    Lane ends form the BFS edges; road and lane IDs form the visited key.
     """
     target_road = dest_wp.road_id
     target_lane = dest_wp.lane_id
@@ -140,9 +125,7 @@ def _wp_route_depth_to_dest(start_wp, dest_wp, max_steps: int = _BFS_MAX_STEPS) 
 
         steps += 1
 
-        # Advance to the end of the current lane, then collect the connecting
-        # roads.  Falling back to a plain next() call keeps things working if
-        # next_until_lane_end is unavailable (older CARLA builds).
+        # Support CARLA versions without next_until_lane_end.
         try:
             end_wps = current.next_until_lane_end(_BFS_STEP_M)
             pivot = end_wps[-1] if end_wps else current
@@ -165,23 +148,7 @@ def _wp_leads_to_dest(start_wp, dest_wp, max_steps: int = _BFS_MAX_STEPS) -> boo
 def _compute_yaw(sx: float, sy: float, sz: float,
                  dx: float, dy: float,
                  carla_map=None) -> float:
-    """
-    Return the spawn yaw that puts the vehicle on the lane leading toward
-    the destination.
-
-    Algorithm:
-      1. Get waypoint at spawn → wp_spawn (forward lane direction).
-      2. Get waypoint at destination → wp_dest.
-      3. Collect candidates: wp_spawn itself, its left neighbour, right
-         neighbour.  For each, also check the 180°-flipped twin (same
-         physical point, opposite direction) so we cover both driving
-         directions on any road.
-      4. BFS from each candidate to wp_dest.  Return the yaw of the reachable
-         candidate with the shortest road-transition depth.
-      5. If no candidate reaches dest fall back to: flip wp_spawn yaw if the
-         atan2 vector disagrees by >90°, otherwise keep wp_spawn yaw.
-      6. Ultimate fallback: atan2(spawn→dest).
-    """
+    """Return the yaw of the spawn lane with the shortest route to dest."""
     if carla_map is None:
         return _yaw_atan2(sx, sy, dx, dy)
 
@@ -220,22 +187,16 @@ def _compute_yaw(sx: float, sy: float, sz: float,
             wp_dest.road_id, wp_dest.lane_id, wp_dest.transform.rotation.yaw,
         )
 
-        # Build candidate waypoints to test
-        # Each entry: (waypoint, label)
         candidates: list[tuple] = []
 
         def _add(wp, label: str) -> None:
             if wp is not None and wp.lane_type == _carla.LaneType.Driving:
                 candidates.append((wp, label))
-                # Also test the 180° flipped direction at same location
                 flipped = carla_map.get_waypoint(
                     wp.transform.location,
                     project_to_road=True,
                     lane_type=_carla.LaneType.Driving,
                 )
-                # A "flipped" wp on a two-way road sits in the opposite lane
-                # after get_waypoint snaps — but on one-way roads it's the
-                # same wp. We always add it; BFS will discard if it loops.
                 if flipped is not None and flipped.road_id == wp.road_id:
                     candidates.append((flipped, label + "_twin"))
 
@@ -288,10 +249,8 @@ def _compute_yaw(sx: float, sy: float, sz: float,
             )
             return yaw
 
-        # BFS found no route — best-effort: compare wp_spawn yaw vs atan2
         yaw = wp_spawn.transform.rotation.yaw
         if abs(_angle_diff(yaw, to_dest_yaw)) > 90.0:
-            # Flip 180° and normalise into [-180, 180]
             yaw = (yaw + 180.0 + 180.0) % 360.0 - 180.0
             log.info("yaw=%.1f deg (no BFS route, flipped to face dest)", yaw)
         else:
@@ -380,11 +339,6 @@ def _nudge_dest_if_same_waypoint(
     return dx, dy, dz
 
 
-# ---------------------------------------------------------------------------
-# Attack configuration
-# ---------------------------------------------------------------------------
-
-# GNSS noise levels per attack intensity
 _GNSS_SPOOF_LEVELS = {
     "low":    {"noise_alt_stddev": 1.0,  "noise_lat_stddev": 3e-5,  "noise_lon_stddev": 3e-5},
     "medium": {"noise_alt_stddev": 5.0,  "noise_lat_stddev": 1e-4,  "noise_lon_stddev": 1e-4},
@@ -392,16 +346,7 @@ _GNSS_SPOOF_LEVELS = {
 }
 
 def _normalize_attack_stages(stages: object) -> list[dict]:
-    """
-    Flatten a `stages` value into a flat list[dict].
-
-    The frontend's OpenCDAAttackStage[] type is meant to be flat, but stale
-    data persisted in localStorage before the frontend's own normalization
-    guard (normalizeAttackStages in AttackConfigModal.tsx) was added can
-    still arrive nested one level, e.g. [[{...}]] instead of [{...}].
-    Mirrors the frontend flattening logic so the backend never trusts the
-    wire shape blindly.
-    """
+    """Flatten attack stages received from persisted frontend state."""
     if not isinstance(stages, list):
         return []
 
@@ -419,43 +364,21 @@ def _apply_attacks(
     attacks: list[dict],
     fixed_delta_seconds: float = 0.05,
 ) -> None:
-    """
-    Inject attack parameters into CAV sensing.localization blocks.
-
-    Supported attack types:
-      spoofer — applies a runtime drift or legacy white-noise profile.
-
-    Attack schema (matches OpenCDAAttackConfig on the frontend):
-      {
-        "name": "gnss_spoof",
-        "type": "spoofer",
-        "targets": {"cav_index": 1},   # 1-based; omit or null → all CAVs
-        "stages": [{"type": "spoofer", "params": {
-            "mode": "drift", "start_time": 10, "max_offset": 3
-        }}]
-      }
-
-    `stages` is defensively normalized via _normalize_attack_stages since
-    stale frontend state can still deliver a nested shape (see docstring
-    there) — this guards against any future regression on either side.
-    """
+    """Inject GNSS spoofing parameters into CAV localization configs."""
     if not attacks:
         return
 
     for attack in attacks:
         stages = _normalize_attack_stages(attack.get("stages"))
 
-        # Resolve type: top-level or first stage
         atk_type = attack.get("type") or (stages[0].get("type", "") if stages else "")
         if atk_type != "spoofer":
             log.warning("Attack %r: type %r not implemented — skipped", attack.get("name"), atk_type)
             continue
 
-        # Resolve params: top-level or first stage
         params = attack.get("params") or (stages[0].get("params") or {} if stages else {})
         mode = str(params.get("mode", "noise")).lower()
 
-        # Resolve targets
         targets = attack.get("targets") or {}
         target_index = targets.get("cav_index")  # 1-based; None → all CAVs
 
@@ -466,8 +389,7 @@ def _apply_attacks(
             sensing = cav.setdefault("sensing", {})
             loc = sensing.setdefault("localization", {})
 
-            # activate=True is required; otherwise localization bypasses both
-            # the GNSS sensor and the runtime spoofing model.
+            # Runtime spoofing is part of the active localization pipeline.
             loc["activate"] = True
             loc.setdefault("dt", fixed_delta_seconds)
 
@@ -523,11 +445,6 @@ def _apply_attacks(
                 noise["noise_lat_stddev"],
                 noise["noise_lon_stddev"],
             )
-
-
-# ---------------------------------------------------------------------------
-# Main conversion entry point
-# ---------------------------------------------------------------------------
 
 
 def _raw_group_items(json_data: dict, vehicle_type: str) -> list[dict]:

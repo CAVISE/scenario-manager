@@ -111,7 +111,6 @@ export function buildScenarioPayload(): ScenarioPayload {
             opencda_lidar_dropoff_zero_intensity:
               r.opencda_sensing?.lidar_dropoff_zero_intensity,
             opencda_lidar_noise_stddev: r.opencda_sensing?.lidar_noise_stddev,
-            // OpenCDA sensing — localization
             opencda_localization_activate:
               r.opencda_sensing?.localization_activate,
             opencda_gnss_noise_alt_stddev:

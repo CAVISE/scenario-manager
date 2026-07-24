@@ -180,20 +180,7 @@ class LocalizationManager(object):
         self.geo_ref = self.map.transform_to_geolocation(
             carla.Location(x=0, y=0, z=0))
 
-        # Guard against a degenerate geo-reference. Maps without a proper
-        # OpenDRIVE <geoReference> tag can have transform_to_geolocation()
-        # fall back to a latitude near +/-90 degrees. geo_to_transform()'s
-        # Mercator-style y-formula has no cos(lat_0) scale factor left at
-        # the reference point (it cancels out algebraically — see
-        # coordinate_transform.py), while its linear x-formula for
-        # longitude IS scaled by cos(lat_0). So as lat_0 approaches a
-        # pole, x-sensitivity to GNSS noise collapses toward zero while
-        # y-sensitivity is essentially unaffected — silently producing
-        # wildly asymmetric localization error between axes even for
-        # perfectly symmetric noise_lat_stddev/noise_lon_stddev config.
-        # The simulation only needs internal (relative) coordinate
-        # consistency, not a real geographic anchor, so falling back to
-        # latitude 0 here is safe and keeps both axes equally sensitive.
+        # Invalid map georeferences near the poles distort longitude noise.
         self._geo_ref_lat = self.geo_ref.latitude
         self._geo_ref_lon = self.geo_ref.longitude
         if abs(self._geo_ref_lat) > 89.0:
@@ -298,9 +285,7 @@ class LocalizationManager(object):
                                                   self._geo_ref_lon,
                                                   0.0)
 
-            # Use the GNSS-vs-GT delta as the noisy sensor measurement in
-            # CARLA coordinates. This avoids comparing two absolute origins
-            # when a map has an imperfect georeference anchor.
+            # Apply GNSS error as a delta in CARLA coordinates.
             x = location.x + raw_x - ref_x
             y = location.y + raw_y - ref_y
             z = location.z + raw_z - ref_z

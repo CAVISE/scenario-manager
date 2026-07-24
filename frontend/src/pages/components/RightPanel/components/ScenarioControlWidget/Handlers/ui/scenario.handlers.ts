@@ -350,7 +350,6 @@ export const handleRunSimulation = async (
     attacks: useEditorStore.getState().simConfig?.attacks ?? [],
   };
 
-  // Frontend debug: log payload but omit large xodr content
   try {
     const debugPayload = {
       ...payload,
