@@ -436,10 +436,7 @@ class PerceptionManager:
         self.traffic_thresh = config_yaml['traffic_light_thresh'] \
             if 'traffic_light_thresh' in config_yaml else 50
 
-        # Detection range for deactivate_mode server-side queries.
-        # Configurable via perception.detection_range in YAML.
-        # RSUs can set a larger range (e.g. 100m) to cover intersections.
-        # Default: 50m for moving CAVs, same for RSU unless overridden.
+        # RSUs may override the server-side detection range.
         self.detection_range = config_yaml.get('detection_range', 50)
 
     def dist(self, a):

@@ -59,7 +59,6 @@ export function getStoredXodrName(fallbackMapName?: string): string {
   const storedName = localStorage.getItem(MAP_NAME_KEY);
   if (storedName?.trim()) return withXodrExtension(storedName);
 
-  // Compatibility with the short-lived contract where cached_xodr held a name.
   const stored = localStorage.getItem(CACHE_KEY);
   if (stored?.trim() && !isOpenDrive(stored)) {
     return withXodrExtension(stored);

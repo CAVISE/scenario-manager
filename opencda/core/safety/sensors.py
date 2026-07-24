@@ -107,13 +107,7 @@ class CollisionSensor(object):
                 other_transform = other.get_transform()
                 oloc = other_transform.location
                 self.last_collision_loc = (oloc.x, oloc.y, oloc.z)
-            # CARLA does not expose the exact contact manifold here. Log every
-            # geometry anchor available at the first impact frame so static
-            # obstacle radii can be tuned from a real run.
-            # Print once per actor lifetime, on the *first* contact only —
-            # sustained contact (e.g. stuck pushing into a pole) can refire
-            # this callback every physics step for hundreds of ticks, and
-            # only the first contact's geometry is diagnostically useful.
+            # Sustained contact can emit the same collision every physics step.
             if not self._first_hit_logged:
                 self._first_hit_logged = True
                 other_yaw = (other_transform.rotation.yaw

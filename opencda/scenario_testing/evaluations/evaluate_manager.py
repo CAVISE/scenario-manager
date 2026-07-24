@@ -190,30 +190,19 @@ class EvaluationManager(object):
     @staticmethod
     def plot_routes(real_route_transforms, planned_route_transforms,
                     gt_route_transforms=None):
-        """
-        Plot three layers on one figure:
-          - Red ×   : initial planned route waypoints
-          - Green ─  : ground-truth physical path (what the vehicle actually did)
-          - Blue: position transmitted by the vehicle over V2X
-
-        When gt_route_transforms is None (no attack / legacy call) only the
-        first two layers are drawn and the title stays generic.
-        """
+        """Plot planned, physical, and V2X-transmitted routes."""
         fig, ax = plt.subplots(figsize=(10, 7))
 
-        # --- V2X-transmitted path ---
         real_x = [t.location.x for t in real_route_transforms]
         real_y = [t.location.y for t in real_route_transforms]
         ax.scatter(real_y, real_x, marker='o', s=8, alpha=0.5,
                    color='steelblue', label='V2X-transmitted position')
 
-        # --- planned route ---
         plan_x = [t.location.x for t in planned_route_transforms]
         plan_y = [t.location.y for t in planned_route_transforms]
         ax.scatter(plan_y, plan_x, marker='x', color='red', s=50,
                    label='Planned route waypoints')
 
-        # --- ground-truth physical path ---
         if gt_route_transforms:
             gt_x = [t.location.x for t in gt_route_transforms]
             gt_y = [t.location.y for t in gt_route_transforms]
@@ -270,8 +259,7 @@ class EvaluationManager(object):
             )
             return
         planned_dist = self.calculate_route_dist(planned_route)
-        # Real distance must be physical ground-truth distance. The transmitted
-        # trace can carry an attacked estimate, so keep it diagnostic-only.
+        # Attacked transmitted positions are diagnostic, not physical distance.
         real_dist = self.calculate_route_dist(
             gt_route) if gt_route else self.calculate_route_dist(
                 transmitted_route)
@@ -339,9 +327,7 @@ class EvaluationManager(object):
         fig_hazard.savefig(os.path.join(self.eval_save_path, f'{actor_id}_hazard.png'), dpi=100)
         plt.close(fig_hazard)
 
-        # Hazard totals over the FULL run (not the plot's skip_head-trimmed
-        # slice) — this is the numeric answer to "did it actually break,
-        # and when" without having to eyeball *_hazard.png.
+        # Summaries use the full run rather than the plot's trimmed window.
         lprint(log_file, "--- Hazard summary (full run) ---")
         for key, label in (('collision', 'Collisions'),
                            ('offroad', 'Off-road events'),
@@ -373,9 +359,6 @@ class EvaluationManager(object):
                 else:
                     lprint(log_file, f"{label}: 0")
 
-        # RSU cooperative-perception participation — lets you tell "RSU had
-        # nothing new to add" apart from "RSU never registered as nearby"
-        # when comparing an RSU-present run against an RSU-absent one.
         rs = vm.rsu_merge_stats
         pct_in_range = (100.0 * rs['ticks_rsu_in_range'] / rs['ticks_total']
                         if rs['ticks_total'] else 0.0)
