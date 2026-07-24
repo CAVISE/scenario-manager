@@ -3,6 +3,7 @@ import { IconButton, Tooltip } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import SettingsIcon from '@mui/icons-material/Settings';
 import DownloadIcon from '@mui/icons-material/Download';
+import SecurityIcon from '@mui/icons-material/Security';
 import FileMenu from '../menus';
 import ExportMenu from '../menus/ExportMenu';
 import {
@@ -13,6 +14,7 @@ import {
 import { downloadFile } from '../../../Generators/exporters';
 import UploadScenariosModal from '../../UploadScenariosModal';
 import SimConfigModal from '../../SimConfigModal';
+import AttackConfigModal from '../../AttackConfigModal';
 import ExportDialog from '../dialogs';
 
 function sanitizeDownloadFilename(name: string, fallback: string): string {
@@ -34,6 +36,7 @@ export const EditorToolbar = () => {
   );
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [simConfigOpen, setSimConfigOpen] = useState(false);
+  const [attackConfigOpen, setAttackConfigOpen] = useState(false);
   const [pendingExport, setPendingExport] = useState<PendingExport | null>(
     null,
   );
@@ -104,6 +107,13 @@ export const EditorToolbar = () => {
           </IconButton>
         </Tooltip>
       </div>
+      <div style={EditorToolbarDivStyles}>
+        <Tooltip title="Attack settings">
+          <IconButton size="small" onClick={() => setAttackConfigOpen(true)}>
+            <SecurityIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      </div>
 
       <UploadScenariosModal
         open={uploadModalOpen}
@@ -112,6 +122,10 @@ export const EditorToolbar = () => {
       <SimConfigModal
         open={simConfigOpen}
         onClose={() => setSimConfigOpen(false)}
+      />
+      <AttackConfigModal
+        open={attackConfigOpen}
+        onClose={() => setAttackConfigOpen(false)}
       />
       <ExportDialog
         open={Boolean(pendingExport)}

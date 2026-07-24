@@ -6,11 +6,9 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, HTTPException, Request, WebSocket, WebSocketDisconnect
-from omegaconf import OmegaConf
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-from app import utils
 from app.config import get_settings
 from app.log_config import get_logger
 from app.schemas import (
@@ -21,7 +19,6 @@ from app.schemas import (
     StartSimulationResponse,
     StopSimulationResponse,
 )
-from opencda.scenario_testing.utils.yaml_utils import add_current_time
 
 router = APIRouter(tags=["simulation"])
 log = get_logger(__name__)
@@ -79,37 +76,50 @@ async def start_opencda(request: Request, body: StartSimulationRequest):
         simulation_state["status"] = "running"
         simulation_state["error"] = None
 
-    log.debug("start_opencda map=%s max_ticks=%d", body.map, body.max_ticks)
-
     raw_map = body.map.replace(".xodr", "")
     map_name = _normalize_map_name(raw_map)
+
+    log.debug("start_opencda map=%s max_ticks=%d", map_name, body.max_ticks)
 
     if body.xodr:
         xodr_dir = settings.xodr_dir
         xodr_dir.mkdir(parents=True, exist_ok=True)
         (xodr_dir / f"{map_name}.xodr").write_text(body.xodr)
 
-    scenario_raw = body.model_dump()
-    scenario = utils.json_to_single_cav_list(scenario_raw)
-    base_dict = OmegaConf.load(settings.cfg_dir / "base.yaml")
-    scene_dict = OmegaConf.merge(base_dict, OmegaConf.create(scenario))
-    scene_dict = add_current_time(scene_dict)
-
-    current_time = OmegaConf.to_container(scene_dict).get("current_time", "")
+    current_time = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
     run_id = f"{map_name}_{current_time}"
 
     with _sim_lock:
         simulation_state["map"] = map_name
         simulation_state["run_id"] = run_id
 
+    scenario_raw = body.model_dump()
+    try:
+        keys = list(scenario_raw.keys())
+        xodr_info = None
+        if scenario_raw.get("xodr"):
+            try:
+                xodr_len = len(scenario_raw.get("xodr") or "")
+                xodr_info = f"present (length={xodr_len})"
+            except Exception:
+                xodr_info = "present (length=?)"
+        else:
+            xodr_info = "absent"
+
+        log.info("Received payload keys: %s | xodr: %s", keys, xodr_info)
+        log.info("Received attacks field from request: %s", scenario_raw.get("attacks"))
+    except Exception:
+        log.exception("Failed to log request payload for debugging")
+
     params = {
         "apply_ml": False,
         "record": False,
         "map_name": map_name,
         "max_ticks": body.max_ticks,
+        "current_time": current_time,
     }
 
-    _executor.submit(_run_with_state, scene_dict, params)
+    _executor.submit(_run_with_state, scenario_raw, params)
 
     return StartSimulationResponse(status="started", map=map_name)
 
@@ -148,7 +158,7 @@ async def list_results(request: Request, run_id: str):
             url=f"/evaluation_outputs/{run_id}/{f}",
         )
         for f in sorted(os.listdir(path))
-        if f.endswith(".png")
+        if f.endswith((".png", ".txt", ".log", ".yaml", ".json"))
     ]
     return ResultsResponse(files=files, run_id=run_id)
 
@@ -184,8 +194,7 @@ async def ws_simulation(websocket: WebSocket):
     try:
         await websocket.send_json(simulation_state)
         while True:
-            await asyncio.sleep(1)
-            await websocket.send_json(simulation_state)
+            await websocket.receive_text()
     except WebSocketDisconnect:
         pass
     finally:
@@ -204,11 +213,11 @@ def _normalize_map_name(name: str) -> str:
     return _KNOWN_MAPS.get(name.lower(), name)
 
 
-def _run_with_state(scene_dict, params: dict) -> None:
+def _run_with_state(scenario_raw: dict, params: dict) -> None:
     import traceback
     try:
         from app import runner
-        runner.run_scenario(scene_dict, params)
+        runner.run_scenario(scenario_raw, params)
         with _sim_lock:
             simulation_state["status"] = "finished"
     except Exception as e:

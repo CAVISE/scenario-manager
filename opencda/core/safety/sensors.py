@@ -2,12 +2,16 @@
 Sensors related to safety status check
 """
 import math
+import logging
 import numpy as np
 import carla
 import weakref
 import shapely
 from collections import deque
 from typing import List
+
+
+log = logging.getLogger(__name__)
 
 
 class CollisionSensor(object):
@@ -44,8 +48,34 @@ class CollisionSensor(object):
 
         self.collided = False
         self.collided_frame = -1
+        self.last_other_actor = None  
+        self.last_other_actor_id = None
+        self.last_collision_loc = None
+        self.last_collision_event_loc = None
+        self.last_ego_loc = None
+        self.last_collision_impulse = None
+        self.last_ego_extent = None
+        self.last_other_extent = None
+        self._first_hit_logged = False
         self._history = deque(maxlen=params['history_size'])
         self._threshold = params['col_thresh']
+
+    @staticmethod
+    def _xyz(value):
+        if value is None:
+            return None
+        return (value.x, value.y, value.z)
+
+    @staticmethod
+    def _fmt_xyz(value):
+        if value is None:
+            return "unknown"
+        return f"({value[0]:.2f},{value[1]:.2f},{value[2]:.2f})"
+
+    @staticmethod
+    def _actor_extent(actor):
+        bbox = getattr(actor, 'bounding_box', None)
+        return CollisionSensor._xyz(getattr(bbox, 'extent', None))
 
     @staticmethod
     def _on_collision(weak_self, event) -> None:
@@ -58,12 +88,66 @@ class CollisionSensor(object):
         if intensity > self._threshold:
             self.collided = True
             self.collided_frame = event.frame
+            actor = event.actor
+            other = event.other_actor
+            self.last_other_actor = other.type_id if other is not None else 'unknown'
+            self.last_other_actor_id = other.id if other is not None else None
+            self.last_collision_impulse = self._xyz(impulse)
+            event_transform = getattr(event, 'transform', None)
+            self.last_collision_event_loc = self._xyz(
+                getattr(event_transform, 'location', None))
+            ego_transform = actor.get_transform()
+            eloc = ego_transform.location
+            self.last_ego_loc = (eloc.x, eloc.y, eloc.z)
+            self.last_ego_extent = self._actor_extent(actor)
+            self.last_other_extent = self._actor_extent(other)
+            self.last_collision_loc = None
+            other_transform = None
+            if other is not None:
+                other_transform = other.get_transform()
+                oloc = other_transform.location
+                self.last_collision_loc = (oloc.x, oloc.y, oloc.z)
+            # Sustained contact can emit the same collision every physics step.
+            if not self._first_hit_logged:
+                self._first_hit_logged = True
+                other_yaw = (other_transform.rotation.yaw
+                             if other_transform is not None else None)
+                other_yaw_str = (f"{other_yaw:.1f}"
+                                 if other_yaw is not None else "unknown")
+                log.warning(
+                    "[collision] FIRST HIT actor=%s frame=%s vs=%s "
+                    "other_id=%s impulse=%.2f event_loc=%s ego_loc=%s "
+                    "ego_yaw=%.1f ego_extent=%s other_loc=%s "
+                    "other_yaw=%s other_extent=%s",
+                    event.actor.id,
+                    event.frame,
+                    self.last_other_actor,
+                    self.last_other_actor_id,
+                    intensity,
+                    self._fmt_xyz(self.last_collision_event_loc),
+                    self._fmt_xyz(self.last_ego_loc),
+                    ego_transform.rotation.yaw,
+                    self._fmt_xyz(self.last_ego_extent),
+                    self._fmt_xyz(self.last_collision_loc),
+                    other_yaw_str,
+                    self._fmt_xyz(self.last_other_extent),
+                )
 
     def return_status(self):
         if self.collided:
-            self.collided = False  # reset and return
-            return {'collision': True}
-        return {'collision': False}
+            self.collided = False
+            return {
+                'collision': True,
+                'collision_with': self.last_other_actor,
+                'collision_with_id': self.last_other_actor_id,
+                'collision_loc': self.last_collision_loc,
+                'collision_event_loc': self.last_collision_event_loc,
+                'ego_loc_at_collision': self.last_ego_loc,
+                'collision_impulse': self.last_collision_impulse,
+                'ego_extent_at_collision': self.last_ego_extent,
+                'other_extent_at_collision': self.last_other_extent,
+            }
+        return {'collision': False, 'collision_with': None}
 
     def tick(self, data_dict):
         pass
@@ -188,6 +272,7 @@ class OffRoadDetector(object):
 
     def __init__(self, params):
         self.off_road = False
+        self.last_offroad_loc = None
 
     def tick(self, data_dict) -> None:
         """
@@ -202,16 +287,24 @@ class OffRoadDetector(object):
         static_map = data_dict['static_bev']
         if static_map is None:
             return
+        ego_pos = data_dict.get('ego_pos')
         h, w = static_map.shape[0], static_map.shape[1]
         # the ego is always at the center of the bev map. If the pixel is
         # black, that means the vehicle is off road.
         if np.mean(static_map[h // 2, w // 2]) == 255:
             self.off_road = True
+            loc = ego_pos.location if ego_pos is not None else None
+            self.last_offroad_loc = (
+                (loc.x, loc.y, loc.z) if loc is not None else None
+            )
         else:
             self.off_road = False
 
     def return_status(self):
-        return {'offroad': self.off_road}
+        return {
+            'offroad': self.off_road,
+            'offroad_loc': self.last_offroad_loc if self.off_road else None,
+        }
 
     def destroy(self):
         pass

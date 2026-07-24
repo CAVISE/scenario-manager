@@ -75,6 +75,11 @@ class RSUManager(object):
         sensing_config['perception']['global_position'] = \
             config_yaml['spawn_position']
 
+        # V2XManager uses the RSU range for coverage checks.
+        v2x_config = config_yaml.get('v2x', {})
+        self.communication_range = v2x_config.get('communication_range', 45) \
+            if v2x_config else 45
+
         # localization module
         self.localizer = LocalizationManager(carla_world,
                                              sensing_config['localization'],
@@ -93,6 +98,8 @@ class RSUManager(object):
         else:
             self.data_dumper = None
 
+        self.detected_objects: dict = {}
+
         cav_world.update_rsu_manager(self)
 
     def update_info(self):
@@ -106,8 +113,8 @@ class RSUManager(object):
         ego_pos = self.localizer.get_ego_pos()
         ego_spd = self.localizer.get_ego_spd()
 
-        # object detection todo: pass it to other CAVs for V2X percetion
         objects = self.perception_manager.detect(ego_pos)
+        self.detected_objects = objects
 
     def run_step(self):
         """
@@ -118,6 +125,13 @@ class RSUManager(object):
             self.data_dumper.run_step(self.perception_manager,
                                       self.localizer,
                                       None)
+
+    def get_detected_objects(self) -> dict:
+        """
+        Return objects detected by this RSU in the last tick.
+        Called by V2XManager to share perception with nearby CAVs.
+        """
+        return self.detected_objects
 
     def destroy(self):
         """

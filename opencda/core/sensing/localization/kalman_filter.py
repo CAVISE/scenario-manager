@@ -7,7 +7,13 @@ Reference: https://www.bzarg.com/p/how-a-kalman-filter-works-in-pictures/
 # License: TDG-Attribution-NonCommercial-NoDistrib
 
 import math
+
 import numpy as np
+
+
+def normalize_angle(angle):
+    """Normalize an angle in radians to the [-pi, pi) interval."""
+    return (angle + math.pi) % (2.0 * math.pi) - math.pi
 
 
 class KalmanFilter(object):
@@ -131,7 +137,7 @@ class KalmanFilter(object):
         """
         self.xEst[0] = x
         self.xEst[1] = y
-        self.xEst[2] = heading
+        self.xEst[2] = normalize_angle(heading)
         self.xEst[3] = velocity
 
     def run_step(self, x, y, heading, velocity, yaw_rate_imu):
@@ -167,9 +173,11 @@ class KalmanFilter(object):
 
         # state prediction
         xPred = self.motion_model(self.xEst, u)
+        xPred[2, 0] = normalize_angle(xPred[2, 0])
         # sensor measurement prediction
         zPred = self.observation_model(xPred)
-        y = z - zPred
+        innovation = z - zPred
+        innovation[2, 0] = normalize_angle(innovation[2, 0])
 
         # projection matrix
         H = np.array([
@@ -188,7 +196,8 @@ class KalmanFilter(object):
         S = np.linalg.inv(H @ PPred @ H.T + self.R)
         K = PPred @ H.T @ S
 
-        self.xEst = xPred + K @ y
+        self.xEst = xPred + K @ innovation
+        self.xEst[2, 0] = normalize_angle(self.xEst[2, 0])
         self.PEst = K @ H @ PPred
 
         return self.xEst[0][0], \

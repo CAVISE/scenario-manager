@@ -10,16 +10,41 @@
 import math
 import random
 import sys
+import logging
 
 import numpy as np
 import carla
 
 from opencda.core.common.misc import get_speed, positive, cal_distance_angle
 from opencda.core.plan.collision_check import CollisionChecker
-from opencda.core.plan.local_planner_behavior import LocalPlanner
+from opencda.core.plan.local_planner_behavior import LocalPlanner, RoadOption
 from opencda.core.plan.global_route_planner import GlobalRoutePlanner
 from opencda.core.plan.global_route_planner_dao import GlobalRoutePlannerDAO
 from opencda.core.plan.planer_debug_helper import PlanDebugHelper
+
+
+log = logging.getLogger(__name__)
+
+
+class _SimpleBoundingBox(object):
+    """Bounding-box subset required by CollisionChecker."""
+
+    def __init__(self, extent_x, extent_y):
+        self.extent = carla.Vector3D(x=extent_x, y=extent_y, z=0)
+
+
+class _StaticCollisionProxy(object):
+    """Expose a static actor origin with a fixed collision footprint."""
+
+    DEFAULT_EXTENT = 1.95
+
+    def __init__(self, actor, extent=None):
+        self._location = actor.get_location()
+        ext = extent if extent is not None else self.DEFAULT_EXTENT
+        self.bounding_box = _SimpleBoundingBox(ext, ext)
+
+    def get_location(self):
+        return self._location
 
 
 class BehaviorAgent(object):
@@ -131,6 +156,7 @@ class BehaviorAgent(object):
         self.car_following_flag = False
         # lane change allowed flag
         self.lane_change_allowed = True
+        self.lane_change_blocked = False
         # destination temp push flag
         self.destination_push_flag = 0
 
@@ -139,6 +165,15 @@ class BehaviorAgent(object):
         self.white_list = []
         self.obstacle_vehicles = []
         self.objects = {}
+
+        self.static_obstacles = []
+        self.static_obstacles_loaded = False
+        self._traffic_light_static_check_logged = False
+        self._traffic_light_static_hazard_logged = False
+        self._static_obstacle_path_hazard_logged = False
+        # Actor origins are unreliable obstacle centers, so avoidance is opt-in.
+        self.static_obstacle_avoidance_enabled = config_yaml.get(
+            'static_obstacle_avoidance_enabled', False)
 
         # debug helper
         self.debug_helper = PlanDebugHelper(self.vehicle.id)
@@ -239,6 +274,86 @@ class BehaviorAgent(object):
 
         return new_obstacle_list
 
+    @staticmethod
+    def _waypoint_key(waypoint):
+        return (
+            waypoint.road_id,
+            getattr(waypoint, 'section_id', None),
+            waypoint.lane_id,
+        )
+
+    def _end_waypoint_candidates(self, end_waypoint):
+        candidates = []
+        seen = set()
+        for label, candidate in (
+                ('nearest', end_waypoint),
+                ('left', end_waypoint.get_left_lane() if end_waypoint else None),
+                ('right', end_waypoint.get_right_lane() if end_waypoint else None)):
+            if candidate is None or candidate.lane_type != carla.LaneType.Driving:
+                continue
+            key = self._waypoint_key(candidate)
+            if key in seen:
+                continue
+            seen.add(key)
+            candidates.append((label, candidate))
+        return candidates
+
+    @staticmethod
+    def _route_distance(route_trace):
+        distance = 0.0
+        previous = None
+        for waypoint, _ in route_trace:
+            loc = waypoint.transform.location
+            if previous is not None:
+                distance += previous.distance(loc)
+            previous = loc
+        return distance
+
+    def _select_destination_route(self, raw_end_waypoint, requested_end_location):
+        """
+        Pick the reachable destination lane with the shortest traced route.
+
+        CARLA's get_waypoint() may snap a clicked destination to the lane that
+        is physically nearest but has the wrong driving direction. The previous
+        code only tried get_left_lane(), which misses maps where the opposite
+        lane is returned by get_right_lane().
+        """
+        best = None
+        for label, candidate in self._end_waypoint_candidates(raw_end_waypoint):
+            route_trace = self._trace_route(self.start_waypoint, candidate)
+            if not route_trace:
+                log.warning(
+                    "[set_destination] candidate=%s road=%s lane=%s produced empty route",
+                    label, candidate.road_id, candidate.lane_id,
+                )
+                continue
+
+            route_distance = self._route_distance(route_trace)
+            snap_distance = candidate.transform.location.distance(requested_end_location)
+            same_sign = self.start_waypoint.lane_id * candidate.lane_id > 0
+            score = (route_distance, snap_distance, 0 if same_sign else 1)
+            log.info(
+                "[set_destination] candidate=%s road=%s lane=%s route_len=%d route_dist=%.1f snap_dist=%.1f same_sign=%s",
+                label, candidate.road_id, candidate.lane_id, len(route_trace),
+                route_distance, snap_distance, same_sign,
+            )
+            if best is None or score < best[0]:
+                best = (score, label, candidate, route_trace)
+
+        if best is None:
+            log.warning(
+                "[set_destination] no reachable destination lane for road=%s lane=%s; using raw waypoint",
+                raw_end_waypoint.road_id, raw_end_waypoint.lane_id,
+            )
+            return raw_end_waypoint, self._trace_route(self.start_waypoint, raw_end_waypoint)
+
+        _, label, end_waypoint, route_trace = best
+        log.info(
+            "[set_destination] selected candidate=%s road=%s lane=%s route_len=%d",
+            label, end_waypoint.road_id, end_waypoint.lane_id, len(route_trace),
+        )
+        return end_waypoint, route_trace
+
     def set_destination(
             self,
             start_location,
@@ -277,39 +392,52 @@ class BehaviorAgent(object):
 
         self.start_waypoint = self._map.get_waypoint(start_location)
 
-        # make sure the start waypoint is behind the vehicle
-        if self._ego_pos:
-            cur_loc = self._ego_pos.location
-            cur_yaw = self._ego_pos.rotation.yaw
+        # Route initialization must use the physical spawn position.
+        cur_loc = start_location
+        cur_yaw = (self._ego_pos.rotation.yaw
+                   if self._ego_pos else
+                   self.start_waypoint.transform.rotation.yaw)
+        _, angle = cal_distance_angle(
+            self.start_waypoint.transform.location, cur_loc, cur_yaw)
+
+        _max_steps = 200
+        _steps = 0
+        while angle > 90 and _steps < _max_steps:
+            candidates = self.start_waypoint.next(1)
+            if not candidates:
+                break  # dead-end road: stop rather than IndexError
+            self.start_waypoint = candidates[0]
             _, angle = cal_distance_angle(
                 self.start_waypoint.transform.location, cur_loc, cur_yaw)
+            _steps += 1
 
-            while angle > 90:
-                self.start_waypoint = self.start_waypoint.next(1)[0]
-                _, angle = cal_distance_angle(
-                    self.start_waypoint.transform.location, cur_loc, cur_yaw)
-
-        end_waypoint = self._map.get_waypoint(end_location)
-        # If end_waypoint landed on the opposite lane, flip to the correct side
-        if self.start_waypoint.lane_id * end_waypoint.lane_id < 0:
-            left = end_waypoint.get_left_lane()
-            if left and left.lane_type == carla.LaneType.Driving and \
-               left.lane_id * self.start_waypoint.lane_id > 0:
-                end_waypoint = left
+        raw_end_waypoint = self._map.get_waypoint(end_location)
+        end_waypoint, route_trace = self._select_destination_route(
+            raw_end_waypoint, end_location)
         if end_reset:
             self.end_waypoint = end_waypoint
 
-        print(f"[set_destination] start_wp=({self.start_waypoint.transform.location.x:.2f},"
-              f"{self.start_waypoint.transform.location.y:.2f})"
-              f" road={self.start_waypoint.road_id} lane={self.start_waypoint.lane_id}")
-        print(f"[set_destination] end_wp=({end_waypoint.transform.location.x:.2f},"
-              f"{end_waypoint.transform.location.y:.2f})"
-              f" road={end_waypoint.road_id} lane={end_waypoint.lane_id}")
-
-        route_trace = self._trace_route(self.start_waypoint, end_waypoint)
-
-        print(f"[set_destination] route_trace length={len(route_trace)}, "
-              f"initial_global_route={'already set' if self.initial_global_route is not None else 'None'}")
+        log.info(
+            "[set_destination] start_wp=(%.2f,%.2f) road=%s lane=%s",
+            self.start_waypoint.transform.location.x,
+            self.start_waypoint.transform.location.y,
+            self.start_waypoint.road_id,
+            self.start_waypoint.lane_id,
+        )
+        log.info(
+            "[set_destination] end_wp=(%.2f,%.2f) raw_road=%s raw_lane=%s selected_road=%s selected_lane=%s",
+            end_waypoint.transform.location.x,
+            end_waypoint.transform.location.y,
+            raw_end_waypoint.road_id,
+            raw_end_waypoint.lane_id,
+            end_waypoint.road_id,
+            end_waypoint.lane_id,
+        )
+        log.info(
+            "[set_destination] route_trace length=%d initial_global_route=%s",
+            len(route_trace),
+            'already set' if self.initial_global_route is not None else 'None',
+        )
 
         # TODO: why is the last waypoint not showing in the trace_route return results
         if self.initial_global_route is None:
@@ -371,18 +499,26 @@ class BehaviorAgent(object):
 
         start_loc = start_waypoint.transform.location
         end_loc = end_waypoint.transform.location
-        print(f"[_trace_route] start=({start_loc.x:.2f},{start_loc.y:.2f},{start_loc.z:.2f})"
-              f" road_id={start_waypoint.road_id} lane_id={start_waypoint.lane_id}")
-        print(f"[_trace_route] end=({end_loc.x:.2f},{end_loc.y:.2f},{end_loc.z:.2f})"
-              f" road_id={end_waypoint.road_id} lane_id={end_waypoint.lane_id}")
+        log.info(
+            "[_trace_route] start=(%.2f,%.2f,%.2f) road_id=%s lane_id=%s",
+            start_loc.x, start_loc.y, start_loc.z,
+            start_waypoint.road_id, start_waypoint.lane_id,
+        )
+        log.info(
+            "[_trace_route] end=(%.2f,%.2f,%.2f) road_id=%s lane_id=%s",
+            end_loc.x, end_loc.y, end_loc.z,
+            end_waypoint.road_id, end_waypoint.lane_id,
+        )
 
         try:
+            if hasattr(self._global_planner, '_previous_decision'):
+                self._global_planner._previous_decision = RoadOption.VOID
             route = self._global_planner.trace_route(start_loc, end_loc)
         except Exception as e:
-            print(f"[_trace_route] ERROR in trace_route: {e}")
+            log.warning("[_trace_route] ERROR in trace_route: %s", e)
             return []
 
-        print(f"[_trace_route] route length={len(route)}")
+        log.info("[_trace_route] route length=%d", len(route))
         return route
 
     def traffic_light_manager(self, waypoint):
@@ -481,6 +617,61 @@ class BehaviorAgent(object):
                     target_vehicle = vehicle
 
         return vehicle_state, target_vehicle, min_distance
+
+    def _load_static_obstacles(self):
+        """Load fixed traffic-light obstacles once per agent."""
+        world = self.vehicle.get_world()
+        tl_list = world.get_actors().filter('traffic.traffic_light*')
+        self.static_obstacles = [_StaticCollisionProxy(tl) for tl in tl_list]
+        self.static_obstacles_loaded = True
+        log.info("[static_obstacles] actor %s: loaded %d traffic light pole(s)",
+                 self.vehicle.id, len(self.static_obstacles))
+
+    def static_obstacle_check(self, rx, ry, ryaw):
+        """Check the planned path against yaw-independent static footprints."""
+        if not self.static_obstacles_loaded:
+            self._load_static_obstacles()
+
+        if not self.static_obstacles:
+            return False, 100000
+
+        speed = self._ego_speed / 3.6
+        lookahead = min(
+            max(int(self._collision_check.time_ahead * speed / 0.1), 90),
+            len(rx))
+        detect_radius = _StaticCollisionProxy.DEFAULT_EXTENT + 1.1
+
+        hazard = False
+        min_distance = 100000
+
+        for obs in self.static_obstacles:
+            oloc = obs.get_location()
+            for i in range(0, lookahead, 5):
+                center_distance = math.hypot(rx[i] - oloc.x, ry[i] - oloc.y)
+                if center_distance < detect_radius:
+                    hazard = True
+                    d = positive(oloc.distance(self._ego_pos.location) - 3)
+                    if d < min_distance:
+                        min_distance = d
+                    if not self._static_obstacle_path_hazard_logged:
+                        self._static_obstacle_path_hazard_logged = True
+                        log.warning(
+                            "[static_obstacles] actor %s: path hazard "
+                            "obstacle_loc=(%.2f,%.2f,%.2f) "
+                            "path_point=(%.2f,%.2f) center_distance=%.2f "
+                            "ego_distance=%.2f detect_radius=%.2f",
+                            self.vehicle.id,
+                            oloc.x,
+                            oloc.y,
+                            oloc.z,
+                            rx[i],
+                            ry[i],
+                            center_distance,
+                            d,
+                            detect_radius)
+                    break
+
+        return hazard, min_distance
 
     def overtake_management(self, obstacle_vehicle):
         """
@@ -714,6 +905,8 @@ class BehaviorAgent(object):
 
 
         """
+        self.lane_change_blocked = False
+
         # the lane change is forbidden if driving within a large curve
         if len(rk) > 2 and np.mean(np.abs(np.array(rk))) > 0.04:
             lane_change_allowed = False
@@ -727,9 +920,10 @@ class BehaviorAgent(object):
                                    self.get_local_planner().lane_lateral_change and \
                                    self.overtake_counter <= 0 and \
                                    not self.destination_push_flag
-        if lane_change_enabled_flag:
-            lane_change_allowed = lane_change_allowed and self.lane_change_management()
-            if not lane_change_allowed:
+        if lane_change_enabled_flag and lane_change_allowed:
+            lane_change_allowed = self.lane_change_management()
+            self.lane_change_blocked = not lane_change_allowed
+            if self.lane_change_blocked:
                 print("lane change not allowed")
 
         return lane_change_allowed
@@ -825,6 +1019,25 @@ class BehaviorAgent(object):
             raise StopIteration('destination_reached')
 
         if self.traffic_light_manager(ego_vehicle_wp) != 0:
+            if collision_detector_enabled:
+                rx, ry, _, ryaw = self._local_planner.generate_path()
+                static_hazard, static_distance = self.static_obstacle_check(
+                    rx, ry, ryaw)
+                should_log = (
+                    static_hazard and
+                    not self._traffic_light_static_hazard_logged
+                ) or not self._traffic_light_static_check_logged
+                if should_log:
+                    log.info("[static_obstacles] actor %s: "
+                             "traffic-light stop check hazard=%s "
+                             "distance=%.2f path_points=%d",
+                             self.vehicle.id,
+                             static_hazard,
+                             static_distance,
+                             len(rx))
+                    self._traffic_light_static_check_logged = True
+                    if static_hazard:
+                        self._traffic_light_static_hazard_logged = True
             return 0, None
 
         if len(self.get_local_planner().get_waypoints_queue()) == 0 \
@@ -864,9 +1077,23 @@ class BehaviorAgent(object):
 
         # 3. Collision check
         is_hazard = False
+        obstacle_vehicle = None
+        distance = 100000
+        static_only_hazard = False
         if collision_detector_enabled:
             is_hazard, obstacle_vehicle, distance = self.collision_manager(
                 rx, ry, ryaw, ego_vehicle_wp)
+
+            # Static obstacles cannot enter the vehicle-overtaking path.
+            static_hazard, static_distance = self.static_obstacle_check(
+                rx, ry, ryaw)
+            if self.static_obstacle_avoidance_enabled and \
+                    static_hazard and \
+                    (not is_hazard or static_distance < distance):
+                is_hazard = True
+                distance = static_distance
+                obstacle_vehicle = None
+                static_only_hazard = True
         car_following_flag = False
 
         if not is_hazard:
@@ -875,7 +1102,7 @@ class BehaviorAgent(object):
         # 4. push case. Push the car to a temporary destination when original lane change action can't be executed
         # The case that the vehicle is doing lane change as planned
         # but found vehicle blocking on the other lane
-        if not self.lane_change_allowed and \
+        if self.lane_change_blocked and \
                 self.get_local_planner().potential_curved_road \
                 and not self.destination_push_flag and \
                 self.overtake_counter <= 0:
@@ -895,6 +1122,7 @@ class BehaviorAgent(object):
         # allowed or it is doing overtaking the second condition is to
         # prevent successive overtaking
         elif is_hazard and (not self.overtake_allowed or
+                            static_only_hazard or
                             self.overtake_counter > 0
                             or self.get_local_planner().potential_curved_road):
             car_following_flag = True
@@ -924,7 +1152,10 @@ class BehaviorAgent(object):
             if distance < max(self.break_distance, 3):
                 return 0, None
 
-            target_speed = self.car_following_manager(obstacle_vehicle, distance, target_speed)
+            if obstacle_vehicle is not None:
+                target_speed = self.car_following_manager(obstacle_vehicle, distance, target_speed)
+            else:
+                target_speed = 0
             target_speed, target_loc = self._local_planner.run_step(
                 rx, ry, rk, target_speed=target_speed)
             return target_speed, target_loc

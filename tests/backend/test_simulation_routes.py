@@ -1,5 +1,4 @@
 import pytest
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
 
@@ -54,31 +53,43 @@ def test_stop_returns_stopping_when_running(client):
     assert response.json()["status"] == "stopping"
     assert simulation_state["status"] == "stopping"
 
-def test_start_returns_409_when_already_running(client):
+VALID_SIM_SCENARIO = [
+    {
+        "vehicle": "car",
+        "path": [
+            {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "points": [{"id": 0, "x": 10, "y": 0, "z": 0}],
+            }
+        ],
+    }
+]
+
+
+def test_start_returns_409_when_already_running(client, open_cda_yaml):
     from app.routers.simulation import simulation_state
     simulation_state["running"] = True
 
     response = client.post("/api/start_opencda", json={
         "map": "Town01",
         "max_ticks": 100,
-        "scenario": [],
+        "opencda_config_yaml": open_cda_yaml,
+        "scenario": VALID_SIM_SCENARIO,
     })
     assert response.status_code == 409
     assert "already running" in response.json()["detail"]
 
 
-def test_start_returns_started(client):
-    with patch("app.routers.simulation._executor") as mock_executor, \
-         patch("app.utils.json_to_single_cav_list", return_value={}), \
-         patch("omegaconf.OmegaConf.load", return_value={}), \
-         patch("omegaconf.OmegaConf.merge", return_value=MagicMock()), \
-         patch("omegaconf.OmegaConf.to_container", return_value={"current_time": "20250101_120000"}), \
-         patch("opencda.scenario_testing.utils.yaml_utils.add_current_time", side_effect=lambda x: x):
+def test_start_returns_started(client, open_cda_yaml):
+    with patch("app.routers.simulation._executor") as mock_executor:
         mock_executor.submit = MagicMock()
         response = client.post("/api/start_opencda", json={
             "map": "Town01",
             "max_ticks": 100,
-            "scenario": [],
+            "opencda_config_yaml": open_cda_yaml,
+            "scenario": VALID_SIM_SCENARIO,
         })
 
     assert response.status_code == 200
@@ -97,12 +108,16 @@ def test_results_returns_404_when_not_found(client, tmp_path):
     assert response.status_code == 404
 
 
-def test_results_returns_png_files(client, tmp_path):
+def test_results_returns_artifact_files(client, tmp_path):
     run_id = "Town01_20250101"
     run_dir = tmp_path / run_id
     run_dir.mkdir()
     (run_dir / "result.png").write_bytes(b"fake")
-    (run_dir / "other.txt").write_bytes(b"ignore")
+    (run_dir / "log.txt").write_text("evaluation")
+    (run_dir / "forensic.log").write_text("forensic")
+    (run_dir / "source_config.yaml").write_text("world: {}")
+    (run_dir / "config_overrides.json").write_text("{}")
+    (run_dir / "other.csv").write_text("ignore")
 
     with patch("app.routers.simulation.get_settings") as mock_settings:
         mock_settings.return_value.eval_dir = tmp_path
@@ -111,8 +126,13 @@ def test_results_returns_png_files(client, tmp_path):
     assert response.status_code == 200
     data = response.json()
     assert data["run_id"] == run_id
-    assert len(data["files"]) == 1
-    assert data["files"][0]["filename"] == "result.png"
+    assert [item["filename"] for item in data["files"]] == [
+        "config_overrides.json",
+        "forensic.log",
+        "log.txt",
+        "result.png",
+        "source_config.yaml",
+    ]
 
 def test_delete_results_404_when_not_found(client, tmp_path):
     with patch("app.routers.simulation.get_settings") as mock_settings:
@@ -134,6 +154,7 @@ def test_delete_results_removes_directory(client, tmp_path):
     assert not run_dir.exists()
 
 def test_health_returns_ok(client):
-    response = client.get("/health")
+    with patch("main.database_is_ready", return_value=True):
+        response = client.get("/health")
     assert response.status_code == 200
     assert response.json()["status"] == "ok"

@@ -11,7 +11,7 @@ const ensurePedestrianModel = (): Promise<boolean> => {
   if (pedestrianModel) return Promise.resolve(true);
   return new Promise((resolve) => {
     loader.load(
-      '/pedestrian_traffic_light.glb',
+      '/man_in_suit.glb',
       (gltf) => {
         pedestrianModel = gltf.scene;
         resolve(true);
@@ -24,9 +24,9 @@ const ensurePedestrianModel = (): Promise<boolean> => {
 
 function syncPedestrians(
   scene: THREE.Scene,
-  pedestrianMeshesRef: React.MutableRefObject<THREE.Mesh[]>,
-  pedestrianObjsRef: React.MutableRefObject<THREE.Mesh[]>,
-  transformControlsRef: React.MutableRefObject<unknown>,
+  pedestrianMeshesRef: React.RefObject<THREE.Mesh[]>,
+  pedestrianObjsRef: React.RefObject<THREE.Mesh[]>,
+  transformControlsRef: React.RefObject<unknown>,
   updateSceneGraph: () => void,
 ) {
   const pedestrians = useEditorStore.getState().pedestrians;
@@ -59,7 +59,7 @@ function syncPedestrians(
     if (!pedestrianModel) return;
 
     const modelClone = pedestrianModel.clone(true);
-    modelClone.scale.setScalar(0.01);
+    modelClone.scale.setScalar(0.03);
     modelClone.rotation.x += Math.PI / 2;
 
     const bbox = new THREE.Box3().setFromObject(modelClone);

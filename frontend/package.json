@@ -1,8 +1,9 @@
 {
-  "name": "scenario-web-app",
+  "name": "scenario-manager",
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "packageManager": "yarn@1.22.22",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -16,17 +17,17 @@
     "lint:css": "stylelint \"src/**/*.{css,scss,sass}\" --fix",
     "format": "prettier --write .",
     "prepare": "husky",
-    "analyze": "source-map-explorer dist/assets/*.js"
+    "analyze": "vite build --mode analyze"
   },
   "dependencies": {
+    "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
     "@mui/icons-material": "^5.15.17",
     "@mui/material": "^5.15.17",
+    "@mui/system": "^5.15.17",
     "@mui/x-tree-view": "^8.0.0-beta.3",
     "@tanstack/react-query": "^5.91.0",
-    "dat.gui": "^0.7.9",
-    "eslint-plugin-react": "^7.37.5",
     "ky": "^1.14.3",
     "notyf": "^3.10.0",
     "react": "^18.2.0",
@@ -39,30 +40,27 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "eslint-plugin-react": "^7.37.5",
     "@playwright/test": "^1.59.1",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
-    "@types/dat.gui": "^0.7.13",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@types/three": "^0.184.0",
     "@typescript-eslint/eslint-plugin": "^8.59.0",
     "@typescript-eslint/parser": "^8.59.0",
-    "@vitejs/plugin-react": "^4.2.1",
-    "@vitejs/plugin-react-swc": "^4.3.0",
+    "@vitejs/plugin-react": "^5.0.0",
     "@vitest/coverage-v8": "^4.1.5",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-prettier": "^5.5.5",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.4.5",
     "eslint-plugin-simple-import-sort": "^13.0.0",
     "eslint-plugin-unused-imports": "^4.4.1",
     "husky": "^9.1.7",
     "jsdom": "^29.1.0",
-    "lint-staged": "^16.4.0",
     "prettier": "^3.8.3",
     "rollup-plugin-visualizer": "^7.0.1",
     "sass": "^1.71.1",
@@ -70,7 +68,7 @@
     "stylelint-config-standard": "^40.0.0",
     "stylelint-scss": "^7.0.0",
     "typescript": "^5.2.2",
-    "vite": "^5.2.11",
+    "vite": "^8.0.10",
     "vitest": "^4.1.5"
   }
 }

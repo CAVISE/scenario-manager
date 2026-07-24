@@ -7,7 +7,11 @@ import {
   ODR_MAP_OPTIONS,
   UseOdrLoaderProps,
 } from '../types/useOdrLoaderTypes';
-import { fetchXodrText, getStoredXodrName } from '../utils/xodrRepository';
+import {
+  fetchXodrText,
+  getStoredXodrName,
+  setCachedCustomXodrContent,
+} from '../utils/xodrRepository';
 
 export function useOdrLoader({
   setStep,
@@ -21,6 +25,7 @@ export function useOdrLoader({
     function processFile(fileText: string, clearMap: boolean) {
       const Module = moduleRef.current;
       if (!Module || cancelled) return;
+      setCachedCustomXodrContent(fileText);
       if (clearMap) {
         const s = useEditorStore.getState();
         s.cars.forEach((c) => s.removeCar(c.id));

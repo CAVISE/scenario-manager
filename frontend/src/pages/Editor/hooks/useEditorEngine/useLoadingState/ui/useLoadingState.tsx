@@ -19,6 +19,7 @@ export function useLoadingState() {
 
   const setStep = useCallback(
     (step: keyof typeof LOADING_STEPS) => {
+      console.log('[setStep] called with:', step);
       clearTimers();
 
       if (step === 'done') {

@@ -22,7 +22,7 @@ import { useNoticeWithToast } from '../../../../../../components/AppToast';
 export default function ScenarioControlWidget() {
   const scenario = useEditorStore((s) => s.Scenario);
   const updateScenario = useEditorStore((s) => s.updateScenario);
-  const { sceneRef, loadRSURef } = useEditorRefs();
+  const { sceneRef, loadRSURef, odrMapRef } = useEditorRefs();
   const { buildingModelRef, updateSceneGraph, loadFile, setStep } = useHooks();
   const [scenarioIdInput, setScenarioIdInput] = useState(scenario.id ?? '');
   const [notice, setNotice] = useState<string>('');
@@ -89,7 +89,11 @@ export default function ScenarioControlWidget() {
           className="rp-btn rp-btn-primary"
           disabled={isBusy}
           onClick={() =>
-            handleCreate(setNoticeWithToast, createScenarioMutation)
+            handleCreate(
+              setNoticeWithToast,
+              createScenarioMutation,
+              scenarioIdInput,
+            )
           }
         >
           POST
@@ -135,6 +139,12 @@ export default function ScenarioControlWidget() {
             setNoticeWithToast,
             scenarioIdInput,
             startSimulationMutation,
+            odrMapRef.current
+              ? {
+                  x: odrMapRef.current.x_offs,
+                  y: -odrMapRef.current.y_offs,
+                }
+              : undefined,
           )
         }
       >
