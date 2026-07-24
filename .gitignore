@@ -37,7 +37,8 @@ coverage/
 reports/
 plots/
 
-evaluation_outputs/
+evaluation_outputs/*
+!evaluation_outputs/.gitkeep
 assets/xodrs/
 frontend/coverage/
 frontend/test-results/
