@@ -23,7 +23,7 @@ jobs:
           python-version: "3.12"
           enable-cache: true
       - name: Install backend dependencies
-        run: uv sync --frozen
+        run: uv sync --frozen --group dev
       - name: Test backend
         run: |
           mkdir -p reports
