@@ -1,4 +1,5 @@
 import { useEditorStore } from '../../../../../../store';
+import { setCachedCustomXodrContent } from '../../../../hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
 import { OpenDriveModule } from '../../../../hooks/useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
 import { PARAMS } from '../../../../hooks/useThreeScene/types/useThreeSceneTypes';
 import {
@@ -26,14 +27,18 @@ export function reloadOdrMap({
   }
   try {
     if (OpenDriveMap) OpenDriveMap.delete();
+    console.log('JFAOSJHFHSAF(HFHASF');
     OpenDriveMap = new ModuleOpenDrive.OpenDriveMap('./data.xodr', {
       with_lateralProfile: PARAMS.lateralProfile,
       with_laneHeight: PARAMS.laneHeight,
       with_road_objects: false,
-      center_map: true,
+      center_map: false,
       abs_z_for_for_local_road_obj_outline: true,
     });
     loadOdrMap(true, false);
+    console.log('[OpenDRIVE] center_map = false');
+    console.log('[OpenDRIVE] x_offs =', OpenDriveMap.x_offs);
+    console.log('[OpenDRIVE] y_offs =', OpenDriveMap.y_offs);
   } catch (err) {
     console.error(err);
     setStep('done');
@@ -65,7 +70,7 @@ export function loadFile({
     return;
   }
   if (clear_map) {
-    localStorage.setItem('cached_xodr', file_text);
+    setCachedCustomXodrContent(file_text);
     const s = useEditorStore.getState();
     s.cars.forEach((c) => s.removeCar(c.id));
     while (useEditorStore.getState().RSUs.length > 0)
@@ -86,15 +91,19 @@ export function loadFile({
   try {
     ModuleOpenDrive.FS_createDataFile('.', 'data.xodr', file_text, true, true);
     if (OpenDriveMap) OpenDriveMap.delete();
+    console.log('JFAOSJHFHSAF(HFHASF');
     OpenDriveMap = new ModuleOpenDrive.OpenDriveMap('./data.xodr', {
       with_lateralProfile: PARAMS.lateralProfile,
       with_laneHeight: PARAMS.laneHeight,
       with_road_objects: false,
-      center_map: true,
-      abs_z_for_for_local_road_obj_outline: true,
+      center_map: false,
+      abs_z_for_for_local_road_obj_outline: false,
     });
     setStep('scene');
     loadOdrMap(clear_map);
+    console.log('[OpenDRIVE] center_map = false');
+    console.log('[OpenDRIVE] x_offs =', OpenDriveMap.x_offs);
+    console.log('[OpenDRIVE] y_offs =', OpenDriveMap.y_offs);
   } catch (err) {
     console.error(err);
     setStep('done');

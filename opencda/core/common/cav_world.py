@@ -60,7 +60,7 @@ class CavWorld(object):
         for vehicle_manager in self._vehicle_manager_dict.values():
             vehicle_manager.destroy()
         for rsu_manager in self._rsu_manager_dict.values():
-            rsu_manager.destory()
+            rsu_manager.destroy()
 
     def update_vehicle_manager(self, vehicle_manager):
         """
@@ -139,8 +139,9 @@ class CavWorld(object):
 
         target_vm = None
         for key, vm in self._vehicle_manager_dict.items():
-            x = vm.localizer.get_ego_pos().location.x
-            y = vm.localizer.get_ego_pos().location.y
+            vehicle_loc = vm.vehicle.get_location()
+            x = vehicle_loc.x
+            y = vehicle_loc.y
 
             if loc.x == x and loc.y == y:
                 target_vm = vm

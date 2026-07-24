@@ -1,25 +1,31 @@
 from functools import lru_cache
 from pathlib import Path
 
+from dotenv import load_dotenv
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).parent.parent
+ENV_FILE = BASE_DIR / ".env"
+
+load_dotenv(ENV_FILE, override=True)
 
 
 class Settings(BaseSettings):
     # CARLA
-    carla_host: str = "localhost"
-    carla_port: int = 2000
+    carla_host: str
+    carla_port: int = Field(ge=1, le=65535)
+    carla_traffic_manager_port: int = Field(default=8001, ge=1, le=65535)
+    carla_timeout_seconds: float = Field(gt=0)
 
-    db_name: str = ""
-    db_user: str = ""
-    db_password: str = ""
-    db_host: str = "localhost"
-    db_port: int = 5432
-    db_encoding: str = "UTF8"
+    db_name: str
+    db_user: str
+    db_password: str
+    db_host: str
+    db_port: int
+    db_encoding: str
 
     base_dir: Path = BASE_DIR
-    cfg_dir: Path = BASE_DIR / "assets" / "opencda"
     xodr_dir: Path = BASE_DIR / "assets" / "xodrs"
     eval_dir: Path = BASE_DIR / "evaluation_outputs"
     log_dir: Path = BASE_DIR / "logs"
@@ -30,26 +36,11 @@ class Settings(BaseSettings):
 
     cors_origins: str = "http://localhost:5173"
 
-    model_config = SettingsConfigDict(
-        env_file=".env.local",
-        env_file_encoding="utf-8",
-        extra="ignore",
-    )
+    model_config = SettingsConfigDict(extra="ignore")
 
     @property
     def cors_origins_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",")]
-
-    @property
-    def db_config(self) -> dict:
-        return {
-            "dbname": self.db_name,
-            "user": self.db_user,
-            "password": self.db_password,
-            "host": self.db_host,
-            "port": self.db_port,
-            "client_encoding": self.db_encoding,
-        }
 
 
 @lru_cache

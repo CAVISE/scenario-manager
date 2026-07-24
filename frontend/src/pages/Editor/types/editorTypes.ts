@@ -15,13 +15,7 @@ export type Vec3 = { x: number; y: number; z: number };
 export const styles = { position: 'absolute', inset: 0 } as const;
 export interface SelectedObject {
   type:
-    | 'rsu'
-    | 'point'
-    | 'building'
-    | 'circle'
-    | 'lidar'
-    | 'car'
-    | 'pedestrian';
+    'rsu' | 'point' | 'building' | 'circle' | 'lidar' | 'car' | 'pedestrian';
   id?: string;
   position?: Vec3;
 }

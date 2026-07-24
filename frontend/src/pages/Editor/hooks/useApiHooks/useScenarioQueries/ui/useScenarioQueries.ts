@@ -31,7 +31,7 @@ export function useScenarioDetailQuery(id: string | null) {
       const data = await scenariosApi.get(id);
       updateScenario({
         id: data.scenario_id ?? '',
-        name: data.scenario_name ?? '',
+        name: data.scenario_name ?? data.name_of_scenario ?? '',
         weather: data.weather ?? '',
         file_: data.file_ ?? null,
       });
@@ -44,10 +44,22 @@ export function useScenarioCreateMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: ScenarioPayload) => scenariosApi.create(payload),
-    onSuccess: (data) => {
-      if (data.scenario_id) {
-        queryClient.setQueryData(scenarioKeys.detail(data.scenario_id), data);
+    mutationFn: ({
+      payload,
+      scenarioIdInput = '',
+    }: {
+      payload: ScenarioPayload;
+      scenarioIdInput?: string;
+    }) => scenariosApi.create(payload, scenarioIdInput),
+    onSuccess: (data, variables) => {
+      const id =
+        variables.scenarioIdInput?.trim() ||
+        variables.payload?.scenario_id?.trim() ||
+        (data as unknown as { scenario_id?: string })?.scenario_id?.trim();
+      if (id) {
+        queryClient.setQueryData(scenarioKeys.detail(id), data);
+        queryClient.invalidateQueries({ queryKey: scenarioKeys.detail(id) });
+        queryClient.invalidateQueries({ queryKey: scenarioKeys.list() });
       }
     },
   });
@@ -59,21 +71,31 @@ export function useScenarioPatchMutation() {
 
   return useMutation({
     mutationFn: ({
+      id,
       payload,
     }: {
       id: string;
-      payload: Partial<ScenarioPayload>;
-    }) => scenariosApi.update(payload),
-    onSuccess: (data) => {
-      if (data.scenario_id) {
-        queryClient.setQueryData(scenarioKeys.detail(data.scenario_id), data);
-      }
-      updateScenario({
-        id: data.scenario_id ?? '',
-        name: data.scenario_name ?? '',
-        weather: data.weather ?? '',
-        file_: data.file_ ?? null,
-      });
+      payload: Partial<ScenarioPayload> & {
+        weather?: string;
+        file_?: string | null;
+      };
+    }) =>
+      scenariosApi.update({
+        ...payload,
+        scenario_id: id,
+      }),
+    onSuccess: (_data, { id, payload }) => {
+      const p = payload as Record<string, unknown>;
+      queryClient.invalidateQueries({ queryKey: scenarioKeys.detail(id) });
+
+      const update: Record<string, unknown> = { id };
+      const name = p.name_of_scenario ?? p.scenario_name ?? p.name;
+      if (name !== undefined) update.name = name;
+      if (p.description !== undefined) update.description = p.description;
+      if (p.weather !== undefined) update.weather = p.weather;
+      if (p.file_ !== undefined) update.file_ = p.file_;
+
+      updateScenario(update as Parameters<typeof updateScenario>[0]);
     },
   });
 }
@@ -81,19 +103,23 @@ export function useScenarioPatchMutation() {
 export function useScenarioPutMutation() {
   const queryClient = useQueryClient();
   const updateScenario = useEditorStore((s) => s.updateScenario);
-
   return useMutation({
-    mutationFn: ({ payload }: { id: string; payload: ScenarioPayload }) =>
-      scenariosApi.replace(payload),
-    onSuccess: (data) => {
-      if (data.scenario_id) {
-        queryClient.setQueryData(scenarioKeys.detail(data.scenario_id), data);
-      }
+    mutationFn: ({ id }: { id: string; payload: ScenarioPayload }) =>
+      scenariosApi.replace(id),
+    onSuccess: (data, { id }) => {
+      const d = data as unknown as {
+        scenario_name?: string;
+        weather?: string;
+        file_?: string | null;
+      };
+      queryClient.setQueryData(scenarioKeys.detail(id), data);
+      queryClient.invalidateQueries({ queryKey: scenarioKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: scenarioKeys.list() });
       updateScenario({
-        id: data.scenario_id ?? '',
-        name: data.scenario_name ?? '',
-        weather: data.weather ?? '',
-        file_: data.file_ ?? null,
+        id,
+        name: d.scenario_name ?? undefined,
+        weather: d.weather ?? undefined,
+        file_: d.file_ ?? null,
       });
     },
   });

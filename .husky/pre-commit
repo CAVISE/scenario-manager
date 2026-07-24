@@ -1,0 +1,2 @@
+yarn --cwd frontend test
+uv run pytest tests/backend -q

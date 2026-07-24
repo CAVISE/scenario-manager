@@ -1,9 +1,14 @@
 import json
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
-from app.database import get_conn
+from app.database import get_session
 from app.log_config import get_logger
+from app.models import Scenario
 from app.schemas import (
     DeleteScenarioRequest,
     LoadAllScenariosResponse,
@@ -17,25 +22,32 @@ from app.schemas import (
 
 router = APIRouter(tags=["scenarios"])
 log = get_logger(__name__)
+DatabaseSession = Annotated[Session, Depends(get_session)]
+
+
+def _normalize_scenario_blob(scenario) -> dict:
+    if scenario is None:
+        return {}
+    if isinstance(scenario, list):
+        return {"scenario_text": scenario}
+    if isinstance(scenario, dict):
+        if "scenario_text" in scenario:
+            return scenario
+        return {"scenario_text": [scenario]}
+    return {}
 
 
 @router.get("/load_all_scenarios", response_model=LoadAllScenariosResponse)
-async def load_all_scenarios():
+def load_all_scenarios(session: DatabaseSession):
     log.info("action=load_all_scenarios")
-    with get_conn() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                "SELECT id, scenario_id, name_of_scenario, preview, annotation FROM scenarios"
-            )
-            rows = cur.fetchall()
-
+    rows = session.scalars(select(Scenario)).all()
     scenarios = [
         ScenarioSummary(
-            id=row[0],
-            scenario_id=str(row[1]),
-            name=row[2],
-            preview=row[3],
-            annotation=row[4],
+            id=row.id,
+            scenario_id=str(row.scenario_id),
+            name=row.name_of_scenario,
+            preview=row.preview,
+            annotation=row.annotation,
         )
         for row in rows
     ]
@@ -45,24 +57,13 @@ async def load_all_scenarios():
 
 
 @router.get("/load_scenario/{scenario_id}", response_model=LoadScenarioResponse)
-async def load_scenario(scenario_id: str):
+def load_scenario(scenario_id: str, session: DatabaseSession):
     log.info("action=load_scenario scenario_id=%s", scenario_id)
-    with get_conn() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                """
-                SELECT id, scenario_id, name_of_scenario, scenario_text,
-                       preview, annotation, file_
-                FROM scenarios WHERE scenario_id = %s
-                """,
-                (scenario_id,),
-            )
-            row = cur.fetchone()
-
-    if not row:
+    row = session.scalar(select(Scenario).where(Scenario.scenario_id == scenario_id))
+    if row is None:
         raise HTTPException(status_code=404, detail="Scenario not found")
 
-    scenario_text = row[3]
+    scenario_text = row.scenario_text
     if scenario_text:
         try:
             scenario_text = json.loads(scenario_text)
@@ -72,88 +73,72 @@ async def load_scenario(scenario_id: str):
     return LoadScenarioResponse(
         status="success",
         scenario=ScenarioDetail(
-            id=row[0],
-            scenario_id=str(row[1]),
-            name_of_scenario=row[2],
+            id=row.id,
+            scenario_id=str(row.scenario_id),
+            name_of_scenario=row.name_of_scenario,
             scenario_text=scenario_text,
-            preview=row[4],
-            annotation=row[5],
-            file_=row[6],
+            preview=row.preview,
+            annotation=row.annotation,
+            file_=row.file_,
         ),
     )
 
 
 @router.post("/upload_scenario", response_model=ScenarioMutationResponse)
-async def upload_scenario(body: UploadScenarioRequest):
+def upload_scenario(body: UploadScenarioRequest, session: DatabaseSession):
     log.info("action=upload_scenario name=%s", body.name_of_scenario)
-    scenario_text = json.dumps(body.scenario or {})
-
-    with get_conn() as conn:
-        with conn.cursor() as cur:
-            if body.scenario_id:
-                cur.execute(
-                    "SELECT 1 FROM scenarios WHERE scenario_id = %s",
-                    (body.scenario_id,),
-                )
-                if cur.fetchone():
-                    raise HTTPException(
-                        status_code=409,
-                        detail="Scenario with this ID already exists",
-                    )
-
-            cur.execute(
-                """
-                INSERT INTO scenarios
-                    (scenario_id, name_of_scenario, scenario_text, preview, annotation, file_)
-                VALUES (%s, %s, %s, %s, %s, %s)
-                """,
-                (
-                    body.scenario_id,
-                    body.name_of_scenario,
-                    scenario_text,
-                    body.preview,
-                    body.description,
-                    body.file_,
-                ),
+    if body.scenario_id:
+        existing_id = session.scalar(
+            select(Scenario.id).where(Scenario.scenario_id == body.scenario_id)
+        )
+        if existing_id is not None:
+            raise HTTPException(
+                status_code=409,
+                detail="Scenario with this ID already exists",
             )
-            conn.commit()
+
+    session.add(
+        Scenario(
+            scenario_id=body.scenario_id,
+            name_of_scenario=body.name_of_scenario,
+            scenario_text=json.dumps(_normalize_scenario_blob(body.scenario)),
+            preview=body.preview,
+            annotation=body.description,
+            file_=body.file_,
+        )
+    )
+    try:
+        session.commit()
+    except IntegrityError as exc:
+        session.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="Scenario with this ID already exists",
+        ) from exc
 
     return ScenarioMutationResponse(status="success", message="Scenario created")
 
 
 @router.post("/update_scenario", response_model=ScenarioMutationResponse)
-async def update_scenario(body: UpdateScenarioRequest):
+def update_scenario(body: UpdateScenarioRequest, session: DatabaseSession):
     log.info("action=update_scenario scenario_id=%s", body.scenario_id)
-    # Only serialize when explicitly provided to avoid overwriting with empty object
-    scenario_text = json.dumps(body.scenario) if body.scenario is not None else None
+    row = session.scalar(
+        select(Scenario).where(Scenario.scenario_id == body.scenario_id)
+    )
+    if row is None:
+        raise HTTPException(status_code=404, detail="Scenario not found")
 
-    with get_conn() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                "SELECT scenario_id FROM scenarios WHERE scenario_id = %s",
-                (body.scenario_id,),
-            )
-            if not cur.fetchone():
-                raise HTTPException(status_code=404, detail="Scenario not found")
-
-            cur.execute(
-                """
-                UPDATE scenarios
-                SET name_of_scenario = COALESCE(%s, name_of_scenario),
-                    scenario_text     = COALESCE(%s, scenario_text),
-                    preview           = COALESCE(%s, preview),
-                    annotation        = COALESCE(%s, annotation)
-                WHERE scenario_id = %s
-                """,
-                (
-                    body.scenario_name,
-                    scenario_text,
-                    body.preview,
-                    body.annotation,
-                    body.scenario_id,
-                ),
-            )
-            conn.commit()
+    if body.scenario_name is not None:
+        row.name_of_scenario = body.scenario_name
+    if body.scenario is not None:
+        row.scenario_text = json.dumps(_normalize_scenario_blob(body.scenario))
+    if body.preview is not None:
+        row.preview = body.preview
+    if body.annotation is not None:
+        row.annotation = body.annotation
+    if body.file_ is not None:
+        row.file_ = body.file_
+    session.commit()
 
     return ScenarioMutationResponse(
         status="success",
@@ -163,19 +148,16 @@ async def update_scenario(body: UpdateScenarioRequest):
 
 
 @router.post("/delete_scenario", response_model=ScenarioMutationResponse)
-async def delete_scenario(body: DeleteScenarioRequest):
+def delete_scenario(body: DeleteScenarioRequest, session: DatabaseSession):
     log.info("action=delete_scenario scenario_id=%s", body.scenario_id)
+    row = session.scalar(
+        select(Scenario).where(Scenario.scenario_id == body.scenario_id)
+    )
+    if row is None:
+        raise HTTPException(status_code=404, detail="Scenario not found")
 
-    with get_conn() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                "DELETE FROM scenarios WHERE scenario_id = %s",
-                (body.scenario_id,),
-            )
-            if cur.rowcount == 0:
-                raise HTTPException(status_code=404, detail="Scenario not found")
-            conn.commit()
-
+    session.delete(row)
+    session.commit()
     return ScenarioMutationResponse(
         status="success",
         message="Scenario deleted",

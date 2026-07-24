@@ -1,15 +1,14 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 from app.config import get_settings
-from app.database import close_pool, init_pool
+from app.database import close_database, database_is_ready, initialize_database
 from app.log_config import get_logger
 from app.routers import scenarios_router, simulation_router
 from app.routers.simulation import cleanup_old_results
@@ -27,10 +26,7 @@ async def lifespan(app: FastAPI):
     settings.xodr_dir.mkdir(parents=True, exist_ok=True)
     settings.log_dir.mkdir(parents=True, exist_ok=True)
 
-    try:
-        init_pool()
-    except Exception as e:
-        log.warning("DB pool init failed (no DB?): %s", e)
+    initialize_database()
 
     try:
         cleanup_old_results()
@@ -39,7 +35,7 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    close_pool()
+    close_database()
 
 
 def create_app() -> FastAPI:
@@ -73,11 +69,9 @@ def create_app() -> FastAPI:
 
     @app.get("/health")
     async def health():
-        from app.database import _db_pool
-        return {
-            "status": "ok",
-            "db": "connected" if _db_pool else "disconnected",
-        }
+        if not database_is_ready():
+            raise HTTPException(status_code=503, detail="Database unavailable")
+        return {"status": "ok", "db": "connected"}
 
     @app.get("/")
     async def root():

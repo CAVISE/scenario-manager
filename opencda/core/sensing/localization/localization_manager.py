@@ -5,6 +5,7 @@ Localization module
 # Author: Runsheng Xu <rxx3386@ucla.edu>
 # License: TDG-Attribution-NonCommercial-NoDistrib
 
+import logging
 import weakref
 from collections import deque
 
@@ -17,6 +18,11 @@ from opencda.core.sensing.localization.localization_debug_helper \
 from opencda.core.sensing.localization.kalman_filter import KalmanFilter
 from opencda.core.sensing.localization.coordinate_transform \
     import geo_to_transform
+from opencda.core.sensing.localization.gnss_spoofer \
+    import GnssDriftSpoofer
+
+
+log = logging.getLogger(__name__)
 
 
 class GnssSensor(object):
@@ -174,6 +180,16 @@ class LocalizationManager(object):
         self.geo_ref = self.map.transform_to_geolocation(
             carla.Location(x=0, y=0, z=0))
 
+        # Invalid map georeferences near the poles distort longitude noise.
+        self._geo_ref_lat = self.geo_ref.latitude
+        self._geo_ref_lon = self.geo_ref.longitude
+        if abs(self._geo_ref_lat) > 89.0:
+            print(f"[geo_ref] WARNING: degenerate map geo-reference "
+                  f"latitude={self._geo_ref_lat:.4f} (near a pole) for "
+                  f"actor {vehicle.id} — falling back to 0.0 to avoid "
+                  f"asymmetric x/y GNSS noise sensitivity")
+            self._geo_ref_lat = 0.0
+
         # speed and transform and current timestamp
         self._ego_pos = None
         self._speed = 0
@@ -191,6 +207,29 @@ class LocalizationManager(object):
         self.speed_noise_std = config_yaml['gnss']['speed_stddev']
 
         self.dt = config_yaml['dt']
+        spoofing_config = config_yaml.get('gnss_spoofing')
+        self.gnss_spoofer = None
+        self._gnss_spoofer_active = False
+        if spoofing_config:
+            mode = spoofing_config.get('mode', 'drift')
+            if mode != 'drift':
+                raise ValueError(
+                    'Unsupported runtime GNSS spoofing mode: %s' % mode)
+            self.gnss_spoofer = GnssDriftSpoofer(
+                spoofing_config, self.dt)
+            log.info(
+                '[gnss_spoofer] actor=%s configured start=%.2fs '
+                'ramp=%.2fs lateral=%.2fm longitudinal=%.2fm '
+                'rate=%.3fm/s max=%.2fm jitter=%.2fm',
+                vehicle.id,
+                self.gnss_spoofer.start_time,
+                self.gnss_spoofer.ramp_duration,
+                self.gnss_spoofer.lateral_offset,
+                self.gnss_spoofer.longitudinal_offset,
+                self.gnss_spoofer.drift_rate,
+                self.gnss_spoofer.max_offset,
+                self.gnss_spoofer.jitter_stddev,
+            )
         # Kalman Filter
         self.kf = KalmanFilter(self.dt)
 
@@ -218,17 +257,51 @@ class LocalizationManager(object):
             speed_true = get_speed(self.vehicle)
             speed_noise = self.add_speed_noise(speed_true)
 
-            x, y, z = geo_to_transform(self.gnss.lat,
-                                       self.gnss.lon,
-                                       self.gnss.alt,
-                                       self.geo_ref.latitude,
-                                       self.geo_ref.longitude, 0.0)
+            true_transform = self.vehicle.get_transform()
+            location = true_transform.location
+            rotation = true_transform.rotation
 
-            # only use this for debugging purpose
-            location = self.vehicle.get_transform().location
+            true_geo = self.map.transform_to_geolocation(location)
+            gnss_lat = self.gnss.lat
+            gnss_lon = self.gnss.lon
+            gnss_alt = self.gnss.alt
+            if (self.gnss.timestamp == 0.0 and
+                    gnss_lat == 0.0 and
+                    gnss_lon == 0.0):
+                gnss_lat = true_geo.latitude
+                gnss_lon = true_geo.longitude
+                gnss_alt = true_geo.altitude
+
+            raw_x, raw_y, raw_z = geo_to_transform(gnss_lat,
+                                                  gnss_lon,
+                                                  gnss_alt,
+                                                  self._geo_ref_lat,
+                                                  self._geo_ref_lon,
+                                                  0.0)
+            ref_x, ref_y, ref_z = geo_to_transform(true_geo.latitude,
+                                                  true_geo.longitude,
+                                                  true_geo.altitude,
+                                                  self._geo_ref_lat,
+                                                  self._geo_ref_lon,
+                                                  0.0)
+
+            # Apply GNSS error as a delta in CARLA coordinates.
+            x = location.x + raw_x - ref_x
+            y = location.y + raw_y - ref_y
+            z = location.z + raw_z - ref_z
+
+            if self.gnss_spoofer is not None:
+                x, y, bias_x, bias_y, elapsed, active = \
+                    self.gnss_spoofer.apply(
+                        x, y, rotation.yaw, self.gnss.timestamp)
+                if active and not self._gnss_spoofer_active:
+                    self._gnss_spoofer_active = True
+                    log.info(
+                        '[gnss_spoofer] actor=%s activated at %.2fs '
+                        'bias=(%.2f, %.2f)m',
+                        self.vehicle.id, elapsed, bias_x, bias_y)
 
             # We add synthetic noise to the heading direction
-            rotation = self.vehicle.get_transform().rotation
             heading_angle = self.add_heading_direction_noise(rotation.yaw)
 
             # assume the initial position is accurate
@@ -303,14 +376,41 @@ class LocalizationManager(object):
 
     def get_ego_pos(self):
         """
-        Retrieve ego vehicle position
+        Retrieve the estimated ego pose produced by localization.
+
+        Kept as the legacy accessor for callers that have not migrated to
+        get_estimated_ego_pos().
         """
         return self._ego_pos
+
+    def get_estimated_ego_pos(self):
+        """Retrieve the GNSS/IMU/KF estimate of the ego pose."""
+        return self._ego_pos
+
+    def get_true_ego_pos(self):
+        """
+        Retrieve ground-truth ego vehicle position directly from CARLA.
+        Always accurate regardless of localization.activate setting.
+        Used for simulator physics, safety checks and evaluation. Navigation
+        may select this pose explicitly through configuration.
+        """
+        return self.vehicle.get_transform()
+
+    def get_true_ego_spd(self):
+        """
+        Ground-truth speed mirrors get_true_ego_pos(). Navigation may select
+        this value explicitly through configuration.
+        """
+        return get_speed(self.vehicle)
 
     def get_ego_spd(self):
         """
         Retrieve ego vehicle speed
         """
+        return self._speed
+
+    def get_estimated_ego_spd(self):
+        """Retrieve the speed estimate produced by localization."""
         return self._speed
 
     def destroy(self):

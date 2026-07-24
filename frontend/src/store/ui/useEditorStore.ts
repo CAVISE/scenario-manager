@@ -39,13 +39,34 @@ export type EditorPersist = Pick<
 
 const persistOptions: PersistOptions<EditorState, EditorPersist> = {
   name: 'editor-scenario-cache',
+  version: 1,
+  migrate: (persisted) => {
+    const state = persisted as Partial<EditorPersist>;
+    const simConfig = state.simConfig;
+    if (!simConfig?.opencda) return state as EditorPersist;
+
+    return {
+      ...state,
+      simConfig: {
+        ...simConfig,
+        opencda: {
+          ...simConfig.opencda,
+          local_planner: {
+            ...simConfig.opencda.local_planner,
+            debug: true,
+            debug_trajectory: true,
+          },
+        },
+      },
+    } as EditorPersist;
+  },
   partialize: (state): EditorPersist => ({
     cars: state.cars,
     RSUs: state.RSUs,
     lidars: state.lidars,
     points: state.points,
     buildings: state.buildings,
-    Scenario: state.Scenario,
+    Scenario: { ...state.Scenario, file_: null },
     simConfig: state.simConfig,
     selectedId: state.selectedId,
     selectedObject: state.selectedObject,
@@ -60,8 +81,7 @@ const persistOptions: PersistOptions<EditorState, EditorPersist> = {
       Scenario: {
         ...current.Scenario,
         ...p?.Scenario,
-        file_:
-          p?.Scenario?.file_ ?? localStorage.getItem('cached_xodr') ?? null,
+        file_: null,
       },
       simConfig: mergeSimConfigWithDefaults(p?.simConfig),
     };
@@ -87,7 +107,7 @@ const storeCreator: StateCreator<EditorState> = (set) => ({
     name: 'Default Scenario',
     weather: 'ClearNoon',
     description: '',
-    file_: localStorage.getItem('cached_xodr'),
+    file_: null,
   },
 
   removeSelectedId: () => set({ selectedId: null, selectedObject: null }),
@@ -231,6 +251,7 @@ const storeCreator: StateCreator<EditorState> = (set) => ({
           azimuth: 0,
           tilt: 0,
           cam_interval: 100,
+          beacon_interval: 1000,
           script: '',
         },
       ],
@@ -331,3 +352,8 @@ const storeCreator: StateCreator<EditorState> = (set) => ({
 export const useEditorStore = create<EditorState>()(
   persist(storeCreator, persistOptions),
 );
+
+if (import.meta.env.DEV && typeof window !== 'undefined') {
+  // @ts-expect-error Exposed only as a development console helper.
+  window.useEditorStore = useEditorStore;
+}

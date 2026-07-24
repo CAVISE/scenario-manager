@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { TransformControls } from 'three-stdlib';
 import { RefObject } from 'react';
 import { ThreeSetup } from '../../hooks/useOpenDriveUtils/useThreeSetup/types/useThreeSetupTypes';
+import { OpenDriveMapInstance } from '../../types/editorTypes';
 
 export interface EditorRefs {
   sceneRef: RefObject<THREE.Scene | undefined>;
@@ -29,4 +30,5 @@ export interface EditorRefs {
     isAddedPoints: boolean;
   }>;
   threeRef: React.RefObject<ThreeSetup | null>;
+  odrMapRef: RefObject<OpenDriveMapInstance | null>;
 }
