@@ -5,14 +5,14 @@ on:
 
 jobs:
   semgrep:
-    uses: CAVISE/pipelines/.github/workflows/semgrep.yml@main
+    uses: CAVISE/pipelines/.github/workflows/semgrep.yml@a8fed47bad4f45ff07ee7ecfc875a12d80f7e7e9 # main
     with:
       config: auto
       target: .
       fail-on-findings: false
 
   frontend-quality:
-    uses: CAVISE/pipelines/.github/workflows/node-yarn-quality.yml@main
+    uses: CAVISE/pipelines/.github/workflows/node-yarn-quality.yml@a8fed47bad4f45ff07ee7ecfc875a12d80f7e7e9 # main
     with:
       node-version: "22"
       working-directory: frontend

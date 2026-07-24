@@ -6,7 +6,7 @@ on:
 
 jobs:
   frontend:
-    uses: CAVISE/pipelines/.github/workflows/node-yarn-vitest.yml@main
+    uses: CAVISE/pipelines/.github/workflows/node-yarn-vitest.yml@a8fed47bad4f45ff07ee7ecfc875a12d80f7e7e9 # main
     with:
       node-version: "22"
       working-directory: frontend
@@ -16,7 +16,7 @@ jobs:
   backend:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
       - name: Install uv and Python
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
@@ -43,7 +43,7 @@ jobs:
           fi
       - name: Upload coverage report
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: backend-coverage
           path: |
