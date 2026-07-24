@@ -40,6 +40,7 @@ simulation = [
 dev = [
     "httpx>=0.28.1",
     "ipython",
+    "matplotlib==3.10.9",
     "mypy",
     "numpy==2.4.5",
     "pytest>=9.1.1",
