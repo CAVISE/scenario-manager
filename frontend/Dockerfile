@@ -11,10 +11,11 @@ RUN --mount=type=cache,target=/usr/local/share/.cache/yarn \
 COPY . .
 RUN yarn build
 
-FROM nginx:stable-alpine AS production
+FROM ghcr.io/nginx/nginx-unprivileged:stable-alpine AS production
 
 COPY --from=builder /app/dist /var/www/html
 COPY nginx/default.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 80
+EXPOSE 8080
+USER nginx
 CMD ["nginx", "-g", "daemon off;"]
