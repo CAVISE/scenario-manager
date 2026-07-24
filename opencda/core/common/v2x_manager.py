@@ -57,7 +57,6 @@ class V2XManager(object):
 
         # found CAVs nearby
         self.cav_nearby = {}
-        # found RSUs nearby
         self.rsu_nearby = {}
 
         # used for cooperative perception.
@@ -73,12 +72,8 @@ class V2XManager(object):
         self.ego_pos = deque(maxlen=100)
         self.ego_spd = deque(maxlen=100)
         self.transmitted_pose = None
-        # True (ground-truth) ego position, used only for range/reachability
-        # checks in search(). Whether a real RSU/CAV radio is in range
-        # depends on true physical distance, not on what this vehicle's own
-        # (possibly GNSS-spoofed) receiver believes its position is.
+        # Radio reachability uses physical coordinates.
         self.true_pos = None
-        # Position actually broadcast over V2X, recorded for evaluation.
         self.transmitted_dynamic_trace = deque()
         self.ego_dynamic_trace = self.transmitted_dynamic_trace
         # used to exclude the cav self during searching
@@ -176,12 +171,6 @@ class V2XManager(object):
         """
         vehicle_manager_dict = self.cav_world.get_vehicle_managers()
 
-        # Anchor for OUR side of every range check below. Must be the true
-        # position: whether a real radio link is in range depends on real
-        # physical distance, not on this vehicle's own (possibly
-        # GNSS-spoofed) belief about where it is. Falls back to the noisy
-        # ego_pos only if update_info() was somehow never called (shouldn't
-        # happen, since search() is only ever invoked from update_info()).
         anchor_pos = self.true_pos if self.true_pos is not None \
             else self.ego_pos[-1]
 
@@ -192,7 +181,6 @@ class V2XManager(object):
             other_v2x = vm.v2x_manager
             other_pos = other_v2x.true_pos
             if other_pos is None:
-                # avoid the NoneType error at the first simulation step
                 if not other_v2x.ego_pos:
                     continue
                 other_pos = other_v2x.ego_pos[-1]
@@ -208,9 +196,7 @@ class V2XManager(object):
             if distance < self.communication_range:
                 self.cav_nearby.update({vid: vm})
 
-        # Search nearby RSUs — they broadcast position and perceived objects.
-        # Use the RSU's own configured range (not the CAV's) since the RSU's
-        # "range" setting is what the user actually controls for coverage.
+        # RSU coverage is defined by each RSU's configured range.
         rsu_manager_dict = self.cav_world._rsu_manager_dict
         for rid, rsu in rsu_manager_dict.items():
             rsu_pos = rsu.localizer.get_ego_pos()

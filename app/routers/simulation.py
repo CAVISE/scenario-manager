@@ -94,7 +94,6 @@ async def start_opencda(request: Request, body: StartSimulationRequest):
         simulation_state["run_id"] = run_id
 
     scenario_raw = body.model_dump()
-    # Detailed logging for debugging payload transfer from frontend
     try:
         keys = list(scenario_raw.keys())
         xodr_info = None

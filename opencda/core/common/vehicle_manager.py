@@ -144,8 +144,6 @@ class VehicleManager(object):
 
         cav_world.update_vehicle_manager(self)
 
-        # Ground-truth position trace recorded alongside the V2X-transmitted
-        # trace so evaluation can compare physical and reported movement.
         from collections import deque as _deque
         self.gt_dynamic_trace = _deque()
         self.ground_truth_pose = None
@@ -153,9 +151,7 @@ class VehicleManager(object):
         self.navigation_pose = None
         self.transmitted_pose = None
 
-        # RSU cooperative-perception participation stats, dumped to log.txt
-        # by evaluate_manager. Lets us tell "RSU had nothing to add" apart
-        # from "RSU never registered as nearby" when comparing runs.
+        # Distinguish RSU coverage from useful merged detections.
         self.rsu_merge_stats = {
             'ticks_total': 0,
             'ticks_rsu_in_range': 0,
@@ -199,11 +195,9 @@ class VehicleManager(object):
         """
         self.localizer.localize()
 
-        # Estimated pose comes from the GNSS/IMU/KF localization stack.
         self.estimated_pose = self.localizer.get_estimated_ego_pos()
         estimated_spd = self.localizer.get_estimated_ego_spd()
 
-        # Ground truth is reserved for simulator physics and evaluation.
         self.ground_truth_pose = self.localizer.get_true_ego_pos()
         ground_truth_spd = self.localizer.get_true_ego_spd()
 
@@ -221,13 +215,10 @@ class VehicleManager(object):
             self.transmitted_pose = self.estimated_pose
             transmitted_spd = estimated_spd
 
-        # object detection: physical lidar/camera see the world from where
-        # the vehicle actually is, not from its (possibly spoofed) GNSS fix.
+        # Sensors observe the physical world, independent of the navigation pose.
         objects = self.perception_manager.detect(self.ground_truth_pose)
 
-        # map/BEV rendering feeds OffRoadDetector's hazard check (sensors.py
-        # reads map_manager.static_bev) — that check must be ground-truth,
-        # not "is the spoofed point on-road".
+        # Safety checks use physical rather than spoofed coordinates.
         self.map_manager.update_information(self.ground_truth_pose)
 
         safety_input = {
@@ -241,7 +232,6 @@ class VehicleManager(object):
         }
         self.safety_manager.update_info(safety_input)
 
-        # Communication reachability still depends on physical distance.
         self.v2x_manager.update_info(
             self.transmitted_pose,
             transmitted_spd,

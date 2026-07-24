@@ -13,9 +13,6 @@ from opencda.scenario_testing.evaluations.evaluate_manager import EvaluationMana
 from opencda.scenario_testing.utils import customized_map_api as map_api
 from opencda.scenario_testing.utils import sim_api
 
-# QT_QPA_PLATFORM=offscreen was removed — opencv-python-headless has no Qt
-# dependency, so no platform-plugin lookup occurs at all.
-
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 XODR_PATH = os.path.join(_BASE_DIR, "..", "assets", "xodrs")
 _stop_event = threading.Event()
@@ -54,10 +51,7 @@ def _make_scenario_manager(scene_dict, apply_ml: bool, xodr_path, map_name: str,
 
 
 def _spawn_pedestrians(world, pedestrian_list: list) -> list:
-    """
-    Spawn Walker actors with AI controllers.
-    Returns list of (walker, controller) tuples for cleanup.
-    """
+    """Spawn walkers and return actor/controller pairs for cleanup."""
     if not pedestrian_list:
         return []
 
@@ -255,7 +249,6 @@ def run_scenario(scenario_raw: dict, params: dict):
     client.set_timeout(settings.carla_timeout_seconds)
     log.info("CARLA server version: %s", client.get_server_version())
 
-    # ── Load map once ─────────────────────────────────────────────────────────
     log.info("Loading map once via client: %s ...", map_name)
     if xodr_path:
         with open(xodr_path) as f:
@@ -272,9 +265,7 @@ def run_scenario(scenario_raw: dict, params: dict):
         carla_map=carla_map,
     )
 
-    # Add current_time directly into the OmegaConf struct — no roundtrip needed.
-    # to_container(resolve=False) + OmegaConf.create() breaks interpolations like
-    # ${world.fixed_delta_seconds} because the new DictConfig loses the full world section.
+    # Preserve unresolved interpolations in the original DictConfig.
     OmegaConf.update(scene_dict, "current_time", current_time, merge=False)
     config_overrides.append({
         "path": "current_time",
@@ -295,7 +286,6 @@ def run_scenario(scenario_raw: dict, params: dict):
     )
     log.info("ScenarioManager ready | map loaded: %s", map_name)
 
-    # ── Spawn CAVs ────────────────────────────────────────────────────────────
     log.info("Spawning CAVs ...")
     single_cav_list = scenario_manager.create_vehicle_manager(
         application=["single"],
@@ -323,22 +313,18 @@ def run_scenario(scenario_raw: dict, params: dict):
         ))
         log.debug("Spectator set to center (%.1f, %.1f, z=500)", center_x, center_y)
 
-    # ── Spawn RSUs ────────────────────────────────────────────────────────────
     rsu_list = []
     scene_container = OmegaConf.to_container(scene_dict, resolve=True)
     if scene_container.get("scenario", {}).get("rsu_list"):
         rsu_list = scenario_manager.create_rsu_manager(data_dump=False)
         log.info("Spawned %d RSU(s)", len(rsu_list))
 
-    # ── Background traffic ────────────────────────────────────────────────────
     log.info("Creating background traffic ...")
     traffic_manager, bg_veh_list = scenario_manager.create_traffic_carla()
     log.info("Background vehicles: %d", len(bg_veh_list))
 
-    # ── Pedestrians ───────────────────────────────────────────────────────────
     spawned_pedestrians = _spawn_pedestrians(scenario_manager.world, pedestrian_list)
 
-    # ── Evaluation manager ────────────────────────────────────────────────────
     eval_manager = EvaluationManager(
         scenario_manager.cav_world,
         script_name=map_name,
@@ -348,7 +334,6 @@ def run_scenario(scenario_raw: dict, params: dict):
 
     spectator = scenario_manager.world.get_spectator()
 
-    # ── Simulation loop ───────────────────────────────────────────────────────
     log.info("Simulation loop starting (max_ticks=%d) ...", max_ticks)
     tick_count = 0
     log_interval = max(1, max_ticks // 20)
@@ -362,8 +347,7 @@ def run_scenario(scenario_raw: dict, params: dict):
 
             active_cavs = [c for c in single_cav_list if c.vehicle.id not in finished_ids]
 
-            # Tick RSUs first — so their detected_objects are fresh
-            # when CAV V2XManager merges perception in update_info().
+            # CAV updates consume RSU detections from the current tick.
             for rsu in rsu_list:
                 try:
                     rsu.update_info()
@@ -371,7 +355,6 @@ def run_scenario(scenario_raw: dict, params: dict):
                 except Exception as _rsu_err:
                     log.warning("RSU id=%d update_info failed: %s", rsu.rid, _rsu_err)
 
-            # Follow camera
             if active_cavs:
                 locs   = [cav.vehicle.get_location() for cav in active_cavs]
                 cx     = sum(location.x for location in locs) / len(locs)
@@ -391,12 +374,7 @@ def run_scenario(scenario_raw: dict, params: dict):
             for cav in active_cavs:
                 loc = cav.vehicle.get_location()
 
-                # Off-road check.
-                # project_to_road=True projects to the nearest driving lane,
-                # so it never returns None inside junction geometry.
-                # We then check distance — > 4 m from nearest lane = truly off-road.
-                # (project_to_road=False returned None at intersections even when
-                # the vehicle was correctly traversing them, stopping cars mid-route.)
+                # Projection handles junction geometry; distance rejects off-road poses.
                 _wp = scenario_manager.carla_map.get_waypoint(
                     loc,
                     project_to_road=True,
@@ -456,7 +434,6 @@ def run_scenario(scenario_raw: dict, params: dict):
                          tick_count, max_ticks,
                          100 * tick_count / max_ticks,
                          len(finished_ids), len(single_cav_list))
-                # RSU coverage metric (for V2X paper evaluation)
                 if rsu_list:
                     covered = sum(
                         1 for cav in active_cavs

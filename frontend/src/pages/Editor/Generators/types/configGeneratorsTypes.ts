@@ -69,13 +69,7 @@ export type OpenCDAAttackConfig = {
   stages?: OpenCDAAttackStage[];
 };
 
-// Flattens a stages value into a flat OpenCDAAttackStage[]. Needed in two
-// places: live edits in AttackConfigModal's StagesField (onChange), and here
-// in mergeSimConfigWithDefaults, which also runs on Zustand persist
-// rehydration (page load) — a path live-edit normalization never touches.
-// Without running it here too, nested stages saved to localStorage before
-// this guard existed (e.g. [[{...}]] instead of [{...}]) keep getting
-// rehydrated unflattened and sent to the backend, crashing _apply_attacks.
+/** Normalize edited and persisted stages to a flat array. */
 export function normalizeAttackStages(value: unknown): OpenCDAAttackStage[] {
   if (!Array.isArray(value)) return [];
   return value.reduce<OpenCDAAttackStage[]>((acc, item) => {

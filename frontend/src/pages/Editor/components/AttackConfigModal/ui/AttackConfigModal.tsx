@@ -110,8 +110,6 @@ function JsonField({
   );
 }
 
-// Local state prevents the text from resetting while the user is typing.
-
 function StagesField({
   value,
   onChange,
@@ -123,8 +121,6 @@ function StagesField({
   const [raw, setRaw] = useState(() => valueRef.current);
   const [error, setError] = useState('');
 
-  // Sync only when the external value changes, such as when applying a preset
-  // or selecting an attack, not after rerenders caused by this field's onChange.
   useEffect(() => {
     const next = JSON.stringify(value ?? [], null, 2);
     if (next !== valueRef.current) {
