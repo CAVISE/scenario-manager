@@ -60,15 +60,27 @@ CARLA, and the bundled OpenCDA runtime.
    cp .env.example .env
    ```
 
-2. Start CARLA on the host configured by `CARLA_HOST` and `CARLA_PORT`.
+2. Prepare the evaluation directory for the backend container user:
 
-3. Build and start the complete system:
+   ```bash
+   mkdir -p evaluation_outputs
+   sudo chown -R 10001:10001 evaluation_outputs
+   sudo chmod -R a+rX evaluation_outputs
+   ```
+
+   The backend runs as UID/GID `10001` and needs write access. Artifacts must
+   remain readable by all users because the rootless frontend container mounts
+   the same directory read-only.
+
+3. Start CARLA on the host configured by `CARLA_HOST` and `CARLA_PORT`.
+
+4. Build and start the complete system:
 
    ```bash
    docker compose --profile prod up --build -d
    ```
 
-4. Check service status:
+5. Check service status:
 
    ```bash
    docker compose ps
@@ -219,6 +231,9 @@ response schemas are documented at `/docs`.
   simulation process output.
 - Evaluation reports and detailed per-run diagnostics are written under
   `evaluation_outputs/`, which is bind-mounted into the backend container.
+- On Linux hosts, keep `evaluation_outputs/` owned by UID/GID `10001` and
+  readable by all users (`chmod -R a+rX`) so the backend can write artifacts
+  and the rootless frontend can serve them.
 - PostgreSQL data is stored in the `postgres_data` named volume.
 - Uploaded custom OpenDRIVE maps are written under `assets/xodrs/`.
 - Run artifacts are also available through `/api/results/{run_id}`.
