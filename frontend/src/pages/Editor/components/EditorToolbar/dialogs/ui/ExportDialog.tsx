@@ -27,6 +27,7 @@ export default function ExportDialog({
       <DialogTitle>Save export as</DialogTitle>
       <DialogContent>
         <TextField
+          key="filename"
           autoFocus
           margin="dense"
           label="File name"
