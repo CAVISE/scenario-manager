@@ -1,4 +1,5 @@
 import {
+  Box,
   Divider,
   FormControl,
   FormControlLabel,
@@ -15,6 +16,20 @@ import { CarlaWeather } from '../../../../../../store/types/useEditorStoreTypes'
 import { useEditorStore } from '../../../../../../store';
 import { useEffect, useMemo } from 'react';
 import { getStoredXodrName } from '../../../../hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
+import { weatherParamsFromPreset } from '../../../../Generators/exporters/opencdaWeather';
+
+const WEATHER_KEYS = [
+  'sun_altitude_angle',
+  'cloudiness',
+  'precipitation',
+  'precipitation_deposits',
+  'wind_intensity',
+  'fog_density',
+  'fog_distance',
+  'fog_falloff',
+  'wetness',
+] as const;
+type WeatherKey = (typeof WEATHER_KEYS)[number];
 
 function toCarlaMapNameFromXodr(xodrName: string): string | null {
   const base = xodrName.replace(/\.xodr$/i, '');
@@ -46,6 +61,9 @@ export default function CarlaTab() {
   const selectedMap = CARLA_MAPS.includes(simConfig.carla.map)
     ? simConfig.carla.map
     : storedMap || 'Town03';
+  const customWeatherEnabled =
+    Object.keys(simConfig.carla.weather_override ?? {}).length > 0;
+
   return (
     <Stack spacing={2}>
       <Stack direction="row" spacing={2}>
@@ -73,6 +91,7 @@ export default function CarlaTab() {
             onChange={(e) =>
               updateSimConfigCarla({
                 weather_preset: e.target.value as CarlaWeather,
+                weather_override: {},
               })
             }
           >
@@ -108,6 +127,28 @@ export default function CarlaTab() {
       </Stack>
       <Stack direction="row" spacing={2}>
         <TextField
+          label="Client Port"
+          type="number"
+          size="small"
+          fullWidth
+          value={simConfig.carla.client_port}
+          onChange={(e) =>
+            updateSimConfigCarla({ client_port: Number(e.target.value) })
+          }
+        />
+        <TextField
+          label="Seed"
+          type="number"
+          size="small"
+          fullWidth
+          value={simConfig.carla.seed}
+          onChange={(e) =>
+            updateSimConfigCarla({ seed: Number(e.target.value) })
+          }
+        />
+      </Stack>
+      <Stack direction="row" spacing={2}>
+        <TextField
           label="Fixed Delta (s)"
           type="number"
           size="small"
@@ -125,6 +166,7 @@ export default function CarlaTab() {
           type="number"
           size="small"
           fullWidth
+          inputProps={{ min: 1, max: 65535, step: 1 }}
           value={simConfig.carla.traffic_manager_port}
           onChange={(e) =>
             updateSimConfigCarla({
@@ -144,6 +186,54 @@ export default function CarlaTab() {
         }
         label="Synchronous Mode"
       />
+
+      <Divider />
+      <Typography variant="subtitle2" color="text.secondary">
+        OpenCDA Weather
+      </Typography>
+      <FormControlLabel
+        control={
+          <Switch
+            checked={customWeatherEnabled}
+            onChange={(e) =>
+              updateSimConfigCarla({
+                weather_override: e.target.checked
+                  ? weatherParamsFromPreset(simConfig.carla.weather_preset)
+                  : {},
+              })
+            }
+          />
+        }
+        label="Custom world.weather override"
+      />
+      {customWeatherEnabled && (
+        <Box
+          display="grid"
+          gridTemplateColumns="repeat(2, minmax(0, 1fr))"
+          gap={1.5}
+        >
+          {WEATHER_KEYS.map((key) => (
+            <TextField
+              key={key}
+              label={key}
+              type="number"
+              size="small"
+              value={simConfig.carla.weather_override?.[key] ?? ''}
+              onChange={(e) => {
+                const raw = e.target.value.trim();
+                const next = { ...(simConfig.carla.weather_override ?? {}) };
+                if (raw === '') {
+                  delete next[key];
+                } else {
+                  next[key as WeatherKey] = Number(raw);
+                }
+                updateSimConfigCarla({ weather_override: next });
+              }}
+            />
+          ))}
+        </Box>
+      )}
+
       <Divider />
       <Typography variant="subtitle2" color="text.secondary">
         Sensors

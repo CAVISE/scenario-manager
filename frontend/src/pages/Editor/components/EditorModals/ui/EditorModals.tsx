@@ -15,14 +15,20 @@ import { useEditorStore } from '../../../../../store';
 import { getApiErrorMessage } from '../../../../../api/errors';
 import type { StartSimulationPayload } from '../../../hooks/useApiHooks/useSimulationMutation/types/useSimulationMutationTypes';
 import { buildScenarioPayload } from '../../../../components/RightPanel/components/ScenarioControlWidget/Handlers';
+import { validateStartSimulationPayload } from '../../../../../api/scenarioValidation';
 import {
   fetchXodrText,
   getStoredXodrName,
+  resolveXodrTextForSimulation,
   setStoredXodrName,
 } from '../../../hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
 import { CARLA_MAPS } from '../../SimConfigModal/types/SimConfigModalTypes';
 import { useEditorRefs, useHooks } from '../../../context';
 import { ScenarioGroup } from '../../../../../api/types/IScenarioTypes';
+<<<<<<< HEAD
+=======
+import { buildOpenCDAArtifact } from '../../../Generators/configGenerators';
+>>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
 
 export default function EditorModals() {
   const [telemetryModalOpen, setTelemetryModalOpen] = useState(false);
@@ -66,24 +72,47 @@ export default function EditorModals() {
     [loadFile, updateSimConfigCarla],
   );
 
-  const handleStart = useCallback(() => {
+  const handleStart = useCallback(async () => {
     setSimulationError(null);
 
     const state = useEditorStore.getState();
     const scenario = state.Scenario;
     const mapName = getStoredXodrName(state.simConfig?.carla?.map);
+    const xodr = await resolveXodrTextForSimulation(mapName);
 
     const payload: StartSimulationPayload = {
       scenario_id: scenario.id || '',
       scenario_name: scenario.name || 'Scenario',
       weather: scenario.weather || 'ClearNoon',
       description: scenario.description || '',
+      opencda_config_yaml: buildOpenCDAArtifact(state),
       map: mapName,
+<<<<<<< HEAD
       scenario: buildScenarioPayload().scenario as ScenarioGroup[],
       map_offsets: odrMapRef.current
         ? { x: odrMapRef.current.x_offs, y: odrMapRef.current.y_offs }
+=======
+      xodr,
+      scenario: buildScenarioPayload().scenario as ScenarioGroup[],
+      attacks: state.simConfig?.attacks ?? [],
+      map_offsets: odrMapRef.current
+        ? { x: odrMapRef.current.x_offs, y: -odrMapRef.current.y_offs }
+>>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
         : undefined,
     };
+
+    // eslint-disable-next-line no-console
+    console.debug('EditorModals start payload', {
+      attacks: payload.attacks?.length,
+      scenario_id: payload.scenario_id,
+      map: payload.map,
+    });
+
+    const validation = validateStartSimulationPayload(payload);
+    if (!validation.ok) {
+      setSimulationError(validation.message);
+      return;
+    }
 
     startSimulationMutation.mutate(payload, {
       onSuccess: () => {
@@ -97,7 +126,7 @@ export default function EditorModals() {
         );
       },
     });
-  }, [startSimulationMutation]);
+  }, [startSimulationMutation, odrMapRef]);
 
   return (
     <>

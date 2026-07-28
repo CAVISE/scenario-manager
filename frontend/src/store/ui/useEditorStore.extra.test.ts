@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useEditorStore } from './useEditorStore';
 import { act } from 'react';
 
@@ -272,6 +272,36 @@ describe('useEditorStore — additional branch coverage', () => {
       await freshStore.persist.rehydrate();
 
       expect(freshStore.getState().cars[0].id).toBe('car-1');
+    });
+
+    it('restores route visualization when migrating the legacy cache', async () => {
+      vi.resetModules();
+      localStorage.setItem(
+        'editor-scenario-cache',
+        JSON.stringify({
+          state: {
+            simConfig: {
+              opencda: {
+                local_planner: {
+                  debug: false,
+                  debug_trajectory: false,
+                },
+              },
+            },
+          },
+          version: 0,
+        }),
+      );
+
+      const { useEditorStore: freshStore } = await import('./useEditorStore');
+      await freshStore.persist.rehydrate();
+
+      expect(freshStore.getState().simConfig.opencda.local_planner.debug).toBe(
+        true,
+      );
+      expect(
+        freshStore.getState().simConfig.opencda.local_planner.debug_trajectory,
+      ).toBe(true);
     });
   });
   describe('branch coverage: no-op updates with non-existent id', () => {

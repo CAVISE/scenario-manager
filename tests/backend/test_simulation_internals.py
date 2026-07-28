@@ -1,6 +1,5 @@
 import sys
 import types
-import shutil
 import pytest
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -137,3 +136,51 @@ def test_run_with_state_calls_broadcast():
         _run_with_state({}, {})
 
     mock_broadcast.assert_called_once()
+
+
+def test_v2x_search_uses_true_positions_and_rebuilds_nearby():
+    import carla
+
+    fake_numpy = types.SimpleNamespace(
+        random=types.SimpleNamespace(
+            normal=lambda *args, **kwargs: 0,
+            randint=lambda *args, **kwargs: 0,
+        ),
+        linalg=types.SimpleNamespace(
+            norm=lambda values: sum(v * v for v in values) ** 0.5,
+        ),
+        finfo=lambda _: types.SimpleNamespace(eps=0.0),
+    )
+    with patch.dict(sys.modules, {"numpy": fake_numpy}):
+        from opencda.core.common.v2x_manager import V2XManager
+
+        class FakeCavWorld:
+            def __init__(self):
+                self.global_clock = 0
+                self._rsu_manager_dict = {}
+                self.managers = {}
+
+            def get_vehicle_managers(self):
+                return self.managers
+
+        def transform(x, y):
+            return carla.Transform(carla.Location(x=x, y=y, z=0),
+                                   carla.Rotation(yaw=0))
+
+        cav_world = FakeCavWorld()
+        cfg = {"enabled": True, "communication_range": 10}
+        v2x_a = V2XManager(cav_world, cfg, "a")
+        v2x_b = V2XManager(cav_world, cfg, "b")
+        cav_world.managers = {
+            "a": types.SimpleNamespace(v2x_manager=v2x_a),
+            "b": types.SimpleNamespace(v2x_manager=v2x_b),
+        }
+
+        v2x_a.update_info(transform(0, 0), 0, true_pos=transform(0, 0))
+        v2x_b.update_info(transform(1000, 0), 0, true_pos=transform(3, 0))
+        v2x_a.search()
+        assert "b" in v2x_a.cav_nearby
+
+        v2x_b.update_info(transform(1, 0), 0, true_pos=transform(100, 0))
+        v2x_a.search()
+        assert "b" not in v2x_a.cav_nearby

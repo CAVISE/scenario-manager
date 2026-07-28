@@ -6,7 +6,10 @@ Use Extended Kalman Filter on GPS + IMU for better localization.
 # License: TDG-Attribution-NonCommercial-NoDistrib
 
 import math
+
 import numpy as np
+
+from opencda.core.sensing.localization.kalman_filter import normalize_angle
 
 
 class ExtentedKalmanFilter(object):
@@ -128,7 +131,7 @@ class ExtentedKalmanFilter(object):
         """
         self.xEst[0] = x
         self.xEst[1] = y
-        self.xEst[2] = heading
+        self.xEst[2] = normalize_angle(heading)
         self.xEst[3] = velocity
 
     def run_step(self, x, y, heading, velocity, yaw_rate_imu):
@@ -155,6 +158,7 @@ class ExtentedKalmanFilter(object):
 
         # EKF starts
         xPred = self.motion_model(self.xEst, u)
+        xPred[2, 0] = normalize_angle(xPred[2, 0])
         jF = self.jacob_f(self.xEst, u)
         PPred = jF @ self.PEst @ jF.T + self.Q
 
@@ -164,10 +168,12 @@ class ExtentedKalmanFilter(object):
             [0, 1, 0, 0],
             [0, 0, 1, 0]])
         zPred = self.observation_model(xPred)
-        y = z - zPred
+        innovation = z - zPred
+        innovation[2, 0] = normalize_angle(innovation[2, 0])
         S = jH @ PPred @ jH.T + self.R
         K = PPred @ jH.T @ np.linalg.inv(S)
-        self.xEst = xPred + K @ y
+        self.xEst = xPred + K @ innovation
+        self.xEst[2, 0] = normalize_angle(self.xEst[2, 0])
         self.PEst = (np.eye(len(self.xEst)) - K @ jH) @ PPred
 
         return self.xEst[0][0], \

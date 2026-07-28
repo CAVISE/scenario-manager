@@ -32,3 +32,21 @@ _setup()
 
 def get_logger(name: str) -> logging.Logger:
     return logging.getLogger(name)
+
+
+def add_run_file_handler(log_file: str, level: int = logging.DEBUG) -> logging.Handler:
+    """Mirror the root logger into a run-specific file."""
+    os.makedirs(os.path.dirname(os.path.abspath(log_file)), exist_ok=True)
+    handler = logging.FileHandler(log_file, mode="w", encoding="utf-8")
+    handler.setLevel(level)
+    handler.setFormatter(logging.Formatter(_FMT, _DATE_FMT))
+    logging.getLogger().addHandler(handler)
+    return handler
+
+
+def remove_run_file_handler(handler: logging.Handler | None) -> None:
+    if handler is None:
+        return
+    root = logging.getLogger()
+    root.removeHandler(handler)
+    handler.close()
