@@ -5,7 +5,12 @@ export { generateSionnaConfig } from './ui/sionna';
 export { generateCarlaYaml } from './ui/carla';
 export { generateOpenCDAConfig } from './ui/opencda';
 export { generateMPCConfig } from './ui/mpc';
-export { generateSumoCfg, generateRouXml, generatePolyXml } from './ui/sumo';
+export {
+  generateSumoCfg,
+  generateRouXml,
+  generatePolyXml,
+  getSumoNetFilename,
+} from './ui/sumo';
 export {
   generateCAPIomnetIni,
   generateCAPIServicesXml,
