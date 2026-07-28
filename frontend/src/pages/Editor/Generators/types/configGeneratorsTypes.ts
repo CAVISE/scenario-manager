@@ -48,6 +48,28 @@ export type OpenCDABgSpawnRange = {
   y_max: number;
   x_step: number;
   y_step: number;
+<<<<<<< HEAD
+};
+
+export type OpenCDAAttackStage = {
+  id: string;
+  type: 'sniffer' | 'dropper' | 'replayer' | 'spoofer' | string;
+  capabilities?: string[];
+  params?: Record<string, unknown>;
+  requirements?: Record<string, unknown>;
+  stage_start_trigger?: Record<string, unknown>;
+  stage_stop_trigger?: Record<string, unknown>;
+};
+
+export type OpenCDAAttackConfig = {
+  name: string;
+  requirements?: Record<string, unknown>;
+  start_trigger?: Record<string, unknown>;
+  stop_trigger?: Record<string, unknown>;
+  targets?: Record<string, unknown>;
+  stages?: OpenCDAAttackStage[];
+=======
+>>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
 };
 
 export type OpenCDAAttackStage = {
@@ -68,6 +90,26 @@ export type OpenCDAAttackConfig = {
   targets?: Record<string, unknown>;
   stages?: OpenCDAAttackStage[];
 };
+
+/** Normalize edited and persisted stages to a flat array. */
+export function normalizeAttackStages(value: unknown): OpenCDAAttackStage[] {
+  if (!Array.isArray(value)) return [];
+  return value.reduce<OpenCDAAttackStage[]>((acc, item) => {
+    if (Array.isArray(item)) {
+      item.forEach((inner) => {
+        if (inner && typeof inner === 'object' && !Array.isArray(inner)) {
+          acc.push(inner as OpenCDAAttackStage);
+        }
+      });
+      return acc;
+    }
+    if (item && typeof item === 'object' && !Array.isArray(item)) {
+      acc.push(item as OpenCDAAttackStage);
+    }
+    return acc;
+  }, []);
+}
+
 export type MPCConfig = {
   NX: number;
   NU: number;
@@ -240,6 +282,7 @@ export type SimulationConfig = {
     vehicle_cam_num: number;
     perception_activate: boolean;
     localization_activate: boolean;
+    localization_navigation_source: 'estimated' | 'ground_truth';
     enable_background_traffic: boolean;
     global_speed_perc: number;
     auto_lane_change: boolean;
@@ -262,7 +305,11 @@ export type SimulationConfig = {
     vehicle_base_color?: [number, number, number];
     v2x_enabled: boolean;
     v2x_communication_range: number;
+<<<<<<< HEAD
     export_full_vehicle_base: boolean;
+=======
+    v2x_position_source: 'estimated' | 'ground_truth';
+>>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
     export_profile: 'standard' | 'aim_check';
     export_attacks: boolean;
     export_platoon_base: boolean;
@@ -347,13 +394,27 @@ export const defaultSimConfig: SimulationConfig = {
   carla: {
     map: 'Town03',
     weather_preset: 'ClearNoon',
+<<<<<<< HEAD
     weather_override: {},
+=======
+    weather_override: {
+      cloudiness: 80,
+      precipitation: 70,
+      precipitation_deposits: 80,
+      sun_altitude_angle: 60,
+      wind_intensity: 0,
+      fog_density: 80,
+      fog_distance: 0,
+      fog_falloff: 80,
+      wetness: 0,
+    },
+>>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
     client_port: 2000,
-    seed: 0,
+    seed: 42,
     num_vehicles: 50,
     num_pedestrians: 20,
     fixed_delta_seconds: 0.05,
-    traffic_manager_port: 8000,
+    traffic_manager_port: 8001,
     synchronous_mode: true,
     sensors: { camera: true, lidar: true, radar: false, gnss: true, imu: true },
     lidar_channels: 32,
@@ -361,8 +422,8 @@ export const defaultSimConfig: SimulationConfig = {
     camera_fov: 90,
   },
   opencda: {
-    use_multi_class_bp: true,
-    bp_meta_path: 'opencda/assets/blueprint_meta/bbx_stats_0915.json',
+    use_multi_class_bp: false,
+    bp_meta_path: 'opencda/assets/blueprint_meta/bbx_stats_0912.json',
     bp_class_sample_prob: {
       car: 0.5,
       truck: 0.1,
@@ -374,30 +435,31 @@ export const defaultSimConfig: SimulationConfig = {
     sumo_host: 'sumo',
     sumo_gui: true,
     sumo_client_order: 1,
-    max_speed: 60,
-    tailgate_speed: 60,
-    speed_lim_dist: 3,
+    max_speed: 45,
+    tailgate_speed: 55,
+    speed_lim_dist: 5,
     speed_decrease: 15,
     safety_time: 4,
     emergency_param: 0.4,
-    ignore_traffic_light: false,
-    overtake_allowed: false,
-    collision_time_ahead: 2.0,
-    sample_resolution: 4.5,
+    ignore_traffic_light: true,
+    overtake_allowed: true,
+    collision_time_ahead: 1.5,
+    sample_resolution: 2.0,
     overtake_counter_recover: 35,
     lidar_channels: 32,
-    lidar_range: 120,
-    lidar_points_per_second: 1_000_000,
+    lidar_range: 50,
+    lidar_points_per_second: 100_000,
     lidar_rotation_frequency: 20,
-    lidar_upper_fov: 2,
-    lidar_lower_fov: -25,
+    lidar_upper_fov: 10,
+    lidar_lower_fov: -30,
     lidar_visualize: false,
     vehicle_cam_num: 1,
     perception_activate: false,
-    localization_activate: false,
+    localization_activate: true,
+    localization_navigation_source: 'estimated',
     enable_background_traffic: false,
-    global_speed_perc: -10,
-    auto_lane_change: true,
+    global_speed_perc: -100,
+    auto_lane_change: false,
     ignore_lights_percentage: 0,
     bg_vehicle_num: 15,
     bg_global_distance: 5,
@@ -406,15 +468,15 @@ export const defaultSimConfig: SimulationConfig = {
     bg_ignore_walkers_percentage: 0,
     rsu_perception_activate: false,
     rsu_lidar_channels: 32,
-    rsu_lidar_range: 120,
-    rsu_cam_num: 0,
+    rsu_lidar_range: 50,
+    rsu_cam_num: 1,
     rsu_camera_visualize: 0,
     vehicle_camera_visualize: 0,
     lidar_sim: {
-      dropoff_general_rate: 0.3,
-      dropoff_intensity_limit: 0.7,
-      dropoff_zero_intensity: 0.4,
-      noise_stddev: 0.02,
+      dropoff_general_rate: 0,
+      dropoff_intensity_limit: 1,
+      dropoff_zero_intensity: 0,
+      noise_stddev: 0,
     },
     local_planner: {
       buffer_size: 12,
@@ -422,13 +484,19 @@ export const defaultSimConfig: SimulationConfig = {
       waypoint_update_freq: 9,
       min_dist: 3,
       trajectory_dt: 0.2,
-      debug: false,
-      debug_trajectory: false,
+      debug: true,
+      debug_trajectory: true,
     },
     gnss_noise: {
+<<<<<<< HEAD
       alt_stddev: 0.05,
       lat_stddev: 3e-6,
       lon_stddev: 3e-6,
+=======
+      alt_stddev: 0.001,
+      lat_stddev: 1e-6,
+      lon_stddev: 1e-6,
+>>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
       heading_direction_stddev: 0.1,
       speed_stddev: 0.2,
     },
@@ -438,7 +506,11 @@ export const defaultSimConfig: SimulationConfig = {
     vehicle_base_color: undefined,
     v2x_enabled: true,
     v2x_communication_range: 35,
+<<<<<<< HEAD
     export_full_vehicle_base: true,
+=======
+    v2x_position_source: 'estimated',
+>>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
     export_profile: 'standard',
     export_attacks: true,
     export_platoon_base: false,
@@ -457,7 +529,11 @@ export const defaultSimConfig: SimulationConfig = {
     metrics: { ...defaultOpenCDAMetrics },
     vehicle_behavior_services: { ...defaultOpenCDAVehicleBehaviorServices },
     coop_perception: { ...defaultOpenCDACoopPerceptionViz },
+<<<<<<< HEAD
     bg_traffic_random: true,
+=======
+    bg_traffic_random: false,
+>>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
     bg_spawn_range: {
       x_min: 0,
       x_max: 500,
@@ -554,7 +630,14 @@ export function mergeSimConfigWithDefaults(
   return {
     ...defaultSimConfig,
     ...p,
+<<<<<<< HEAD
     attacks: p.attacks ?? defaultSimConfig.attacks,
+=======
+    attacks: (p.attacks ?? defaultSimConfig.attacks).map((attack) => ({
+      ...attack,
+      stages: normalizeAttackStages(attack.stages),
+    })),
+>>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
     omnet,
     artery: { ...defaultSimConfig.artery, ...p.artery },
     sumo: {
@@ -568,10 +651,19 @@ export function mergeSimConfigWithDefaults(
       ...p.carla,
       map: normalizedCarlaMap,
       sensors: { ...defaultSimConfig.carla.sensors, ...p.carla?.sensors },
+<<<<<<< HEAD
       weather_override: {
         ...defaultSimConfig.carla.weather_override,
         ...p.carla?.weather_override,
       },
+=======
+      weather_override: Object.prototype.hasOwnProperty.call(
+        p.carla ?? {},
+        'weather_override',
+      )
+        ? (p.carla?.weather_override ?? {})
+        : { ...defaultSimConfig.carla.weather_override },
+>>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
     },
     opencda: {
       ...defaultSimConfig.opencda,

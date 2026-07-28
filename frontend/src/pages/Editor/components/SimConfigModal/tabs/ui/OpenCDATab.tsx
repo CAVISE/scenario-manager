@@ -63,7 +63,11 @@ export default function OpenCDATab() {
         </Typography>
         <Stack spacing={1.5}>
           <FormControl size="small" fullWidth>
+<<<<<<< HEAD
             <FormLabel>YAML layout</FormLabel>
+=======
+            <FormLabel>Configuration profile</FormLabel>
+>>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
             <Select
               value={oc.export_profile}
               onChange={(e) =>
@@ -72,12 +76,17 @@ export default function OpenCDATab() {
                 })
               }
             >
+<<<<<<< HEAD
               <MenuItem value="standard">
                 Standard (full world + vehicle_base)
               </MenuItem>
               <MenuItem value="aim_check">
                 AIM check (aim_check.yaml layout)
               </MenuItem>
+=======
+              <MenuItem value="standard">Standard</MenuItem>
+              <MenuItem value="aim_check">AIM check</MenuItem>
+>>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
             </Select>
           </FormControl>
           <Button
@@ -187,6 +196,7 @@ export default function OpenCDATab() {
       <Typography variant="subtitle2" color="text.secondary">
         Export / defaults
       </Typography>
+<<<<<<< HEAD
       <FormControlLabel
         control={
           <Switch
@@ -200,6 +210,8 @@ export default function OpenCDATab() {
         }
         label="Export map_manager, safety_manager, controller, v2x in vehicle_base"
       />
+=======
+>>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
       <Stack direction="row" spacing={2}>
         <FormControlLabel
           control={
@@ -224,6 +236,24 @@ export default function OpenCDATab() {
           }
           sx={{ maxWidth: 140 }}
         />
+<<<<<<< HEAD
+=======
+        <FormControl size="small" sx={{ minWidth: 190 }}>
+          <FormLabel>V2X position source</FormLabel>
+          <Select
+            value={oc.v2x_position_source}
+            onChange={(e) =>
+              updateSimConfigOpenCDA({
+                v2x_position_source: e.target.value as
+                  'estimated' | 'ground_truth',
+              })
+            }
+          >
+            <MenuItem value="estimated">Estimated</MenuItem>
+            <MenuItem value="ground_truth">Ground truth</MenuItem>
+          </Select>
+        </FormControl>
+>>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
       </Stack>
 
       <Divider />
@@ -613,6 +643,21 @@ export default function OpenCDATab() {
           }
           label="Localization"
         />
+        <FormControl size="small" sx={{ minWidth: 190 }}>
+          <FormLabel>Navigation position</FormLabel>
+          <Select
+            value={oc.localization_navigation_source}
+            onChange={(e) =>
+              updateSimConfigOpenCDA({
+                localization_navigation_source: e.target.value as
+                  'estimated' | 'ground_truth',
+              })
+            }
+          >
+            <MenuItem value="estimated">Estimated</MenuItem>
+            <MenuItem value="ground_truth">Ground truth</MenuItem>
+          </Select>
+        </FormControl>
         <FormControlLabel
           control={
             <Switch

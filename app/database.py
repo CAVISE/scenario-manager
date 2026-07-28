@@ -1,55 +1,61 @@
-import threading
-from contextlib import contextmanager
+from collections.abc import Generator
 
-import psycopg2
-from psycopg2 import pool
 from fastapi import HTTPException
+from sqlalchemy import URL, create_engine, text
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session, sessionmaker
 
 from app.config import get_settings
 from app.log_config import get_logger
 
 log = get_logger(__name__)
+settings = get_settings()
 
-_pool_lock = threading.Lock()
-_db_pool: pool.ThreadedConnectionPool | None = None
+database_url = URL.create(
+    drivername="postgresql+psycopg",
+    username=settings.db_user,
+    password=settings.db_password,
+    host=settings.db_host,
+    port=settings.db_port,
+    database=settings.db_name,
+)
 
-
-def init_pool() -> None:
-    global _db_pool
-    with _pool_lock:
-        if _db_pool is None:
-            settings = get_settings()
-            _db_pool = pool.ThreadedConnectionPool(1, 10, **settings.db_config)
-            log.info("DB pool initialized")
-
-
-def close_pool() -> None:
-    global _db_pool
-    with _pool_lock:
-        if _db_pool is not None:
-            _db_pool.closeall()
-            _db_pool = None
-            log.info("DB pool closed")
+engine = create_engine(
+    database_url,
+    connect_args={"client_encoding": settings.db_encoding},
+    pool_pre_ping=True,
+)
+SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
 
 
-def _get_pool() -> pool.SimpleConnectionPool:
-    if _db_pool is None:
-        init_pool()
-    return _db_pool
-
-
-@contextmanager
-def get_conn():
-    db_pool = _get_pool()
-    conn = None
+def get_session() -> Generator[Session, None, None]:
+    session = SessionLocal()
     try:
-        conn = db_pool.getconn()
-        yield conn
-    except psycopg2.Error as e:
-        if conn:
-            conn.rollback()
-        log.error("DB error: %s", e)
-        raise HTTPException(status_code=500, detail=f"Database error: {e}")
+        yield session
+    except SQLAlchemyError as exc:
+        session.rollback()
+        log.exception("Database operation failed")
+        raise HTTPException(status_code=500, detail="Database operation failed") from exc
     finally:
-        if conn:
-            db_pool.putconn(conn)
+        session.close()
+
+
+def initialize_database() -> None:
+    with engine.connect() as connection:
+        connection.execute(text("SELECT 1"))
+    log.info("Database connection initialized")
+
+
+def database_is_ready() -> bool:
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+        return True
+    except SQLAlchemyError:
+        log.exception("Database health check failed")
+        return False
+
+
+def close_database() -> None:
+    engine.dispose()
+    log.info("Database connections closed")

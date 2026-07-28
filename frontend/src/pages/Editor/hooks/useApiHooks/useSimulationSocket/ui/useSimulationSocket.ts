@@ -9,7 +9,8 @@ export interface SimulationStatus {
   run_id: string | null;
 }
 
-const WS_URL = API_URL.replace(/^http/, 'ws') + '/api/ws/simulation';
+const WS_URL =
+  API_URL.replace(/^http/, 'ws').replace(/\/$/, '') + '/api/ws/simulation';
 
 const RECONNECT_DELAY_MS = 3_000;
 const MAX_RECONNECT_DELAY_MS = 30_000;

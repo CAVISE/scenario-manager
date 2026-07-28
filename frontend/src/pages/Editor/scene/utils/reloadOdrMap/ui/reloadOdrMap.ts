@@ -1,4 +1,5 @@
 import { useEditorStore } from '../../../../../../store';
+import { setCachedCustomXodrContent } from '../../../../hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
 import { OpenDriveModule } from '../../../../hooks/useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
 import { PARAMS } from '../../../../hooks/useThreeScene/types/useThreeSceneTypes';
 import {
@@ -26,7 +27,11 @@ export function reloadOdrMap({
   }
   try {
     if (OpenDriveMap) OpenDriveMap.delete();
+<<<<<<< HEAD
     console.log("JFAOSJHFHSAF(HFHASF");
+=======
+    console.log('JFAOSJHFHSAF(HFHASF');
+>>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
     OpenDriveMap = new ModuleOpenDrive.OpenDriveMap('./data.xodr', {
       with_lateralProfile: PARAMS.lateralProfile,
       with_laneHeight: PARAMS.laneHeight,
@@ -69,7 +74,7 @@ export function loadFile({
     return;
   }
   if (clear_map) {
-    localStorage.setItem('cached_xodr', file_text);
+    setCachedCustomXodrContent(file_text);
     const s = useEditorStore.getState();
     s.cars.forEach((c) => s.removeCar(c.id));
     while (useEditorStore.getState().RSUs.length > 0)
@@ -90,7 +95,11 @@ export function loadFile({
   try {
     ModuleOpenDrive.FS_createDataFile('.', 'data.xodr', file_text, true, true);
     if (OpenDriveMap) OpenDriveMap.delete();
+<<<<<<< HEAD
     console.log("JFAOSJHFHSAF(HFHASF");
+=======
+    console.log('JFAOSJHFHSAF(HFHASF');
+>>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
     OpenDriveMap = new ModuleOpenDrive.OpenDriveMap('./data.xodr', {
       with_lateralProfile: PARAMS.lateralProfile,
       with_laneHeight: PARAMS.laneHeight,

@@ -1,57 +1,49 @@
-import sys
-import types
 import asyncio
-import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-def make_conn(rows=None, one=None, rowcount=1):
-    cursor = MagicMock()
-    cursor.fetchall.return_value = rows or []
-    cursor.fetchone.return_value = one
-    cursor.rowcount = rowcount
-    cursor.__enter__ = lambda s: s
-    cursor.__exit__ = MagicMock(return_value=False)
-    conn = MagicMock()
-    conn.cursor.return_value = cursor
-    conn.__enter__ = lambda s: s
-    conn.__exit__ = MagicMock(return_value=False)
-    return conn, cursor
+from sqlalchemy import select
 
-@pytest.fixture
-def client():
-    from main import app
-    from fastapi.testclient import TestClient
-    return TestClient(app)
+from app.models import Scenario
 
-def test_upload_scenario_without_scenario_id(client):
-    conn, cursor = make_conn(one=None)
 
-    with patch("app.routers.scenarios.get_conn", return_value=conn):
-        response = client.post("/api/upload_scenario", json={
-            "name_of_scenario": "No ID Scenario",
-        })
+def test_upload_scenario_without_scenario_id(scenario_client, db_session):
+    response = scenario_client.post("/api/upload_scenario", json={
+        "name_of_scenario": "No ID Scenario",
+    })
 
     assert response.status_code == 200
     assert response.json()["status"] == "success"
-    executed = [call[0][0] for call in cursor.execute.call_args_list]
-    assert not any("SELECT 1 FROM scenarios" in q for q in executed)
+    assert db_session.scalar(select(Scenario.scenario_id)) is None
 
-def test_update_scenario_with_none_fields(client):
-    conn, cursor = make_conn(one=("sc-1",))
+def test_update_scenario_with_none_fields(scenario_client, db_session):
+    scenario = Scenario(
+        scenario_id="sc-1",
+        name_of_scenario="Original",
+        preview="preview",
+        annotation="annotation",
+    )
+    db_session.add(scenario)
+    db_session.commit()
 
-    with patch("app.routers.scenarios.get_conn", return_value=conn):
-        response = client.post("/api/update_scenario", json={
-            "scenario_id": "sc-1",
-            "scenario_name": None,
-            "preview": None,
-            "annotation": None,
-        })
+    response = scenario_client.post("/api/update_scenario", json={
+        "scenario_id": "sc-1",
+        "scenario_name": None,
+        "preview": None,
+        "annotation": None,
+    })
 
     assert response.status_code == 200
+    db_session.refresh(scenario)
+    assert scenario.name_of_scenario == "Original"
+    assert scenario.preview == "preview"
+    assert scenario.annotation == "annotation"
 
-def test_spawn_yaw_is_zero_when_coords_identical():
-    from app.utils import json_to_single_cav_list
+def test_spawn_yaw_is_zero_when_coords_identical(open_cda_config_factory):
+    from app.utils import yaml_to_runtime_scenario
 
+    config = open_cda_config_factory()
+    config["scenario"]["single_cav_list"][0]["spawn_position"] = [5, 5, 0, 0, 0, 0]
+    config["scenario"]["single_cav_list"][0]["destination"] = [5, 5, 0]
     payload = {
         "map": "Town03",
         "scenario": [{
@@ -62,13 +54,15 @@ def test_spawn_yaw_is_zero_when_coords_identical():
             }]
         }]
     }
-    result = json_to_single_cav_list(payload)
+    result, _, _ = yaml_to_runtime_scenario(config, payload)
     cav = result["scenario"]["single_cav_list"][0]
     assert cav["spawn_position"][4] == 0.0
 
-def test_unknown_map_uses_zero_offset():
-    from app.utils import json_to_single_cav_list
+def test_unknown_map_uses_zero_offset(open_cda_config_factory):
+    from app.utils import yaml_to_runtime_scenario
 
+    config = open_cda_config_factory()
+    config["scenario"]["single_cav_list"][0]["spawn_position"] = [10, 20, 0, 0, 0, 0]
     payload = {
         "map": "UnknownMap",
         "scenario": [{
@@ -76,7 +70,7 @@ def test_unknown_map_uses_zero_offset():
             "path": [{"x": 10, "y": 20, "z": 0, "points": []}]
         }]
     }
-    result = json_to_single_cav_list(payload)
+    result, _, _ = yaml_to_runtime_scenario(config, payload)
     cav = result["scenario"]["single_cav_list"][0]
     assert cav["spawn_position"][0] == 10
     assert cav["spawn_position"][1] == -20 

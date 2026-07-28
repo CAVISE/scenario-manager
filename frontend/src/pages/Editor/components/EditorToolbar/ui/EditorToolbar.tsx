@@ -14,6 +14,7 @@ import {
 import { downloadFile } from '../../../Generators/exporters';
 import UploadScenariosModal from '../../UploadScenariosModal';
 import SimConfigModal from '../../SimConfigModal';
+import AttackConfigModal from '../../AttackConfigModal';
 import ExportDialog from '../dialogs';
 import AttackConfigModal from '../../AttackConfigModal';
 
@@ -104,6 +105,13 @@ export const EditorToolbar = () => {
         <Tooltip title="Simulation settings">
           <IconButton size="small" onClick={() => setSimConfigOpen(true)}>
             <SettingsIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      </div>
+      <div style={EditorToolbarDivStyles}>
+        <Tooltip title="Attack settings">
+          <IconButton size="small" onClick={() => setAttackConfigOpen(true)}>
+            <SecurityIcon fontSize="small" />
           </IconButton>
         </Tooltip>
       </div>

@@ -27,7 +27,14 @@ import {
   toggleButtonGroupStyles,
   typographyStyles,
 } from '../../BuildingProperties/types/BuildingPropertiesTypes';
+<<<<<<< HEAD
 import type { RsuBehaviorService } from '../../../../../../store/types/useEditorStoreTypes';
+=======
+import type {
+  RSU,
+  RsuBehaviorService,
+} from '../../../../../../store/types/useEditorStoreTypes';
+>>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
 
 function AIMServerEditor({
   service,
@@ -275,18 +282,38 @@ export default function RSUProperties({ rsu, onDelete }: RSUPropertiesProps) {
         </Grid>
       </Grid>
 
-      <FormControl>
-        <FormLabel>Frequency (Hz)</FormLabel>
-        <Input
-          size="small"
-          type="number"
-          slotProps={numInputSlot}
-          value={rsu.frequency ?? 5.9e9}
-          onChange={(e) =>
-            updateRSU(rsu.id, { frequency: parseFloat(e.target.value) })
-          }
-        />
-      </FormControl>
+      <Grid item container spacing={1}>
+        <Grid item xs={6}>
+          <FormControl>
+            <FormLabel>Frequency (Hz)</FormLabel>
+            <Input
+              size="small"
+              type="number"
+              slotProps={numInputSlot}
+              value={rsu.frequency ?? 5.9e9}
+              onChange={(e) =>
+                updateRSU(rsu.id, { frequency: parseFloat(e.target.value) })
+              }
+            />
+          </FormControl>
+        </Grid>
+        <Grid item xs={6}>
+          <FormControl>
+            <FormLabel>Beacon interval (ms)</FormLabel>
+            <Input
+              size="small"
+              type="number"
+              slotProps={numInputSlot}
+              value={rsu.beacon_interval ?? 1000}
+              onChange={(e) =>
+                updateRSU(rsu.id, {
+                  beacon_interval: parseInt(e.target.value, 10),
+                })
+              }
+            />
+          </FormControl>
+        </Grid>
+      </Grid>
 
       <FormControl onClick={(e) => e.stopPropagation()}>
         <FormLabel>Protocol</FormLabel>
@@ -479,6 +506,270 @@ export default function RSUProperties({ rsu, onDelete }: RSUPropertiesProps) {
         <AIMServerEditor service={aimSvc} onChange={updateAimServer} />
       )}
 
+<<<<<<< HEAD
+=======
+      <Accordion>
+        <AccordionSummary expandIcon={<KeyboardArrowDownIcon />}>
+          <Typography variant="subtitle2">OpenCDA Sensing (CARLA)</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Stack spacing={2}>
+            {/* Perception */}
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: 0.5,
+              }}
+            >
+              Perception
+            </Typography>
+            <FormControlLabel
+              control={
+                <Switch
+                  size="small"
+                  checked={rsu.opencda_sensing?.perception_activate ?? false}
+                  onChange={(e) =>
+                    updateRSU(rsu.id, {
+                      opencda_sensing: {
+                        ...rsu.opencda_sensing,
+                        perception_activate: e.target.checked,
+                      },
+                    })
+                  }
+                />
+              }
+              label="Activate (YOLOv5 detection)"
+            />
+
+            <FormControl>
+              <FormLabel sx={formLabelStyles}>Detection range (m)</FormLabel>
+              <Input
+                size="small"
+                type="number"
+                slotProps={numInputSlot}
+                value={rsu.opencda_sensing?.detection_range ?? 100}
+                onChange={(e) =>
+                  updateRSU(rsu.id, {
+                    opencda_sensing: {
+                      ...rsu.opencda_sensing,
+                      detection_range: parseFloat(e.target.value),
+                    },
+                  })
+                }
+              />
+            </FormControl>
+
+            <Typography variant="caption" color="text.secondary">
+              Camera
+            </Typography>
+            <Grid item container spacing={1}>
+              <Grid item xs={6}>
+                <FormControl>
+                  <FormLabel sx={formLabelStyles}>Visualize (count)</FormLabel>
+                  <Input
+                    size="small"
+                    type="number"
+                    slotProps={numInputSlot}
+                    value={rsu.opencda_sensing?.camera_visualize ?? 4}
+                    onChange={(e) =>
+                      updateRSU(rsu.id, {
+                        opencda_sensing: {
+                          ...rsu.opencda_sensing,
+                          camera_visualize: parseInt(e.target.value),
+                        },
+                      })
+                    }
+                  />
+                </FormControl>
+              </Grid>
+              <Grid item xs={6}>
+                <FormControl>
+                  <FormLabel sx={formLabelStyles}>Count</FormLabel>
+                  <Input
+                    size="small"
+                    type="number"
+                    slotProps={numInputSlot}
+                    value={rsu.opencda_sensing?.camera_num ?? 4}
+                    onChange={(e) =>
+                      updateRSU(rsu.id, {
+                        opencda_sensing: {
+                          ...rsu.opencda_sensing,
+                          camera_num: parseInt(e.target.value),
+                        },
+                      })
+                    }
+                  />
+                </FormControl>
+              </Grid>
+            </Grid>
+
+            <Typography variant="caption" color="text.secondary">
+              Lidar
+            </Typography>
+            <FormControlLabel
+              control={
+                <Switch
+                  size="small"
+                  checked={rsu.opencda_sensing?.lidar_visualize ?? true}
+                  onChange={(e) =>
+                    updateRSU(rsu.id, {
+                      opencda_sensing: {
+                        ...rsu.opencda_sensing,
+                        lidar_visualize: e.target.checked,
+                      },
+                    })
+                  }
+                />
+              }
+              label="Visualize lidar points"
+            />
+            <Grid item container spacing={1}>
+              {(
+                [
+                  { key: 'lidar_channels', label: 'Channels', def: 32 },
+                  { key: 'lidar_range', label: 'Range (m)', def: 120 },
+                  { key: 'lidar_upper_fov', label: 'Upper FOV°', def: 2 },
+                  { key: 'lidar_lower_fov', label: 'Lower FOV°', def: -25 },
+                  {
+                    key: 'lidar_rotation_frequency',
+                    label: 'Rot. Freq.',
+                    def: 20,
+                  },
+                  {
+                    key: 'lidar_points_per_second',
+                    label: 'Pts/sec',
+                    def: 1000000,
+                  },
+                  {
+                    key: 'lidar_dropoff_general_rate',
+                    label: 'Dropoff rate',
+                    def: 0.3,
+                  },
+                  {
+                    key: 'lidar_dropoff_intensity_limit',
+                    label: 'Dropoff int.',
+                    def: 0.7,
+                  },
+                  {
+                    key: 'lidar_dropoff_zero_intensity',
+                    label: 'Dropoff zero',
+                    def: 0.4,
+                  },
+                  {
+                    key: 'lidar_noise_stddev',
+                    label: 'Noise stddev',
+                    def: 0.02,
+                  },
+                ] as {
+                  key: keyof NonNullable<RSU['opencda_sensing']>;
+                  label: string;
+                  def: number;
+                }[]
+              ).map(({ key, label, def }) => (
+                <Grid item xs={6} key={key}>
+                  <FormControl>
+                    <FormLabel sx={formLabelStyles}>{label}</FormLabel>
+                    <Input
+                      size="small"
+                      type="number"
+                      slotProps={numInputSlot}
+                      value={rsu.opencda_sensing?.[key] ?? def}
+                      onChange={(e) =>
+                        updateRSU(rsu.id, {
+                          opencda_sensing: {
+                            ...rsu.opencda_sensing,
+                            [key]: parseFloat(e.target.value),
+                          },
+                        })
+                      }
+                    />
+                  </FormControl>
+                </Grid>
+              ))}
+            </Grid>
+
+            {/* Localization */}
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: 0.5,
+              }}
+            >
+              Localization
+            </Typography>
+            <FormControlLabel
+              control={
+                <Switch
+                  size="small"
+                  checked={rsu.opencda_sensing?.localization_activate ?? true}
+                  onChange={(e) =>
+                    updateRSU(rsu.id, {
+                      opencda_sensing: {
+                        ...rsu.opencda_sensing,
+                        localization_activate: e.target.checked,
+                      },
+                    })
+                  }
+                />
+              }
+              label="Activate (GNSS + Kalman Filter)"
+            />
+            <Grid item container spacing={1}>
+              {(
+                [
+                  {
+                    key: 'gnss_noise_alt_stddev',
+                    label: 'Alt stddev',
+                    def: 0.05,
+                  },
+                  {
+                    key: 'gnss_noise_lat_stddev',
+                    label: 'Lat stddev',
+                    def: 3e-6,
+                  },
+                  {
+                    key: 'gnss_noise_lon_stddev',
+                    label: 'Lon stddev',
+                    def: 3e-6,
+                  },
+                ] as {
+                  key: keyof NonNullable<RSU['opencda_sensing']>;
+                  label: string;
+                  def: number;
+                }[]
+              ).map(({ key, label, def }) => (
+                <Grid item xs={4} key={key}>
+                  <FormControl>
+                    <FormLabel sx={formLabelStyles}>{label}</FormLabel>
+                    <Input
+                      size="small"
+                      type="number"
+                      slotProps={numInputSlot}
+                      value={rsu.opencda_sensing?.[key] ?? def}
+                      onChange={(e) =>
+                        updateRSU(rsu.id, {
+                          opencda_sensing: {
+                            ...rsu.opencda_sensing,
+                            [key]: parseFloat(e.target.value),
+                          },
+                        })
+                      }
+                    />
+                  </FormControl>
+                </Grid>
+              ))}
+            </Grid>
+          </Stack>
+        </AccordionDetails>
+      </Accordion>
+
+>>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
       <Accordion>
         <AccordionSummary expandIcon={<KeyboardArrowDownIcon />}>
           <Typography variant="subtitle2">Script</Typography>

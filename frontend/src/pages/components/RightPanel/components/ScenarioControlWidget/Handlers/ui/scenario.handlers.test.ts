@@ -1,9 +1,25 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as THREE from 'three';
-const { fetchQueryMock, getScenarioMock } = vi.hoisted(() => ({
+const { fetchQueryMock, getScenarioMock, resolveXodrMock } = vi.hoisted(() => ({
   fetchQueryMock: vi.fn(),
   getScenarioMock: vi.fn(),
+  resolveXodrMock: vi.fn().mockResolvedValue(undefined),
 }));
+
+vi.mock(
+  '../../../../../../Editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository',
+  async (importOriginal) => {
+    const mod =
+      await importOriginal<
+        typeof import('../../../../../../Editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository')
+      >();
+    return {
+      ...mod,
+      resolveXodrTextForSimulation: resolveXodrMock,
+      getStoredXodrName: vi.fn(() => 'Town10HD.xodr'),
+    };
+  },
+);
 
 vi.mock('../../../../../../../api/queryClient', () => ({
   queryClient: { fetchQuery: fetchQueryMock },
@@ -94,11 +110,11 @@ import {
   handlePatch,
   handleRunSimulation,
 } from './scenario.handlers';
+import { scenarioGroupsFromPayload } from '../../../../../../../api/scenarioRequest';
 import { buildScenarioPayload } from './scenario.load.handler';
 import {
   Building,
   Car,
-  EditorState,
   Lidar,
   Pedestrian,
   Point,
@@ -230,35 +246,15 @@ describe('buildScenarioPayload', () => {
     const payload = buildScenarioPayload();
 
     expect(payload.scenario_id).toBe('sc-1');
-    expect(payload.scenario_name).toBe('My Scenario');
-    expect(payload.weather).toBe('Rain');
-    expect(payload.id).toBe('sc-1');
     expect(payload.name_of_scenario).toBe('My Scenario');
   });
 
-  it('falls back to localStorage when store is empty', () => {
-    storeState.Scenario = { id: '', name: '', weather: '' };
-    vi.spyOn(Storage.prototype, 'getItem').mockImplementation((key) => {
-      if (key === 'scenario_name') return 'Stored Name';
-      if (key === 'weather') return 'ClearNoon';
-      return null;
-    });
-
-    const payload = buildScenarioPayload();
-
-    expect(payload.scenario_name).toBe('Stored Name');
-    expect(payload.weather).toBe('ClearNoon');
-
-    vi.restoreAllMocks();
-  });
-
-  it('sets scenario_id and id to null when id is empty', () => {
+  it('sets scenario_id to null when id is empty', () => {
     storeState.Scenario = { id: '', name: 'Test', weather: 'Fog' };
 
     const payload = buildScenarioPayload();
 
     expect(payload.scenario_id).toBeNull();
-    expect(payload.id).toBeNull();
   });
 
   it('sets name_of_scenario to null when name is empty', () => {
@@ -400,9 +396,13 @@ describe('buildScenarioPayload', () => {
 
     const payload = buildScenarioPayload();
     const scenario = payload.scenario as ScenarioGroup[];
+<<<<<<< HEAD
     const buildingGroup = scenario.find(
       (g) => g.vehicle === 'building',
     )!;
+=======
+    const buildingGroup = scenario.find((g) => g.vehicle === 'building')!;
+>>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
     const building = buildingGroup.path[0];
 
     expect(building.id).toBe('b-1');
@@ -439,19 +439,11 @@ describe('buildScenarioPayload', () => {
   });
 
   it('returns empty path arrays when store collections are empty', () => {
-    const payload = buildScenarioPayload();
-    expect(payload.scenario).toHaveLength(0);
+    expect(
+      scenarioGroupsFromPayload(buildScenarioPayload().scenario),
+    ).toHaveLength(0);
   });
 
-  it('uses simConfig map when available', () => {
-    (storeState as unknown as EditorState).simConfig = {
-      carla: { map: 'town05' } as EditorState['simConfig']['carla'],
-    } as EditorState['simConfig'];
-
-    const payload = buildScenarioPayload();
-
-    expect(payload.map).toBe('town05');
-  });
   it('calls scenariosApi.get via queryFn', async () => {
     getScenarioMock.mockResolvedValue({
       scenario: { scenario_id: 'q-1', scenario_text: [] },
@@ -524,12 +516,6 @@ describe('buildScenarioPayload', () => {
 
     vi.useRealTimers();
   });
-  it('defaults map to town10 when simConfig is absent', () => {
-    const payload = buildScenarioPayload();
-
-    expect(payload.map).toBe('town10');
-  });
-
   it('defaults car rotation to 0 when rotation is undefined', () => {
     storeState.cars = [
       {
@@ -551,18 +537,41 @@ describe('buildScenarioPayload', () => {
   });
   describe('handleCreate', () => {
     it('calls mutateAsync and sets success notice', async () => {
+      storeState.Scenario = { id: '', name: 'Saved scenario', weather: '' };
       const setNotice = vi.fn();
       const createMutation = {
         mutateAsync: vi.fn().mockResolvedValue({}),
       } as unknown as ReturnType<typeof useScenarioCreateMutation>;
 
-      await handleCreate(setNotice, createMutation);
+      await handleCreate(setNotice, createMutation, 'sc-new');
 
-      expect(createMutation.mutateAsync).toHaveBeenCalled();
+      expect(createMutation.mutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          scenarioIdInput: 'sc-new',
+          payload: expect.objectContaining({
+            scenario_id: 'sc-new',
+            name_of_scenario: 'Saved scenario',
+          }),
+        }),
+      );
       expect(setNotice).toHaveBeenCalledWith('Script saved (POST).');
     });
 
+    it('shows validation message without calling mutate', async () => {
+      storeState.Scenario = { id: '', name: '', weather: '' };
+      const setNotice = vi.fn();
+      const createMutation = {
+        mutateAsync: vi.fn(),
+      } as unknown as ReturnType<typeof useScenarioCreateMutation>;
+
+      await handleCreate(setNotice, createMutation, 'sc-new');
+
+      expect(createMutation.mutateAsync).not.toHaveBeenCalled();
+      expect(setNotice).toHaveBeenCalledWith('Scenario name is required.');
+    });
+
     it('sets error notice when mutateAsync throws', async () => {
+      storeState.Scenario = { id: '', name: 'Saved scenario', weather: '' };
       const setNotice = vi.fn();
       const createMutation = {
         mutateAsync: vi.fn().mockRejectedValue(new Error('network error')),
@@ -902,42 +911,73 @@ describe('buildScenarioPayload', () => {
   });
 
   describe('handleRunSimulation', () => {
-    it('calls mutate with correct payload and triggers onSuccess', () => {
+    it('calls mutate with correct payload and triggers onSuccess', async () => {
       storeState.Scenario = {
         id: 'sc-1',
         name: 'Test',
         weather: 'Rain',
       } as unknown as Scenario;
+      storeState.cars = [
+        {
+          id: 'car-1',
+          x: 0,
+          y: 0,
+          z: 0,
+          model: 'car',
+          color: '00ff00',
+          scale: 1,
+          rotation: 0,
+        } as Car,
+      ];
+      storeState.points = [
+        { id: 'p-1', carId: 'car-1', x: 1, y: 0, z: 0 } as Point,
+      ];
       const setNotice = vi.fn();
       const startMutation = {
         mutate: vi.fn((_, { onSuccess }) => onSuccess()),
       } as unknown as ReturnType<typeof useStartSimulationMutation>;
 
-      handleRunSimulation(setNotice, 'sc-1', startMutation);
+      await handleRunSimulation(setNotice, 'sc-1', startMutation);
 
       expect(startMutation.mutate).toHaveBeenCalledWith(
         expect.objectContaining({
           scenario_id: 'sc-1',
           scenario_name: 'Test',
           weather: 'Rain',
+          map: 'Town10HD',
         }),
         expect.any(Object),
       );
       expect(setNotice).toHaveBeenCalledWith('The simulation has started.');
     });
 
-    it('falls back to scenarioIdInput when store id is empty', () => {
+    it('falls back to scenarioIdInput when store id is empty', async () => {
       storeState.Scenario = {
         id: '',
-        name: '',
+        name: 'Test',
         weather: '',
       } as unknown as Scenario;
+      storeState.cars = [
+        {
+          id: 'car-1',
+          x: 0,
+          y: 0,
+          z: 0,
+          model: 'car',
+          color: '00ff00',
+          scale: 1,
+          rotation: 0,
+        } as Car,
+      ];
+      storeState.points = [
+        { id: 'p-1', carId: 'car-1', x: 1, y: 0, z: 0 } as Point,
+      ];
       const setNotice = vi.fn();
       const startMutation = {
         mutate: vi.fn((_, { onSuccess }) => onSuccess()),
       } as unknown as ReturnType<typeof useStartSimulationMutation>;
 
-      handleRunSimulation(setNotice, '  sc-fallback  ', startMutation);
+      await handleRunSimulation(setNotice, '  sc-fallback  ', startMutation);
 
       expect(startMutation.mutate).toHaveBeenCalledWith(
         expect.objectContaining({ scenario_id: 'sc-fallback' }),
@@ -951,12 +991,27 @@ describe('buildScenarioPayload', () => {
         name: 'Test',
         weather: 'Rain',
       } as unknown as Scenario;
+      storeState.cars = [
+        {
+          id: 'car-1',
+          x: 0,
+          y: 0,
+          z: 0,
+          model: 'car',
+          color: '00ff00',
+          scale: 1,
+          rotation: 0,
+        } as Car,
+      ];
+      storeState.points = [
+        { id: 'p-1', carId: 'car-1', x: 1, y: 0, z: 0 } as Point,
+      ];
       const setNotice = vi.fn();
       const startMutation = {
         mutate: vi.fn((_, { onError }) => onError(new Error('sim error'))),
       } as unknown as ReturnType<typeof useStartSimulationMutation>;
 
-      handleRunSimulation(setNotice, 'sc-1', startMutation);
+      await handleRunSimulation(setNotice, 'sc-1', startMutation);
 
       await vi.waitFor(() => {
         expect(setNotice).toHaveBeenCalledWith(

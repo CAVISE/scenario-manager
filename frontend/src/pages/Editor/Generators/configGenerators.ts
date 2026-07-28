@@ -12,3 +12,4 @@ export {
   generateCAPIServicesXml,
   generateCAPIomnetIni,
 } from './exporters';
+export { buildOpenCDAArtifact } from './opencdaArtifact';

@@ -58,6 +58,7 @@ const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
     if (!open) return;
     setLoading(true);
 
+    setLoading(true);
     api
       .get('api/status')
       .json<SimStatus>()
@@ -75,7 +76,7 @@ const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
             const imgs: Record<string, { default: string }> = {};
             for (const entry of data.files) {
               imgs[entry.filename] = {
-                default: `${API_URL}${entry.url}`,
+                default: `${API_URL}${entry.url.replace(/^\//, '')}`,
               };
             }
             setImages(imgs);
@@ -239,27 +240,18 @@ const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
                 </Tabs>
               </TabsBar>
 
-              <TabPanel
-                sx={{ display: activeTab === 'routes' ? 'block' : 'none' }}
-              >
-                {renderTabContent('routes')}
+              <TabPanel hidden={activeTab !== 'routes'}>
+                {activeTab === 'routes' && renderTabContent('routes')}
               </TabPanel>
-              <TabPanel
-                sx={{ display: activeTab === 'telemetry' ? 'block' : 'none' }}
-              >
-                {renderTabContent('telemetry')}
+              <TabPanel hidden={activeTab !== 'telemetry'}>
+                {activeTab === 'telemetry' && renderTabContent('telemetry')}
               </TabPanel>
-              <TabPanel
-                sx={{
-                  display: activeTab === 'localization' ? 'block' : 'none',
-                }}
-              >
-                {renderTabContent('localization')}
+              <TabPanel hidden={activeTab !== 'localization'}>
+                {activeTab === 'localization' &&
+                  renderTabContent('localization')}
               </TabPanel>
-              <TabPanel
-                sx={{ display: activeTab === 'other' ? 'block' : 'none' }}
-              >
-                {renderTabContent('other')}
+              <TabPanel hidden={activeTab !== 'other'}>
+                {activeTab === 'other' && renderTabContent('other')}
               </TabPanel>
             </>
           )}

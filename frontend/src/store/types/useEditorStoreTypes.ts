@@ -6,11 +6,7 @@ import {
 
 export type V2XProtocol = 'ITS-G5' | 'C-V2X' | 'DSRC';
 export type BuildingMaterial =
-  | 'concrete'
-  | 'glass'
-  | 'wood'
-  | 'brick'
-  | 'metal';
+  'concrete' | 'glass' | 'wood' | 'brick' | 'metal';
 export type AntennaType = 'isotropic' | 'dipole' | 'tr38901' | 'planar_array';
 export type Polarization = 'vertical' | 'horizontal' | 'cross';
 export type NetworkProtocol = 'GeoNetworking' | 'BTP' | 'IPv4' | 'IPv6';
@@ -48,9 +44,13 @@ export type SumoStop = {
 };
 
 export type BehaviorServiceType =
+<<<<<<< HEAD
   | 'self_informer'
   | 'aim_client'
   | 'movement_controller';
+=======
+  'self_informer' | 'aim_client' | 'movement_controller';
+>>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
 
 export type SelfInformerService = {
   type: 'self_informer';
@@ -78,9 +78,13 @@ export type AIMServerService = {
 };
 
 export type CavBehaviorService =
+<<<<<<< HEAD
   | SelfInformerService
   | AIMClientService
   | MovementControllerService;
+=======
+  SelfInformerService | AIMClientService | MovementControllerService;
+>>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
 
 export type RsuBehaviorService = AIMServerService;
 
@@ -163,11 +167,37 @@ export type RSU = {
   azimuth: number;
   tilt: number;
   cam_interval: number;
+  beacon_interval: number;
   script: string;
   opencda_name?: string;
   opencda_id?: number;
   opencda_behavior_services?: RsuBehaviorService[];
   opencda_color?: [number, number, number];
+<<<<<<< HEAD
+=======
+  opencda_sensing?: {
+    perception_activate?: boolean;
+    detection_range?: number;
+    camera_visualize?: number;
+    camera_num?: number;
+    camera_positions?: [number, number, number, number][];
+    lidar_visualize?: boolean;
+    lidar_channels?: number;
+    lidar_range?: number;
+    lidar_points_per_second?: number;
+    lidar_rotation_frequency?: number;
+    lidar_upper_fov?: number;
+    lidar_lower_fov?: number;
+    lidar_dropoff_general_rate?: number;
+    lidar_dropoff_intensity_limit?: number;
+    lidar_dropoff_zero_intensity?: number;
+    lidar_noise_stddev?: number;
+    localization_activate?: boolean;
+    gnss_noise_alt_stddev?: number;
+    gnss_noise_lat_stddev?: number;
+    gnss_noise_lon_stddev?: number;
+  };
+>>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
 };
 
 export type Point = {
