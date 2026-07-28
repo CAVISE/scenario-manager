@@ -7,6 +7,7 @@ export {
   generateOpenCDAConfig,
   generateSumoCfg,
   generateRouXml,
+  getSumoNetFilename,
   generatePolyXml,
   generateCAPISensorsXml,
   generateCAPIServicesXml,

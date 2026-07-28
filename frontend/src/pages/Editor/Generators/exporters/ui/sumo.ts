@@ -26,12 +26,17 @@ function sumoArtifactBaseName(
   return basename.trim() || fallback.trim() || 'scenario';
 }
 
-function xodrNetFile(map: string): string {
+function sumoMapBaseName(map: string): string {
   const mapName = map
     .trim()
     .replace(/^.*[/\\]/, '')
+    .replace(/\.net\.xml$/i, '')
     .replace(/\.xodr$/i, '');
-  return `../maps/${mapName || 'Town03'}.xodr`;
+  return mapName || 'Town03';
+}
+
+export function getSumoNetFilename(map: string): string {
+  return `${sumoMapBaseName(map)}.net.xml`;
 }
 
 export function generateSumoCfg(
@@ -43,13 +48,13 @@ export function generateSumoCfg(
   const artifactName = xmlAttribute(
     sumoArtifactBaseName(outputFilename, scenario_name),
   );
-  const netFile = xmlAttribute(xodrNetFile(cfg.carla.map));
+  const netFile = xmlAttribute(getSumoNetFilename(cfg.carla.map));
   return `<?xml version='1.0' encoding='UTF-8'?>
 <configuration>
   <input>
-    <net-file value="${netFile}"/>
-    <route-files value="${artifactName}.rou.xml"/>
-    <additional-files value="${artifactName}.poly.xml"/>
+    <net-file value="./${netFile}"/>
+    <route-files value="./${artifactName}.rou.xml"/>
+    <additional-files value="./${artifactName}.poly.xml"/>
   </input>${
     full_output
       ? `
@@ -65,7 +70,11 @@ export function generateSumoCfg(
 </configuration>`;
 }
 
-export function generateRouXml(config: SimulationConfig, cars: Car[]): string {
+export function generateRouXml(
+  config: SimulationConfig,
+  cars: Car[],
+  generatedRoutes: Record<string, string> = {},
+): string {
   const cfg = mergeSimConfigWithDefaults(config);
   const vtypeLines = cfg.sumo.vtypes
     .map(
@@ -76,6 +85,13 @@ export function generateRouXml(config: SimulationConfig, cars: Car[]): string {
 
   const vehicleLines = cars
     .map((car, i) => {
+      const edges =
+        car.sumo_edges?.trim() || generatedRoutes[car.id]?.trim() || '';
+      if (!edges) {
+        throw new Error(
+          `Vehicle ${car.opencda_name || car.id} has no SUMO route`,
+        );
+      }
       const maxSpeed = car.sumo_max_speed ?? 16.665;
       const depart = car.sumo_depart ?? 0.05;
       const dLane = car.sumo_depart_lane
@@ -90,7 +106,7 @@ export function generateRouXml(config: SimulationConfig, cars: Car[]): string {
         ? `\n    <stop lane="${car.sumo_stop.lane}" startPos="${car.sumo_stop.startPos}" endPos="${car.sumo_stop.endPos}" duration="${car.sumo_stop.duration}"/>`
         : '';
       return `  <vehicle id="sumo${i}"${type} maxSpeed="${maxSpeed}" depart="${depart}"${dLane}${dPos} departSpeed="0.00">
-    <route edges="${car.sumo_edges ?? ''}"/>${stop}
+    <route edges="${xmlAttribute(edges)}"/>${stop}
   </vehicle>`;
     })
     .join('\n');

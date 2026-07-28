@@ -5,7 +5,7 @@ import { defaultSimConfig } from '../../types/configGeneratorsTypes';
 import { generateRouXml, generateSumoCfg } from './sumo';
 
 describe('SUMO exporters', () => {
-  it('uses the exported config basename for related files and the CARLA map xodr', () => {
+  it('uses local SUMO artifacts and the exported config basename', () => {
     const config = {
       ...defaultSimConfig,
       carla: { ...defaultSimConfig.carla, map: 'Town01' },
@@ -17,9 +17,11 @@ describe('SUMO exporters', () => {
 
     const xml = generateSumoCfg(config, 'sm_poc_town01.sumocfg');
 
-    expect(xml).toContain('<net-file value="../maps/Town01.xodr"/>');
-    expect(xml).toContain('<route-files value="sm_poc_town01.rou.xml"/>');
-    expect(xml).toContain('<additional-files value="sm_poc_town01.poly.xml"/>');
+    expect(xml).toContain('<net-file value="./Town01.net.xml"/>');
+    expect(xml).toContain('<route-files value="./sm_poc_town01.rou.xml"/>');
+    expect(xml).toContain(
+      '<additional-files value="./sm_poc_town01.poly.xml"/>',
+    );
     expect(xml).not.toContain('hardcoded-name.rou.xml');
   });
 
@@ -29,8 +31,8 @@ describe('SUMO exporters', () => {
       sumo: { ...defaultSimConfig.sumo, scenario_name: 'my-scenario' },
     });
 
-    expect(xml).toContain('<route-files value="my-scenario.rou.xml"/>');
-    expect(xml).toContain('<additional-files value="my-scenario.poly.xml"/>');
+    expect(xml).toContain('<route-files value="./my-scenario.rou.xml"/>');
+    expect(xml).toContain('<additional-files value="./my-scenario.poly.xml"/>');
   });
 
   it('writes the route edges stored on each vehicle', () => {
@@ -50,5 +52,65 @@ describe('SUMO exporters', () => {
     const xml = generateRouXml(defaultSimConfig, [car]);
 
     expect(xml).toContain('<route edges="27 26 -35.0.00"/>');
+  });
+
+  it('writes generated edge routes when there is no manual override', () => {
+    const car = {
+      id: 'car-1',
+      x: 0,
+      y: 0,
+      z: 0,
+      color: 'ffffff',
+      model: 'vehicle.tesla.model3',
+      scale: 1,
+      rotation: 0,
+      speed: 50,
+    } satisfies Car;
+
+    const xml = generateRouXml(defaultSimConfig, [car], {
+      'car-1': 'edge-a edge-b edge-c',
+    });
+
+    expect(xml).toContain('<route edges="edge-a edge-b edge-c"/>');
+  });
+
+  it('keeps manual edges as an override over generated routes', () => {
+    const car = {
+      id: 'car-1',
+      x: 0,
+      y: 0,
+      z: 0,
+      color: 'ffffff',
+      model: 'vehicle.tesla.model3',
+      scale: 1,
+      rotation: 0,
+      speed: 50,
+      sumo_edges: 'manual-a manual-b',
+    } satisfies Car;
+
+    const xml = generateRouXml(defaultSimConfig, [car], {
+      'car-1': 'generated-a generated-b',
+    });
+
+    expect(xml).toContain('<route edges="manual-a manual-b"/>');
+    expect(xml).not.toContain('generated-a');
+  });
+
+  it('does not silently export a vehicle with an empty route', () => {
+    const car = {
+      id: 'car-1',
+      x: 0,
+      y: 0,
+      z: 0,
+      color: 'ffffff',
+      model: 'vehicle.tesla.model3',
+      scale: 1,
+      rotation: 0,
+      speed: 50,
+    } satisfies Car;
+
+    expect(() => generateRouXml(defaultSimConfig, [car])).toThrow(
+      'has no SUMO route',
+    );
   });
 });
