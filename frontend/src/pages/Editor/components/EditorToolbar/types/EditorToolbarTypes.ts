@@ -1,6 +1,6 @@
 export type PendingExport = {
   defaultFilename: string;
-  getContent: () => string;
+  getContent: (filename: string) => string;
 };
 export const EditorToolbarStyles = {
   position: 'absolute',

@@ -156,6 +156,7 @@ describe('handleLoad regression', () => {
                 z: 10,
                 model: 'audi',
                 color: 'FF0000',
+                sumo_edges: '27 26',
                 points: [{ x: 1, y: 1 }],
               },
             ],
@@ -184,6 +185,10 @@ describe('handleLoad regression', () => {
     });
 
     expect(storeState.addCar).toHaveBeenCalled();
+    expect(storeState.updateCar).toHaveBeenCalledWith(
+      'car-1',
+      expect.objectContaining({ sumo_edges: '27 26' }),
+    );
     expect(storeState.addPedestrian).toHaveBeenCalled();
     expect(storeState.addRSU).toHaveBeenCalled();
     expect(setNotice).toHaveBeenCalledWith('The script has been uploaded.');
@@ -276,6 +281,18 @@ describe('buildScenarioPayload', () => {
         color: 'FF0000',
         scale: 1,
         rotation: 1.57,
+        sumo_depart: 1.5,
+        sumo_depart_lane: 'best',
+        sumo_depart_pos: 12,
+        sumo_max_speed: 20,
+        sumo_edges: '27 26 -35.0.00',
+        sumo_vtype: 'vType_0',
+        sumo_stop: {
+          lane: '26_0',
+          startPos: 5,
+          endPos: 10,
+          duration: 2,
+        },
       } as Car,
     ];
     storeState.points = [
@@ -306,6 +323,20 @@ describe('buildScenarioPayload', () => {
     expect(carPath.color).toBe(0xff0000);
     expect(carPath.rotation).toBe(Math.floor(1.57 * 57.32));
     expect(carPath.selected).toBe(true);
+    expect(carPath).toMatchObject({
+      sumo_depart: 1.5,
+      sumo_depart_lane: 'best',
+      sumo_depart_pos: 12,
+      sumo_max_speed: 20,
+      sumo_edges: '27 26 -35.0.00',
+      sumo_vtype: 'vType_0',
+      sumo_stop: {
+        lane: '26_0',
+        startPos: 5,
+        endPos: 10,
+        duration: 2,
+      },
+    });
     expect(carPath.points).toHaveLength(1);
     expect(carPath.points![0]).toMatchObject({ id: 0, x: 10, y: 20, z: 0 });
     expect(carPath.lidars).toHaveLength(1);

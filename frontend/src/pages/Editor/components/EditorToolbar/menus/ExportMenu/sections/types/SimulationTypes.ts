@@ -5,5 +5,8 @@ export const ListSubheaderStyles = {
 } as const;
 export const DownloadIconStyles = { marginRight: 8 } as const;
 export interface SimulatorProps {
-  openExportDialog: (filename: string, contentGenerator: () => string) => void;
+  openExportDialog: (
+    filename: string,
+    contentGenerator: (filename: string) => string,
+  ) => void;
 }

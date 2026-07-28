@@ -43,7 +43,7 @@ export const EditorToolbar = () => {
   const [exportFilename, setExportFilename] = useState('');
 
   const openExportDialog = useCallback(
-    (defaultFilename: string, getContent: () => string) => {
+    (defaultFilename: string, getContent: (filename: string) => string) => {
       setExportMenuAnchor(null);
       setExportFilename(defaultFilename);
       setPendingExport({ defaultFilename, getContent });
@@ -62,7 +62,7 @@ export const EditorToolbar = () => {
       exportFilename,
       pendingExport.defaultFilename,
     );
-    downloadFile(safe, pendingExport.getContent());
+    downloadFile(safe, pendingExport.getContent(safe));
     closeExportDialog();
   };
 

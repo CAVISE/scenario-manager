@@ -1,4 +1,4 @@
-import { Lidar } from '../../store/types/useEditorStoreTypes';
+import { Lidar, SumoStop } from '../../store/types/useEditorStoreTypes';
 
 export interface CarScenarioPath {
   x: number;
@@ -10,6 +10,13 @@ export interface CarScenarioPath {
   rotation?: number;
   selected?: boolean;
   speed?: number;
+  sumo_depart?: number;
+  sumo_depart_lane?: string;
+  sumo_depart_pos?: number;
+  sumo_max_speed?: number;
+  sumo_edges?: string;
+  sumo_vtype?: string;
+  sumo_stop?: SumoStop;
   points?: { id: number; x: number; y: number; z: number }[];
   lidars?: Omit<Lidar, 'id' | 'carId'>[];
 }

@@ -100,6 +100,13 @@ export const handleLoad = async ({
         s.updateCar(carId, {
           scale: car.scale ?? 1,
           rotation: (car.rotation ?? 0) / 57.32,
+          sumo_depart: car.sumo_depart,
+          sumo_depart_lane: car.sumo_depart_lane,
+          sumo_depart_pos: car.sumo_depart_pos,
+          sumo_max_speed: car.sumo_max_speed,
+          sumo_edges: car.sumo_edges,
+          sumo_vtype: car.sumo_vtype,
+          sumo_stop: car.sumo_stop,
         });
         car.points?.forEach((pt) => s.addPoint(carId, pt.x, pt.y, pt.z));
         car.lidars?.forEach((l) => {

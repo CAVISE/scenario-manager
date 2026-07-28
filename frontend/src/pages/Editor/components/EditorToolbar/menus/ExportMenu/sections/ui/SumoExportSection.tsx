@@ -20,9 +20,9 @@ export default function SumoExportSection({
     const simConfig = mergeSimConfigWithDefaults(
       useEditorStore.getState().simConfig,
     );
-    openExportDialog(`${simConfig.sumo.scenario_name}.sumocfg`, () => {
+    openExportDialog(`${simConfig.sumo.scenario_name}.sumocfg`, (filename) => {
       const { simConfig: raw } = useEditorStore.getState();
-      return generateSumoCfg(mergeSimConfigWithDefaults(raw));
+      return generateSumoCfg(mergeSimConfigWithDefaults(raw), filename);
     });
   };
 

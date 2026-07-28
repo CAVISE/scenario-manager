@@ -190,7 +190,6 @@ export type SimulationConfig = {
   };
   sumo: {
     scenario_name: string;
-    net_file: string;
     full_output: boolean;
     vtypes: SumoVType[];
   };
@@ -501,7 +500,6 @@ export const defaultSimConfig: SimulationConfig = {
   },
   sumo: {
     scenario_name: 'scenario',
-    net_file: 'map.net.xml',
     full_output: false,
     vtypes: [
       {
