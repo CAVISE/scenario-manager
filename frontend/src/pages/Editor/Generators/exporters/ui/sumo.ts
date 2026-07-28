@@ -7,15 +7,49 @@ import type {
   Car,
 } from '../../../../../store/types/useEditorStoreTypes';
 
-export function generateSumoCfg(config: SimulationConfig): string {
+function xmlAttribute(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function sumoArtifactBaseName(
+  outputFilename: string | undefined,
+  fallback: string,
+): string {
+  const filename = outputFilename?.trim();
+  if (!filename) return fallback.trim() || 'scenario';
+
+  const basename = filename.replace(/^.*[/\\]/, '').replace(/\.sumocfg$/i, '');
+  return basename.trim() || fallback.trim() || 'scenario';
+}
+
+function xodrNetFile(map: string): string {
+  const mapName = map
+    .trim()
+    .replace(/^.*[/\\]/, '')
+    .replace(/\.xodr$/i, '');
+  return `../maps/${mapName || 'Town03'}.xodr`;
+}
+
+export function generateSumoCfg(
+  config: SimulationConfig,
+  outputFilename?: string,
+): string {
   const cfg = mergeSimConfigWithDefaults(config);
-  const { scenario_name, net_file, full_output } = cfg.sumo;
+  const { scenario_name, full_output } = cfg.sumo;
+  const artifactName = xmlAttribute(
+    sumoArtifactBaseName(outputFilename, scenario_name),
+  );
+  const netFile = xmlAttribute(xodrNetFile(cfg.carla.map));
   return `<?xml version='1.0' encoding='UTF-8'?>
 <configuration>
   <input>
-    <net-file value="${net_file}"/>
-    <route-files value="${scenario_name}.rou.xml"/>
-    <additional-files value="${scenario_name}.poly.xml"/>
+    <net-file value="${netFile}"/>
+    <route-files value="${artifactName}.rou.xml"/>
+    <additional-files value="${artifactName}.poly.xml"/>
   </input>${
     full_output
       ? `

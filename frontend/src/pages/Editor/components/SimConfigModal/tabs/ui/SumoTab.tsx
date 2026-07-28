@@ -46,9 +46,9 @@ export default function SumoTab() {
           label="Net file"
           size="small"
           fullWidth
-          placeholder="Town04.net.xml"
-          value={sumo.net_file}
-          onChange={(e) => updateSimConfigSumo({ net_file: e.target.value })}
+          value={`../maps/${simConfig.carla.map}.xodr`}
+          InputProps={{ readOnly: true }}
+          helperText="Derived from the selected CARLA map"
         />
       </Stack>
       <FormControlLabel

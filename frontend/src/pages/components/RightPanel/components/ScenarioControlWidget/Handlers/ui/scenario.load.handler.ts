@@ -53,6 +53,13 @@ export function buildScenarioPayload(): ScenarioPayload {
               car.opencda_v2x?.communication_range,
             opencda_carla_model: car.opencda_carla_model,
             opencda_color: car.opencda_color,
+            sumo_depart: car.sumo_depart,
+            sumo_depart_lane: car.sumo_depart_lane,
+            sumo_depart_pos: car.sumo_depart_pos,
+            sumo_max_speed: car.sumo_max_speed,
+            sumo_edges: car.sumo_edges,
+            sumo_vtype: car.sumo_vtype,
+            sumo_stop: car.sumo_stop,
             points: s.points
               .filter((p: Point) => p.carId === car.id)
               .map((p: Point, i: number) => ({
