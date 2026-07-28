@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Box,
   Button,
@@ -17,6 +18,11 @@ import {
   defaultSimConfig,
   mergeSimConfigWithDefaults,
 } from '../../../../Generators/types/configGeneratorsTypes';
+import { getSumoNetFilename } from '../../../../Generators/exporters';
+import {
+  getLoadedSumoNetwork,
+  setLoadedSumoNetwork,
+} from '../../../../Generators/exporters/ui/sumoNetwork';
 
 export default function SumoTab() {
   const simConfig = mergeSimConfigWithDefaults(
@@ -26,6 +32,10 @@ export default function SumoTab() {
   const updateCar = useEditorStore((s) => s.updateCar);
   const sumo = simConfig.sumo ?? defaultSimConfig.sumo;
   const updateSimConfigSumo = useEditorStore((s) => s.updateSimConfigSumo);
+  const setError = useEditorStore((s) => s.setError);
+  const [loadedNetFilename, setLoadedNetFilename] = useState(
+    getLoadedSumoNetwork()?.filename ?? '',
+  );
   return (
     <Stack spacing={2}>
       <Typography variant="subtitle2" color="text.secondary">
@@ -46,10 +56,39 @@ export default function SumoTab() {
           label="Net file"
           size="small"
           fullWidth
-          value={`../maps/${simConfig.carla.map}.xodr`}
+          value={`./${getSumoNetFilename(simConfig.carla.map)}`}
           InputProps={{ readOnly: true }}
           helperText="Derived from the selected CARLA map"
         />
+      </Stack>
+      <Stack direction="row" spacing={2} alignItems="center">
+        <Button component="label" size="small" variant="outlined">
+          Load SUMO network
+          <input
+            hidden
+            type="file"
+            accept=".net.xml,.xml"
+            onChange={async (event) => {
+              const file = event.target.files?.[0];
+              if (!file) return;
+              try {
+                setLoadedSumoNetwork(file.name, await file.text());
+                setLoadedNetFilename(file.name);
+              } catch (error) {
+                setError(
+                  error instanceof Error ? error : new Error(String(error)),
+                );
+              } finally {
+                event.target.value = '';
+              }
+            }}
+          />
+        </Button>
+        <Typography variant="caption" color="text.secondary">
+          {loadedNetFilename
+            ? `Loaded: ${loadedNetFilename}`
+            : 'Not loaded; the exporter will try the displayed local path'}
+        </Typography>
       </Stack>
       <FormControlLabel
         control={
