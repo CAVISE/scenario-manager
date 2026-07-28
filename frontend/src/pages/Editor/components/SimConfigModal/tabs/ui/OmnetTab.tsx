@@ -15,6 +15,7 @@ export default function OmnetTab() {
     <Stack spacing={2}>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`tx_power-${simConfig.omnet.tx_power}`}
           label="TX Power (mW)"
           type="number"
           size="small"
@@ -25,6 +26,7 @@ export default function OmnetTab() {
           }
         />
         <TextField
+          key={`bitrate-${simConfig.omnet.bitrate}`}
           label="Bitrate (Mbps)"
           type="number"
           size="small"
@@ -37,6 +39,7 @@ export default function OmnetTab() {
       </Stack>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`beaconing_interval-${simConfig.omnet.beaconing_interval}`}
           label="Beacon Interval (ms)"
           type="number"
           size="small"
@@ -47,6 +50,7 @@ export default function OmnetTab() {
           }
         />
         <TextField
+          key={`max_interf_dist-${simConfig.omnet.max_interf_dist}`}
           label="Max Interf. Dist (m)"
           type="number"
           size="small"
@@ -60,6 +64,7 @@ export default function OmnetTab() {
       <FormControl size="small" fullWidth>
         <InputLabel>Protocol</InputLabel>
         <Select
+          key={`protocol-${simConfig.omnet.protocol}`}
           value={simConfig.omnet.protocol}
           label="Protocol"
           onChange={(e) =>

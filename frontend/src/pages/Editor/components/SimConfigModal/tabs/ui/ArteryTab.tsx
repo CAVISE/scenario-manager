@@ -16,6 +16,7 @@ export default function ArteryTab() {
         SUMO
       </Typography>
       <TextField
+        key={`sumo_config-${simConfig.artery.sumo_config}`}
         label="SUMO Config (.sumocfg)"
         size="small"
         fullWidth
@@ -24,6 +25,7 @@ export default function ArteryTab() {
       />
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`sumo_step_length-${simConfig.artery.sumo_step_length}`}
           label="Step Length (s)"
           type="number"
           size="small"
@@ -35,6 +37,7 @@ export default function ArteryTab() {
           }
         />
         <TextField
+          key={`sumo_seed-${simConfig.artery.sumo_seed}`}
           label="Seed"
           type="number"
           size="small"
@@ -51,6 +54,7 @@ export default function ArteryTab() {
       </Typography>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`middleware_update_interval-${simConfig.artery.middleware_update_interval}`}
           label="Update Interval (ms)"
           type="number"
           size="small"
@@ -63,6 +67,7 @@ export default function ArteryTab() {
           }
         />
         <TextField
+          key={`datetime-${simConfig.artery.datetime}`}
           label="Datetime"
           size="small"
           fullWidth
@@ -72,6 +77,7 @@ export default function ArteryTab() {
       </Stack>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`cam_interval_min-${simConfig.artery.cam_interval_min}`}
           label="CAM Min (ms)"
           type="number"
           size="small"
@@ -82,6 +88,7 @@ export default function ArteryTab() {
           }
         />
         <TextField
+          key={`cam_interval_max-${simConfig.artery.cam_interval_max}`}
           label="CAM Max (ms)"
           type="number"
           size="small"
@@ -96,6 +103,7 @@ export default function ArteryTab() {
         <FormControlLabel
           control={
             <Switch
+              key={`denm_enabled-${simConfig.artery.denm_enabled}`}
               checked={simConfig.artery.denm_enabled}
               onChange={(e) =>
                 updateSimConfigArtery({ denm_enabled: e.target.checked })
@@ -107,6 +115,7 @@ export default function ArteryTab() {
         <FormControlLabel
           control={
             <Switch
+              key={`cp_service_enabled-${simConfig.artery.cp_service_enabled}`}
               checked={simConfig.artery.cp_service_enabled}
               onChange={(e) =>
                 updateSimConfigArtery({ cp_service_enabled: e.target.checked })
@@ -124,6 +133,7 @@ export default function ArteryTab() {
         <FormControlLabel
           control={
             <Switch
+              key={`rsu_cam_enabled-${simConfig.artery.rsu_cam_enabled}`}
               checked={simConfig.artery.rsu_cam_enabled}
               onChange={(e) =>
                 updateSimConfigArtery({ rsu_cam_enabled: e.target.checked })
@@ -135,6 +145,7 @@ export default function ArteryTab() {
         <FormControlLabel
           control={
             <Switch
+              key={`rsu_denm_enabled-${simConfig.artery.rsu_denm_enabled}`}
               checked={simConfig.artery.rsu_denm_enabled}
               onChange={(e) =>
                 updateSimConfigArtery({ rsu_denm_enabled: e.target.checked })

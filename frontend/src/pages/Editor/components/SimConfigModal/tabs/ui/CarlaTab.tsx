@@ -105,6 +105,7 @@ export default function CarlaTab() {
       </Stack>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`num_vehicles-${simConfig.carla.num_vehicles}`}
           label="Vehicles"
           type="number"
           size="small"
@@ -115,6 +116,7 @@ export default function CarlaTab() {
           }
         />
         <TextField
+          key={`num_pedestrians-${simConfig.carla.num_pedestrians}`}
           label="Pedestrians"
           type="number"
           size="small"
@@ -127,6 +129,7 @@ export default function CarlaTab() {
       </Stack>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`client_port-${simConfig.carla.client_port}`}
           label="Client Port"
           type="number"
           size="small"
@@ -137,6 +140,7 @@ export default function CarlaTab() {
           }
         />
         <TextField
+          key={`seed-${simConfig.carla.seed}`}
           label="Seed"
           type="number"
           size="small"
@@ -149,6 +153,7 @@ export default function CarlaTab() {
       </Stack>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`fixed_delta_seconds-${simConfig.carla.fixed_delta_seconds}`}
           label="Fixed Delta (s)"
           type="number"
           size="small"
@@ -162,6 +167,7 @@ export default function CarlaTab() {
           }
         />
         <TextField
+          key={`traffic_manager_port-${simConfig.carla.traffic_manager_port}`}
           label="TM Port"
           type="number"
           size="small"
@@ -178,6 +184,7 @@ export default function CarlaTab() {
       <FormControlLabel
         control={
           <Switch
+            key={`synchronous_mode-${simConfig.carla.synchronous_mode}`}
             checked={simConfig.carla.synchronous_mode}
             onChange={(e) =>
               updateSimConfigCarla({ synchronous_mode: e.target.checked })
@@ -194,6 +201,7 @@ export default function CarlaTab() {
       <FormControlLabel
         control={
           <Switch
+            key={`custom_weather_enabled-${customWeatherEnabled}`}
             checked={customWeatherEnabled}
             onChange={(e) =>
               updateSimConfigCarla({
@@ -244,6 +252,7 @@ export default function CarlaTab() {
             key={s}
             control={
               <Switch
+                key={`sensors-${s}`}
                 checked={simConfig.carla.sensors[s]}
                 onChange={(e) =>
                   updateSimConfigCarla({
@@ -262,6 +271,7 @@ export default function CarlaTab() {
       {simConfig.carla.sensors.lidar && (
         <Stack direction="row" spacing={2}>
           <TextField
+            key={`lidar_channels-${simConfig.carla.lidar_channels}`}
             label="LiDAR Channels"
             type="number"
             size="small"
@@ -272,6 +282,7 @@ export default function CarlaTab() {
             }
           />
           <TextField
+            key={`lidar_range-${simConfig.carla.lidar_range}`}
             label="LiDAR Range (m)"
             type="number"
             size="small"
@@ -285,6 +296,7 @@ export default function CarlaTab() {
       )}
       {simConfig.carla.sensors.camera && (
         <TextField
+          key={`camera_fov-${simConfig.carla.camera_fov}`}
           label="Camera FOV (°)"
           type="number"
           size="small"

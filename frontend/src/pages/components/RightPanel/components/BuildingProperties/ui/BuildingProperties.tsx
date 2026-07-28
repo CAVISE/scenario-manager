@@ -1,4 +1,4 @@
-import { Button, ToggleButtonGroup, ToggleButton } from '@mui/material';
+import { Button, ToggleButtonGroup, ToggleButton, TextField } from '@mui/material';
 import {
   Stack,
   FormControl,
@@ -40,10 +40,11 @@ export default function BuildingProperties({
           <Grid xs={4} key={axis}>
             <FormControl>
               <FormLabel sx={formLabelStyles}>{axis.toUpperCase()}</FormLabel>
-              <Input
+              <TextField
+                key={`building ${building.id}`}
                 size="small"
                 type="number"
-                slotProps={numInputSlot}
+                // slotProps={numInputSlot}
                 value={building[axis].toFixed(3)}
                 onChange={(e) =>
                   updateBuilding(building.id, {
