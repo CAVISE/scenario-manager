@@ -55,7 +55,113 @@ afterEach(() => {
 describe('SUMO frontend routing', () => {
   it('maps CARLA coordinates and fills intermediate SUMO edges', () => {
     expect(buildSumoRoutes(NET_XML, [car], [destination])).toEqual({
-      'car-1': 'edge-a edge-b edge-c',
+      'car-1': {
+        edges: 'edge-a edge-b edge-c',
+        depart: {
+          edgeId: 'edge-a',
+          laneId: 'edge-a_0',
+          laneIndex: 0,
+          pos: 1,
+          distance: 0,
+        },
+        arrival: {
+          edgeId: 'edge-c',
+          laneId: 'edge-c_0',
+          laneIndex: 0,
+          pos: 9,
+          distance: 0,
+        },
+        warnings: [],
+      },
+    });
+  });
+
+  it('prefers driving lanes over sidewalk geometry', () => {
+    const network = `<?xml version="1.0" encoding="UTF-8"?>
+<net>
+  <location netOffset="0,0"/>
+  <edge id="edge-a">
+    <lane id="edge-a_0" index="0" type="sidewalk" length="20" shape="0,0 20,0"/>
+    <lane id="edge-a_1" index="1" type="driving" length="20" shape="0,2 20,2"/>
+  </edge>
+</net>`;
+    const localCar = { ...car, x: 2, y: 0 };
+    const localDestination = { ...destination, x: 18, y: 0 };
+
+    expect(
+      buildSumoRoutes(network, [localCar], [localDestination])['car-1'],
+    ).toEqual({
+      edges: 'edge-a',
+      depart: {
+        edgeId: 'edge-a',
+        laneId: 'edge-a_1',
+        laneIndex: 1,
+        pos: 2,
+        distance: 2,
+      },
+      arrival: {
+        edgeId: 'edge-a',
+        laneId: 'edge-a_1',
+        laneIndex: 1,
+        pos: 18,
+        distance: 2,
+      },
+      warnings: [],
+    });
+  });
+
+  it('uses a departure lane that connects to the next route edge', () => {
+    const network = `<?xml version="1.0" encoding="UTF-8"?>
+<net>
+  <location netOffset="0,0"/>
+  <edge id="edge-a">
+    <lane id="edge-a_0" index="0" type="driving" length="10" shape="0,0 10,0"/>
+    <lane id="edge-a_1" index="1" type="driving" length="10" shape="0,2 10,2"/>
+  </edge>
+  <edge id="edge-b">
+    <lane id="edge-b_0" index="0" type="driving" length="10" shape="10,0 20,0"/>
+  </edge>
+  <connection from="edge-a" to="edge-b" fromLane="1" toLane="0"/>
+</net>`;
+    const localCar = { ...car, x: 1, y: 0 };
+    const localDestination = { ...destination, x: 19, y: 0 };
+
+    expect(
+      buildSumoRoutes(network, [localCar], [localDestination])['car-1'],
+    ).toEqual({
+      edges: 'edge-a edge-b',
+      depart: {
+        edgeId: 'edge-a',
+        laneId: 'edge-a_1',
+        laneIndex: 1,
+        pos: 1,
+        distance: 2,
+      },
+      arrival: {
+        edgeId: 'edge-b',
+        laneId: 'edge-b_0',
+        laneIndex: 0,
+        pos: 9,
+        distance: 0,
+      },
+      warnings: [],
+    });
+  });
+
+  it('falls back to the default SUMO positions for a reversed single edge', () => {
+    const localCar = { ...car, x: 8, y: 0 };
+    const localDestination = { ...destination, x: 2, y: 0 };
+
+    expect(
+      buildSumoRoutes(NET_XML, [localCar], [localDestination])['car-1'],
+    ).toEqual({
+      edges: 'edge-a',
+      depart: undefined,
+      arrival: undefined,
+      warnings: [
+        'precise departure lane/position is ambiguous',
+        'precise arrival lane/position is ambiguous',
+      ],
     });
   });
 
