@@ -266,6 +266,7 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
               </Box>
             )}
             <TextField
+              key={`scenario_id-${selectedScenario.scenario_id}`}
               label="ID"
               value={selectedScenario.scenario_id}
               InputProps={{ readOnly: true }}
@@ -273,6 +274,7 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
               variant="outlined"
             />
             <TextField
+              key={`scenario_name-${selectedScenario.name}`}
               label="Description"
               value={selectedScenario.annotation ?? ''}
               multiline

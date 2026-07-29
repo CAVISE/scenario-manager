@@ -11,6 +11,7 @@ export default function MpcTab() {
       </Typography>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`nx-${mpc.NX}`}
           label="NX (state dim)"
           type="number"
           size="small"
@@ -19,6 +20,7 @@ export default function MpcTab() {
           onChange={(e) => updateSimConfigMPC({ NX: Number(e.target.value) })}
         />
         <TextField
+          key={`NU-${mpc.NU}`}
           label="NU (input dim)"
           type="number"
           size="small"
@@ -29,6 +31,7 @@ export default function MpcTab() {
       </Stack>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`T-${mpc.T}`}
           label="T (horizon)"
           type="number"
           size="small"
@@ -37,6 +40,7 @@ export default function MpcTab() {
           onChange={(e) => updateSimConfigMPC({ T: Number(e.target.value) })}
         />
         <TextField
+          key={`T_aug-${mpc.T_aug}`}
           label="T_aug"
           type="number"
           size="small"
@@ -54,6 +58,7 @@ export default function MpcTab() {
       </Typography>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`dist_stop-${mpc.dist_stop}`}
           label="dist_stop (m)"
           type="number"
           size="small"
@@ -65,6 +70,7 @@ export default function MpcTab() {
           }
         />
         <TextField
+          key={`speed_stop-${mpc.speed_stop}`}
           label="speed_stop (m/s)"
           type="number"
           size="small"
@@ -78,6 +84,7 @@ export default function MpcTab() {
       </Stack>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`time_max-${mpc.time_max}`}
           label="time_max (s)"
           type="number"
           size="small"
@@ -88,6 +95,7 @@ export default function MpcTab() {
           }
         />
         <TextField
+          key={`iter_max-${mpc.iter_max}`}
           label="iter_max"
           type="number"
           size="small"
@@ -100,6 +108,7 @@ export default function MpcTab() {
       </Stack>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`target_speed-${mpc.target_speed}`}
           label="target_speed (m/s)"
           type="number"
           size="small"
@@ -111,6 +120,7 @@ export default function MpcTab() {
           }
         />
         <TextField
+          key={`n_ind-${mpc.n_ind}`}
           label="n_ind"
           type="number"
           size="small"
@@ -123,6 +133,7 @@ export default function MpcTab() {
       </Stack>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`dt-${mpc.dt}`}
           label="dt (s)"
           type="number"
           size="small"
@@ -132,6 +143,7 @@ export default function MpcTab() {
           onChange={(e) => updateSimConfigMPC({ dt: Number(e.target.value) })}
         />
         <TextField
+          key={`d_dist-${mpc.d_dist}`}
           label="d_dist (m)"
           type="number"
           size="small"
@@ -144,6 +156,7 @@ export default function MpcTab() {
         />
       </Stack>
       <TextField
+        key={`du_res-${mpc.du_res}`}
         label="du_res"
         type="number"
         size="small"
@@ -163,7 +176,7 @@ export default function MpcTab() {
       <Stack direction="row" spacing={1}>
         {([0, 1, 2, 3] as const).map((idx) => (
           <TextField
-            key={idx}
+            key={`Qf-${idx}`}
             label={`Qf[${idx}]`}
             type="number"
             size="small"
@@ -184,7 +197,7 @@ export default function MpcTab() {
       <Stack direction="row" spacing={1}>
         {([0, 1] as const).map((idx) => (
           <TextField
-            key={idx}
+            key={`R-${idx}`}
             label={`R[${idx}]`}
             type="number"
             size="small"
@@ -205,7 +218,7 @@ export default function MpcTab() {
       <Stack direction="row" spacing={1}>
         {([0, 1] as const).map((idx) => (
           <TextField
-            key={idx}
+            key={`Rd-${idx}`}
             label={`Rd[${idx}]`}
             type="number"
             size="small"
@@ -227,6 +240,7 @@ export default function MpcTab() {
       </Typography>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`RF-${mpc.RF}`}
           label="RF (m)"
           type="number"
           size="small"
@@ -236,6 +250,7 @@ export default function MpcTab() {
           onChange={(e) => updateSimConfigMPC({ RF: Number(e.target.value) })}
         />
         <TextField
+          key={`RB-${mpc.RB}`}
           label="RB (m)"
           type="number"
           size="small"
@@ -247,6 +262,7 @@ export default function MpcTab() {
       </Stack>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`W-${mpc.W}`}
           label="W (m)"
           type="number"
           size="small"
@@ -256,6 +272,7 @@ export default function MpcTab() {
           onChange={(e) => updateSimConfigMPC({ W: Number(e.target.value) })}
         />
         <TextField
+          key={`wd_ratio-${mpc.wd_ratio}`}
           label="wd_ratio"
           type="number"
           size="small"
@@ -269,6 +286,7 @@ export default function MpcTab() {
       </Stack>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`WB-${mpc.WB}`}
           label="WB (m)"
           type="number"
           size="small"
@@ -278,6 +296,7 @@ export default function MpcTab() {
           onChange={(e) => updateSimConfigMPC({ WB: Number(e.target.value) })}
         />
         <TextField
+          key={`WH-${mpc.TR}`}
           label="TR (m)"
           type="number"
           size="small"
@@ -288,6 +307,7 @@ export default function MpcTab() {
         />
       </Stack>
       <TextField
+        key={`TW-${mpc.TW}`}
         label="TW (m)"
         type="number"
         size="small"
@@ -303,6 +323,7 @@ export default function MpcTab() {
       </Typography>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`steer_deg-${mpc.steer_deg}`}
           label="steer_deg (°)"
           type="number"
           size="small"
@@ -314,6 +335,7 @@ export default function MpcTab() {
           }
         />
         <TextField
+          key={`steer_change_deg-${mpc.steer_change_deg}`}
           label="steer_change_deg (°/s)"
           type="number"
           size="small"
@@ -327,6 +349,7 @@ export default function MpcTab() {
       </Stack>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`speed_max_kph-${mpc.speed_max_kph}`}
           label="speed_max (km/h)"
           type="number"
           size="small"
@@ -338,6 +361,7 @@ export default function MpcTab() {
           }
         />
         <TextField
+          key={`speed_min_kph-${mpc.speed_min_kph}`}
           label="speed_min (km/h)"
           type="number"
           size="small"
@@ -350,6 +374,7 @@ export default function MpcTab() {
         />
       </Stack>
       <TextField
+        key={`acceleration_max-${mpc.acceleration_max}`}
         label="acceleration_max (m/s²)"
         type="number"
         size="small"

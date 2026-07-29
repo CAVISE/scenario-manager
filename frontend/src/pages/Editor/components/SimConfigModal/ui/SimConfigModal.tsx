@@ -44,6 +44,7 @@ export default function SimConfigModal({ open, onClose }: SimConfigModalProps) {
 
         <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
           <TextField
+            key={`sim_duration-${simConfig.sim_duration}`}
             label="Duration (s)"
             type="number"
             size="small"

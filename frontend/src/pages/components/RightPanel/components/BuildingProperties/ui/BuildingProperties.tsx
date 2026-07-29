@@ -1,4 +1,9 @@
-import { Button, ToggleButtonGroup, ToggleButton } from '@mui/material';
+import {
+  Button,
+  ToggleButtonGroup,
+  ToggleButton,
+  TextField,
+} from '@mui/material';
 import {
   Stack,
   FormControl,
@@ -9,7 +14,6 @@ import {
   Typography,
 } from '@mui/material';
 import { numInputSlot } from '../../../types/PanelTypes';
-import NumericInput from '../../NumericInput';
 import {
   BuildingPropertiesProps,
   formLabelStyles,
@@ -41,10 +45,16 @@ export default function BuildingProperties({
           <Grid xs={4} key={axis}>
             <FormControl>
               <FormLabel sx={formLabelStyles}>{axis.toUpperCase()}</FormLabel>
-              <NumericInput
-                value={building[axis]}
-                onValueChange={(value) =>
-                  updateBuilding(building.id, { [axis]: value })
+              <TextField
+                key={`building ${building.id}`}
+                size="small"
+                type="number"
+                // slotProps={numInputSlot}
+                value={building[axis].toFixed(3)}
+                onChange={(e) =>
+                  updateBuilding(building.id, {
+                    [axis]: parseFloat(e.target.value),
+                  })
                 }
               />
             </FormControl>

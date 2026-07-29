@@ -189,6 +189,8 @@ export type SimulationConfig = {
     rsu_denm_enabled: boolean;
   };
   sumo: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    [x: string]: any;
     scenario_name: string;
     full_output: boolean;
     vtypes: SumoVType[];

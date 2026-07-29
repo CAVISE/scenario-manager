@@ -73,6 +73,7 @@ function JsonField({
 
   return (
     <TextField
+      key={label}
       label={label}
       multiline
       minRows={minRows}
@@ -132,6 +133,7 @@ function StagesField({
 
   return (
     <TextField
+      key="stages"
       label="stages (JSON array)"
       multiline
       minRows={6}
@@ -304,6 +306,7 @@ export default function AttackConfigModal({
               <Stack spacing={1.5}>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <TextField
+                    key="name"
                     label="attack.name"
                     size="small"
                     fullWidth
