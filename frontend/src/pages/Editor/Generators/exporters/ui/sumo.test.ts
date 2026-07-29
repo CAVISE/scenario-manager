@@ -68,10 +68,31 @@ describe('SUMO exporters', () => {
     } satisfies Car;
 
     const xml = generateRouXml(defaultSimConfig, [car], {
-      'car-1': 'edge-a edge-b edge-c',
+      'car-1': {
+        edges: 'edge-a edge-b edge-c',
+        depart: {
+          edgeId: 'edge-a',
+          laneId: 'edge-a_1',
+          laneIndex: 1,
+          pos: 12.345,
+          distance: 0.5,
+        },
+        arrival: {
+          edgeId: 'edge-c',
+          laneId: 'edge-c_0',
+          laneIndex: 0,
+          pos: 8.765,
+          distance: 0.25,
+        },
+        warnings: [],
+      },
     });
 
     expect(xml).toContain('<route edges="edge-a edge-b edge-c"/>');
+    expect(xml).toContain('departLane="1"');
+    expect(xml).toContain('departPos="12.35"');
+    expect(xml).toContain('arrivalLane="0"');
+    expect(xml).toContain('arrivalPos="8.77"');
   });
 
   it('keeps manual edges as an override over generated routes', () => {
@@ -89,11 +110,49 @@ describe('SUMO exporters', () => {
     } satisfies Car;
 
     const xml = generateRouXml(defaultSimConfig, [car], {
-      'car-1': 'generated-a generated-b',
+      'car-1': {
+        edges: 'generated-a generated-b',
+        warnings: [],
+      },
     });
 
     expect(xml).toContain('<route edges="manual-a manual-b"/>');
     expect(xml).not.toContain('generated-a');
+  });
+
+  it('keeps manual departure values over generated anchors', () => {
+    const car = {
+      id: 'car-1',
+      x: 0,
+      y: 0,
+      z: 0,
+      color: 'ffffff',
+      model: 'vehicle.tesla.model3',
+      scale: 1,
+      rotation: 0,
+      speed: 50,
+      sumo_depart_lane: 'best',
+      sumo_depart_pos: 42,
+    } satisfies Car;
+
+    const xml = generateRouXml(defaultSimConfig, [car], {
+      'car-1': {
+        edges: 'edge-a edge-b',
+        depart: {
+          edgeId: 'edge-a',
+          laneId: 'edge-a_1',
+          laneIndex: 1,
+          pos: 12.345,
+          distance: 0.5,
+        },
+        warnings: [],
+      },
+    });
+
+    expect(xml).toContain('departLane="best"');
+    expect(xml).toContain('departPos="42"');
+    expect(xml).not.toContain('departLane="1"');
+    expect(xml).not.toContain('departPos="12.35"');
   });
 
   it('does not silently export a vehicle with an empty route', () => {

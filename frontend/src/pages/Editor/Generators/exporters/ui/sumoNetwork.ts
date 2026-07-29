@@ -5,21 +5,61 @@ import type {
 
 type Coordinate = { x: number; y: number };
 type LaneGeometry = {
+  id: string;
   edgeId: string;
+  index: number;
+  length: number;
+  type: string;
   shape: Coordinate[];
+};
+type LaneConnection = {
+  fromEdge: string;
+  fromLane: number;
+  toEdge: string;
+  toLane: number;
 };
 type SumoNetwork = {
   offsetX: number;
   offsetY: number;
   lanes: LaneGeometry[];
+  connections: LaneConnection[];
   edgeLengths: Map<string, number>;
   successors: Map<string, Set<string>>;
 };
+
+export type SumoRouteAnchor = {
+  edgeId: string;
+  laneId: string;
+  laneIndex: number;
+  pos: number;
+  distance: number;
+};
+
+export type GeneratedSumoRoute = {
+  edges: string;
+  depart?: SumoRouteAnchor;
+  arrival?: SumoRouteAnchor;
+  warnings: string[];
+};
+
+export type GeneratedSumoRoutes = Record<string, GeneratedSumoRoute>;
 
 export interface LoadedSumoNetwork {
   filename: string;
   content: string;
 }
+
+const MAX_PRECISE_SNAP_DISTANCE = 10;
+const MIN_LANE_POSITION_MARGIN = 0.1;
+const NON_DRIVING_LANE_TYPES = new Set([
+  'biking',
+  'border',
+  'bus_stop',
+  'parking',
+  'shoulder',
+  'sidewalk',
+  'walking',
+]);
 
 let loadedNetwork: LoadedSumoNetwork | null = null;
 
@@ -66,9 +106,9 @@ export function buildSumoRoutes(
   netXml: string,
   cars: Car[],
   points: Point[],
-): Record<string, string> {
+): GeneratedSumoRoutes {
   const network = parseNetwork(netXml);
-  const result: Record<string, string> = {};
+  const result: GeneratedSumoRoutes = {};
 
   cars.forEach((car) => {
     if (car.sumo_edges?.trim()) return;
@@ -88,8 +128,10 @@ export function buildSumoRoutes(
       y: -point.y + network.offsetY,
     }));
 
-    const snappedEdges = sumoPoints.map((point, index) =>
-      nearestEdge(network.lanes, point, routeDirection(sumoPoints, index)),
+    const snappedEdges = sumoPoints.map(
+      (point, index) =>
+        nearestLane(network.lanes, point, routeDirection(sumoPoints, index))
+          .edgeId,
     );
 
     const edgeRoute: string[] = [];
@@ -111,7 +153,49 @@ export function buildSumoRoutes(
       );
     }
 
-    result[car.id] = deduplicateAdjacent(edgeRoute).join(' ');
+    const edges = deduplicateAdjacent(edgeRoute);
+    const warnings: string[] = [];
+    let depart = preciseEndpointAnchor(
+      network,
+      sumoPoints[0],
+      routeDirection(sumoPoints, 0),
+      edges,
+      'depart',
+    );
+    let arrival = preciseEndpointAnchor(
+      network,
+      sumoPoints[sumoPoints.length - 1],
+      routeDirection(sumoPoints, sumoPoints.length - 1),
+      edges,
+      'arrival',
+    );
+
+    if (!depart) {
+      warnings.push('precise departure lane/position is ambiguous');
+    }
+    if (!arrival) {
+      warnings.push('precise arrival lane/position is ambiguous');
+    }
+    if (
+      depart &&
+      arrival &&
+      edges.length === 1 &&
+      depart.edgeId === arrival.edgeId &&
+      arrival.pos <= depart.pos + MIN_LANE_POSITION_MARGIN
+    ) {
+      depart = undefined;
+      arrival = undefined;
+      warnings.push(
+        'arrival is not ahead of departure on the single-edge route',
+      );
+    }
+
+    result[car.id] = {
+      edges: edges.join(' '),
+      depart,
+      arrival,
+      warnings,
+    };
   });
 
   return result;
@@ -140,15 +224,32 @@ function parseNetwork(netXml: string): SumoNetwork {
         if (!allowsPassenger(lane)) return;
         const shape = parseShape(lane.getAttribute('shape') ?? '');
         if (shape.length < 2) return;
-        lanes.push({ edgeId, shape });
         const fallbackLength = polylineLength(shape);
         const parsedLength = Number(lane.getAttribute('length'));
-        longestLane = Math.max(
-          longestLane,
+        const length =
           Number.isFinite(parsedLength) && parsedLength > 0
             ? parsedLength
-            : fallbackLength,
-        );
+            : fallbackLength;
+        const laneIndexValue = lane.getAttribute('index');
+        const laneIndex = Number(laneIndexValue);
+        const laneId = lane.getAttribute('id');
+        if (
+          !laneId ||
+          laneIndexValue == null ||
+          !Number.isInteger(laneIndex) ||
+          length <= 0
+        ) {
+          return;
+        }
+        lanes.push({
+          id: laneId,
+          edgeId,
+          index: laneIndex,
+          length,
+          type: (lane.getAttribute('type') ?? '').trim().toLowerCase(),
+          shape,
+        });
+        longestLane = Math.max(longestLane, length);
       });
     if (longestLane > 0) edgeLengths.set(edgeId, longestLane);
   });
@@ -158,11 +259,16 @@ function parseNetwork(netXml: string): SumoNetwork {
   }
 
   const successors = new Map<string, Set<string>>();
+  const connections: LaneConnection[] = [];
   edgeLengths.forEach((_length, edgeId) => successors.set(edgeId, new Set()));
   Array.from(document.getElementsByTagName('connection')).forEach(
     (connection) => {
       const source = connection.getAttribute('from');
       const destination = connection.getAttribute('to');
+      const fromLaneValue = connection.getAttribute('fromLane');
+      const toLaneValue = connection.getAttribute('toLane');
+      const fromLane = Number(fromLaneValue);
+      const toLane = Number(toLaneValue);
       if (
         source &&
         destination &&
@@ -170,11 +276,31 @@ function parseNetwork(netXml: string): SumoNetwork {
         edgeLengths.has(destination)
       ) {
         successors.get(source)?.add(destination);
+        if (
+          fromLaneValue != null &&
+          toLaneValue != null &&
+          Number.isInteger(fromLane) &&
+          Number.isInteger(toLane)
+        ) {
+          connections.push({
+            fromEdge: source,
+            fromLane,
+            toEdge: destination,
+            toLane,
+          });
+        }
       }
     },
   );
 
-  return { offsetX, offsetY, lanes, edgeLengths, successors };
+  return {
+    offsetX,
+    offsetY,
+    lanes,
+    connections,
+    edgeLengths,
+    successors,
+  };
 }
 
 function allowsPassenger(lane: Element): boolean {
@@ -231,16 +357,32 @@ function routeDirection(
   return length < 1e-6 ? null : { x: dx / length, y: dy / length };
 }
 
-function nearestEdge(
+function nearestLane(
   lanes: LaneGeometry[],
   point: Coordinate,
   direction: Coordinate | null,
-): string {
-  let bestEdge = '';
+): SumoRouteAnchor {
+  let best: SumoRouteAnchor | null = null;
   let bestScore = Number.POSITIVE_INFINITY;
+  const drivingLanes = lanes.filter((lane) => isDrivingLane(lane));
+  const candidates = drivingLanes.length > 0 ? drivingLanes : lanes;
+  const projected = candidates.map((lane) => ({
+    lane,
+    nearest: distanceToShape(point, lane.shape),
+  }));
+  const aligned = direction
+    ? projected.filter(({ nearest }) => {
+        if (!nearest.direction) return false;
+        return (
+          direction.x * nearest.direction.x +
+            direction.y * nearest.direction.y >
+          0
+        );
+      })
+    : projected;
+  const pool = aligned.length > 0 ? aligned : projected;
 
-  lanes.forEach((lane) => {
-    const nearest = distanceToShape(point, lane.shape);
+  pool.forEach(({ lane, nearest }) => {
     let score = Math.sqrt(nearest.distanceSquared);
     if (direction && nearest.direction) {
       const alignment =
@@ -249,20 +391,120 @@ function nearestEdge(
     }
     if (score < bestScore) {
       bestScore = score;
-      bestEdge = lane.edgeId;
+      best = laneAnchor(lane, nearest);
     }
   });
 
-  if (!bestEdge) throw new Error('Could not match route point to SUMO edge');
-  return bestEdge;
+  if (!best) {
+    throw new Error('Could not match route point to a directed SUMO lane');
+  }
+  return best;
 }
+
+function preciseEndpointAnchor(
+  network: SumoNetwork,
+  point: Coordinate,
+  direction: Coordinate | null,
+  edges: string[],
+  endpoint: 'depart' | 'arrival',
+): SumoRouteAnchor | undefined {
+  if (edges.length === 0 || !direction) return undefined;
+  const edgeId = endpoint === 'depart' ? edges[0] : edges[edges.length - 1];
+  const compatibleLanes = network.lanes.filter(
+    (lane) =>
+      lane.edgeId === edgeId &&
+      isDrivingLane(lane) &&
+      endpointConnectionMatches(network, lane, edges, endpoint),
+  );
+
+  let best: SumoRouteAnchor | undefined;
+  let bestScore = Number.POSITIVE_INFINITY;
+  compatibleLanes.forEach((lane) => {
+    const nearest = distanceToShape(point, lane.shape);
+    if (!nearest.direction) return;
+    const alignment =
+      direction.x * nearest.direction.x + direction.y * nearest.direction.y;
+    if (alignment <= 0) return;
+    const distance = Math.sqrt(nearest.distanceSquared);
+    if (distance > MAX_PRECISE_SNAP_DISTANCE) return;
+    const score = distance + (1 - alignment) * 10;
+    if (score < bestScore) {
+      bestScore = score;
+      best = laneAnchor(lane, nearest);
+    }
+  });
+  return best;
+}
+
+function endpointConnectionMatches(
+  network: SumoNetwork,
+  lane: LaneGeometry,
+  edges: string[],
+  endpoint: 'depart' | 'arrival',
+): boolean {
+  if (edges.length < 2) return true;
+  if (endpoint === 'depart') {
+    return network.connections.some(
+      (connection) =>
+        connection.fromEdge === edges[0] &&
+        connection.fromLane === lane.index &&
+        connection.toEdge === edges[1],
+    );
+  }
+  return network.connections.some(
+    (connection) =>
+      connection.fromEdge === edges[edges.length - 2] &&
+      connection.toEdge === edges[edges.length - 1] &&
+      connection.toLane === lane.index,
+  );
+}
+
+function isDrivingLane(lane: LaneGeometry): boolean {
+  return !NON_DRIVING_LANE_TYPES.has(lane.type);
+}
+
+function laneAnchor(
+  lane: LaneGeometry,
+  nearest: ShapeProjection,
+): SumoRouteAnchor {
+  const geometricLength = polylineLength(lane.shape);
+  const scaledPosition =
+    geometricLength > 0
+      ? (nearest.position / geometricLength) * lane.length
+      : nearest.position;
+  return {
+    edgeId: lane.edgeId,
+    laneId: lane.id,
+    laneIndex: lane.index,
+    pos: clampLanePosition(scaledPosition, lane.length),
+    distance: Math.sqrt(nearest.distanceSquared),
+  };
+}
+
+function clampLanePosition(position: number, laneLength: number): number {
+  if (laneLength <= MIN_LANE_POSITION_MARGIN * 2) {
+    return Math.max(0, Math.min(laneLength, position));
+  }
+  return Math.max(
+    MIN_LANE_POSITION_MARGIN,
+    Math.min(laneLength - MIN_LANE_POSITION_MARGIN, position),
+  );
+}
+
+type ShapeProjection = {
+  distanceSquared: number;
+  direction: Coordinate | null;
+  position: number;
+};
 
 function distanceToShape(
   point: Coordinate,
   shape: Coordinate[],
-): { distanceSquared: number; direction: Coordinate | null } {
+): ShapeProjection {
   let bestDistance = Number.POSITIVE_INFINITY;
   let bestDirection: Coordinate | null = null;
+  let bestPosition = 0;
+  let lengthBeforeSegment = 0;
 
   for (let index = 0; index < shape.length - 1; index += 1) {
     const start = shape[index];
@@ -286,10 +528,16 @@ function distanceToShape(
       const length = Math.sqrt(lengthSquared);
       bestDistance = distanceSquared;
       bestDirection = { x: dx / length, y: dy / length };
+      bestPosition = lengthBeforeSegment + projection * length;
     }
+    lengthBeforeSegment += Math.sqrt(lengthSquared);
   }
 
-  return { distanceSquared: bestDistance, direction: bestDirection };
+  return {
+    distanceSquared: bestDistance,
+    direction: bestDirection,
+    position: bestPosition,
+  };
 }
 
 function shortestPath(

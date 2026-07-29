@@ -6,6 +6,7 @@ import type {
   Building,
   Car,
 } from '../../../../../store/types/useEditorStoreTypes';
+import type { GeneratedSumoRoutes } from './sumoNetwork';
 
 function xmlAttribute(value: string): string {
   return value
@@ -73,7 +74,7 @@ export function generateSumoCfg(
 export function generateRouXml(
   config: SimulationConfig,
   cars: Car[],
-  generatedRoutes: Record<string, string> = {},
+  generatedRoutes: GeneratedSumoRoutes = {},
 ): string {
   const cfg = mergeSimConfigWithDefaults(config);
   const vtypeLines = cfg.sumo.vtypes
@@ -85,27 +86,39 @@ export function generateRouXml(
 
   const vehicleLines = cars
     .map((car, i) => {
-      const edges =
-        car.sumo_edges?.trim() || generatedRoutes[car.id]?.trim() || '';
+      const generated = generatedRoutes[car.id];
+      const edges = car.sumo_edges?.trim() || generated?.edges.trim() || '';
       if (!edges) {
         throw new Error(
           `Vehicle ${car.opencda_name || car.id} has no SUMO route`,
         );
       }
+      const generatedAnchors =
+        generated?.edges.trim() === edges ? generated : undefined;
       const maxSpeed = car.sumo_max_speed ?? 16.665;
       const depart = car.sumo_depart ?? 0.05;
       const dLane = car.sumo_depart_lane
         ? ` departLane="${car.sumo_depart_lane}"`
-        : '';
+        : generatedAnchors?.depart
+          ? ` departLane="${generatedAnchors.depart.laneIndex}"`
+          : '';
       const dPos =
         car.sumo_depart_pos != null
           ? ` departPos="${car.sumo_depart_pos}"`
-          : '';
+          : generatedAnchors?.depart
+            ? ` departPos="${formatLanePosition(generatedAnchors.depart.pos)}"`
+            : '';
+      const aLane = generatedAnchors?.arrival
+        ? ` arrivalLane="${generatedAnchors.arrival.laneIndex}"`
+        : '';
+      const aPos = generatedAnchors?.arrival
+        ? ` arrivalPos="${formatLanePosition(generatedAnchors.arrival.pos)}"`
+        : '';
       const type = car.sumo_vtype ? ` type="${car.sumo_vtype}"` : '';
       const stop = car.sumo_stop
         ? `\n    <stop lane="${car.sumo_stop.lane}" startPos="${car.sumo_stop.startPos}" endPos="${car.sumo_stop.endPos}" duration="${car.sumo_stop.duration}"/>`
         : '';
-      return `  <vehicle id="sumo${i}"${type} maxSpeed="${maxSpeed}" depart="${depart}"${dLane}${dPos} departSpeed="0.00">
+      return `  <vehicle id="sumo${i}"${type} maxSpeed="${maxSpeed}" depart="${depart}"${dLane}${dPos}${aLane}${aPos} departSpeed="0.00">
     <route edges="${xmlAttribute(edges)}"/>${stop}
   </vehicle>`;
     })
@@ -115,6 +128,10 @@ export function generateRouXml(
 <routes>
 ${vtypeLines ? vtypeLines + '\n' : ''}${vehicleLines}
 </routes>`;
+}
+
+function formatLanePosition(value: number): string {
+  return value.toFixed(2);
 }
 
 export function generatePolyXml(buildings: Building[]): string {
