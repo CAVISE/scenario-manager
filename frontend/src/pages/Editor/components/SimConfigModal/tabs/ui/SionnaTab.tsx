@@ -7,6 +7,7 @@ export default function SionnaTab() {
   return (
     <Stack spacing={2}>
       <TextField
+        key={`carrier_frequency-${simConfig.sionna.carrier_frequency}`}
         label="Carrier Frequency (Hz)"
         type="number"
         size="small"
@@ -18,6 +19,7 @@ export default function SionnaTab() {
       />
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`max_depth-${simConfig.sionna.max_depth}`}
           label="Max Depth"
           type="number"
           size="small"
@@ -28,6 +30,7 @@ export default function SionnaTab() {
           }
         />
         <TextField
+          key={`num_samples-${simConfig.sionna.num_samples}`}
           label="Num Samples"
           type="number"
           size="small"
@@ -40,11 +43,12 @@ export default function SionnaTab() {
       </Stack>
       <Stack direction="row" flexWrap="wrap" gap={1}>
         {(['los', 'reflection', 'diffraction', 'scattering'] as const).map(
-          (key) => (
+          (key, idx: number) => (
             <FormControlLabel
-              key={key}
+              key={`${key}_${idx}`}
               control={
                 <Switch
+                  key={`sionna-${key}`}
                   checked={simConfig.sionna[key]}
                   onChange={(e) =>
                     updateSimConfigSionna({ [key]: e.target.checked })

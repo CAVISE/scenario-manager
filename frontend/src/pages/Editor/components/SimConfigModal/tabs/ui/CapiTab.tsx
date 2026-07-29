@@ -25,6 +25,7 @@ export default function CapiTab() {
         Network
       </Typography>
       <TextField
+        key={`network-${capi.network}`}
         label="Network"
         size="small"
         fullWidth
@@ -41,6 +42,7 @@ export default function CapiTab() {
         <FormControlLabel
           control={
             <Switch
+              key={`cmdenv_express_mode-${capi.cmdenv_express_mode}`}
               checked={capi.cmdenv_express_mode}
               onChange={(e) =>
                 updateSimConfigCAPI({ cmdenv_express_mode: e.target.checked })
@@ -51,6 +53,7 @@ export default function CapiTab() {
         />
       </Stack>
       <TextField
+        key={`cmdenv_output_file-${capi.cmdenv_output_file}`}
         label="Output file"
         size="small"
         fullWidth
@@ -64,6 +67,7 @@ export default function CapiTab() {
         <FormControlLabel
           control={
             <Switch
+              key={`scalar_recording-${capi.scalar_recording}`}
               checked={capi.scalar_recording}
               onChange={(e) =>
                 updateSimConfigCAPI({ scalar_recording: e.target.checked })
@@ -75,6 +79,7 @@ export default function CapiTab() {
         <FormControlLabel
           control={
             <Switch
+              key={`vector_recording-${capi.vector_recording}`}
               checked={capi.vector_recording}
               onChange={(e) =>
                 updateSimConfigCAPI({ vector_recording: e.target.checked })
@@ -99,6 +104,7 @@ export default function CapiTab() {
           onChange={(e) => updateSimConfigCAPI({ address: e.target.value })}
         />
         <TextField
+          key={`client_id-${capi.client_id}`}
           label="Client ID"
           type="number"
           size="small"
@@ -134,6 +140,7 @@ export default function CapiTab() {
       </Typography>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`traci_hostname-${capi.traci_hostname}`}
           label="Hostname"
           size="small"
           fullWidth
@@ -144,6 +151,7 @@ export default function CapiTab() {
           }
         />
         <TextField
+          key={`traci_port-${capi.traci_port}`}
           label="Port"
           type="number"
           size="small"
@@ -161,6 +169,7 @@ export default function CapiTab() {
       </Typography>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`carrier_frequency-${capi.carrier_frequency}`}
           label="Carrier frequency"
           size="small"
           fullWidth
@@ -171,6 +180,7 @@ export default function CapiTab() {
           }
         />
         <TextField
+          key={`tx_power-${capi.tx_power}`}
           label="TX power"
           size="small"
           fullWidth
@@ -180,6 +190,7 @@ export default function CapiTab() {
         />
       </Stack>
       <TextField
+        key={`channel_number-${capi.channel_number}`}
         label="Channel number"
         type="number"
         size="small"
@@ -196,6 +207,7 @@ export default function CapiTab() {
       </Typography>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`middleware_update_interval-${capi.middleware_update_interval}`}
           label="Update interval (s)"
           type="number"
           size="small"
@@ -209,6 +221,7 @@ export default function CapiTab() {
           }
         />
         <TextField
+          key={`datetime-${capi.datetime}`}
           label="Datetime"
           size="small"
           fullWidth
@@ -234,6 +247,7 @@ export default function CapiTab() {
           <FormControlLabel
             control={
               <Switch
+                key={`ca_service_enabled-${capi.ca_service_enabled}`}
                 checked={capi.ca_service_enabled}
                 onChange={(e) =>
                   updateSimConfigCAPI({ ca_service_enabled: e.target.checked })
@@ -244,6 +258,7 @@ export default function CapiTab() {
           />
           {capi.ca_service_enabled && (
             <TextField
+              key={`ca_service_port-${capi.ca_service_port}`}
               label="Port"
               type="number"
               size="small"
@@ -269,6 +284,7 @@ export default function CapiTab() {
           <FormControlLabel
             control={
               <Switch
+                key={`cosim_service_enabled-${capi.cosim_service_enabled}`}
                 checked={capi.cosim_service_enabled}
                 onChange={(e) =>
                   updateSimConfigCAPI({
@@ -282,6 +298,7 @@ export default function CapiTab() {
           {capi.cosim_service_enabled && (
             <Stack direction="row" spacing={1}>
               <TextField
+                key={`cosim_service_port-${capi.cosim_service_port}`}
                 label="Port"
                 type="number"
                 size="small"
@@ -294,6 +311,7 @@ export default function CapiTab() {
                 }
               />
               <TextField
+                key={`cosim_filter_pattern-${capi.cosim_filter_pattern}`}
                 label="Filter pattern"
                 size="small"
                 fullWidth
@@ -347,6 +365,7 @@ export default function CapiTab() {
           <Stack spacing={1}>
             <Stack direction="row" spacing={1}>
               <TextField
+                key={`name-${ec.name}`}
                 label="Name"
                 size="small"
                 fullWidth
@@ -359,6 +378,7 @@ export default function CapiTab() {
                 }}
               />
               <TextField
+                key={`path_loss_type-${ec.path_loss_type}`}
                 label="Path loss type"
                 size="small"
                 fullWidth
@@ -375,6 +395,7 @@ export default function CapiTab() {
               <FormControlLabel
                 control={
                   <Switch
+                    key={`small_scale_variations-${ec.small_scale_variations}`}
                     checked={ec.small_scale_variations}
                     onChange={(e) => {
                       const extra_configs = [...capi.extra_configs];
@@ -391,6 +412,7 @@ export default function CapiTab() {
               <FormControlLabel
                 control={
                   <Switch
+                    key={`visualization-${ec.visualization}`}
                     checked={ec.visualization}
                     onChange={(e) => {
                       const extra_configs = [...capi.extra_configs];

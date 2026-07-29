@@ -43,6 +43,7 @@ export default function SumoTab() {
       </Typography>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`scenario_name-${sumo.scenario_name}`}
           label="Scenario name"
           size="small"
           fullWidth
@@ -53,6 +54,7 @@ export default function SumoTab() {
           }
         />
         <TextField
+          key={`net_file-${sumo.net_file}`}
           label="Net file"
           size="small"
           fullWidth
@@ -93,6 +95,7 @@ export default function SumoTab() {
       <FormControlLabel
         control={
           <Switch
+            key={`full_output-${sumo.full_output}`}
             checked={sumo.full_output}
             onChange={(e) =>
               updateSimConfigSumo({ full_output: e.target.checked })
@@ -144,6 +147,7 @@ export default function SumoTab() {
           <Stack spacing={1}>
             <Stack direction="row" spacing={1}>
               <TextField
+                key={`id-${vt.id}`}
                 label="ID"
                 size="small"
                 fullWidth
@@ -155,6 +159,7 @@ export default function SumoTab() {
                 }}
               />
               <TextField
+                key={`vClass-${vt.id}-${vt.vClass}`}
                 label="vClass"
                 size="small"
                 fullWidth
@@ -168,6 +173,7 @@ export default function SumoTab() {
             </Stack>
             <Stack direction="row" spacing={1}>
               <TextField
+                key={`minGap-${vt.id}-${vt.minGap}`}
                 label="minGap"
                 type="number"
                 size="small"
@@ -181,6 +187,7 @@ export default function SumoTab() {
                 }}
               />
               <TextField
+                key={`tau-${vt.id}-${vt.tau}`}
                 label="tau"
                 type="number"
                 size="small"
@@ -194,6 +201,7 @@ export default function SumoTab() {
                 }}
               />
               <TextField
+                key={`carFollowModel-${vt.id}-${vt.carFollowModel}`}
                 label="carFollowModel"
                 size="small"
                 fullWidth
@@ -207,6 +215,7 @@ export default function SumoTab() {
             </Stack>
             <Stack direction="row" spacing={1} alignItems="center">
               <TextField
+                key={`speedFactor-${vt.id}-${vt.speedFactor}`}
                 label="speedFactor"
                 size="small"
                 fullWidth
@@ -263,6 +272,7 @@ export default function SumoTab() {
             </Typography>
             <Stack spacing={1}>
               <TextField
+                key={`edges-${car.id}-${car.sumo_edges ?? ''}`}
                 label="Route edges"
                 size="small"
                 fullWidth
@@ -274,6 +284,7 @@ export default function SumoTab() {
               />
               <Stack direction="row" spacing={1}>
                 <TextField
+                  key={`depart-${car.id}-${car.sumo_depart ?? 0.05}`}
                   label="Depart (s)"
                   type="number"
                   size="small"
@@ -285,6 +296,7 @@ export default function SumoTab() {
                   }
                 />
                 <TextField
+                  key={`speed-${car.id}-${car.sumo_max_speed ?? 16.665}`}
                   label="Max speed (m/s)"
                   type="number"
                   size="small"
@@ -300,6 +312,7 @@ export default function SumoTab() {
               </Stack>
               <Stack direction="row" spacing={1}>
                 <TextField
+                  key={`depart-lane-${car.id}-${car.sumo_depart_lane ?? ''}`}
                   label="Depart lane"
                   size="small"
                   fullWidth
@@ -310,16 +323,19 @@ export default function SumoTab() {
                   }
                 />
                 <TextField
+                  key={`depart-pos-${car.id}-${car.sumo_depart_pos ?? 0}`}
                   label="Depart pos (m)"
                   type="number"
                   size="small"
                   fullWidth
+                  inputProps={{ step: 1 }}
                   value={car.sumo_depart_pos ?? 0}
-                  onChange={(e) =>
-                    updateCar(car.id, {
-                      sumo_depart_pos: Number(e.target.value),
-                    })
-                  }
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    const value = raw === '' ? 0 : Number(raw);
+                    if (Number.isNaN(value)) return;
+                    updateCar(car.id, { sumo_depart_pos: value });
+                  }}
                 />
               </Stack>
               <FormControl size="small" fullWidth>
@@ -344,6 +360,7 @@ export default function SumoTab() {
               <FormControlLabel
                 control={
                   <Switch
+                    key={`sumo_stop-${car.id}-${!!car.sumo_stop}`}
                     checked={!!car.sumo_stop}
                     onChange={(e) =>
                       updateCar(car.id, {

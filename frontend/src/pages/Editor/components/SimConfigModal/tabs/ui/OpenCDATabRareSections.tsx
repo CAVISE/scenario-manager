@@ -34,6 +34,7 @@ function NumField({
 }) {
   return (
     <TextField
+      key={label}
       label={label}
       type="number"
       size="small"
@@ -137,6 +138,7 @@ export default function OpenCDATabRareSections({ oc, update }: Props) {
               key={key}
               control={
                 <Switch
+                  key={key}
                   size="small"
                   checked={oc[key]}
                   onChange={(e) => update({ [key]: e.target.checked })}
@@ -211,6 +213,7 @@ export default function OpenCDATabRareSections({ oc, update }: Props) {
           <FormControlLabel
             control={
               <Switch
+                key={`activate-${oc.map_manager.activate}`}
                 size="small"
                 checked={oc.map_manager.activate}
                 onChange={(e) => patchMm({ activate: e.target.checked })}
@@ -221,6 +224,7 @@ export default function OpenCDATabRareSections({ oc, update }: Props) {
           <FormControlLabel
             control={
               <Switch
+                key={`visualize-${oc.map_manager.visualize}`}
                 size="small"
                 checked={oc.map_manager.visualize}
                 onChange={(e) => patchMm({ visualize: e.target.checked })}
@@ -236,6 +240,7 @@ export default function OpenCDATabRareSections({ oc, update }: Props) {
           <FormControlLabel
             control={
               <Switch
+                key={`print_message-${oc.safety_manager.print_message}`}
                 size="small"
                 checked={oc.safety_manager.print_message}
                 onChange={(e) => patchSm({ print_message: e.target.checked })}
@@ -276,6 +281,7 @@ export default function OpenCDATabRareSections({ oc, update }: Props) {
       <OpenCDACollapsibleSection title="controller (pid_controller)">
         <Stack spacing={1}>
           <TextField
+            key={`type-${oc.controller_pid.type}`}
             label="type"
             size="small"
             fullWidth
@@ -327,6 +333,7 @@ export default function OpenCDATabRareSections({ oc, update }: Props) {
           <FormControlLabel
             control={
               <Switch
+                key={`dynamic-${oc.controller_pid.dynamic}`}
                 size="small"
                 checked={oc.controller_pid.dynamic}
                 onChange={(e) => patchCtrl({ dynamic: e.target.checked })}
@@ -384,6 +391,7 @@ export default function OpenCDATabRareSections({ oc, update }: Props) {
           <FormControlLabel
             control={
               <Switch
+                key={`change_leader_speed-${oc.platoon_base.change_leader_speed}`}
                 size="small"
                 checked={oc.platoon_base.change_leader_speed}
                 onChange={(e) =>
@@ -512,6 +520,7 @@ export default function OpenCDATabRareSections({ oc, update }: Props) {
           <FormControlLabel
             control={
               <Switch
+                key={`lane_change_controller-${oc.vehicle_behavior_services.self_informer}`}
                 size="small"
                 checked={oc.vehicle_behavior_services.self_informer}
                 onChange={(e) =>
@@ -529,6 +538,7 @@ export default function OpenCDATabRareSections({ oc, update }: Props) {
           <FormControlLabel
             control={
               <Switch
+                key={`movement_controller-${oc.vehicle_behavior_services.movement_controller}`}
                 size="small"
                 checked={oc.vehicle_behavior_services.movement_controller}
                 onChange={(e) =>
@@ -548,6 +558,7 @@ export default function OpenCDATabRareSections({ oc, update }: Props) {
 
       {oc.export_world_client_host && (
         <TextField
+          key={`world_client_host-${oc.world_client_host}`}
           label="world.client_host"
           size="small"
           fullWidth

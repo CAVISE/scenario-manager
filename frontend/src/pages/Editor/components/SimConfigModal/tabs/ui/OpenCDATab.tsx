@@ -65,6 +65,7 @@ export default function OpenCDATab() {
           <FormControl size="small" fullWidth>
             <FormLabel>Configuration profile</FormLabel>
             <Select
+              key={`export_profile-${oc.export_profile}`}
               value={oc.export_profile}
               onChange={(e) =>
                 updateSimConfigOpenCDA({
@@ -90,6 +91,7 @@ export default function OpenCDATab() {
       <FormControlLabel
         control={
           <Switch
+            key={`vehicle_base_color-${oc.vehicle_base_color}`}
             checked={oc.vehicle_base_color != null}
             onChange={(e) =>
               updateSimConfigOpenCDA({
@@ -134,6 +136,7 @@ export default function OpenCDATab() {
       <FormControlLabel
         control={
           <Switch
+            key={`use_multi_class_bp-${oc.use_multi_class_bp}`}
             checked={oc.use_multi_class_bp}
             onChange={(e) =>
               updateSimConfigOpenCDA({ use_multi_class_bp: e.target.checked })
@@ -143,6 +146,7 @@ export default function OpenCDATab() {
         label="Multi-class blueprints"
       />
       <TextField
+        key={`bp_meta_path-${oc.bp_meta_path}`}
         label="Blueprint meta path"
         size="small"
         fullWidth
@@ -187,6 +191,7 @@ export default function OpenCDATab() {
         <FormControlLabel
           control={
             <Switch
+              key={`v2x_enabled-${oc.v2x_enabled}`}
               checked={oc.v2x_enabled}
               onChange={(e) =>
                 updateSimConfigOpenCDA({ v2x_enabled: e.target.checked })
@@ -196,6 +201,7 @@ export default function OpenCDATab() {
           label="Default V2X enabled"
         />
         <TextField
+          key={`v2x_communication_range-${oc.v2x_communication_range}`}
           label="V2X range (m)"
           type="number"
           size="small"
@@ -210,6 +216,7 @@ export default function OpenCDATab() {
         <FormControl size="small" sx={{ minWidth: 190 }}>
           <FormLabel>V2X position source</FormLabel>
           <Select
+            key={`v2x_position_source-${oc.v2x_position_source}`}
             value={oc.v2x_position_source}
             onChange={(e) =>
               updateSimConfigOpenCDA({
@@ -231,6 +238,7 @@ export default function OpenCDATab() {
       </Typography>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`max_speed-${oc.max_speed}`}
           label="Max speed (km/h)"
           type="number"
           size="small"
@@ -241,6 +249,7 @@ export default function OpenCDATab() {
           }
         />
         <TextField
+          key={`tailgate_speed-${oc.tailgate_speed}`}
           label="Tailgate speed"
           type="number"
           size="small"
@@ -251,8 +260,9 @@ export default function OpenCDATab() {
           }
         />
       </Stack>
-      <Stack direction="row" spacing={2}>
+      <Stack direction="row" spacing={2} key={`safety_time-${oc.safety_time}`}>
         <TextField
+          key={`safety_time-${oc.safety_time}`}
           label="Safety time (s)"
           type="number"
           size="small"
@@ -263,6 +273,7 @@ export default function OpenCDATab() {
           }
         />
         <TextField
+          key={`emergency_param-${oc.emergency_param}`}
           label="Emergency param"
           type="number"
           size="small"
@@ -276,6 +287,7 @@ export default function OpenCDATab() {
       </Stack>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`collision_time_ahead-${oc.collision_time_ahead}`}
           label="Collision ahead (s)"
           type="number"
           size="small"
@@ -288,6 +300,7 @@ export default function OpenCDATab() {
           }
         />
         <TextField
+          key={`collision_time_behind-${oc.collision_time_ahead}`}
           label="Sample resolution (m)"
           type="number"
           size="small"
@@ -302,6 +315,7 @@ export default function OpenCDATab() {
       </Stack>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`speed_lim_dist-${oc.speed_lim_dist}`}
           label="Speed lim dist (m)"
           type="number"
           size="small"
@@ -312,6 +326,7 @@ export default function OpenCDATab() {
           }
         />
         <TextField
+          key={`speed_decrease-${oc.speed_decrease}`}
           label="Speed decrease"
           type="number"
           size="small"
@@ -323,6 +338,7 @@ export default function OpenCDATab() {
         />
       </Stack>
       <TextField
+        key={`overtake_counter_recover-${oc.overtake_counter_recover}`}
         label="Overtake counter recover"
         type="number"
         size="small"
@@ -338,6 +354,7 @@ export default function OpenCDATab() {
         <FormControlLabel
           control={
             <Switch
+              key={`ignore_traffic_light-${oc.ignore_traffic_light}`}
               checked={oc.ignore_traffic_light}
               onChange={(e) =>
                 updateSimConfigOpenCDA({
@@ -351,6 +368,7 @@ export default function OpenCDATab() {
         <FormControlLabel
           control={
             <Switch
+              key={`overtake_allowed-${oc.overtake_allowed}`}
               checked={oc.overtake_allowed}
               onChange={(e) =>
                 updateSimConfigOpenCDA({ overtake_allowed: e.target.checked })
@@ -367,6 +385,7 @@ export default function OpenCDATab() {
       </Typography>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`local_planner-${oc.local_planner.buffer_size}`}
           label="Buffer size"
           type="number"
           size="small"
@@ -382,6 +401,7 @@ export default function OpenCDATab() {
           }
         />
         <TextField
+          key={`trajectory_update_freq-${oc.local_planner.trajectory_update_freq}`}
           label="Traj. update freq"
           type="number"
           size="small"
@@ -399,6 +419,7 @@ export default function OpenCDATab() {
       </Stack>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`waypoint_update_freq-${oc.local_planner.waypoint_update_freq}`}
           label="Waypoint update freq"
           type="number"
           size="small"
@@ -414,6 +435,7 @@ export default function OpenCDATab() {
           }
         />
         <TextField
+          key={`min_dist-${oc.local_planner.min_dist}`}
           label="Min dist (m)"
           type="number"
           size="small"
@@ -431,6 +453,7 @@ export default function OpenCDATab() {
       </Stack>
       <Stack direction="row" spacing={2} alignItems="center">
         <TextField
+          key={`trajectory_dt-${oc.local_planner.trajectory_dt}`}
           label="Trajectory dt (s)"
           type="number"
           size="small"
@@ -449,6 +472,7 @@ export default function OpenCDATab() {
         <FormControlLabel
           control={
             <Switch
+              key={`debug-${oc.local_planner.debug}`}
               checked={oc.local_planner.debug}
               onChange={(e) =>
                 updateSimConfigOpenCDA({
@@ -465,6 +489,7 @@ export default function OpenCDATab() {
         <FormControlLabel
           control={
             <Switch
+              key={`debug_trajectory-${oc.local_planner.debug_trajectory}`}
               checked={oc.local_planner.debug_trajectory}
               onChange={(e) =>
                 updateSimConfigOpenCDA({
@@ -487,6 +512,7 @@ export default function OpenCDATab() {
       </Typography>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`vehicle_camera_visualize-${oc.vehicle_camera_visualize}`}
           label="Cam visualize (0/1)"
           type="number"
           size="small"
@@ -500,6 +526,7 @@ export default function OpenCDATab() {
           }
         />
         <TextField
+          key={`vehicle_cam_num-${oc.vehicle_cam_num}`}
           label="Onboard cameras (0–4)"
           type="number"
           size="small"
@@ -516,6 +543,7 @@ export default function OpenCDATab() {
       </Typography>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`lidar_channels-${oc.lidar_channels}`}
           label="Channels"
           type="number"
           size="small"
@@ -526,6 +554,7 @@ export default function OpenCDATab() {
           }
         />
         <TextField
+          key={`lidar_range-${oc.lidar_range}`}
           label="Range (m)"
           type="number"
           size="small"
@@ -538,6 +567,7 @@ export default function OpenCDATab() {
       </Stack>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`lidar_points_per_second-${oc.lidar_points_per_second}`}
           label="Points / second"
           type="number"
           size="small"
@@ -550,6 +580,7 @@ export default function OpenCDATab() {
           }
         />
         <TextField
+          key={`lidar_rotation_frequency-${oc.lidar_rotation_frequency}`}
           label="Rotation freq (Hz)"
           type="number"
           size="small"
@@ -564,6 +595,7 @@ export default function OpenCDATab() {
       </Stack>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`lidar_upper_fov-${oc.lidar_upper_fov}`}
           label="Upper FOV (°)"
           type="number"
           size="small"
@@ -574,6 +606,7 @@ export default function OpenCDATab() {
           }
         />
         <TextField
+          key={`lidar_lower_fov-${oc.lidar_lower_fov}`}
           label="Lower FOV (°)"
           type="number"
           size="small"
@@ -588,6 +621,7 @@ export default function OpenCDATab() {
         <FormControlLabel
           control={
             <Switch
+              key={`perception_activate-${oc.perception_activate}`}
               checked={oc.perception_activate}
               onChange={(e) =>
                 updateSimConfigOpenCDA({
@@ -601,6 +635,7 @@ export default function OpenCDATab() {
         <FormControlLabel
           control={
             <Switch
+              key={`localization_activate-${oc.localization_activate}`}
               checked={oc.localization_activate}
               onChange={(e) =>
                 updateSimConfigOpenCDA({
@@ -615,6 +650,7 @@ export default function OpenCDATab() {
           <FormLabel>Navigation position</FormLabel>
           <Select
             value={oc.localization_navigation_source}
+            key={`localization_navigation_source-${oc.localization_navigation_source}`}
             onChange={(e) =>
               updateSimConfigOpenCDA({
                 localization_navigation_source: e.target.value as
@@ -629,6 +665,7 @@ export default function OpenCDATab() {
         <FormControlLabel
           control={
             <Switch
+              key={`lidar_visualize-${oc.lidar_visualize}`}
               checked={oc.lidar_visualize}
               onChange={(e) =>
                 updateSimConfigOpenCDA({ lidar_visualize: e.target.checked })
@@ -644,6 +681,7 @@ export default function OpenCDATab() {
       </Typography>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`dropoff_general_rate-${oc.lidar_sim.dropoff_general_rate}`}
           label="Dropoff rate"
           type="number"
           size="small"
@@ -660,6 +698,7 @@ export default function OpenCDATab() {
           }
         />
         <TextField
+          key={`dropoff_intensity_limit-${oc.lidar_sim.dropoff_intensity_limit}`}
           label="Intensity limit"
           type="number"
           size="small"
@@ -678,6 +717,7 @@ export default function OpenCDATab() {
       </Stack>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`dropoff_zero_intensity-${oc.lidar_sim.dropoff_zero_intensity}`}
           label="Zero intensity"
           type="number"
           size="small"
@@ -694,6 +734,7 @@ export default function OpenCDATab() {
           }
         />
         <TextField
+          key={`noise_stddev-${oc.lidar_sim.noise_stddev}`}
           label="Noise stddev"
           type="number"
           size="small"
@@ -719,6 +760,7 @@ export default function OpenCDATab() {
       </Typography>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`gnss_alt_stddev-${oc.gnss_noise.alt_stddev}`}
           label="Alt σ"
           type="number"
           size="small"
@@ -735,6 +777,7 @@ export default function OpenCDATab() {
           }
         />
         <TextField
+          key={`gnss_lat_stddev-${oc.gnss_noise.lat_stddev}`}
           label="Lat σ"
           type="number"
           size="small"
@@ -751,6 +794,7 @@ export default function OpenCDATab() {
           }
         />
         <TextField
+          key={`gnss_lon_stddev-${oc.gnss_noise.lon_stddev}`}
           label="Lon σ"
           type="number"
           size="small"
@@ -770,6 +814,7 @@ export default function OpenCDATab() {
       <FormControlLabel
         control={
           <Switch
+            key={`vehicle_localization_debug_animation-${oc.vehicle_localization_debug_animation}`}
             checked={oc.vehicle_localization_debug_animation}
             onChange={(e) =>
               updateSimConfigOpenCDA({
@@ -788,6 +833,7 @@ export default function OpenCDATab() {
       </Typography>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`rsu_lidar_channels-${oc.rsu_lidar_channels}`}
           label="LiDAR channels"
           type="number"
           size="small"
@@ -800,6 +846,7 @@ export default function OpenCDATab() {
           }
         />
         <TextField
+          key={`rsu_lidar_range-${oc.rsu_lidar_range}`}
           label="LiDAR range (m)"
           type="number"
           size="small"
@@ -812,6 +859,7 @@ export default function OpenCDATab() {
       </Stack>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`rsu_camera_visualize-${oc.rsu_camera_visualize}`}
           label="RSU cam visualize (0/1)"
           type="number"
           size="small"
@@ -825,6 +873,7 @@ export default function OpenCDATab() {
           }
         />
         <TextField
+          key={`rsu_cam_num-${oc.rsu_cam_num}`}
           label="Camera count (0–4)"
           type="number"
           size="small"
@@ -839,6 +888,7 @@ export default function OpenCDATab() {
       <FormControlLabel
         control={
           <Switch
+            key={`rsu_perception_activate-${oc.rsu_perception_activate}`}
             checked={oc.rsu_perception_activate}
             onChange={(e) =>
               updateSimConfigOpenCDA({
@@ -857,6 +907,7 @@ export default function OpenCDATab() {
       </Typography>
       <Stack direction="row" spacing={2}>
         <TextField
+          key={`sumo_host-${oc.sumo_host}`}
           label="Host"
           size="small"
           fullWidth
@@ -866,6 +917,7 @@ export default function OpenCDATab() {
           }
         />
         <TextField
+          key={`sumo_port-${oc.sumo_port}`}
           label="Port"
           type="number"
           size="small"
@@ -878,6 +930,7 @@ export default function OpenCDATab() {
       </Stack>
       <Stack direction="row" spacing={2} alignItems="center">
         <TextField
+          key={`sumo_client_order-${oc.sumo_client_order}`}
           label="Client order"
           type="number"
           size="small"
@@ -892,6 +945,7 @@ export default function OpenCDATab() {
         <FormControlLabel
           control={
             <Switch
+              key={`sumo_gui-${oc.sumo_gui}`}
               checked={oc.sumo_gui}
               onChange={(e) =>
                 updateSimConfigOpenCDA({ sumo_gui: e.target.checked })
@@ -910,6 +964,7 @@ export default function OpenCDATab() {
       <FormControlLabel
         control={
           <Switch
+            key={`enable_background_traffic-${oc.enable_background_traffic}`}
             checked={oc.enable_background_traffic}
             onChange={(e) =>
               updateSimConfigOpenCDA({
@@ -925,6 +980,7 @@ export default function OpenCDATab() {
           <FormControlLabel
             control={
               <Switch
+                key={`bg_traffic_random-${oc.bg_traffic_random}`}
                 checked={oc.bg_traffic_random}
                 onChange={(e) =>
                   updateSimConfigOpenCDA({
@@ -941,6 +997,7 @@ export default function OpenCDATab() {
           </Typography>
           <Stack direction="row" spacing={2}>
             <TextField
+              key={`bg_spawn_range.x_min-${oc.bg_spawn_range.x_min}`}
               label="X min"
               type="number"
               size="small"
@@ -956,6 +1013,7 @@ export default function OpenCDATab() {
               }
             />
             <TextField
+              key={`bg_spawn_range.x_max-${oc.bg_spawn_range.x_max}`}
               label="X max"
               type="number"
               size="small"
@@ -973,6 +1031,7 @@ export default function OpenCDATab() {
           </Stack>
           <Stack direction="row" spacing={2}>
             <TextField
+              key={`bg_spawn_range.y_min-${oc.bg_spawn_range.y_min}`}
               label="Y min"
               type="number"
               size="small"
@@ -988,6 +1047,7 @@ export default function OpenCDATab() {
               }
             />
             <TextField
+              key={`bg_spawn_range.y_max-${oc.bg_spawn_range.y_max}`}
               label="Y max"
               type="number"
               size="small"
@@ -1005,6 +1065,7 @@ export default function OpenCDATab() {
           </Stack>
           <Stack direction="row" spacing={2}>
             <TextField
+              key={`bg_spawn_range.x_step-${oc.bg_spawn_range.x_step}`}
               label="X step"
               type="number"
               size="small"
@@ -1020,6 +1081,7 @@ export default function OpenCDATab() {
               }
             />
             <TextField
+              key={`bg_spawn_range.y_step-${oc.bg_spawn_range.y_step}`}
               label="Y step"
               type="number"
               size="small"
@@ -1049,6 +1111,7 @@ export default function OpenCDATab() {
               }
             />
             <TextField
+              key={`bg_vehicle_num-${oc.bg_vehicle_num}`}
               label="Vehicles"
               type="number"
               size="small"
@@ -1063,6 +1126,7 @@ export default function OpenCDATab() {
           </Stack>
           <Stack direction="row" spacing={2}>
             <TextField
+              key={`bg_global_distance-${oc.bg_global_distance}`}
               label="Global distance (m)"
               type="number"
               size="small"
@@ -1077,6 +1141,7 @@ export default function OpenCDATab() {
             <FormControlLabel
               control={
                 <Switch
+                  key={`bg_set_osm_mode-${oc.bg_set_osm_mode}`}
                   checked={oc.bg_set_osm_mode}
                   onChange={(e) =>
                     updateSimConfigOpenCDA({
@@ -1090,6 +1155,7 @@ export default function OpenCDATab() {
           </Stack>
           <Stack direction="row" spacing={2}>
             <TextField
+              key={`ignore_lights_percentage-${oc.ignore_lights_percentage}`}
               label="Ignore lights %"
               type="number"
               size="small"
@@ -1102,6 +1168,7 @@ export default function OpenCDATab() {
               }
             />
             <TextField
+              key={`bg_ignore_signs_percentage-${oc.bg_ignore_signs_percentage}`}
               label="Ignore signs %"
               type="number"
               size="small"
@@ -1116,6 +1183,7 @@ export default function OpenCDATab() {
           </Stack>
           <Stack direction="row" spacing={2} alignItems="center">
             <TextField
+              key={`bg_ignore_walkers_percentage-${oc.bg_ignore_walkers_percentage}`}
               label="Ignore walkers %"
               type="number"
               size="small"
@@ -1130,6 +1198,7 @@ export default function OpenCDATab() {
             <FormControlLabel
               control={
                 <Switch
+                  key={`auto_lane_change-${oc.auto_lane_change}`}
                   checked={oc.auto_lane_change}
                   onChange={(e) =>
                     updateSimConfigOpenCDA({
