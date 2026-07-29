@@ -9,6 +9,7 @@ import {
   Typography,
 } from '@mui/material';
 import { numInputSlot } from '../../../types/PanelTypes';
+import NumericInput from '../../NumericInput';
 import {
   BuildingPropertiesProps,
   formLabelStyles,
@@ -40,15 +41,10 @@ export default function BuildingProperties({
           <Grid xs={4} key={axis}>
             <FormControl>
               <FormLabel sx={formLabelStyles}>{axis.toUpperCase()}</FormLabel>
-              <Input
-                size="small"
-                type="number"
-                slotProps={numInputSlot}
-                value={building[axis].toFixed(3)}
-                onChange={(e) =>
-                  updateBuilding(building.id, {
-                    [axis]: parseFloat(e.target.value),
-                  })
+              <NumericInput
+                value={building[axis]}
+                onValueChange={(value) =>
+                  updateBuilding(building.id, { [axis]: value })
                 }
               />
             </FormControl>
