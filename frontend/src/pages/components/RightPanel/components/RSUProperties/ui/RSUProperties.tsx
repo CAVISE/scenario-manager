@@ -18,6 +18,7 @@ import {
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { useEditorStore } from '../../../../../../store';
 import { numInputSlot } from '../../../types/PanelTypes';
+import NumericInput from '../../NumericInput';
 import {
   RsuPropertiesTextareaStyles,
   type RSUPropertiesProps,
@@ -228,14 +229,9 @@ export default function RSUProperties({ rsu, onDelete }: RSUPropertiesProps) {
           <Grid item xs={4} key={axis}>
             <FormControl>
               <FormLabel sx={formLabelStyles}>{axis.toUpperCase()}</FormLabel>
-              <Input
-                size="small"
-                type="number"
-                slotProps={numInputSlot}
-                value={rsu[axis].toFixed(3)}
-                onChange={(e) =>
-                  updateRSU(rsu.id, { [axis]: parseFloat(e.target.value) })
-                }
+              <NumericInput
+                value={rsu[axis]}
+                onValueChange={(value) => updateRSU(rsu.id, { [axis]: value })}
               />
             </FormControl>
           </Grid>

@@ -19,11 +19,11 @@ export function useDblClickHandler(ctx: SharedMouseContext) {
   } = useEditorRefs();
   return useCallback(
     (e: MouseEvent) => {
+      if (!ctx.insideEditorCanvas(e)) return;
       const transformControls = transformControlsRef.current;
       if (!transformControls) return;
       const scene = sceneRef.current;
       if (!scene) return;
-      if (ctx.insidePanel(e)) return;
       const camera = cameraRef.current;
       if (!camera) return;
       e.preventDefault();

@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import { useEditorStore } from '../../../../../../store';
 import { numInputSlot } from '../../../types/PanelTypes';
+import NumericInput from '../../NumericInput';
 import { IPedestrianProps } from '../types/PedestrianPropertiesTypes';
 import {
   toggleButtonStyles,
@@ -33,15 +34,10 @@ export default function PedestrianProperties({
           <Grid item xs={4} key={axis}>
             <FormControl>
               <FormLabel sx={formLabelStyles}>{axis.toUpperCase()}</FormLabel>
-              <Input
-                size="small"
-                type="number"
-                slotProps={numInputSlot}
-                value={pedestrian[axis].toFixed(3)}
-                onChange={(e) =>
-                  updatePedestrian(pedestrian.id, {
-                    [axis]: parseFloat(e.target.value),
-                  })
+              <NumericInput
+                value={pedestrian[axis]}
+                onValueChange={(value) =>
+                  updatePedestrian(pedestrian.id, { [axis]: value })
                 }
               />
             </FormControl>

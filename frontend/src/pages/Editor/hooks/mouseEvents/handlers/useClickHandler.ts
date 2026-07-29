@@ -22,13 +22,13 @@ export function useClickHandler(ctx: SharedMouseContext) {
   } = useEditorRefs();
   const onSelectObject = useEditorStore((s) => s.selectObject);
   return useCallback((e: MouseEvent) => {
+    if (!ctx.insideEditorCanvas(e)) return;
     const transformControls = transformControlsRef.current;
     if (!transformControls) return;
     const scene = sceneRef.current;
     if (!scene) return;
     const camera = cameraRef.current;
     if (!camera) return;
-    if (ctx.insidePanel(e)) return;
     const road = roadMeshRef.current;
     if (!road) return;
     e.preventDefault();

@@ -17,8 +17,10 @@ export function useMouseEvents() {
       mouseRef.current.x = (e.clientX / window.innerWidth) * 2 - 1;
       mouseRef.current.y = -(e.clientY / window.innerHeight) * 2 + 1;
     },
-    insidePanel: (e: MouseEvent) =>
-      !!document.querySelector('.rp-root')?.contains(e.target as Node),
+    insideEditorCanvas: (e: MouseEvent) =>
+      !!document
+        .querySelector('[data-testid="editor-canvas"]')
+        ?.contains(e.target as Node),
   };
 
   const onMouseMove = useMouseMoveHandler(ctx);

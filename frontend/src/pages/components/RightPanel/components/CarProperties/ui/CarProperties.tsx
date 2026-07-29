@@ -13,8 +13,8 @@ import {
 import { Box } from '@mui/material';
 import { HexColorPicker } from 'react-colorful';
 import { useEditorStore } from '../../../../../../store';
-import { numInputSlot } from '../../../types/PanelTypes';
 import CarLidarList from '../../CarLidarList';
+import NumericInput from '../../NumericInput';
 import CarOpenCDASection from './CarOpenCDASection';
 import CarOpenCDARareSection from './CarOpenCDARareSection';
 import {
@@ -50,17 +50,9 @@ export default function CarProperties({ car, onDelete }: CarPropertiesProps) {
           <Grid item xs={4} key={axis}>
             <FormControl>
               <FormLabel sx={formLabelStyles}>{axis.toUpperCase()}</FormLabel>
-              <Input
-                size="small"
-                type="number"
-                slotProps={numInputSlot}
-                value={car[axis].toFixed(3)}
-                onChange={(e) => {
-                  const value = parseFloat(e.target.value);
-                  if (!isNaN(value)) {
-                    updateCar(car.id, { [axis]: value });
-                  }
-                }}
+              <NumericInput
+                value={car[axis]}
+                onValueChange={(value) => updateCar(car.id, { [axis]: value })}
               />
             </FormControl>
           </Grid>
