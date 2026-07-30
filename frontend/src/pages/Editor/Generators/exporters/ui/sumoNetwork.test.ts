@@ -175,6 +175,72 @@ describe('SUMO frontend routing', () => {
     ).toEqual({});
   });
 
+  it('adds endpoint anchors to a manual edge route when points exist', () => {
+    expect(
+      buildSumoRoutes(
+        NET_XML,
+        [{ ...car, sumo_edges: 'edge-a edge-b edge-c' }],
+        [destination],
+      ),
+    ).toEqual({
+      'car-1': {
+        edges: 'edge-a edge-b edge-c',
+        depart: {
+          edgeId: 'edge-a',
+          laneId: 'edge-a_0',
+          laneIndex: 0,
+          pos: 1,
+          distance: 0,
+        },
+        arrival: {
+          edgeId: 'edge-c',
+          laneId: 'edge-c_0',
+          laneIndex: 0,
+          pos: 9,
+          distance: 0,
+        },
+        warnings: [],
+      },
+    });
+  });
+
+  it('rejects a manual departure lane that is absent from the first edge', () => {
+    expect(() =>
+      buildSumoRoutes(
+        NET_XML,
+        [
+          {
+            ...car,
+            sumo_edges: 'edge-a edge-b',
+            sumo_depart_lane: '4',
+          },
+        ],
+        [],
+      ),
+    ).toThrow('departLane 4 is not a passenger driving lane on edge edge-a');
+  });
+
+  it('rejects a static stop with an empty lane', () => {
+    expect(() =>
+      buildSumoRoutes(
+        NET_XML,
+        [
+          {
+            ...car,
+            sumo_edges: 'edge-a edge-b',
+            sumo_stop: {
+              lane: '',
+              startPos: 1,
+              endPos: 2,
+              duration: 10,
+            },
+          },
+        ],
+        [],
+      ),
+    ).toThrow('Static stop is enabled but its Lane field is empty');
+  });
+
   it('rejects automatic routing when a vehicle has no route points', () => {
     expect(() => buildSumoRoutes(NET_XML, [car], [])).toThrow(
       'has no route points',

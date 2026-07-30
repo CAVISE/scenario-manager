@@ -115,9 +115,7 @@ export function generateRouXml(
         ? ` arrivalPos="${formatLanePosition(generatedAnchors.arrival.pos)}"`
         : '';
       const type = car.sumo_vtype ? ` type="${car.sumo_vtype}"` : '';
-      const stop = car.sumo_stop
-        ? `\n    <stop lane="${car.sumo_stop.lane}" startPos="${car.sumo_stop.startPos}" endPos="${car.sumo_stop.endPos}" duration="${car.sumo_stop.duration}"/>`
-        : '';
+      const stop = generateStopXml(car, i);
       return `  <vehicle id="sumo${i}"${type} maxSpeed="${maxSpeed}" depart="${depart}"${dLane}${dPos}${aLane}${aPos} departSpeed="0.00">
     <route edges="${xmlAttribute(edges)}"/>${stop}
   </vehicle>`;
@@ -132,6 +130,34 @@ ${vtypeLines ? vtypeLines + '\n' : ''}${vehicleLines}
 
 function formatLanePosition(value: number): string {
   return value.toFixed(2);
+}
+
+function generateStopXml(car: Car, index: number): string {
+  const stop = car.sumo_stop;
+  if (!stop) return '';
+  const label = car.opencda_name || `sumo${index}`;
+  const lane = stop.lane.trim();
+  if (!lane) {
+    throw new Error(
+      `Vehicle ${label}: Static stop is enabled but its Lane field is empty`,
+    );
+  }
+  if (
+    !Number.isFinite(stop.startPos) ||
+    !Number.isFinite(stop.endPos) ||
+    stop.startPos < 0 ||
+    stop.endPos <= stop.startPos
+  ) {
+    throw new Error(
+      `Vehicle ${label}: stop positions must satisfy 0 <= startPos < endPos`,
+    );
+  }
+  if (!Number.isFinite(stop.duration) || stop.duration < 0) {
+    throw new Error(
+      `Vehicle ${label}: stop duration must be a non-negative number`,
+    );
+  }
+  return `\n    <stop lane="${xmlAttribute(lane)}" startPos="${stop.startPos}" endPos="${stop.endPos}" duration="${stop.duration}"/>`;
 }
 
 export function generatePolyXml(buildings: Building[]): string {

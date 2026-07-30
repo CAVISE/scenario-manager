@@ -50,8 +50,10 @@ export default function SumoExportSection({
         getSumoNetFilename(simConfig.carla.map),
       );
       const routes = buildSumoRoutes(network.content, cars, points);
-      openExportDialog(`${simConfig.sumo.scenario_name}.rou.xml`, () =>
-        generateRouXml(simConfig, cars, routes),
+      const content = generateRouXml(simConfig, cars, routes);
+      openExportDialog(
+        `${simConfig.sumo.scenario_name}.rou.xml`,
+        () => content,
       );
     } catch (error) {
       reportExportError(error);

@@ -323,16 +323,21 @@ export default function SumoTab() {
                   }
                 />
                 <TextField
-                  key={`depart-pos-${car.id}-${car.sumo_depart_pos ?? 0}`}
+                  key={`depart-pos-${car.id}-${car.sumo_depart_pos ?? 'auto'}`}
                   label="Depart pos (m)"
                   type="number"
                   size="small"
                   fullWidth
                   inputProps={{ step: 1 }}
-                  value={car.sumo_depart_pos ?? 0}
+                  placeholder="auto"
+                  value={car.sumo_depart_pos ?? ''}
                   onChange={(e) => {
                     const raw = e.target.value;
-                    const value = raw === '' ? 0 : Number(raw);
+                    if (raw === '') {
+                      updateCar(car.id, { sumo_depart_pos: undefined });
+                      return;
+                    }
+                    const value = Number(raw);
                     if (Number.isNaN(value)) return;
                     updateCar(car.id, { sumo_depart_pos: value });
                   }}
@@ -386,6 +391,10 @@ export default function SumoTab() {
                     fullWidth
                     placeholder="27_3"
                     value={car.sumo_stop.lane}
+                    error={!car.sumo_stop.lane.trim()}
+                    helperText={
+                      car.sumo_stop.lane.trim() ? undefined : 'Required'
+                    }
                     onChange={(e) =>
                       updateCar(car.id, {
                         sumo_stop: { ...car.sumo_stop!, lane: e.target.value },
