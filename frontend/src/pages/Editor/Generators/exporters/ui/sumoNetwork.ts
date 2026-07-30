@@ -2,6 +2,7 @@ import type {
   Car,
   Point,
 } from '../../../../../store/types/useEditorStoreTypes';
+import type { MapOffsets } from '../../../../../helpers/coordinateTransform';
 
 type Coordinate = { x: number; y: number };
 type LaneGeometry = {
@@ -50,6 +51,7 @@ export interface LoadedSumoNetwork {
 }
 
 const MAX_PRECISE_SNAP_DISTANCE = 10;
+const MAX_DIRECTIONAL_SNAP_DISTANCE_DELTA = 2;
 const MIN_LANE_POSITION_MARGIN = 0.1;
 const NON_DRIVING_LANE_TYPES = new Set([
   'biking',
@@ -114,6 +116,7 @@ export function buildSumoRoutes(
   netXml: string,
   cars: Car[],
   points: Point[],
+  mapOffsets: MapOffsets = { x: 0, y: 0 },
 ): GeneratedSumoRoutes {
   const network = parseNetwork(netXml);
   const result: GeneratedSumoRoutes = {};
@@ -121,7 +124,11 @@ export function buildSumoRoutes(
   cars.forEach((car) => {
     const manualEdges = parseEdgeList(car.sumo_edges);
     const routePoints = points.filter((point) => point.carId === car.id);
-    const sumoStart = toSumoCoordinate({ x: car.x, y: car.y }, network);
+    const sumoStart = toSumoCoordinate(
+      { x: car.x, y: car.y },
+      network,
+      mapOffsets,
+    );
     if (routePoints.length === 0) {
       if (manualEdges.length > 0) {
         validateVehicleNetworkSettings(network, car, manualEdges);
@@ -147,7 +154,9 @@ export function buildSumoRoutes(
 
     const sumoPoints = [
       sumoStart,
-      ...routePoints.map((point) => toSumoCoordinate(point, network)),
+      ...routePoints.map((point) =>
+        toSumoCoordinate(point, network, mapOffsets),
+      ),
     ];
 
     const edges =
@@ -159,14 +168,14 @@ export function buildSumoRoutes(
     let depart = preciseEndpointAnchor(
       network,
       sumoPoints[0],
-      routeDirection(sumoPoints, 0),
+      null,
       edges,
       'depart',
     );
     let arrival = preciseEndpointAnchor(
       network,
       sumoPoints[sumoPoints.length - 1],
-      routeDirection(sumoPoints, sumoPoints.length - 1),
+      null,
       edges,
       'arrival',
     );
@@ -209,10 +218,14 @@ function parseEdgeList(value: string | undefined): string[] {
   return value?.trim().split(/\s+/).filter(Boolean) ?? [];
 }
 
-function toSumoCoordinate(point: Coordinate, network: SumoNetwork): Coordinate {
+function toSumoCoordinate(
+  point: Coordinate,
+  network: SumoNetwork,
+  mapOffsets: MapOffsets,
+): Coordinate {
   return {
-    x: point.x + network.offsetX,
-    y: -point.y + network.offsetY,
+    x: point.x + mapOffsets.x + network.offsetX,
+    y: point.y + mapOffsets.y + network.offsetY,
   };
 }
 
@@ -520,8 +533,16 @@ function nearestLane(
     lane,
     nearest: distanceToShape(point, lane.shape),
   }));
+  const nearestDistance = Math.min(
+    ...projected.map(({ nearest }) => Math.sqrt(nearest.distanceSquared)),
+  );
+  const local = projected.filter(
+    ({ nearest }) =>
+      Math.sqrt(nearest.distanceSquared) <=
+      nearestDistance + MAX_DIRECTIONAL_SNAP_DISTANCE_DELTA,
+  );
   const aligned = direction
-    ? projected.filter(({ nearest }) => {
+    ? local.filter(({ nearest }) => {
         if (!nearest.direction) return false;
         return (
           direction.x * nearest.direction.x +
@@ -529,8 +550,8 @@ function nearestLane(
           0
         );
       })
-    : projected;
-  const pool = aligned.length > 0 ? aligned : projected;
+    : local;
+  const pool = aligned.length > 0 ? aligned : local;
 
   pool.forEach(({ lane, nearest }) => {
     let score = Math.sqrt(nearest.distanceSquared);

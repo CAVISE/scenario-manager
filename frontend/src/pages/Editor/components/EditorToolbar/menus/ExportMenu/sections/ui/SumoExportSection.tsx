@@ -17,6 +17,7 @@ import {
   getStoredXodrName,
   resolveXodrTextForSimulation,
 } from '../../../../../../hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
+import { useEditorRefs } from '../../../../../../context';
 import {
   buildSumoRoutes,
   resolveSumoNetwork,
@@ -32,6 +33,8 @@ function reportExportError(error: unknown) {
 export default function SumoExportSection({
   openExportDialog,
 }: SimulatorProps) {
+  const { odrMapRef } = useEditorRefs();
+
   const handleExportSumoCfg = () => {
     const simConfig = mergeSimConfigWithDefaults(
       useEditorStore.getState().simConfig,
@@ -49,7 +52,16 @@ export default function SumoExportSection({
       const network = await resolveSumoNetwork(
         getSumoNetFilename(simConfig.carla.map),
       );
-      const routes = buildSumoRoutes(network.content, cars, points);
+      const map = odrMapRef.current;
+      if (!map) {
+        throw new Error(
+          'OpenDRIVE map offsets are unavailable; wait for the map to finish loading',
+        );
+      }
+      const routes = buildSumoRoutes(network.content, cars, points, {
+        x: map.x_offs,
+        y: map.y_offs,
+      });
       const content = generateRouXml(simConfig, cars, routes);
       openExportDialog(
         `${simConfig.sumo.scenario_name}.rou.xml`,
