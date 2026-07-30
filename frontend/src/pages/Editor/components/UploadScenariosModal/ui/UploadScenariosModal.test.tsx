@@ -4,10 +4,14 @@ import UploadScenariosModal from './UploadScenariosModal';
 import '@testing-library/jest-dom';
 const useScenariosListQueryMock = vi.fn();
 const handleLoadMock = vi.fn();
+const patchMutateAsyncMock = vi.fn();
+const useScenarioPatchMutationMock = vi.fn();
 
 vi.mock('../../../hooks/useApiHooks/useScenarioQueries', () => ({
   useScenariosListQuery: (...args: unknown[]) =>
     useScenariosListQueryMock(...args),
+  useScenarioPatchMutation: (...args: unknown[]) =>
+    useScenarioPatchMutationMock(...args),
 }));
 
 vi.mock(
@@ -34,6 +38,12 @@ describe('UploadScenariosModal', () => {
   beforeEach(() => {
     useScenariosListQueryMock.mockReset();
     handleLoadMock.mockReset();
+    patchMutateAsyncMock.mockReset();
+    useScenarioPatchMutationMock.mockReset();
+    useScenarioPatchMutationMock.mockReturnValue({
+      mutateAsync: patchMutateAsyncMock,
+      isPending: false,
+    });
   });
 
   it('loads selected scenario onto scene', async () => {
@@ -345,5 +355,70 @@ describe('UploadScenariosModal', () => {
     fireEvent.click(screen.getByTestId('ArrowBackIcon').closest('button')!);
 
     expect(screen.getByText('Load Scenario')).toBeInTheDocument();
+  });
+
+  it('disables Save button until description is edited', () => {
+    useScenariosListQueryMock.mockReturnValue({
+      data: [
+        {
+          scenario_id: 's-save-1',
+          name: 'Save Scenario',
+          preview: null,
+          annotation: 'original note',
+        },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    render(<UploadScenariosModal open onClose={vi.fn()} />);
+    fireEvent.click(screen.getByText('Save Scenario'));
+
+    const saveButton = screen.getByRole('button', { name: 'Save' });
+    expect(saveButton).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText('Description'), {
+      target: { value: 'updated note' },
+    });
+    expect(saveButton).not.toBeDisabled();
+  });
+
+  it('saves edited description via patch mutation', async () => {
+    const refetch = vi.fn();
+    useScenariosListQueryMock.mockReturnValue({
+      data: [
+        {
+          scenario_id: 's-save-2',
+          name: 'Save Scenario 2',
+          preview: null,
+          annotation: 'original note',
+        },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch,
+    });
+    patchMutateAsyncMock.mockResolvedValue(undefined);
+
+    render(<UploadScenariosModal open onClose={vi.fn()} />);
+    fireEvent.click(screen.getByText('Save Scenario 2'));
+
+    fireEvent.change(screen.getByLabelText('Description'), {
+      target: { value: 'updated note' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => {
+      expect(patchMutateAsyncMock).toHaveBeenCalledWith({
+        id: 's-save-2',
+        payload: { description: 'updated note' },
+      });
+    });
+    await waitFor(() => {
+      expect(refetch).toHaveBeenCalled();
+    });
   });
 });

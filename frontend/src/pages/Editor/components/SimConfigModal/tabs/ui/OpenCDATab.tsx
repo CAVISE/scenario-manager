@@ -221,7 +221,8 @@ export default function OpenCDATab() {
             onChange={(e) =>
               updateSimConfigOpenCDA({
                 v2x_position_source: e.target.value as
-                  'estimated' | 'ground_truth',
+                  | 'estimated'
+                  | 'ground_truth',
               })
             }
           >
@@ -654,7 +655,8 @@ export default function OpenCDATab() {
             onChange={(e) =>
               updateSimConfigOpenCDA({
                 localization_navigation_source: e.target.value as
-                  'estimated' | 'ground_truth',
+                  | 'estimated'
+                  | 'ground_truth',
               })
             }
           >

@@ -6,7 +6,11 @@ import {
 
 export type V2XProtocol = 'ITS-G5' | 'C-V2X' | 'DSRC';
 export type BuildingMaterial =
-  'concrete' | 'glass' | 'wood' | 'brick' | 'metal';
+  | 'concrete'
+  | 'glass'
+  | 'wood'
+  | 'brick'
+  | 'metal';
 export type AntennaType = 'isotropic' | 'dipole' | 'tr38901' | 'planar_array';
 export type Polarization = 'vertical' | 'horizontal' | 'cross';
 export type NetworkProtocol = 'GeoNetworking' | 'BTP' | 'IPv4' | 'IPv6';
@@ -44,7 +48,9 @@ export type SumoStop = {
 };
 
 export type BehaviorServiceType =
-  'self_informer' | 'aim_client' | 'movement_controller';
+  | 'self_informer'
+  | 'aim_client'
+  | 'movement_controller';
 
 export type SelfInformerService = {
   type: 'self_informer';
@@ -72,7 +78,9 @@ export type AIMServerService = {
 };
 
 export type CavBehaviorService =
-  SelfInformerService | AIMClientService | MovementControllerService;
+  | SelfInformerService
+  | AIMClientService
+  | MovementControllerService;
 
 export type RsuBehaviorService = AIMServerService;
 

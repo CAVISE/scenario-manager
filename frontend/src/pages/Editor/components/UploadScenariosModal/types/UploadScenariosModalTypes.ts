@@ -115,3 +115,178 @@ export const uploadModalBoxStyles = {
   alignItems: 'center',
   gap: 1,
 } as const;
+
+export const ACCENT = '#4C6FE0';
+export const ACCENT_HOVER = '#3C5BC7';
+export const TEXT_PRIMARY = '#1A1D24';
+export const TEXT_SECONDARY = '#6B7280';
+export const BORDER = '#E5E7EB';
+export const SURFACE_MUTED = '#F7F8FA';
+export const titleStyles = {
+  fontWeight: 600,
+  color: TEXT_PRIMARY,
+  letterSpacing: '-0.01em',
+};
+
+export const backButtonStyles = {
+  color: TEXT_SECONDARY,
+  '&:hover': { color: TEXT_PRIMARY, bgcolor: SURFACE_MUTED },
+};
+
+export const closeButtonStyles = {
+  color: TEXT_SECONDARY,
+  '&:hover': { color: TEXT_PRIMARY, bgcolor: SURFACE_MUTED },
+};
+
+export const alertStyles = {
+  mb: 2,
+  bgcolor: '#EEF2FF',
+  color: TEXT_PRIMARY,
+  border: `1px solid #DCE3FA`,
+  '& .MuiAlert-icon': { color: ACCENT },
+};
+
+export const emptyStateStyles = {
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  py: 8,
+  width: '100%',
+  border: `1px dashed ${BORDER}`,
+  borderRadius: '10px',
+};
+
+export const listContainerStyles = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 1.25,
+  width: '100%',
+};
+
+export const scenarioCardStyles = {
+  display: 'flex',
+  flexDirection: 'row',
+  alignItems: 'stretch',
+  width: '100%',
+  minHeight: 150,
+  bgcolor: '#FFFFFF',
+  border: `1px solid ${BORDER}`,
+  borderRadius: '12px',
+  overflow: 'hidden',
+  cursor: 'pointer',
+  transition:
+    'border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease',
+  '&:hover': {
+    borderColor: ACCENT,
+    boxShadow: '0 2px 10px rgba(76,111,224,0.12)',
+    bgcolor: '#FAFBFF',
+  },
+};
+
+export const cardThumbWrapStyles = {
+  position: 'relative',
+  flex: '0 0 240px',
+  minHeight: 150,
+  bgcolor: '#0E0F12',
+  overflow: 'hidden',
+};
+
+export const cardBodyStyles = {
+  flex: 1,
+  minWidth: 0,
+  p: 2.5,
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  gap: 0.6,
+};
+
+export const cardTitleStyles = {
+  color: TEXT_PRIMARY,
+  fontWeight: 600,
+  maxWidth: '70%',
+};
+
+export const cardIdStyles = {
+  color: '#9CA3AF',
+  fontFamily: 'monospace',
+  fontSize: '0.7rem',
+};
+
+export const cardAnnotationStyles = {
+  color: TEXT_SECONDARY,
+  fontSize: '0.85rem',
+  lineHeight: 1.4,
+  display: '-webkit-box',
+  WebkitLineClamp: 2,
+  WebkitBoxOrient: 'vertical',
+  overflow: 'hidden',
+};
+
+export const cardAnnotationEmptyStyles = {
+  color: '#B0B5BE',
+  fontSize: '0.85rem',
+  fontStyle: 'italic',
+};
+
+export const cardChevronStyles = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flex: '0 0 40px',
+  color: '#C6CAD3',
+};
+
+export const detailImageStyles = {
+  width: '100%',
+  maxHeight: 340,
+  objectFit: 'cover',
+  borderRadius: '10px',
+  border: `1px solid ${BORDER}`,
+  bgcolor: '#0E0F12',
+};
+
+export const detailImagePlaceholderStyles = {
+  width: '100%',
+  minHeight: 200,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  color: '#9CA3AF',
+  bgcolor: SURFACE_MUTED,
+  border: `1px solid ${BORDER}`,
+  borderRadius: '10px',
+};
+
+export const fieldStyles = {
+  '& .MuiInputLabel-root': { color: TEXT_SECONDARY },
+  '& .MuiInputLabel-root.Mui-focused': { color: ACCENT },
+  '& .MuiOutlinedInput-root': {
+    bgcolor: '#FFFFFF',
+    color: TEXT_PRIMARY,
+    '& fieldset': { borderColor: BORDER },
+    '&:hover fieldset': { borderColor: '#C6CAD3' },
+    '&.Mui-focused fieldset': { borderColor: ACCENT },
+  },
+  '& .MuiInputBase-input': { color: TEXT_PRIMARY },
+};
+
+export const loadButtonStyles = {
+  bgcolor: ACCENT,
+  color: '#fff',
+  fontWeight: 600,
+  textTransform: 'none',
+  px: 3,
+  '&:hover': { bgcolor: ACCENT_HOVER },
+  '&.Mui-disabled': { bgcolor: '#C9D3F5', color: '#fff' },
+};
+
+export const saveButtonStyles = {
+  borderColor: ACCENT,
+  color: ACCENT,
+  fontWeight: 600,
+  textTransform: 'none',
+  px: 3,
+  '&:hover': { borderColor: ACCENT_HOVER, bgcolor: '#F5F7FE' },
+  '&.Mui-disabled': { borderColor: BORDER, color: '#B0B5BE' },
+};
