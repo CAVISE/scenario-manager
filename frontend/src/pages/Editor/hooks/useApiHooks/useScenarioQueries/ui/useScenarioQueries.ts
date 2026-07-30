@@ -33,6 +33,7 @@ export function useScenarioDetailQuery(id: string | null) {
         id: data.scenario_id ?? '',
         name: data.scenario_name ?? data.name_of_scenario ?? '',
         weather: data.weather ?? '',
+        description: data.description ?? '',
         file_: data.file_ ?? null,
       });
       return data;

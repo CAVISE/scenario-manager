@@ -69,7 +69,6 @@ export type OpenCDAAttackConfig = {
   stages?: OpenCDAAttackStage[];
 };
 
-/** Normalize edited and persisted stages to a flat array. */
 export function normalizeAttackStages(value: unknown): OpenCDAAttackStage[] {
   if (!Array.isArray(value)) return [];
   return value.reduce<OpenCDAAttackStage[]>((acc, item) => {
