@@ -60,6 +60,14 @@ const NON_DRIVING_LANE_TYPES = new Set([
   'sidewalk',
   'walking',
 ]);
+const DEPART_LANE_KEYWORDS = new Set([
+  'allowed',
+  'best',
+  'best_prob',
+  'first',
+  'free',
+  'random',
+]);
 
 let loadedNetwork: LoadedSumoNetwork | null = null;
 
@@ -111,10 +119,13 @@ export function buildSumoRoutes(
   const result: GeneratedSumoRoutes = {};
 
   cars.forEach((car) => {
-    if (car.sumo_edges?.trim()) return;
-
+    const manualEdges = parseEdgeList(car.sumo_edges);
     const routePoints = points.filter((point) => point.carId === car.id);
     if (routePoints.length === 0) {
+      if (manualEdges.length > 0) {
+        validateVehicleNetworkSettings(network, car, manualEdges);
+        return;
+      }
       throw new Error(
         `Vehicle ${car.opencda_name || car.id} has no route points`,
       );
@@ -128,32 +139,11 @@ export function buildSumoRoutes(
       y: -point.y + network.offsetY,
     }));
 
-    const snappedEdges = sumoPoints.map(
-      (point, index) =>
-        nearestLane(network.lanes, point, routeDirection(sumoPoints, index))
-          .edgeId,
-    );
-
-    const edgeRoute: string[] = [];
-    for (let index = 0; index < snappedEdges.length - 1; index += 1) {
-      const start = snappedEdges[index];
-      const destination = snappedEdges[index + 1];
-      const segment = shortestPath(network, start, destination);
-      if (segment.length === 0) {
-        throw new Error(
-          `No connected SUMO route for vehicle ${
-            car.opencda_name || car.id
-          } between edges ${start} and ${destination}`,
-        );
-      }
-      edgeRoute.push(
-        ...(edgeRoute[edgeRoute.length - 1] === segment[0]
-          ? segment.slice(1)
-          : segment),
-      );
-    }
-
-    const edges = deduplicateAdjacent(edgeRoute);
+    const edges =
+      manualEdges.length > 0
+        ? manualEdges
+        : buildEdgeRoute(network, sumoPoints, car);
+    validateVehicleNetworkSettings(network, car, edges);
     const warnings: string[] = [];
     let depart = preciseEndpointAnchor(
       network,
@@ -199,6 +189,132 @@ export function buildSumoRoutes(
   });
 
   return result;
+}
+
+function parseEdgeList(value: string | undefined): string[] {
+  return value?.trim().split(/\s+/).filter(Boolean) ?? [];
+}
+
+function buildEdgeRoute(
+  network: SumoNetwork,
+  sumoPoints: Coordinate[],
+  car: Car,
+): string[] {
+  const snappedEdges = sumoPoints.map(
+    (point, index) =>
+      nearestLane(network.lanes, point, routeDirection(sumoPoints, index))
+        .edgeId,
+  );
+  const edgeRoute: string[] = [];
+  for (let index = 0; index < snappedEdges.length - 1; index += 1) {
+    const start = snappedEdges[index];
+    const destination = snappedEdges[index + 1];
+    const segment = shortestPath(network, start, destination);
+    if (segment.length === 0) {
+      throw new Error(
+        `No connected SUMO route for vehicle ${
+          car.opencda_name || car.id
+        } between edges ${start} and ${destination}`,
+      );
+    }
+    edgeRoute.push(
+      ...(edgeRoute[edgeRoute.length - 1] === segment[0]
+        ? segment.slice(1)
+        : segment),
+    );
+  }
+  return deduplicateAdjacent(edgeRoute);
+}
+
+function validateVehicleNetworkSettings(
+  network: SumoNetwork,
+  car: Car,
+  edges: string[],
+): void {
+  if (edges.length === 0) return;
+  const label = car.opencda_name || car.id;
+  const firstEdge = edges[0];
+  const departLaneValue = car.sumo_depart_lane?.trim();
+  let departLane: LaneGeometry | undefined;
+
+  if (departLaneValue) {
+    if (/^\d+$/.test(departLaneValue)) {
+      const laneIndex = Number(departLaneValue);
+      departLane = network.lanes.find(
+        (lane) => lane.edgeId === firstEdge && lane.index === laneIndex,
+      );
+      if (!departLane || !isDrivingLane(departLane)) {
+        throw new Error(
+          `Vehicle ${label}: departLane ${departLaneValue} is not a passenger driving lane on edge ${firstEdge}`,
+        );
+      }
+    } else if (!DEPART_LANE_KEYWORDS.has(departLaneValue)) {
+      throw new Error(
+        `Vehicle ${label}: unsupported SUMO departLane "${departLaneValue}"`,
+      );
+    }
+  }
+
+  if (car.sumo_depart_pos != null) {
+    const position = car.sumo_depart_pos;
+    if (!Number.isFinite(position) || position < 0) {
+      throw new Error(
+        `Vehicle ${label}: departPos must be a non-negative number`,
+      );
+    }
+    const laneLength = departLane?.length ?? network.edgeLengths.get(firstEdge);
+    if (laneLength != null && position >= laneLength) {
+      throw new Error(
+        `Vehicle ${label}: departPos ${position} is outside edge ${firstEdge} (length ${laneLength.toFixed(2)})`,
+      );
+    }
+  }
+
+  const stop = car.sumo_stop;
+  if (!stop) return;
+  const stopLaneId = stop.lane.trim();
+  if (!stopLaneId) {
+    throw new Error(
+      `Vehicle ${label}: Static stop is enabled but its Lane field is empty`,
+    );
+  }
+  const stopLane = network.lanes.find((lane) => lane.id === stopLaneId);
+  if (!stopLane || !isDrivingLane(stopLane)) {
+    throw new Error(
+      `Vehicle ${label}: stop lane "${stopLaneId}" is not a passenger driving lane`,
+    );
+  }
+  if (!edges.includes(stopLane.edgeId)) {
+    throw new Error(
+      `Vehicle ${label}: stop lane "${stopLaneId}" is not part of its route`,
+    );
+  }
+  if (
+    !Number.isFinite(stop.startPos) ||
+    !Number.isFinite(stop.endPos) ||
+    stop.startPos < 0 ||
+    stop.endPos <= stop.startPos ||
+    stop.endPos > stopLane.length
+  ) {
+    throw new Error(
+      `Vehicle ${label}: stop positions must satisfy 0 <= startPos < endPos <= ${stopLane.length.toFixed(2)}`,
+    );
+  }
+  if (!Number.isFinite(stop.duration) || stop.duration < 0) {
+    throw new Error(
+      `Vehicle ${label}: stop duration must be a non-negative number`,
+    );
+  }
+  if (
+    stopLane.edgeId === firstEdge &&
+    edges.lastIndexOf(firstEdge) === 0 &&
+    car.sumo_depart_pos != null &&
+    stop.endPos <= car.sumo_depart_pos
+  ) {
+    throw new Error(
+      `Vehicle ${label}: stop on ${stopLaneId} is behind departPos ${car.sumo_depart_pos}`,
+    );
+  }
 }
 
 function parseNetwork(netXml: string): SumoNetwork {

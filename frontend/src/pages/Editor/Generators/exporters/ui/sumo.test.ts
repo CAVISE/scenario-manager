@@ -155,6 +155,31 @@ describe('SUMO exporters', () => {
     expect(xml).not.toContain('departPos="12.35"');
   });
 
+  it('rejects a static stop with an empty lane', () => {
+    const car = {
+      id: 'car-1',
+      x: 0,
+      y: 0,
+      z: 0,
+      color: 'ffffff',
+      model: 'vehicle.tesla.model3',
+      scale: 1,
+      rotation: 0,
+      speed: 50,
+      sumo_edges: 'edge-a',
+      sumo_stop: {
+        lane: '',
+        startPos: 1,
+        endPos: 2,
+        duration: 10,
+      },
+    } satisfies Car;
+
+    expect(() => generateRouXml(defaultSimConfig, [car])).toThrow(
+      'Static stop is enabled but its Lane field is empty',
+    );
+  });
+
   it('does not silently export a vehicle with an empty route', () => {
     const car = {
       id: 'car-1',
