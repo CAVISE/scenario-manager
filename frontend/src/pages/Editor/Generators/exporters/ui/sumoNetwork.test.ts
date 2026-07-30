@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type {
@@ -26,6 +29,10 @@ const NET_XML = `<?xml version="1.0" encoding="UTF-8"?>
   <connection from="edge-a" to="edge-b" fromLane="0" toLane="0"/>
   <connection from="edge-b" to="edge-c" fromLane="0" toLane="0"/>
 </net>`;
+const TOWN01_NET_XML = readFileSync(
+  resolve(process.cwd(), 'public/Town01.net.xml'),
+  'utf8',
+);
 
 const car = {
   id: 'car-1',
@@ -53,6 +60,39 @@ afterEach(() => {
 });
 
 describe('SUMO frontend routing', () => {
+  it('uses OpenDRIVE map offsets for distinct Town01 vehicle spawns', () => {
+    const townCars = [
+      { ...car, id: 'cav1', x: -118.9, y: -107.47 },
+      { ...car, id: 'cav2', x: -212.91, y: 118.92 },
+      { ...car, id: 'cav3', x: 13.93, y: 64.31 },
+      { ...car, id: 'cav4', x: 2.41, y: -3.5 },
+    ];
+    const destinations = [
+      { id: 'p1', carId: 'cav1', x: -88.59, y: 67.63, z: 0 },
+      { id: 'p2', carId: 'cav2', x: -125.35, y: -142.57, z: 0 },
+      { id: 'p3', carId: 'cav3', x: -115.93, y: -40.82, z: 0 },
+      { id: 'p4', carId: 'cav4', x: -125.44, y: -59.85, z: 0 },
+    ];
+
+    const routes = buildSumoRoutes(TOWN01_NET_XML, townCars, destinations, {
+      x: 212.00307621889581,
+      y: -123.08861225209964,
+    });
+
+    expect(townCars.map(({ id }) => routes[id].edges.split(' ')[0])).toEqual([
+      '24',
+      '13',
+      '-10',
+      '4',
+    ]);
+    expect(townCars.map(({ id }) => routes[id].depart?.edgeId)).toEqual([
+      '24',
+      '13',
+      '-10',
+      '4',
+    ]);
+  });
+
   it('maps CARLA coordinates and fills intermediate SUMO edges', () => {
     expect(buildSumoRoutes(NET_XML, [car], [destination])).toEqual({
       'car-1': {
@@ -158,10 +198,7 @@ describe('SUMO frontend routing', () => {
       edges: 'edge-a',
       depart: undefined,
       arrival: undefined,
-      warnings: [
-        'precise departure lane/position is ambiguous',
-        'precise arrival lane/position is ambiguous',
-      ],
+      warnings: ['arrival is not ahead of departure on the single-edge route'],
     });
   });
 
