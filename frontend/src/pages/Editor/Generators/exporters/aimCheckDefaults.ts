@@ -1,6 +1,5 @@
 import type { SimulationConfig } from '../types/configGeneratorsTypes';
 
-/** Defaults aligned with opencda/scenario_testing/config_yaml/aim_check.yaml */
 export const AIM_CHECK_SIM_OVERRIDES: {
   carla?: Partial<SimulationConfig['carla']>;
   opencda?: Partial<SimulationConfig['opencda']>;

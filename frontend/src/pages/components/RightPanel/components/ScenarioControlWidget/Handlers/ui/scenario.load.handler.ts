@@ -26,6 +26,7 @@ export function buildScenarioPayload(): ScenarioPayload {
     map: s.simConfig?.carla?.map || 'town10',
     id: s.Scenario?.id || null,
     name_of_scenario: s.Scenario?.name || null,
+    description: s.Scenario?.description || null,
     preview: canvas?.toDataURL('image/png') ?? null,
     file_: getCachedXodrContent(),
     scenario: (

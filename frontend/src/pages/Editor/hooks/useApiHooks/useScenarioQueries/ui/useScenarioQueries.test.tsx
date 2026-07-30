@@ -56,6 +56,7 @@ describe('useScenarioQueries', () => {
       scenario_id: 's-1',
       scenario_name: 'Scenario one',
       weather: 'ClearNoon',
+      description: 'Scenario one note',
     });
 
     const queryClient = new QueryClient();
@@ -68,6 +69,7 @@ describe('useScenarioQueries', () => {
       id: 's-1',
       name: 'Scenario one',
       weather: 'ClearNoon',
+      description: 'Scenario one note',
       file_: null,
     });
   });
@@ -248,6 +250,7 @@ describe('useScenarioQueries', () => {
       scenario_id: 'sc-1',
       scenario_name: 'My Scenario',
       weather: 'ClearNoon',
+      description: 'Detailed notes',
       file_: '<OpenDRIVE></OpenDRIVE>',
     });
     const queryClient = new QueryClient();
@@ -259,6 +262,7 @@ describe('useScenarioQueries', () => {
       id: 'sc-1',
       name: 'My Scenario',
       weather: 'ClearNoon',
+      description: 'Detailed notes',
       file_: '<OpenDRIVE></OpenDRIVE>',
     });
   });

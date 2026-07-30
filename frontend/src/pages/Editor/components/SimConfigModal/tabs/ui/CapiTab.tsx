@@ -123,7 +123,10 @@ export default function CapiTab() {
           onChange={(e) =>
             updateSimConfigCAPI({
               capi_log_level: e.target.value as
-                'debug' | 'info' | 'warn' | 'error',
+                | 'debug'
+                | 'info'
+                | 'warn'
+                | 'error',
             })
           }
         >

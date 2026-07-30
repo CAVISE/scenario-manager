@@ -63,6 +63,7 @@ export const handleLoad = async ({
       id: data.scenario_id ?? '',
       name: data.scenario_name ?? data.name_of_scenario ?? '',
       weather: data.weather ?? '',
+      description: data.description ?? '',
       file_: data.file_ ?? null,
     });
     const xodr = data.file_ ?? (data.scenario as unknown as Scenario)?.file_;
@@ -86,7 +87,8 @@ export const handleLoad = async ({
     [...s.pedestrians].forEach((p) => s.removePedestrian(p.id));
 
     const carGroup = scenarioText?.find((g) => g.vehicle === 'car') as
-      ScenarioGroup<CarPath> | undefined;
+      | ScenarioGroup<CarPath>
+      | undefined;
     if (carGroup) {
       carGroup.path.forEach((car: CarPath) => {
         const carId = s.addCar(
@@ -125,7 +127,8 @@ export const handleLoad = async ({
     }
 
     const rsuGroup = scenarioText?.find((g) => g.vehicle === 'RSU') as
-      ScenarioGroup<RSUPath> | undefined;
+      | ScenarioGroup<RSUPath>
+      | undefined;
     if (rsuGroup) {
       rsuGroup.path.forEach((rsu: RSUPath) => {
         s.addRSU(rsu.x, rsu.y, rsu.z);
@@ -173,7 +176,8 @@ export const handleLoad = async ({
     }
 
     const pedGroup = scenarioText?.find((g) => g.vehicle === 'pedestrian') as
-      ScenarioGroup<PedestrianPath> | undefined;
+      | ScenarioGroup<PedestrianPath>
+      | undefined;
     if (pedGroup) {
       pedGroup.path.forEach((p: PedestrianPath) => {
         const pedId = s.addPedestrian(p.x, p.y, p.z);
@@ -190,7 +194,8 @@ export const handleLoad = async ({
     }
 
     const bldGroup = scenarioText?.find((g) => g.vehicle === 'building') as
-      ScenarioGroup<BuildingPath> | undefined;
+      | ScenarioGroup<BuildingPath>
+      | undefined;
     if (bldGroup) {
       bldGroup.path.forEach((b: BuildingPath) => {
         s.addBuilding(b.x, b.y, b.z);
@@ -228,7 +233,8 @@ export const handleLoad = async ({
     }
 
     const meta = data.scenario as
-      { scenario_id?: string; name_of_scenario?: string } | undefined;
+      | { scenario_id?: string; name_of_scenario?: string }
+      | undefined;
     s.updateScenario({
       id: String(meta?.scenario_id ?? id),
       name: meta?.name_of_scenario ?? '',
