@@ -165,14 +165,32 @@ describe('SUMO frontend routing', () => {
     });
   });
 
-  it('keeps manually configured edges out of automatic routing', () => {
+  it('anchors a manually configured route from the vehicle spawn', () => {
     expect(
+      buildSumoRoutes(NET_XML, [{ ...car, sumo_edges: 'edge-a edge-b' }], []),
+    ).toEqual({
+      'car-1': {
+        edges: 'edge-a edge-b',
+        depart: {
+          edgeId: 'edge-a',
+          laneId: 'edge-a_0',
+          laneIndex: 0,
+          pos: 1,
+          distance: 0,
+        },
+        warnings: [],
+      },
+    });
+  });
+
+  it('rejects a manual route whose first edge does not contain the spawn', () => {
+    expect(() =>
       buildSumoRoutes(
         NET_XML,
-        [{ ...car, sumo_edges: 'manual-a manual-b' }],
-        [],
+        [{ ...car, sumo_edges: 'edge-c' }],
+        [destination],
       ),
-    ).toEqual({});
+    ).toThrow('scene spawn is not on the first manual SUMO edge edge-c');
   });
 
   it('adds endpoint anchors to a manual edge route when points exist', () => {
