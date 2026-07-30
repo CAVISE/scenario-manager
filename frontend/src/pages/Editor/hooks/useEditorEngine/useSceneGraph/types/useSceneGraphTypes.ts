@@ -20,7 +20,11 @@ export const KNOWN_USER_DATA_TYPES = new Set([
 ]);
 
 export type KnownUserDataType =
-  'car' | 'point' | 'building' | 'lidar' | 'pedestrian';
+  | 'car'
+  | 'point'
+  | 'building'
+  | 'lidar'
+  | 'pedestrian';
 
 export interface KnownUserData {
   type?: string;

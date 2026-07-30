@@ -1,5 +1,3 @@
-/** Shared MUI `sx` for OpenCDA panels in Sim Config and Right Panel. */
-
 export const opencdaPanelPaperSx = {
   p: 2,
   borderRadius: 2,

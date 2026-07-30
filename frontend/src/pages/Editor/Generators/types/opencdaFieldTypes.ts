@@ -1,5 +1,3 @@
-/** Nested OpenCDA blocks matching default.yaml / upstream CAVISE configs. */
-
 export type OpenCDAMapManager = {
   pixels_per_meter: number;
   raster_size: [number, number];

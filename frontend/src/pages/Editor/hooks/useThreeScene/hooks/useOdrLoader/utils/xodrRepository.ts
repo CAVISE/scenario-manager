@@ -98,7 +98,6 @@ export function setCachedCustomXodrContent(content: string): void {
   }
 }
 
-/** OpenDRIVE XML for POST /api/start_opencda (`xodr` field). */
 export async function resolveXodrTextForSimulation(
   fallbackMapName?: string,
 ): Promise<string | undefined> {

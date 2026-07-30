@@ -504,7 +504,6 @@ export default function RSUProperties({ rsu, onDelete }: RSUPropertiesProps) {
         </AccordionSummary>
         <AccordionDetails>
           <Stack spacing={2}>
-            {/* Perception */}
             <Typography
               variant="caption"
               color="text.secondary"
@@ -681,7 +680,6 @@ export default function RSUProperties({ rsu, onDelete }: RSUPropertiesProps) {
               ))}
             </Grid>
 
-            {/* Localization */}
             <Typography
               variant="caption"
               color="text.secondary"

@@ -6,7 +6,6 @@ import {
   Button,
   TextField,
   IconButton,
-  Grid,
   CircularProgress,
   Alert,
 } from '@mui/material';
@@ -16,14 +15,36 @@ import {
   ModalContainer,
   ModalHeader,
   ScenarioCard,
-  uploadModalStyles,
   uploadModalBoxStyles,
   boxStyles,
   imgStyles,
+  listContainerStyles,
+  ACCENT,
+  alertStyles,
+  backButtonStyles,
+  cardAnnotationEmptyStyles,
+  cardAnnotationStyles,
+  cardBodyStyles,
+  cardChevronStyles,
+  cardIdStyles,
+  cardThumbWrapStyles,
+  cardTitleStyles,
+  closeButtonStyles,
+  detailImagePlaceholderStyles,
+  detailImageStyles,
+  emptyStateStyles,
+  fieldStyles,
+  loadButtonStyles,
+  saveButtonStyles,
+  scenarioCardStyles,
+  titleStyles,
 } from '../types/UploadScenariosModalTypes';
 import type { UploadScenariosModalProps } from '../types/UploadScenariosModalTypes';
 import type { ScenarioListItem } from '../../../../../api/types/IScenarioTypes';
-import { useScenariosListQuery } from '../../../hooks/useApiHooks/useScenarioQueries';
+import {
+  useScenariosListQuery,
+  useScenarioPatchMutation,
+} from '../../../hooks/useApiHooks/useScenarioQueries';
 import { handleLoad } from '../../../../components/RightPanel/components/ScenarioControlWidget/Handlers';
 import { useEditorRefs, useHooks } from '../../../context';
 import { getApiErrorMessageSync } from '../../../../../api/errors';
@@ -49,6 +70,7 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
   const { sceneRef, loadRSURef } = useEditorRefs();
   const [selectedScenario, setSelectedScenario] =
     useState<ScenarioListItem | null>(null);
+  const [editedDescription, setEditedDescription] = useState('');
   const [notice, setNotice] = useState('');
   const setNoticeWithToast = useNoticeWithToast(setNotice, 'info-default');
   const [loadingScene, setLoadingScene] = useState(false);
@@ -59,22 +81,55 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
     error,
     refetch,
   } = useScenariosListQuery(open);
+  const patchScenarioMutation = useScenarioPatchMutation();
 
   const handleSelectScenario = (scenario: ScenarioListItem) => {
     setSelectedScenario(scenario);
+    setEditedDescription(scenario.annotation || '');
     setNotice('');
   };
 
   const handleBack = () => {
     setSelectedScenario(null);
+    setEditedDescription('');
     setNotice('');
   };
 
   const handleClose = () => {
     setSelectedScenario(null);
+    setEditedDescription('');
     setNotice('');
     onClose();
   };
+
+  const isDescriptionDirty =
+    !!selectedScenario &&
+    editedDescription !== (selectedScenario.annotation || '');
+
+  const handleSaveDescription = useCallback(async () => {
+    if (!selectedScenario?.scenario_id) return;
+    try {
+      await patchScenarioMutation.mutateAsync({
+        id: selectedScenario.scenario_id,
+        payload: { description: editedDescription },
+      });
+      setSelectedScenario((prev) =>
+        prev ? { ...prev, annotation: editedDescription } : prev,
+      );
+      setNoticeWithToast('Description saved');
+      refetch();
+    } catch (err) {
+      setNoticeWithToast(
+        getApiErrorMessageSync(err, 'Failed to save description'),
+      );
+    }
+  }, [
+    selectedScenario,
+    editedDescription,
+    patchScenarioMutation,
+    setNoticeWithToast,
+    refetch,
+  ]);
   const { buildingModelRef, updateSceneGraph, loadFile, setStep } = useHooks();
   const handleLoadOnScene = useCallback(async () => {
     if (!selectedScenario?.scenario_id) return;
@@ -122,21 +177,35 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
         <ModalHeader>
           <Box sx={uploadModalBoxStyles}>
             {selectedScenario && (
-              <IconButton size="small" onClick={handleBack}>
-                <ArrowBackIcon />
+              <IconButton
+                size="small"
+                onClick={handleBack}
+                sx={backButtonStyles}
+              >
+                <ArrowBackIcon fontSize="small" />
               </IconButton>
             )}
-            <Typography id="upload-scenarios-title" variant="h5" component="h2">
+            <Typography
+              id="upload-scenarios-title"
+              variant="h6"
+              component="h2"
+              sx={titleStyles}
+            >
               {selectedScenario ? selectedScenario.name : 'Load Scenario'}
             </Typography>
           </Box>
-          <IconButton onClick={handleClose} size="small" aria-label="close">
-            <CloseIcon />
+          <IconButton
+            onClick={handleClose}
+            size="small"
+            aria-label="close"
+            sx={closeButtonStyles}
+          >
+            <CloseIcon fontSize="small" />
           </IconButton>
         </ModalHeader>
 
         {notice ? (
-          <Alert severity="info" sx={{ mb: 2 }} onClose={() => setNotice('')}>
+          <Alert severity="info" sx={alertStyles} onClose={() => setNotice('')}>
             {notice}
           </Alert>
         ) : null}
@@ -146,7 +215,7 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
             {isError ? (
               <Alert
                 severity="error"
-                sx={{ mb: 2 }}
+                sx={alertStyles}
                 action={
                   <Button
                     color="inherit"
@@ -161,85 +230,100 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
               </Alert>
             ) : null}
             {isLoading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-                <CircularProgress />
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                <CircularProgress size={28} sx={{ color: ACCENT }} />
               </Box>
             ) : (
-              <Grid item container spacing={2}>
+              <Box sx={listContainerStyles}>
                 {scenarios.length === 0 && !isLoading ? (
-                  <Grid item xs={12}>
-                    <Typography color="text.secondary">
+                  <Box sx={emptyStateStyles}>
+                    <Typography sx={{ color: '#9AA1AC', fontSize: 14 }}>
                       No saved scenarios
                     </Typography>
-                  </Grid>
+                  </Box>
                 ) : null}
                 {scenarios.map((scenario) => (
-                  <Grid item xs={12} sm={6} md={4} key={scenario.scenario_id}>
-                    <ScenarioCard
-                      onClick={() => handleSelectScenario(scenario)}
-                    >
+                  <ScenarioCard
+                    key={scenario.scenario_id}
+                    onClick={() => handleSelectScenario(scenario)}
+                    sx={scenarioCardStyles}
+                  >
+                    <Box sx={cardThumbWrapStyles}>
+                      {previewSrc(scenario.preview) ? (
+                        <img
+                          src={previewSrc(scenario.preview)}
+                          alt={scenario.name}
+                          loading="lazy"
+                          style={{
+                            ...imgStyles,
+                            position: 'absolute',
+                            inset: 0,
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                          }}
+                        />
+                      ) : (
+                        <Box
+                          sx={{
+                            ...boxStyles,
+                            position: 'absolute',
+                            inset: 0,
+                            color: '#7A828D',
+                            fontSize: 13,
+                          }}
+                        >
+                          No preview
+                        </Box>
+                      )}
+                    </Box>
+                    <Box sx={cardBodyStyles}>
                       <Box
                         sx={{
-                          position: 'relative',
-                          paddingTop: '56.25%',
-                          minHeight: 140,
-                          bgcolor: '#eee',
-                          overflow: 'hidden',
+                          display: 'flex',
+                          alignItems: 'baseline',
+                          gap: 1,
+                          flexWrap: 'wrap',
                         }}
                       >
-                        {previewSrc(scenario.preview) ? (
-                          <img
-                            src={previewSrc(scenario.preview)}
-                            alt={scenario.name}
-                            loading="lazy"
-                            style={{
-                              ...imgStyles,
-                              position: 'absolute',
-                              inset: 0,
-                              width: '100%',
-                              height: '100%',
-                              objectFit: 'cover',
-                            }}
-                          />
-                        ) : (
-                          <Box
-                            sx={{
-                              ...boxStyles,
-                              position: 'absolute',
-                              inset: 0,
-                            }}
-                          >
-                            No preview
-                          </Box>
-                        )}
-                      </Box>
-                      <Box sx={{ p: 1.5 }}>
-                        <Typography variant="subtitle2" noWrap>
+                        <Typography
+                          variant="subtitle1"
+                          noWrap
+                          sx={cardTitleStyles}
+                          title={scenario.name}
+                        >
                           {scenario.name}
                         </Typography>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          display="block"
-                          noWrap
-                        >
+                        <Typography variant="caption" sx={cardIdStyles} noWrap>
                           {scenario.scenario_id}
                         </Typography>
-                        {scenario.annotation ? (
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            sx={{ mt: 0.5 }}
-                            noWrap
-                          >
-                            {scenario.annotation}
-                          </Typography>
-                        ) : null}
                       </Box>
-                    </ScenarioCard>
-                  </Grid>
+                      {scenario.annotation ? (
+                        <Typography
+                          variant="body2"
+                          sx={cardAnnotationStyles}
+                          title={scenario.annotation}
+                        >
+                          {scenario.annotation}
+                        </Typography>
+                      ) : (
+                        <Typography
+                          variant="body2"
+                          sx={cardAnnotationEmptyStyles}
+                        >
+                          No description
+                        </Typography>
+                      )}
+                    </Box>
+                    <Box sx={cardChevronStyles}>
+                      <ArrowBackIcon
+                        fontSize="small"
+                        sx={{ transform: 'rotate(180deg)' }}
+                      />
+                    </Box>
+                  </ScenarioCard>
                 ))}
-              </Grid>
+              </Box>
             )}
           </>
         ) : (
@@ -249,21 +333,10 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
                 component="img"
                 src={thumb}
                 alt={selectedScenario.name}
-                sx={uploadModalStyles}
+                sx={detailImageStyles}
               />
             ) : (
-              <Box
-                sx={{
-                  ...uploadModalStyles,
-                  minHeight: 200,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'text.secondary',
-                }}
-              >
-                No preview
-              </Box>
+              <Box sx={detailImagePlaceholderStyles}>No preview</Box>
             )}
             <TextField
               key={`scenario_id-${selectedScenario.scenario_id}`}
@@ -272,30 +345,44 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
               InputProps={{ readOnly: true }}
               fullWidth
               variant="outlined"
+              sx={fieldStyles}
             />
             <TextField
-              key={`scenario_name-${selectedScenario.name}`}
+              key={`scenario_description-${selectedScenario.scenario_id}`}
               label="Description"
-              value={selectedScenario.annotation ?? ''}
+              placeholder="Enter scenario description"
+              value={editedDescription}
+              onChange={(e) => setEditedDescription(e.target.value)}
               multiline
               rows={3}
               fullWidth
               variant="outlined"
-              InputProps={{ readOnly: true }}
+              sx={fieldStyles}
             />
-            <Button
-              variant="contained"
-              onClick={handleLoadOnScene}
-              disabled={loadingScene}
-              sx={{ alignSelf: 'flex-end' }}
-            >
-              {loadingScene ? 'Loading…' : 'Load onto scene'}
-            </Button>
+            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+              <Button
+                variant="outlined"
+                onClick={handleSaveDescription}
+                disabled={
+                  !isDescriptionDirty || patchScenarioMutation.isPending
+                }
+                sx={saveButtonStyles}
+              >
+                {patchScenarioMutation.isPending ? 'Saving…' : 'Save'}
+              </Button>
+              <Button
+                variant="contained"
+                onClick={handleLoadOnScene}
+                disabled={loadingScene}
+                sx={loadButtonStyles}
+              >
+                {loadingScene ? 'Loading…' : 'Load onto scene'}
+              </Button>
+            </Box>
           </Box>
         )}
       </ModalContainer>
     </Modal>
   );
 };
-
 export default UploadScenariosModal;
