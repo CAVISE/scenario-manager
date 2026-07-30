@@ -277,6 +277,7 @@ export default function SumoTab() {
                 size="small"
                 fullWidth
                 placeholder='e.g. "27 26 -35.0.00"'
+                helperText="Leave empty to build the route and spawn automatically from scene points"
                 value={car.sumo_edges ?? ''}
                 onChange={(e) =>
                   updateCar(car.id, { sumo_edges: e.target.value })

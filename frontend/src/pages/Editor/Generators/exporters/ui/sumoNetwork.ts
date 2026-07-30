@@ -121,9 +121,23 @@ export function buildSumoRoutes(
   cars.forEach((car) => {
     const manualEdges = parseEdgeList(car.sumo_edges);
     const routePoints = points.filter((point) => point.carId === car.id);
+    const sumoStart = toSumoCoordinate({ x: car.x, y: car.y }, network);
     if (routePoints.length === 0) {
       if (manualEdges.length > 0) {
         validateVehicleNetworkSettings(network, car, manualEdges);
+        const depart = preciseEndpointAnchor(
+          network,
+          sumoStart,
+          null,
+          manualEdges,
+          'depart',
+        );
+        assertManualDepartureMatches(car, manualEdges, depart);
+        result[car.id] = {
+          edges: manualEdges.join(' '),
+          depart,
+          warnings: [],
+        };
         return;
       }
       throw new Error(
@@ -132,12 +146,9 @@ export function buildSumoRoutes(
     }
 
     const sumoPoints = [
-      { x: car.x, y: car.y },
-      ...routePoints.map((point) => ({ x: point.x, y: point.y })),
-    ].map((point) => ({
-      x: point.x + network.offsetX,
-      y: -point.y + network.offsetY,
-    }));
+      sumoStart,
+      ...routePoints.map((point) => toSumoCoordinate(point, network)),
+    ];
 
     const edges =
       manualEdges.length > 0
@@ -161,6 +172,9 @@ export function buildSumoRoutes(
     );
 
     if (!depart) {
+      if (manualEdges.length > 0) {
+        assertManualDepartureMatches(car, edges, depart);
+      }
       warnings.push('precise departure lane/position is ambiguous');
     }
     if (!arrival) {
@@ -193,6 +207,26 @@ export function buildSumoRoutes(
 
 function parseEdgeList(value: string | undefined): string[] {
   return value?.trim().split(/\s+/).filter(Boolean) ?? [];
+}
+
+function toSumoCoordinate(point: Coordinate, network: SumoNetwork): Coordinate {
+  return {
+    x: point.x + network.offsetX,
+    y: -point.y + network.offsetY,
+  };
+}
+
+function assertManualDepartureMatches(
+  car: Car,
+  edges: string[],
+  depart: SumoRouteAnchor | undefined,
+): void {
+  if (depart || (car.sumo_depart_lane?.trim() && car.sumo_depart_pos != null)) {
+    return;
+  }
+  throw new Error(
+    `Vehicle ${car.opencda_name || car.id}: its scene spawn is not on the first manual SUMO edge ${edges[0]}. Clear "Route edges" to build the route from scene points, or select a matching first edge and set Depart lane/Depart pos.`,
+  );
 }
 
 function buildEdgeRoute(
@@ -524,7 +558,7 @@ function preciseEndpointAnchor(
   edges: string[],
   endpoint: 'depart' | 'arrival',
 ): SumoRouteAnchor | undefined {
-  if (edges.length === 0 || !direction) return undefined;
+  if (edges.length === 0) return undefined;
   const edgeId = endpoint === 'depart' ? edges[0] : edges[edges.length - 1];
   const compatibleLanes = network.lanes.filter(
     (lane) =>
@@ -537,13 +571,14 @@ function preciseEndpointAnchor(
   let bestScore = Number.POSITIVE_INFINITY;
   compatibleLanes.forEach((lane) => {
     const nearest = distanceToShape(point, lane.shape);
-    if (!nearest.direction) return;
     const alignment =
-      direction.x * nearest.direction.x + direction.y * nearest.direction.y;
-    if (alignment <= 0) return;
+      direction && nearest.direction
+        ? direction.x * nearest.direction.x + direction.y * nearest.direction.y
+        : null;
+    if (alignment != null && alignment <= 0) return;
     const distance = Math.sqrt(nearest.distanceSquared);
     if (distance > MAX_PRECISE_SNAP_DISTANCE) return;
-    const score = distance + (1 - alignment) * 10;
+    const score = distance + (alignment == null ? 0 : (1 - alignment) * 10);
     if (score < bestScore) {
       bestScore = score;
       best = laneAnchor(lane, nearest);
