@@ -7,6 +7,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { numInputSlot } from '../../../../../components/RightPanel/types/PanelTypes';
 import type { SimulationConfig } from '../../../../Generators/types/configGeneratorsTypes';
 import OpenCDACollapsibleSection from '../../components/OpenCDACollapsibleSection';
 import {
@@ -39,7 +40,7 @@ function NumField({
       type="number"
       size="small"
       fullWidth
-      inputProps={{ step: step ?? 1 }}
+      inputProps={{ ...numInputSlot.input, step: String(step ?? 1) }}
       value={value}
       onChange={(e) => onChange(Number(e.target.value))}
     />
@@ -67,6 +68,7 @@ function RgbTriple({
             label={['R', 'G', 'B'][i]}
             type="number"
             size="small"
+            inputProps={numInputSlot.input}
             sx={{ width: 72 }}
             value={value[i]}
             onChange={(e) => {

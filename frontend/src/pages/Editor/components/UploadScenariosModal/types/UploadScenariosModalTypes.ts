@@ -1,5 +1,6 @@
 import { styled } from '@mui/system';
 import { Box, Card } from '@mui/material';
+import { pressActiveSx, pressTransition } from '../../../../../theme/pressInteraction';
 
 export interface MockScenario {
   id: string;
@@ -90,10 +91,13 @@ export const ModalHeader = styled(Box)({
 
 export const ScenarioCard = styled(Card)({
   cursor: 'pointer',
-  transition: 'transform 0.2s ease-in-out',
+  transition: `${pressTransition}, box-shadow 0.2s ease-in-out`,
   '&:hover': {
     transform: 'scale(1.03)',
     boxShadow: '0px 6px 12px rgba(0, 0, 0, 0.15)',
+  },
+  '&:active': {
+    transform: 'scale(0.98)',
   },
 });
 
@@ -129,11 +133,13 @@ export const titleStyles = {
 };
 
 export const backButtonStyles = {
+  ...pressActiveSx,
   color: TEXT_SECONDARY,
   '&:hover': { color: TEXT_PRIMARY, bgcolor: SURFACE_MUTED },
 };
 
 export const closeButtonStyles = {
+  ...pressActiveSx,
   color: TEXT_SECONDARY,
   '&:hover': { color: TEXT_PRIMARY, bgcolor: SURFACE_MUTED },
 };
@@ -174,12 +180,14 @@ export const scenarioCardStyles = {
   borderRadius: '12px',
   overflow: 'hidden',
   cursor: 'pointer',
-  transition:
-    'border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease',
+  transition: `${pressTransition}, border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease`,
   '&:hover': {
     borderColor: ACCENT,
     boxShadow: '0 2px 10px rgba(76,111,224,0.12)',
     bgcolor: '#FAFBFF',
+  },
+  '&:active': {
+    transform: 'scale(0.99)',
   },
 };
 
@@ -272,6 +280,7 @@ export const fieldStyles = {
 };
 
 export const loadButtonStyles = {
+  ...pressActiveSx,
   bgcolor: ACCENT,
   color: '#fff',
   fontWeight: 600,
@@ -282,6 +291,7 @@ export const loadButtonStyles = {
 };
 
 export const saveButtonStyles = {
+  ...pressActiveSx,
   borderColor: ACCENT,
   color: ACCENT,
   fontWeight: 600,

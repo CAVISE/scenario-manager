@@ -175,7 +175,7 @@ export const css = `
     text-transform: uppercase;
     padding: 8px 14px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s, transform 140ms cubic-bezier(0.4,0,0.2,1);
   }
   .sm-home-btn:hover {
     background: rgba(105,240,174,0.08);
@@ -202,7 +202,7 @@ export const css = `
     background: rgba(255,255,255,0.02);
     border: 1px solid rgba(105,240,174,0.07);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s, transform 140ms cubic-bezier(0.4,0,0.2,1);
   }
   .sm-home-scenario-item:hover {
     background: rgba(105,240,174,0.05);
@@ -273,7 +273,7 @@ export const css = `
     text-decoration: none;
     padding: 10px 24px;
     cursor: pointer;
-    transition: all 0.25s;
+    transition: all 0.25s, transform 140ms cubic-bezier(0.4,0,0.2,1);
   }
   .sm-home-editor-link:hover {
     background: rgba(105,240,174,0.12);
