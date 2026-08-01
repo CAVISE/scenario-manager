@@ -85,8 +85,16 @@ export function generateRouXml(
     )
     .join('\n');
 
-  const vehicleLines = cars
-    .map((car, i) => {
+  const vehicles = cars
+    .map((car, index) => ({
+      car,
+      index,
+      depart: car.sumo_depart ?? 0.05,
+    }))
+    .sort((a, b) => a.depart - b.depart || a.index - b.index);
+
+  const vehicleLines = vehicles
+    .map(({ car, index, depart }) => {
       const generated = generatedRoutes[car.id];
       const edges = car.sumo_edges?.trim() || generated?.edges.trim() || '';
       if (!edges) {
@@ -97,7 +105,6 @@ export function generateRouXml(
       const generatedAnchors =
         generated?.edges.trim() === edges ? generated : undefined;
       const maxSpeed = car.sumo_max_speed ?? 16.665;
-      const depart = car.sumo_depart ?? 0.05;
       const dLane = car.sumo_depart_lane
         ? ` departLane="${car.sumo_depart_lane}"`
         : generatedAnchors?.depart
@@ -116,8 +123,8 @@ export function generateRouXml(
         ? ` arrivalPos="${formatLanePosition(generatedAnchors.arrival.pos)}"`
         : '';
       const type = car.sumo_vtype ? ` type="${car.sumo_vtype}"` : '';
-      const stop = generateStopXml(car, i);
-      return `  <vehicle id="sumo${i}"${type} maxSpeed="${maxSpeed}" depart="${depart}"${dLane}${dPos}${aLane}${aPos} departSpeed="0.00">
+      const stop = generateStopXml(car, index);
+      return `  <vehicle id="sumo${index}"${type} maxSpeed="${maxSpeed}" depart="${depart}"${dLane}${dPos}${aLane}${aPos} departSpeed="0.00">
     <route edges="${xmlAttribute(edges)}"/>${stop}
   </vehicle>`;
     })
