@@ -191,6 +191,20 @@ export function buildOdrScene(p: LoadOdrMapParams): OdrMapMeshes {
   const bbox = new THREE.Box3().setFromObject(refline_lines);
   const diag = bbox.min.distanceTo(bbox.max);
   camera.far = diag * 1.5;
+  // near scales with far to keep the depth-buffer precision ratio (far/near)
+  // roughly constant across map sizes. With a fixed near=0.1, this ratio
+  // grows linearly with map size and can exceed what a standard WebGL depth
+  // buffer can represent on very large maps, causing depth-precision
+  // artifacts (geometry flickering or disappearing). 20000 keeps small maps
+  // unchanged (near stays at the 0.1 floor) while scaling near up on large
+  // maps so the ratio doesn't blow out.
+  camera.near = Math.max(0.1, camera.far / 20000);
+  // Required after manually changing near/far — Three.js does not recompute
+  // the projection matrix automatically. Without this call, near/far changes
+  // stay in the JS object but never reach the GPU projection, so the camera
+  // renders as if near/far were still whatever they were set to at
+  // construction time.
+  camera.updateProjectionMatrix();
   controls.autoRotate = fit_view;
   if (fit_view) fitViewToBbox(bbox, camera, controls);
 
@@ -208,6 +222,13 @@ export function buildOdrScene(p: LoadOdrMapParams): OdrMapMeshes {
   light.target.updateMatrixWorld();
 
   if (!scene.children.includes(transformControls)) scene.add(transformControls);
+
+  console.log(
+    '[buildOdrScene] geometry added to scene at',
+    performance.now().toFixed(0),
+    'ms, scene.children.length =',
+    scene.children.length,
+  );
 
   if (import.meta.env.DEV) {
     console.log(`Heap: ${(Module.HEAP8.length / 1024 / 1024) | 0} MB`);
