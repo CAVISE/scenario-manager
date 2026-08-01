@@ -9,6 +9,8 @@ import {
   Modal,
   Typography,
 } from '@mui/material';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
 import TelemetryModal from '../../../../../components/TelemetryModal';
 import { useStartSimulationMutation } from '../../../hooks/useApiHooks/useSimulationMutation';
 import { useEditorStore } from '../../../../../store';
@@ -26,6 +28,7 @@ import { CARLA_MAPS } from '../../SimConfigModal/types/SimConfigModalTypes';
 import { useEditorRefs, useHooks } from '../../../context';
 import { ScenarioGroup } from '../../../../../api/types/IScenarioTypes';
 import { buildOpenCDAArtifact } from '../../../Generators/configGenerators';
+import { confirmModalStyles, confirmIconWrapStyles, ACCENT, confirmTitleStyles, confirmBodyStyles, inlineAlertStyles, confirmActionsStyles, cancelButtonStyles, runButtonStyles, mapPickerModalStyles, mapPickerHeaderStyles, mapPickerTitleStyles, mapListStyles, mapListItemStyles, mapItemPrimaryStyles, mapItemSecondaryStyles } from '../types/EditorModalsTypes';
 
 export default function EditorModals() {
   const [telemetryModalOpen, setTelemetryModalOpen] = useState(false);
@@ -130,80 +133,71 @@ export default function EditorModals() {
         open={simulationConfirmOpen}
         onClose={() => setSimulationConfirmOpen(false)}
       >
-        <Box
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%,-50%)',
-            width: 400,
-            bgcolor: 'background.paper',
-            border: '1px solid #ccc',
-            boxShadow: 24,
-            p: 4,
-            textAlign: 'center',
-          }}
-        >
-          <Typography variant="h6" gutterBottom>
-            Confirmation
+        <Box sx={confirmModalStyles}>
+          <Box sx={confirmIconWrapStyles}>
+            <CheckCircleOutlineIcon sx={{ fontSize: 32, color: ACCENT }} />
+          </Box>
+          <Typography variant="h6" sx={confirmTitleStyles}>
+            Run simulation?
           </Typography>
-          <Typography sx={{ mt: 2, mb: 3 }}>
-            Are you sure you want to run the simulation?
+          <Typography sx={confirmBodyStyles}>
+            This will start a new CARLA simulation run with the current scenario
+            configuration.
           </Typography>
           {simulationError && (
-            <Typography sx={{ mb: 2, color: 'error.main' }}>
+            <Alert severity="error" sx={inlineAlertStyles}>
               {simulationError}
-            </Typography>
+            </Alert>
           )}
-          <Button
-            variant="contained"
-            onClick={handleStart}
-            disabled={startSimulationMutation.isPending}
-            sx={{
-              bgcolor: 'error.main',
-              '&:hover': { bgcolor: 'error.dark' },
-            }}
-          >
-            {startSimulationMutation.isPending ? 'Starting...' : 'Run'}
-          </Button>
+          <Box sx={confirmActionsStyles}>
+            <Button
+              variant="text"
+              onClick={() => setSimulationConfirmOpen(false)}
+              disabled={startSimulationMutation.isPending}
+              sx={cancelButtonStyles}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleStart}
+              disabled={startSimulationMutation.isPending}
+              sx={runButtonStyles}
+            >
+              {startSimulationMutation.isPending
+                ? 'Starting…'
+                : 'Run simulation'}
+            </Button>
+          </Box>
         </Box>
       </Modal>
 
       <Modal open={mapPickerOpen} onClose={() => setMapPickerOpen(false)}>
-        <Box
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%,-50%)',
-            width: 420,
-            maxHeight: '70vh',
-            bgcolor: 'background.paper',
-            border: '1px solid #ccc',
-            boxShadow: 24,
-            p: 3,
-            borderRadius: 1,
-            overflow: 'auto',
-          }}
-        >
-          <Typography variant="h6" gutterBottom>
-            Select map
-          </Typography>
+        <Box sx={mapPickerModalStyles}>
+          <Box sx={mapPickerHeaderStyles}>
+            <MapOutlinedIcon sx={{ fontSize: 20, color: ACCENT }} />
+            <Typography variant="h6" sx={mapPickerTitleStyles}>
+              Select map
+            </Typography>
+          </Box>
           {mapPickerError ? (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert severity="error" sx={inlineAlertStyles}>
               {mapPickerError}
             </Alert>
           ) : null}
-          <List dense sx={{ p: 0 }}>
+          <List dense sx={mapListStyles}>
             {CARLA_MAPS.map((mapName) => (
               <ListItemButton
                 key={mapName}
                 onClick={() => handleSelectMap(mapName)}
                 disabled={Boolean(loadingMap)}
+                sx={mapListItemStyles}
               >
                 <ListItemText
                   primary={mapName}
                   secondary={loadingMap === mapName ? 'Loading…' : undefined}
+                  primaryTypographyProps={{ sx: mapItemPrimaryStyles }}
+                  secondaryTypographyProps={{ sx: mapItemSecondaryStyles }}
                 />
               </ListItemButton>
             ))}

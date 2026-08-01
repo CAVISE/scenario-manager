@@ -10,6 +10,7 @@ import {
 import {
   fetchXodrText,
   getStoredXodrName,
+  initXodrCacheFromIndexedDb,
   setCachedCustomXodrContent,
 } from '../utils/xodrRepository';
 
@@ -39,9 +40,7 @@ export function useOdrLoader({
       }
       try {
         Module.FS_unlink('/data.xodr');
-      } catch {
-        // ignore when /data.xodr does not exist yet
-      }
+      } catch {}
 
       try {
         Module.FS_createDataFile('.', 'data.xodr', fileText, true, true);
@@ -68,6 +67,9 @@ export function useOdrLoader({
         );
         const text = await fetchXodrText(mapName);
         if (cancelled) return;
+        console.log(
+          `[OdrLoader] map "${mapName}" size: ${(text.length / 1024 / 1024).toFixed(2)} MB`,
+        );
         processFile(text, false);
       } catch (err) {
         if (cancelled) return;
@@ -81,6 +83,7 @@ export function useOdrLoader({
 
     async function init() {
       setStep('wasm');
+      void initXodrCacheFromIndexedDb();
       try {
         const Module = await libOpenDrive();
 
@@ -131,9 +134,7 @@ export function useOdrLoader({
     }
     try {
       Module.FS_unlink('/data.xodr');
-    } catch {
-      // ignore when /data.xodr does not exist yet
-    }
+    } catch {}
 
     try {
       Module.FS_createDataFile('.', 'data.xodr', fileText, true, true);

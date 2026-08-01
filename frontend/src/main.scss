@@ -2,6 +2,65 @@
   user-select: none !important;
 }
 
+/* Smooth press feedback for native / class-based controls */
+$press-ease: cubic-bezier(0.4, 0, 0.2, 1);
+$press-ms: 140ms;
+
+@mixin press-interaction {
+  transition:
+    transform $press-ms $press-ease,
+    background-color $press-ms ease,
+    border-color $press-ms ease,
+    box-shadow $press-ms ease,
+    color $press-ms ease,
+    opacity $press-ms ease;
+
+  &:active:not(:disabled) {
+    transform: scale(0.96);
+  }
+}
+
+.rp-btn,
+.rp-link-btn,
+.sm-home-btn,
+.sm-home-scenario-item,
+.sm-home-editor-link,
+.sm-err-btn,
+.nf-btn,
+.stp-clear-btn,
+.stp-node-delete {
+  @include press-interaction;
+}
+
+.rp-toggle {
+  @include press-interaction;
+
+  &:active:not(:disabled) {
+    transform: translateY(-50%) scale(0.96);
+  }
+}
+
+.rp-section-header:active {
+  transform: scale(0.99);
+}
+
+input[type='number'] {
+  transition:
+    border-color $press-ms ease,
+    box-shadow $press-ms ease;
+}
+
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  opacity: 0.7;
+  transition: opacity 120ms ease;
+}
+
+input[type='number']:hover::-webkit-inner-spin-button,
+input[type='number']:hover::-webkit-outer-spin-button {
+  opacity: 1;
+}
+
 html,
 body,
 #root {

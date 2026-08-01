@@ -151,7 +151,7 @@ export const css = `
   padding: 11px 20px;
   cursor: pointer;
   user-select: none;
-  transition: background 0.12s;
+  transition: background 0.12s, transform 140ms cubic-bezier(0.4,0,0.2,1);
 }
 .rp-section-header:hover { background: #f2f0ec; }
 

@@ -12,6 +12,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { numInputSlot } from '../../../../../components/RightPanel/types/PanelTypes';
 import {
   opencdaPanelPaperSx,
   opencdaSectionLabelSx,
@@ -112,6 +113,7 @@ export default function OpenCDATab() {
               label={['R', 'G', 'B'][idx]}
               type="number"
               size="small"
+              inputProps={numInputSlot.input}
               value={baseColor[idx]}
               onChange={(e) => {
                 const val = Math.max(
@@ -166,7 +168,7 @@ export default function OpenCDATab() {
               label={cls}
               type="number"
               size="small"
-              inputProps={{ step: 0.05, min: 0, max: 1 }}
+              inputProps={{ ...numInputSlot.input, step: '0.05', min: '0', max: '1' }}
               value={oc.bp_class_sample_prob[cls]}
               onChange={(e) =>
                 updateSimConfigOpenCDA({
@@ -205,6 +207,7 @@ export default function OpenCDATab() {
           label="V2X range (m)"
           type="number"
           size="small"
+          inputProps={numInputSlot.input}
           value={oc.v2x_communication_range}
           onChange={(e) =>
             updateSimConfigOpenCDA({
@@ -244,6 +247,7 @@ export default function OpenCDATab() {
           type="number"
           size="small"
           fullWidth
+          inputProps={numInputSlot.input}
           value={oc.max_speed}
           onChange={(e) =>
             updateSimConfigOpenCDA({ max_speed: Number(e.target.value) })
@@ -255,6 +259,7 @@ export default function OpenCDATab() {
           type="number"
           size="small"
           fullWidth
+          inputProps={numInputSlot.input}
           value={oc.tailgate_speed}
           onChange={(e) =>
             updateSimConfigOpenCDA({ tailgate_speed: Number(e.target.value) })
@@ -268,6 +273,7 @@ export default function OpenCDATab() {
           type="number"
           size="small"
           fullWidth
+          inputProps={numInputSlot.input}
           value={oc.safety_time}
           onChange={(e) =>
             updateSimConfigOpenCDA({ safety_time: Number(e.target.value) })
@@ -279,7 +285,7 @@ export default function OpenCDATab() {
           type="number"
           size="small"
           fullWidth
-          inputProps={{ step: 0.05 }}
+          inputProps={{ ...numInputSlot.input, step: '0.05' }}
           value={oc.emergency_param}
           onChange={(e) =>
             updateSimConfigOpenCDA({ emergency_param: Number(e.target.value) })
