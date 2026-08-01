@@ -6,6 +6,7 @@ import type {
   Building,
   Car,
 } from '../../../../../store/types/useEditorStoreTypes';
+import type { MapOffsets } from '../../../../../helpers/coordinateTransform';
 import type { GeneratedSumoRoutes } from './sumoNetwork';
 
 function xmlAttribute(value: string): string {
@@ -160,17 +161,22 @@ function generateStopXml(car: Car, index: number): string {
   return `\n    <stop lane="${xmlAttribute(lane)}" startPos="${stop.startPos}" endPos="${stop.endPos}" duration="${stop.duration}"/>`;
 }
 
-export function generatePolyXml(buildings: Building[]): string {
+export function generatePolyXml(
+  buildings: Building[],
+  offsets: MapOffsets = { x: 0, y: 0 },
+): string {
   const polyLines = buildings
     .map((b, i) => {
       const hw = (b.width ?? 20) / 2;
       const hd = (b.depth ?? 20) / 2;
+      const x = b.x + offsets.x;
+      const y = b.y + offsets.y;
       const shape = [
-        `${(b.x - hw).toFixed(6)},${(b.y - hd).toFixed(6)}`,
-        `${(b.x + hw).toFixed(6)},${(b.y - hd).toFixed(6)}`,
-        `${(b.x + hw).toFixed(6)},${(b.y + hd).toFixed(6)}`,
-        `${(b.x - hw).toFixed(6)},${(b.y + hd).toFixed(6)}`,
-        `${(b.x - hw).toFixed(6)},${(b.y - hd).toFixed(6)}`,
+        `${(x - hw).toFixed(6)},${(y - hd).toFixed(6)}`,
+        `${(x + hw).toFixed(6)},${(y - hd).toFixed(6)}`,
+        `${(x + hw).toFixed(6)},${(y + hd).toFixed(6)}`,
+        `${(x - hw).toFixed(6)},${(y + hd).toFixed(6)}`,
+        `${(x - hw).toFixed(6)},${(y - hd).toFixed(6)}`,
       ].join(' ');
       return `  <poly id="${b.name || `building_${i}`}" type="building" color="172,187,173" fill="1" layer="0.00" shape="${shape}"/>`;
     })

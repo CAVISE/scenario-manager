@@ -1,10 +1,45 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Car } from '../../../../../store/types/useEditorStoreTypes';
+import type {
+  Building,
+  Car,
+} from '../../../../../store/types/useEditorStoreTypes';
 import { defaultSimConfig } from '../../types/configGeneratorsTypes';
-import { generateRouXml, generateSumoCfg } from './sumo';
+import { generatePolyXml, generateRouXml, generateSumoCfg } from './sumo';
+import { getSumoCoordinateOffsets } from './sumoNetwork';
+
+const NET_XML = `<?xml version="1.0" encoding="UTF-8"?>
+<net>
+  <location netOffset="100.0,200.0"/>
+  <edge id="edge-a">
+    <lane id="edge-a_0" index="0" length="10" shape="100,200 110,200"/>
+  </edge>
+</net>`;
 
 describe('SUMO exporters', () => {
+  it('applies OpenDRIVE and SUMO offsets to building polygons', () => {
+    const building = {
+      id: 'building-1',
+      name: 'test-building',
+      x: 10,
+      y: 20,
+      z: 0,
+      width: 20,
+      depth: 10,
+      height: 10,
+      scale: 1,
+      rotation: 0,
+      material: 'concrete',
+    } satisfies Building;
+    const offsets = getSumoCoordinateOffsets(NET_XML, { x: 5, y: -30 });
+
+    const xml = generatePolyXml([building], offsets);
+
+    expect(xml).toContain(
+      'shape="105.000000,185.000000 125.000000,185.000000 125.000000,195.000000 105.000000,195.000000 105.000000,185.000000"',
+    );
+  });
+
   it('uses local SUMO artifacts and the exported config basename', () => {
     const config = {
       ...defaultSimConfig,
