@@ -181,7 +181,7 @@ export const css = `
   letter-spacing: 2px;
   text-transform: uppercase;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 140ms cubic-bezier(0.4,0,0.2,1);
 }
 .sm-err-btn-retry {
   background: rgba(255,82,82,0.12);

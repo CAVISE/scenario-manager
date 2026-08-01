@@ -4,6 +4,8 @@ import {
   setStoredXodrName,
   getStoredXodrName,
   fetchXodrText,
+  setCachedCustomXodrContent,
+  initXodrCacheFromIndexedDb,
 } from './xodrRepository';
 
 const localStorageMock = (() => {
@@ -22,6 +24,77 @@ const localStorageMock = (() => {
   };
 })();
 Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock });
+
+function createIndexedDbMock() {
+  let stored: string | undefined;
+  let shouldFailOpen = false;
+
+  const fakeIndexedDb = {
+    open: vi.fn(() => {
+      const request: Partial<IDBOpenDBRequest> & {
+        onupgradeneeded?: (() => void) | null;
+        onsuccess?: (() => void) | null;
+        onerror?: (() => void) | null;
+      } = {};
+      queueMicrotask(() => {
+        if (shouldFailOpen) {
+          (request as { error: Error }).error = new Error('open failed');
+          request.onerror?.();
+          return;
+        }
+        const fakeStore = {
+          get: vi.fn(() => {
+            const getRequest: Partial<IDBRequest> & {
+              onsuccess?: (() => void) | null;
+              onerror?: (() => void) | null;
+              result?: unknown;
+            } = {};
+            queueMicrotask(() => {
+              getRequest.result = stored;
+              getRequest.onsuccess?.();
+            });
+            return getRequest as IDBRequest;
+          }),
+          put: vi.fn((value: string) => {
+            stored = value;
+            const putRequest: Partial<IDBRequest> = {};
+            return putRequest as IDBRequest;
+          }),
+        };
+        const fakeTx: Partial<IDBTransaction> & {
+          oncomplete?: (() => void) | null;
+          onerror?: (() => void) | null;
+        } = {
+          objectStore: vi.fn(
+            () => fakeStore,
+          ) as unknown as IDBTransaction['objectStore'],
+        };
+        const fakeDb: Partial<IDBDatabase> = {
+          objectStoreNames: {
+            contains: vi.fn(() => true),
+          } as unknown as DOMStringList,
+          transaction: vi.fn(() => {
+            queueMicrotask(() => fakeTx.oncomplete?.());
+            return fakeTx as IDBTransaction;
+          }) as unknown as IDBDatabase['transaction'],
+        };
+        (request as { result: IDBDatabase }).result = fakeDb as IDBDatabase;
+        request.onsuccess?.();
+      });
+      return request as IDBOpenDBRequest;
+    }),
+  };
+
+  return {
+    fakeIndexedDb,
+    setStoredValue: (value: string | undefined) => {
+      stored = value;
+    },
+    setShouldFailOpen: (value: boolean) => {
+      shouldFailOpen = value;
+    },
+  };
+}
 
 const fetchMock = vi.fn();
 globalThis.fetch = fetchMock;
@@ -177,5 +250,43 @@ describe('fetchXodrText', () => {
     fetchMock.mockResolvedValue(okResponse(VALID_OPENDRIVE) as never);
     await fetchXodrText('Town01');
     expect(fetchMock).toHaveBeenCalledWith('./Town01.xodr');
+  });
+});
+
+describe('IndexedDB-backed cache for large maps', () => {
+  it('setCachedCustomXodrContent still works when localStorage throws QuotaExceededError', () => {
+    const { fakeIndexedDb } = createIndexedDbMock();
+    vi.stubGlobal('indexedDB', fakeIndexedDb);
+    localStorageMock.setItem.mockImplementationOnce(() => {
+      throw new DOMException('quota exceeded', 'QuotaExceededError');
+    });
+
+    expect(() => setCachedCustomXodrContent(VALID_OPENDRIVE)).not.toThrow();
+    expect(getCachedXodrContent()).toBe(VALID_OPENDRIVE);
+
+    vi.unstubAllGlobals();
+  });
+
+  it('initXodrCacheFromIndexedDb restores content persisted by a previous session', async () => {
+    const { fakeIndexedDb, setStoredValue } = createIndexedDbMock();
+    setStoredValue(VALID_OPENDRIVE);
+    vi.stubGlobal('indexedDB', fakeIndexedDb);
+
+    await initXodrCacheFromIndexedDb();
+    expect(getCachedXodrContent()).toBe(VALID_OPENDRIVE);
+
+    vi.unstubAllGlobals();
+  });
+
+  it('initXodrCacheFromIndexedDb resolves without throwing when IndexedDB is unavailable', async () => {
+    vi.stubGlobal('indexedDB', {
+      open: () => {
+        throw new Error('IndexedDB not supported in this environment');
+      },
+    });
+
+    await expect(initXodrCacheFromIndexedDb()).resolves.toBeUndefined();
+
+    vi.unstubAllGlobals();
   });
 });
