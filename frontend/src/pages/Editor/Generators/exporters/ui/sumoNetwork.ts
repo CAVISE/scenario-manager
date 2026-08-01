@@ -98,6 +98,23 @@ export function clearLoadedSumoNetwork(): void {
   loadedNetwork = null;
 }
 
+export function getSumoCoordinateOffsets(
+  netXml: string,
+  mapOffsets: MapOffsets = { x: 0, y: 0 },
+): MapOffsets {
+  const document = new DOMParser().parseFromString(netXml, 'application/xml');
+  if (document.querySelector('parsererror')) {
+    throw new Error('SUMO network contains invalid XML');
+  }
+  const [netOffsetX, netOffsetY] = parsePair(
+    document.querySelector('location')?.getAttribute('netOffset') ?? '0,0',
+  );
+  return {
+    x: mapOffsets.x + netOffsetX,
+    y: mapOffsets.y + netOffsetY,
+  };
+}
+
 export async function resolveSumoNetwork(
   filename: string,
 ): Promise<LoadedSumoNetwork> {

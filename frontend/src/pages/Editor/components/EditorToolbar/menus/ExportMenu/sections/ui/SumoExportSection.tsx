@@ -20,6 +20,7 @@ import {
 import { useEditorRefs } from '../../../../../../context';
 import {
   buildSumoRoutes,
+  getSumoCoordinateOffsets,
   resolveSumoNetwork,
 } from '../../../../../../Generators/exporters/ui/sumoNetwork';
 import { getSumoNetFilename } from '../../../../../../Generators/exporters';
@@ -72,14 +73,31 @@ export default function SumoExportSection({
     }
   };
 
-  const handleExportPolyXml = () => {
-    const simConfig = mergeSimConfigWithDefaults(
-      useEditorStore.getState().simConfig,
-    );
-    openExportDialog(`${simConfig.sumo.scenario_name}.poly.xml`, () => {
-      const { buildings } = useEditorStore.getState();
-      return generatePolyXml(buildings);
-    });
+  const handleExportPolyXml = async () => {
+    try {
+      const { simConfig: raw, buildings } = useEditorStore.getState();
+      const simConfig = mergeSimConfigWithDefaults(raw);
+      const network = await resolveSumoNetwork(
+        getSumoNetFilename(simConfig.carla.map),
+      );
+      const map = odrMapRef.current;
+      if (!map) {
+        throw new Error(
+          'OpenDRIVE map offsets are unavailable; wait for the map to finish loading',
+        );
+      }
+      const offsets = getSumoCoordinateOffsets(network.content, {
+        x: map.x_offs,
+        y: map.y_offs,
+      });
+      const content = generatePolyXml(buildings, offsets);
+      openExportDialog(
+        `${simConfig.sumo.scenario_name}.poly.xml`,
+        () => content,
+      );
+    } catch (error) {
+      reportExportError(error);
+    }
   };
 
   const handleExportNetXml = async () => {
