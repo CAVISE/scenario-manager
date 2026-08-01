@@ -55,10 +55,10 @@ export function fitViewToBbox(
     );
   const fov2r = camera.fov * 0.5 * (Math.PI / 180.0);
   const dz = l2xy / Math.tan(fov2r);
-  camera.position.set(bbox.min.x, center_pt.y, bbox.max.z + dz);
+  camera.position.set(center_pt.x, center_pt.y, bbox.max.z + dz);
   controls.target.set(center_pt.x, center_pt.y, center_pt.z);
   if (restrict_zoom)
-    controls.maxDistance = center_pt.distanceTo(bbox.max) * 1.2;
+    controls.maxDistance = center_pt.distanceTo(bbox.max) * 1.5;
   controls.update();
 }
 

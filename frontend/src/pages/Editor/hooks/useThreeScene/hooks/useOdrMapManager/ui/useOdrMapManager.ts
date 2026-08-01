@@ -106,8 +106,17 @@ export function useOdrMapManager({
       console.log('[OdrMapManager] loadOdrMap finished, calling setStep done');
       console.log('X offset: ', mapRef?.current?.x_offs);
       console.log('Y offset: ', mapRef?.current?.y_offs);
+      try {
+        three.renderer.compile(three.scene, three.camera);
+      } catch (err) {
+        console.error('renderer.compile failed:', err);
+      }
 
-      setStep('done');
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setStep('done');
+        });
+      });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
