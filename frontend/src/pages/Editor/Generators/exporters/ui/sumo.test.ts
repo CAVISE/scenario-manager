@@ -89,6 +89,59 @@ describe('SUMO exporters', () => {
     expect(xml).toContain('<route edges="27 26 -35.0.00"/>');
   });
 
+  it('sorts vehicles by departure time while preserving their SUMO ids', () => {
+    const cars = [
+      {
+        id: 'car-0',
+        x: 0,
+        y: 0,
+        z: 0,
+        color: 'ffffff',
+        model: 'vehicle.tesla.model3',
+        scale: 1,
+        rotation: 0,
+        speed: 50,
+        sumo_edges: 'edge-a',
+        sumo_depart: 0.1,
+      },
+      {
+        id: 'car-1',
+        x: 0,
+        y: 0,
+        z: 0,
+        color: 'ffffff',
+        model: 'vehicle.tesla.model3',
+        scale: 1,
+        rotation: 0,
+        speed: 50,
+        sumo_edges: 'edge-b',
+        sumo_depart: 0.05,
+      },
+      {
+        id: 'car-2',
+        x: 0,
+        y: 0,
+        z: 0,
+        color: 'ffffff',
+        model: 'vehicle.tesla.model3',
+        scale: 1,
+        rotation: 0,
+        speed: 50,
+        sumo_edges: 'edge-c',
+        sumo_depart: 0.05,
+      },
+    ] satisfies Car[];
+
+    const xml = generateRouXml(defaultSimConfig, cars);
+    const sumo0Position = xml.indexOf('<vehicle id="sumo0"');
+    const sumo1Position = xml.indexOf('<vehicle id="sumo1"');
+    const sumo2Position = xml.indexOf('<vehicle id="sumo2"');
+
+    expect(sumo1Position).toBeLessThan(sumo2Position);
+    expect(sumo2Position).toBeLessThan(sumo0Position);
+    expect(xml.slice(sumo0Position)).toContain('<route edges="edge-a"/>');
+  });
+
   it('writes generated edge routes when there is no manual override', () => {
     const car = {
       id: 'car-1',
