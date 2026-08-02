@@ -15,6 +15,8 @@ export function useRSUMeshSync(): void {
     rsuMeshesRef,
   } = useEditorRefs();
   useEffect(() => {
+    let cancelled = false;
+
     const trySync = (attempts = 0) => {
       const scene = sceneRef.current;
 
@@ -25,6 +27,7 @@ export function useRSUMeshSync(): void {
       const rsuSnapshot = RSUs.map((r) => ({ ...r }));
 
       ensureRsuModel().then((hasModel) => {
+        if (cancelled) return;
         const tc = transformControlsRef.current;
         const attached = (tc as unknown as { object?: THREE.Object3D })?.object;
 
@@ -114,6 +117,10 @@ export function useRSUMeshSync(): void {
     };
 
     trySync();
+
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [RSUs, updateSceneGraph]);
 }

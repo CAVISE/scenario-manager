@@ -11,13 +11,7 @@ export type SceneNode = { id: string; name: string; children?: SceneNode[] };
 
 export type SelectedObject = {
   type:
-    | 'car'
-    | 'rsu'
-    | 'point'
-    | 'building'
-    | 'lidar'
-    | 'circle'
-    | 'pedestrian';
+    'car' | 'rsu' | 'point' | 'building' | 'lidar' | 'circle' | 'pedestrian';
   id?: string;
   position?: Vec3;
 } | null;

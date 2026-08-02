@@ -28,11 +28,16 @@ export function handleSelect({
   tc.detach();
 
   if (type === 'point') {
-    let rsuMesh = pointsArrRef.current.find((p) => p.userData.id === itemId);
+    const idx = pointsArrRef.current.findIndex((p) => p.userData.id === itemId);
+    let rsuMesh = idx !== -1 ? pointsArrRef.current[idx] : undefined;
 
-    if (!rsuMesh) {
+    if (!rsuMesh || rsuMesh !== found) {
       rsuMesh = found as THREE.Mesh;
-      pointsArrRef.current.push(rsuMesh);
+      if (idx !== -1) {
+        pointsArrRef.current[idx] = rsuMesh;
+      } else {
+        pointsArrRef.current.push(rsuMesh);
+      }
     }
 
     if (rsuMesh) {

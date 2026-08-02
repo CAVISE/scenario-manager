@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { TransformControls } from 'three-stdlib';
 import { RSU } from '../../../../../../store/types/useEditorStoreTypes';
 export interface LoadRSUContext {
   scene: THREE.Scene;
@@ -7,4 +8,5 @@ export interface LoadRSUContext {
   points_objs: THREE.Mesh[];
   isAddPointModeActive: boolean;
   updateSceneGraph: () => void;
+  transformControlsRef?: React.RefObject<TransformControls | null>;
 }

@@ -11,6 +11,8 @@ export function handleDeleteNode({
   carMeshesRef,
   cubeCirclesRef,
   pointsArrRef,
+  pointsObjsRef,
+  rsuMeshesRef,
   sceneRef,
   transformControlsRef,
   detachTransformControls,
@@ -51,6 +53,17 @@ export function handleDeleteNode({
         materials.forEach((mt) => mt?.dispose());
         pointsArrRef.current.splice(meshIdx, 1);
       }
+
+      const objsIdx = pointsObjsRef.current.findIndex(
+        (m) => m.userData.id === id,
+      );
+      if (objsIdx !== -1) pointsObjsRef.current.splice(objsIdx, 1);
+
+      const rsuMeshIdx = rsuMeshesRef.current.findIndex(
+        (m) => m.userData.id === id,
+      );
+      if (rsuMeshIdx !== -1) rsuMeshesRef.current.splice(rsuMeshIdx, 1);
+
       s.removeRSU(rsuIdx);
     }
   } else if (meta.label === 'BLD') {

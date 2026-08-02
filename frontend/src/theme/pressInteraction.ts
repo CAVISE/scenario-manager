@@ -8,7 +8,6 @@ export const pressTransition = `transform ${PRESS_MS} ${PRESS_EASE}, background-
 export const pressActiveScale = 0.96;
 export const visiblePressScale = 0.985;
 
-/** Merge into MUI `sx` objects for custom-styled buttons and list rows. */
 export const pressActiveSx = {
   transition: pressTransition,
   '&:active:not(:disabled):not(.Mui-disabled)': {

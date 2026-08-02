@@ -1,5 +1,9 @@
 module.exports = {
-  extends: ['stylelint-config-standard', 'stylelint-scss'],
+  customSyntax: 'postcss-scss',
+
+  extends: ['stylelint-config-standard-scss'],
+
+  plugins: ['stylelint-scss'],
 
   ignoreFiles: [
     '**/*.{js,ts,tsx,json}',

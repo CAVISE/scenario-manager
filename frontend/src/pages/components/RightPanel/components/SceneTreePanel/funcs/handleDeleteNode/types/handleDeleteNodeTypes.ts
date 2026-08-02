@@ -11,4 +11,6 @@ export interface handleDeleteNodeProps {
   sceneRef: React.RefObject<THREE.Scene | undefined>;
   transformControlsRef: React.RefObject<TransformControls | null>;
   detachTransformControls: () => void;
+  pointsObjsRef: React.RefObject<THREE.Object3D[]>;
+  rsuMeshesRef: React.RefObject<THREE.Mesh[]>;
 }

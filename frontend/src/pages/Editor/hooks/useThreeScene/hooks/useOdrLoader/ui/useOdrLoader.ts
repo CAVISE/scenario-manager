@@ -9,6 +9,7 @@ import {
 } from '../types/useOdrLoaderTypes';
 import {
   fetchXodrText,
+  getCachedXodrContent,
   getStoredXodrName,
   initXodrCacheFromIndexedDb,
   setCachedCustomXodrContent,
@@ -35,12 +36,12 @@ export function useOdrLoader({
         }
         s.points.forEach((p) => s.removePoint(p.id));
         s.buildings.forEach((b) => s.removeBuilding(b.id));
-
-        setTimeout(() => localStorage.removeItem('editor-scenario-cache'), 100);
       }
       try {
         Module.FS_unlink('/data.xodr');
-      } catch {}
+      } catch {
+        console.warn('FS_unlink failed, maybe /data.xodr did not exist yet');
+      }
 
       try {
         Module.FS_createDataFile('.', 'data.xodr', fileText, true, true);
@@ -62,6 +63,13 @@ export function useOdrLoader({
 
     async function fetchAndLoad() {
       try {
+        const cached = getCachedXodrContent();
+        if (cached) {
+          console.log('[OdrLoader] restoring map content from cache');
+          processFile(cached, false);
+          return;
+        }
+
         const mapName = getStoredXodrName(
           useEditorStore.getState().simConfig?.carla?.map,
         );
@@ -83,7 +91,8 @@ export function useOdrLoader({
 
     async function init() {
       setStep('wasm');
-      void initXodrCacheFromIndexedDb();
+
+      await initXodrCacheFromIndexedDb();
       try {
         const Module = await libOpenDrive();
 
@@ -119,6 +128,7 @@ export function useOdrLoader({
       setError?.(new Error('OpenDRIVE module not initialized'));
       return;
     }
+    setCachedCustomXodrContent(fileText);
     setStep('map');
     const Module = moduleRef.current;
 
@@ -130,11 +140,12 @@ export function useOdrLoader({
       }
       s.points.forEach((p) => s.removePoint(p.id));
       s.buildings.forEach((b) => s.removeBuilding(b.id));
-      setTimeout(() => localStorage.removeItem('editor-scenario-cache'), 100);
     }
     try {
       Module.FS_unlink('/data.xodr');
-    } catch {}
+    } catch {
+      console.warn('FS_unlink failed, maybe /data.xodr did not exist yet');
+    }
 
     try {
       Module.FS_createDataFile('.', 'data.xodr', fileText, true, true);

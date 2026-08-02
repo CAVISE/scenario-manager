@@ -7,6 +7,8 @@ export function handleClearScene({
   sceneRef,
   cubeCirclesRef,
   pointsArrRef,
+  pointsObjsRef,
+  rsuMeshesRef,
   transformControlsRef,
   detachTransformControls,
 }: handleClearSceneProps) {
@@ -36,6 +38,8 @@ export function handleClearScene({
     materials.forEach((mt) => mt?.dispose());
   });
   pointsArrRef.current.length = 0;
+  pointsObjsRef.current.length = 0;
+  rsuMeshesRef.current.length = 0;
 
   [...s.buildings].forEach((b) => {
     const mesh = sceneRef.current?.children.find((c) => c.userData.id === b.id);
