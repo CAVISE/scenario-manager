@@ -1,4 +1,7 @@
-import { pressActiveSx, pressTransition } from '../../../../../theme/pressInteraction';
+import {
+  pressActiveSx,
+  pressTransition,
+} from '../../../../../theme/pressInteraction';
 
 export interface EditorModalsProps {
   telemetryModalOpen: boolean;
@@ -32,7 +35,6 @@ export const TEXT_PRIMARY = '#1A1D24';
 export const TEXT_SECONDARY = '#6B7280';
 export const BORDER = '#E5E7EB';
 export const SURFACE_MUTED = '#F7F8FA';
-
 
 export const confirmModalStyles = {
   position: 'absolute',
@@ -102,7 +104,6 @@ export const inlineAlertStyles = {
   textAlign: 'left',
   '& .MuiAlert-icon': { color: '#C0392B' },
 };
-
 
 export const mapPickerModalStyles = {
   position: 'absolute',

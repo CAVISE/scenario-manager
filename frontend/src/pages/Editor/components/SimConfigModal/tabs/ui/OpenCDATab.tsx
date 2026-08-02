@@ -168,7 +168,12 @@ export default function OpenCDATab() {
               label={cls}
               type="number"
               size="small"
-              inputProps={{ ...numInputSlot.input, step: '0.05', min: '0', max: '1' }}
+              inputProps={{
+                ...numInputSlot.input,
+                step: '0.05',
+                min: '0',
+                max: '1',
+              }}
               value={oc.bp_class_sample_prob[cls]}
               onChange={(e) =>
                 updateSimConfigOpenCDA({
@@ -224,8 +229,7 @@ export default function OpenCDATab() {
             onChange={(e) =>
               updateSimConfigOpenCDA({
                 v2x_position_source: e.target.value as
-                  | 'estimated'
-                  | 'ground_truth',
+                  'estimated' | 'ground_truth',
               })
             }
           >
@@ -661,8 +665,7 @@ export default function OpenCDATab() {
             onChange={(e) =>
               updateSimConfigOpenCDA({
                 localization_navigation_source: e.target.value as
-                  | 'estimated'
-                  | 'ground_truth',
+                  'estimated' | 'ground_truth',
               })
             }
           >

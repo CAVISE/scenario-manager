@@ -113,6 +113,7 @@ export function useClickHandler(ctx: SharedMouseContext) {
       while (root.parent && !rsuMeshes.includes(root as THREE.Mesh)) {
         root = root.parent;
       }
+      if (!root.parent) return;
       const rsuId: string | undefined = root.userData.id;
       if (rsuId)
         useEditorStore.getState().selectObject({ type: 'rsu', id: rsuId });

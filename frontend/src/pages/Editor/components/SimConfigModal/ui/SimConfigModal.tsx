@@ -75,7 +75,9 @@ export default function SimConfigModal({ open, onClose }: SimConfigModalProps) {
 
     const startHolding = (event: Event) => {
       const target = event.target as HTMLElement | null;
-      const input = target?.closest('input[type="number"]') as HTMLInputElement | null;
+      const input = target?.closest(
+        'input[type="number"]',
+      ) as HTMLInputElement | null;
 
       if (!input) {
         return;
@@ -90,11 +92,15 @@ export default function SimConfigModal({ open, onClose }: SimConfigModalProps) {
 
       stopHolding();
       const currentValue = Number(input.value);
-      updateInputValue((Number.isFinite(currentValue) ? currentValue : 0) + step);
+      updateInputValue(
+        (Number.isFinite(currentValue) ? currentValue : 0) + step,
+      );
 
       holdInterval = window.setInterval(() => {
         const currentValue = Number(activeInput?.value ?? input.value);
-        updateInputValue((Number.isFinite(currentValue) ? currentValue : 0) + step);
+        updateInputValue(
+          (Number.isFinite(currentValue) ? currentValue : 0) + step,
+        );
       }, 90);
     };
 
@@ -107,7 +113,10 @@ export default function SimConfigModal({ open, onClose }: SimConfigModalProps) {
     return () => {
       stopHolding();
       container.removeEventListener('mousedown', startHolding as EventListener);
-      container.removeEventListener('touchstart', startHolding as EventListener);
+      container.removeEventListener(
+        'touchstart',
+        startHolding as EventListener,
+      );
       container.removeEventListener('mouseleave', stopHolding as EventListener);
       window.removeEventListener('mouseup', stopHolding);
       window.removeEventListener('touchend', stopHolding);
@@ -177,7 +186,11 @@ export default function SimConfigModal({ open, onClose }: SimConfigModalProps) {
           sx={{ mt: 3 }}
         >
           <Stack direction="row" spacing={1} />
-          <Button onClick={onClose} variant="outlined" sx={muiPressableRootStyle}>
+          <Button
+            onClick={onClose}
+            variant="outlined"
+            sx={muiPressableRootStyle}
+          >
             Close
           </Button>
         </Stack>

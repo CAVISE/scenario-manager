@@ -22,6 +22,8 @@ export default function SceneTreePanel() {
   const {
     sceneRef,
     pointsArrRef,
+    pointsObjsRef,
+    rsuMeshesRef,
     transformControlsRef,
     carMeshesRef,
     cubeCirclesRef,
@@ -70,6 +72,8 @@ export default function SceneTreePanel() {
         carMeshesRef,
         cubeCirclesRef,
         pointsArrRef,
+        pointsObjsRef,
+        rsuMeshesRef,
       });
     },
     [
@@ -77,6 +81,8 @@ export default function SceneTreePanel() {
       carMeshesRef,
       cubeCirclesRef,
       pointsArrRef,
+      pointsObjsRef,
+      rsuMeshesRef,
       sceneRef,
       detachTransformControls,
     ],
@@ -88,6 +94,8 @@ export default function SceneTreePanel() {
       carMeshesRef,
       cubeCirclesRef,
       pointsArrRef,
+      pointsObjsRef,
+      rsuMeshesRef,
       sceneRef,
       detachTransformControls,
     });
@@ -96,6 +104,8 @@ export default function SceneTreePanel() {
     carMeshesRef,
     cubeCirclesRef,
     pointsArrRef,
+    pointsObjsRef,
+    rsuMeshesRef,
     sceneRef,
     detachTransformControls,
   ]);

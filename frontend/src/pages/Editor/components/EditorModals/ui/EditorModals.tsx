@@ -28,7 +28,24 @@ import { CARLA_MAPS } from '../../SimConfigModal/types/SimConfigModalTypes';
 import { useEditorRefs, useHooks } from '../../../context';
 import { ScenarioGroup } from '../../../../../api/types/IScenarioTypes';
 import { buildOpenCDAArtifact } from '../../../Generators/configGenerators';
-import { confirmModalStyles, confirmIconWrapStyles, ACCENT, confirmTitleStyles, confirmBodyStyles, inlineAlertStyles, confirmActionsStyles, cancelButtonStyles, runButtonStyles, mapPickerModalStyles, mapPickerHeaderStyles, mapPickerTitleStyles, mapListStyles, mapListItemStyles, mapItemPrimaryStyles, mapItemSecondaryStyles } from '../types/EditorModalsTypes';
+import {
+  confirmModalStyles,
+  confirmIconWrapStyles,
+  ACCENT,
+  confirmTitleStyles,
+  confirmBodyStyles,
+  inlineAlertStyles,
+  confirmActionsStyles,
+  cancelButtonStyles,
+  runButtonStyles,
+  mapPickerModalStyles,
+  mapPickerHeaderStyles,
+  mapPickerTitleStyles,
+  mapListStyles,
+  mapListItemStyles,
+  mapItemPrimaryStyles,
+  mapItemSecondaryStyles,
+} from '../types/EditorModalsTypes';
 
 export default function EditorModals() {
   const [telemetryModalOpen, setTelemetryModalOpen] = useState(false);

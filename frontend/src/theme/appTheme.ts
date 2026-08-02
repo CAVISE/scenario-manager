@@ -86,7 +86,8 @@ export const appTheme = createTheme({
           '& .MuiInputBase-root': {
             minHeight: 32,
             borderRadius: 8,
-            transition: 'border-color 160ms ease-in-out, box-shadow 160ms ease-in-out, background-color 160ms ease-in-out',
+            transition:
+              'border-color 160ms ease-in-out, box-shadow 160ms ease-in-out, background-color 160ms ease-in-out',
             '&:hover': {
               backgroundColor: 'rgba(15, 23, 42, 0.02)',
             },
@@ -103,7 +104,8 @@ export const appTheme = createTheme({
         root: {
           minHeight: 32,
           borderRadius: 8,
-          transition: 'border-color 160ms ease-in-out, box-shadow 160ms ease-in-out, background-color 160ms ease-in-out',
+          transition:
+            'border-color 160ms ease-in-out, box-shadow 160ms ease-in-out, background-color 160ms ease-in-out',
           '&:hover': {
             backgroundColor: 'rgba(15, 23, 42, 0.02)',
           },

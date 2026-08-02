@@ -13,10 +13,16 @@ export function loadRSU(ctx: LoadRSUContext): {
   points_objs: THREE.Mesh[];
   isAddPointModeActive: boolean;
 } {
-  const { scene, RSUs, updateSceneGraph } = ctx;
+  const { scene, RSUs, updateSceneGraph, transformControlsRef } = ctx;
+
+  const tc = transformControlsRef?.current;
+  const attached = (tc as unknown as { object?: THREE.Object3D } | undefined)
+    ?.object;
 
   const toRemove = scene.children.filter((c) => c.userData.type === 'point');
   toRemove.forEach((obj) => {
+    if (attached && (attached === obj || obj.getObjectById(attached.id)))
+      tc?.detach();
     scene.remove(obj);
     obj.traverse((child) => {
       const m = child as THREE.Mesh;
