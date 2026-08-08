@@ -7,7 +7,7 @@ import {
   useScenarioCreateMutation,
   useScenarioDetailQuery,
   useScenarioPatchMutation,
-  useScenarioPutMutation,
+  useScenarioDeleteMutation,
   useScenariosListQuery,
 } from './useScenarioQueries';
 
@@ -15,7 +15,7 @@ const listAllMock = vi.fn();
 const getMock = vi.fn();
 const createMock = vi.fn();
 const updateMock = vi.fn();
-const replaceMock = vi.fn();
+const removeMock = vi.fn();
 const updateScenarioMock = vi.fn();
 
 vi.mock('../../../../../../api/scenarios', () => ({
@@ -24,7 +24,7 @@ vi.mock('../../../../../../api/scenarios', () => ({
     get: (...args: unknown[]) => getMock(...args),
     create: (...args: unknown[]) => createMock(...args),
     update: (...args: unknown[]) => updateMock(...args),
-    replace: (...args: unknown[]) => replaceMock(...args),
+    remove: (...args: unknown[]) => removeMock(...args),
   },
 }));
 
@@ -40,7 +40,7 @@ describe('useScenarioQueries', () => {
     getMock.mockReset();
     createMock.mockReset();
     updateMock.mockReset();
-    replaceMock.mockReset();
+    removeMock.mockReset();
     updateScenarioMock.mockReset();
   });
 
@@ -172,15 +172,16 @@ describe('useScenarioQueries', () => {
     });
   });
 
-  it('useScenarioPutMutation invalidates scenario queries on success', async () => {
-    replaceMock.mockResolvedValue({ status: 'success', message: 'deleted' });
+  it('useScenarioDeleteMutation removes cached scenario and invalidates the list on success', async () => {
+    removeMock.mockResolvedValue({ status: 'success', message: 'deleted' });
     const queryClient = new QueryClient();
+    const removeQueries = vi.spyOn(queryClient, 'removeQueries');
     const invalidateQueries = vi.spyOn(queryClient, 'invalidateQueries');
-    const { result } = renderHook(() => useScenarioPutMutation(), {
+    const { result } = renderHook(() => useScenarioDeleteMutation(), {
       wrapper: makeWrapper(queryClient),
     });
     await result.current.mutateAsync({ id: 'put-1', payload: {} as never });
-    expect(invalidateQueries).toHaveBeenCalledWith({
+    expect(removeQueries).toHaveBeenCalledWith({
       queryKey: scenarioKeys.detail('put-1'),
     });
     expect(invalidateQueries).toHaveBeenCalledWith({
@@ -202,15 +203,15 @@ describe('useScenarioQueries', () => {
 
     expect(getMock).not.toHaveBeenCalled();
   });
-  it('useScenarioPutMutation still invalidates by mutation id', async () => {
-    replaceMock.mockResolvedValue({ status: 'success', message: 'deleted' });
+  it('useScenarioDeleteMutation removes cache entry by mutation id', async () => {
+    removeMock.mockResolvedValue({ status: 'success', message: 'deleted' });
     const queryClient = new QueryClient();
-    const invalidateQueries = vi.spyOn(queryClient, 'invalidateQueries');
-    const { result } = renderHook(() => useScenarioPutMutation(), {
+    const removeQueries = vi.spyOn(queryClient, 'removeQueries');
+    const { result } = renderHook(() => useScenarioDeleteMutation(), {
       wrapper: makeWrapper(queryClient),
     });
     await result.current.mutateAsync({ id: 'put-x', payload: {} as never });
-    expect(invalidateQueries).toHaveBeenCalledWith({
+    expect(removeQueries).toHaveBeenCalledWith({
       queryKey: scenarioKeys.detail('put-x'),
     });
   });

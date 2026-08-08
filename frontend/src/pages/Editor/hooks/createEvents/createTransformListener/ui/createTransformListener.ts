@@ -8,6 +8,21 @@ export function createTransformListener(
   const { transformControls, carMeshesRef, cubeCirclesRef, carQuaternionsRef } =
     opts;
 
+  let rafId: number | null = null;
+  const flush = () => {
+    rafId = null;
+    handler();
+  };
+  const scheduleFlush = () => {
+    if (rafId === null) rafId = requestAnimationFrame(flush);
+  };
+  const cancelScheduledFlush = () => {
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+  };
+
   const handler = () => {
     try {
       const obj = (
@@ -96,7 +111,27 @@ export function createTransformListener(
     }
   };
 
-  transformControls.addEventListener('objectChange' as never, handler);
-  return () =>
-    transformControls.removeEventListener('objectChange' as never, handler);
+  const onDraggingChanged = (e: { value: boolean }) => {
+    if (!e.value) {
+      cancelScheduledFlush();
+      handler();
+    }
+  };
+
+  transformControls.addEventListener('objectChange' as never, scheduleFlush);
+  transformControls.addEventListener(
+    'dragging-changed' as never,
+    onDraggingChanged as never,
+  );
+  return () => {
+    cancelScheduledFlush();
+    transformControls.removeEventListener(
+      'objectChange' as never,
+      scheduleFlush,
+    );
+    transformControls.removeEventListener(
+      'dragging-changed' as never,
+      onDraggingChanged as never,
+    );
+  };
 }

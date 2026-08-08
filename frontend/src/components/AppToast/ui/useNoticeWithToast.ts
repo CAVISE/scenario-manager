@@ -1,26 +1,74 @@
 import { useCallback } from 'react';
 import { useAppToast } from './AppToastProvider';
 
+type ToastLevel = 'success' | 'error' | 'info' | 'warning';
+
+interface UseNoticeWithToastOptions {
+  defaultLevel?: ToastLevel;
+}
+
 export function useNoticeWithToast(
   setNotice: (message: string) => void,
-  mode: 'success-default' | 'info-default' = 'success-default',
+  options: UseNoticeWithToastOptions = {},
 ) {
+  const { defaultLevel = 'success' } = options;
   const toast = useAppToast();
 
   return useCallback(
-    (message: string) => {
+    (message: string, level?: ToastLevel) => {
+      const finalLevel = level ?? defaultLevel;
+
       setNotice(message);
-      const msg = message.toLowerCase();
-      if (msg.includes('failed') || msg.includes('error')) {
-        toast.error(message);
-        return;
+
+      switch (finalLevel) {
+        case 'error':
+          toast.error(message);
+          break;
+        case 'success':
+          toast.success(message);
+          break;
+        case 'warning':
+          toast.info(message);
+          break;
+        case 'info':
+        default:
+          toast.info(message);
+          break;
       }
-      if (mode === 'info-default') {
-        toast.info(message);
-        return;
-      }
-      toast.success(message);
     },
-    [setNotice, toast, mode],
+    [setNotice, toast, defaultLevel],
+  );
+}
+
+export function createSmartNotice(
+  setNotice: (message: string) => void,
+  options: UseNoticeWithToastOptions = {},
+) {
+  const { defaultLevel = 'info' } = options;
+  const toast = useAppToast();
+
+  return useCallback(
+    (message: string, level?: ToastLevel) => {
+      const finalLevel = level ?? defaultLevel;
+
+      setNotice(message);
+
+      switch (finalLevel) {
+        case 'error':
+          toast.error(message);
+          break;
+        case 'success':
+          toast.success(message);
+          break;
+        case 'warning':
+          toast.info(message);
+          break;
+        case 'info':
+        default:
+          toast.info(message);
+          break;
+      }
+    },
+    [setNotice, toast, defaultLevel],
   );
 }

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { SimpleTreeView } from '@mui/x-tree-view/SimpleTreeView';
 import { TreeItem } from '@mui/x-tree-view/TreeItem';
 import { useEditorStore } from '../../../../../../store';
+import { useAppToast } from '../../../../../../components/AppToast';
 import type { SceneNode } from '../../../types/PanelTypes';
 import { css, extraCss } from '../types/SceneTreePanelTypes';
 import { countNodes, getTypeMeta } from '../types/SceneTreePanelTypes';
@@ -15,6 +16,7 @@ import { useEditorRefs } from '../../../../../Editor/context';
 
 export default function SceneTreePanel() {
   const { sceneGraph, detachTransformControls } = useHooks();
+  const toast = useAppToast();
   const onSelectObject = useEditorStore((s) => s.selectObject);
   const selectedId = useEditorStore((s) => s.selectedId);
   const selectObject = useEditorStore((s) => s.selectObject);
@@ -74,6 +76,7 @@ export default function SceneTreePanel() {
         pointsArrRef,
         pointsObjsRef,
         rsuMeshesRef,
+        toast,
       });
     },
     [
@@ -85,6 +88,7 @@ export default function SceneTreePanel() {
       rsuMeshesRef,
       sceneRef,
       detachTransformControls,
+      toast,
     ],
   );
 
@@ -98,6 +102,7 @@ export default function SceneTreePanel() {
       rsuMeshesRef,
       sceneRef,
       detachTransformControls,
+      toast,
     });
   }, [
     transformControlsRef,
@@ -108,6 +113,7 @@ export default function SceneTreePanel() {
     rsuMeshesRef,
     sceneRef,
     detachTransformControls,
+    toast,
   ]);
 
   const renderTreeItem = useCallback(

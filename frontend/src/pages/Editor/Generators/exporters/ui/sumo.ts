@@ -6,8 +6,9 @@ import type {
   Building,
   Car,
 } from '../../../../../store/types/useEditorStoreTypes';
-import type { MapOffsets } from '../../../../../helpers/coordinateTransform';
 import type { GeneratedSumoRoutes } from './sumoNetwork';
+import { MapOffsets } from '../../../../../helpers/types/coordinateTransformTypes';
+import { useMemo } from 'react';
 
 function xmlAttribute(value: string): string {
   return value
@@ -41,16 +42,19 @@ export function getSumoNetFilename(map: string): string {
   return `${sumoMapBaseName(map)}.net.xml`;
 }
 
-export function generateSumoCfg(
+export function useGenerateSumoCfg(
   config: SimulationConfig,
   outputFilename?: string,
 ): string {
-  const cfg = mergeSimConfigWithDefaults(config);
-  const { scenario_name, full_output } = cfg.sumo;
+  const useSimConfig = useMemo(
+    () => mergeSimConfigWithDefaults(config),
+    [config],
+  );
+  const { scenario_name, full_output } = useSimConfig.sumo;
   const artifactName = xmlAttribute(
     sumoArtifactBaseName(outputFilename, scenario_name),
   );
-  const netFile = xmlAttribute(getSumoNetFilename(cfg.carla.map));
+  const netFile = xmlAttribute(getSumoNetFilename(useSimConfig.carla.map));
   return `<?xml version='1.0' encoding='UTF-8'?>
 <configuration>
   <input>
@@ -66,19 +70,22 @@ export function generateSumoCfg(
       : ''
   }
   <time>
-    <step-length value="${cfg.artery.sumo_step_length}"/>
+    <step-length value="${useSimConfig.artery.sumo_step_length}"/>
   </time>
   <num-clients value="1"/>
 </configuration>`;
 }
 
-export function generateRouXml(
+export function useGenerateRouXml(
   config: SimulationConfig,
   cars: Car[],
   generatedRoutes: GeneratedSumoRoutes = {},
 ): string {
-  const cfg = mergeSimConfigWithDefaults(config);
-  const vtypeLines = cfg.sumo.vtypes
+  const useSimConfig = useMemo(
+    () => mergeSimConfigWithDefaults(config),
+    [config],
+  );
+  const vtypeLines = useSimConfig.sumo.vtypes
     .map(
       (vt) =>
         `  <vType id="${vt.id}" minGap="${vt.minGap}" tau="${vt.tau}" vClass="${vt.vClass}" carFollowModel="${vt.carFollowModel}" speedFactor="${vt.speedFactor}"/>`,

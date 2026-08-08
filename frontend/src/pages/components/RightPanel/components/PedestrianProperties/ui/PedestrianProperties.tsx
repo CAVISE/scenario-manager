@@ -13,10 +13,15 @@ import { numInputSlot } from '../../../types/PanelTypes';
 import NumericInput from '../../NumericInput';
 import { IPedestrianProps } from '../types/PedestrianPropertiesTypes';
 import {
+  formLabelStyles,
   toggleButtonStyles,
   typographyStyles,
-} from '../../BuildingProperties/types/BuildingPropertiesTypes';
-import { formLabelStyles } from '../../CarProperties/types/CarPropertiesTypes';
+} from '../../../../../../shared/styles/panelStyles';
+import { parseNumberInputChange } from '../../../../../Editor/components/SimConfigModal/utils/numberInputUtils';
+
+function clampCrossFactor(value: number): number {
+  return Math.max(0, Math.min(1, value));
+}
 
 export default function PedestrianProperties({
   pedestrian,
@@ -57,11 +62,13 @@ export default function PedestrianProperties({
           type="number"
           slotProps={numInputSlot}
           value={pedestrian.speed}
-          onChange={(e) =>
+          onChange={(e) => {
+            const parsed_speed = parseNumberInputChange(e.target);
+            if (parsed_speed === undefined || isNaN(parsed_speed)) return;
             updatePedestrian(pedestrian.id, {
-              speed: parseFloat(e.target.value),
-            })
-          }
+              speed: parsed_speed,
+            });
+          }}
         />
       </FormControl>
 
@@ -72,11 +79,30 @@ export default function PedestrianProperties({
           type="number"
           slotProps={numInputSlot}
           value={pedestrian.cross_factor}
-          onChange={(e) =>
+          onChange={(e) => {
+            const parsed_cross_factor = parseNumberInputChange(e.target);
+            if (parsed_cross_factor === undefined || isNaN(parsed_cross_factor))
+              return;
+            const clamped = clampCrossFactor(parsed_cross_factor);
             updatePedestrian(pedestrian.id, {
-              cross_factor: parseFloat(e.target.value),
-            })
-          }
+              cross_factor: clamped,
+            });
+          }}
+          onBlur={(e) => {
+            const parsed_cross_factor = parseNumberInputChange(e.target);
+            if (
+              parsed_cross_factor === undefined ||
+              isNaN(parsed_cross_factor)
+            ) {
+              return;
+            }
+            const clamped = clampCrossFactor(parsed_cross_factor);
+            if (clamped !== pedestrian.cross_factor) {
+              updatePedestrian(pedestrian.id, {
+                cross_factor: clamped,
+              });
+            }
+          }}
         />
       </FormControl>
 
@@ -115,11 +141,14 @@ export default function PedestrianProperties({
               type="number"
               slotProps={numInputSlot}
               value={pedestrian.tx_power}
-              onChange={(e) =>
+              onChange={(e) => {
+                const parsed_tx_power = parseNumberInputChange(e.target);
+                if (parsed_tx_power === undefined || isNaN(parsed_tx_power))
+                  return;
                 updatePedestrian(pedestrian.id, {
-                  tx_power: parseFloat(e.target.value),
-                })
-              }
+                  tx_power: parsed_tx_power,
+                });
+              }}
             />
           </FormControl>
         </Grid>
@@ -131,11 +160,17 @@ export default function PedestrianProperties({
               type="number"
               slotProps={numInputSlot}
               value={pedestrian.beacon_interval}
-              onChange={(e) =>
+              onChange={(e) => {
+                const parsed_beacon_interval = parseNumberInputChange(e.target);
+                if (
+                  parsed_beacon_interval === undefined ||
+                  isNaN(parsed_beacon_interval)
+                )
+                  return;
                 updatePedestrian(pedestrian.id, {
-                  beacon_interval: parseFloat(e.target.value),
-                })
-              }
+                  beacon_interval: parsed_beacon_interval,
+                });
+              }}
             />
           </FormControl>
         </Grid>
@@ -148,11 +183,14 @@ export default function PedestrianProperties({
           type="number"
           slotProps={numInputSlot}
           value={pedestrian.frequency}
-          onChange={(e) =>
+          onChange={(e) => {
+            const parsed_frequency = parseNumberInputChange(e.target);
+            if (parsed_frequency === undefined || isNaN(parsed_frequency))
+              return;
             updatePedestrian(pedestrian.id, {
-              frequency: parseFloat(e.target.value),
-            })
-          }
+              frequency: parsed_frequency,
+            });
+          }}
         />
       </FormControl>
 

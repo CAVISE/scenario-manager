@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button, ToggleButtonGroup, ToggleButton, Switch } from '@mui/material';
 import { AIM_CHECK_RSU_BEHAVIOR_SERVICES } from '../../../../../Editor/Generators/exporters/aimCheckDefaults';
 import {
@@ -23,15 +23,16 @@ import {
   RsuPropertiesTextareaStyles,
   type RSUPropertiesProps,
 } from '../types/RSUPropertiesTypes';
-import { formLabelStyles } from '../../CarProperties/types/CarPropertiesTypes';
 import {
+  formLabelStyles,
   toggleButtonGroupStyles,
   typographyStyles,
-} from '../../BuildingProperties/types/BuildingPropertiesTypes';
+} from '../../../../../../shared/styles/panelStyles';
 import type {
   RSU,
   RsuBehaviorService,
 } from '../../../../../../store/types/useEditorStoreTypes';
+import { parseNumberInputChange } from '../../../../../Editor/components/SimConfigModal/utils/numberInputUtils';
 
 function AIMServerEditor({
   service,
@@ -69,9 +70,15 @@ function AIMServerEditor({
           type="number"
           slotProps={numInputSlot}
           value={service.control_radius ?? 15}
-          onChange={(e) =>
-            onChange({ control_radius: parseFloat(e.target.value) })
-          }
+          onChange={(e) => {
+            const parsed_control_radius = parseNumberInputChange(e.target);
+            if (
+              parsed_control_radius === undefined ||
+              isNaN(parsed_control_radius)
+            )
+              return;
+            onChange({ control_radius: parsed_control_radius });
+          }}
         />
       </FormControl>
 
@@ -86,14 +93,16 @@ function AIMServerEditor({
                 type="number"
                 slotProps={numInputSlot}
                 value={loc[axis]}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const parsed_value = parseNumberInputChange(e.target);
+                  if (parsed_value === undefined || isNaN(parsed_value)) return;
                   onChange({
                     control_center_location: {
                       ...loc,
-                      [axis]: parseFloat(e.target.value),
+                      [axis]: parsed_value,
                     },
-                  })
-                }
+                  });
+                }}
               />
             </FormControl>
           </Grid>
@@ -105,11 +114,7 @@ function AIMServerEditor({
         <Input
           size="small"
           value={service.model ?? 'MTP'}
-          slotProps={{
-            input: {
-              onKeyDown: (e: React.KeyboardEvent) => e.stopPropagation(),
-            },
-          }}
+          slotProps={numInputSlot}
           onChange={(e) => onChange({ model: e.target.value })}
         />
       </FormControl>
@@ -119,11 +124,7 @@ function AIMServerEditor({
         <Input
           size="small"
           value={service.underling_model ?? 'GNN_mtl_gnn'}
-          slotProps={{
-            input: {
-              onKeyDown: (e: React.KeyboardEvent) => e.stopPropagation(),
-            },
-          }}
+          slotProps={numInputSlot}
           onChange={(e) => onChange({ underling_model: e.target.value })}
         />
       </FormControl>
@@ -135,9 +136,15 @@ function AIMServerEditor({
           type="number"
           slotProps={numInputSlot}
           value={service.hidden_channels ?? 128}
-          onChange={(e) =>
-            onChange({ hidden_channels: parseInt(e.target.value) })
-          }
+          onChange={(e) => {
+            const parsed_hidden_channels = parseNumberInputChange(e.target);
+            if (
+              parsed_hidden_channels === undefined ||
+              isNaN(parsed_hidden_channels)
+            )
+              return;
+            onChange({ hidden_channels: parsed_hidden_channels });
+          }}
         />
       </FormControl>
 
@@ -146,11 +153,7 @@ function AIMServerEditor({
         <Input
           size="small"
           value={service.weight ?? ''}
-          slotProps={{
-            input: {
-              onKeyDown: (e: React.KeyboardEvent) => e.stopPropagation(),
-            },
-          }}
+          slotProps={numInputSlot}
           onChange={(e) => onChange({ weight: e.target.value })}
         />
       </FormControl>
@@ -252,9 +255,12 @@ export default function RSUProperties({ rsu, onDelete }: RSUPropertiesProps) {
               type="number"
               slotProps={numInputSlot}
               value={rsu.tx_power ?? 20}
-              onChange={(e) =>
-                updateRSU(rsu.id, { tx_power: parseFloat(e.target.value) })
-              }
+              onChange={(e) => {
+                const parsed_tx_power = parseNumberInputChange(e.target);
+                if (parsed_tx_power === undefined || isNaN(parsed_tx_power))
+                  return;
+                updateRSU(rsu.id, { tx_power: parsed_tx_power });
+              }}
             />
           </FormControl>
         </Grid>
@@ -266,9 +272,11 @@ export default function RSUProperties({ rsu, onDelete }: RSUPropertiesProps) {
               type="number"
               slotProps={numInputSlot}
               value={rsu.range ?? 500}
-              onChange={(e) =>
-                updateRSU(rsu.id, { range: parseFloat(e.target.value) })
-              }
+              onChange={(e) => {
+                const parsed_range = parseNumberInputChange(e.target);
+                if (parsed_range === undefined || isNaN(parsed_range)) return;
+                updateRSU(rsu.id, { range: parsed_range });
+              }}
             />
           </FormControl>
         </Grid>
@@ -283,9 +291,12 @@ export default function RSUProperties({ rsu, onDelete }: RSUPropertiesProps) {
               type="number"
               slotProps={numInputSlot}
               value={rsu.frequency ?? 5.9e9}
-              onChange={(e) =>
-                updateRSU(rsu.id, { frequency: parseFloat(e.target.value) })
-              }
+              onChange={(e) => {
+                const parsed_frequency = parseNumberInputChange(e.target);
+                if (parsed_frequency === undefined || isNaN(parsed_frequency))
+                  return;
+                updateRSU(rsu.id, { frequency: parsed_frequency });
+              }}
             />
           </FormControl>
         </Grid>
@@ -297,11 +308,17 @@ export default function RSUProperties({ rsu, onDelete }: RSUPropertiesProps) {
               type="number"
               slotProps={numInputSlot}
               value={rsu.beacon_interval ?? 1000}
-              onChange={(e) =>
+              onChange={(e) => {
+                const parsed_beacon_interval = parseNumberInputChange(e.target);
+                if (
+                  parsed_beacon_interval === undefined ||
+                  isNaN(parsed_beacon_interval)
+                )
+                  return;
                 updateRSU(rsu.id, {
-                  beacon_interval: parseInt(e.target.value, 10),
-                })
-              }
+                  beacon_interval: parsed_beacon_interval,
+                });
+              }}
             />
           </FormControl>
         </Grid>
@@ -377,11 +394,7 @@ export default function RSUProperties({ rsu, onDelete }: RSUPropertiesProps) {
           <Input
             size="small"
             value={rsu.opencda_name ?? ''}
-            slotProps={{
-              input: {
-                onKeyDown: (e: React.KeyboardEvent) => e.stopPropagation(),
-              },
-            }}
+            slotProps={numInputSlot}
             onChange={(e) =>
               updateRSU(rsu.id, { opencda_name: e.target.value })
             }
@@ -412,11 +425,11 @@ export default function RSUProperties({ rsu, onDelete }: RSUPropertiesProps) {
             type="number"
             slotProps={numInputSlot}
             value={rsu.opencda_id ?? -1}
-            onChange={(e) =>
-              updateRSU(rsu.id, {
-                opencda_id: parseInt(e.target.value, 10) || -1,
-              })
-            }
+            onChange={(e) => {
+              const parsed_id = parseNumberInputChange(e.target);
+              if (parsed_id === undefined || isNaN(parsed_id)) return;
+              updateRSU(rsu.id, { opencda_id: parsed_id });
+            }}
           />
         </FormControl>
       )}
@@ -540,14 +553,16 @@ export default function RSUProperties({ rsu, onDelete }: RSUPropertiesProps) {
                 type="number"
                 slotProps={numInputSlot}
                 value={rsu.opencda_sensing?.detection_range ?? 100}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const parsed_range = parseNumberInputChange(e.target);
+                  if (parsed_range === undefined || isNaN(parsed_range)) return;
                   updateRSU(rsu.id, {
                     opencda_sensing: {
                       ...rsu.opencda_sensing,
-                      detection_range: parseFloat(e.target.value),
+                      detection_range: parsed_range,
                     },
-                  })
-                }
+                  });
+                }}
               />
             </FormControl>
 
@@ -563,14 +578,20 @@ export default function RSUProperties({ rsu, onDelete }: RSUPropertiesProps) {
                     type="number"
                     slotProps={numInputSlot}
                     value={rsu.opencda_sensing?.camera_visualize ?? 4}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const parsed_visualize = parseNumberInputChange(e.target);
+                      if (
+                        parsed_visualize === undefined ||
+                        isNaN(parsed_visualize)
+                      )
+                        return;
                       updateRSU(rsu.id, {
                         opencda_sensing: {
                           ...rsu.opencda_sensing,
-                          camera_visualize: parseInt(e.target.value),
+                          camera_visualize: parsed_visualize,
                         },
-                      })
-                    }
+                      });
+                    }}
                   />
                 </FormControl>
               </Grid>
@@ -582,14 +603,16 @@ export default function RSUProperties({ rsu, onDelete }: RSUPropertiesProps) {
                     type="number"
                     slotProps={numInputSlot}
                     value={rsu.opencda_sensing?.camera_num ?? 4}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const parsed_num = parseNumberInputChange(e.target);
+                      if (parsed_num === undefined || isNaN(parsed_num)) return;
                       updateRSU(rsu.id, {
                         opencda_sensing: {
                           ...rsu.opencda_sensing,
-                          camera_num: parseInt(e.target.value),
+                          camera_num: parsed_num,
                         },
-                      })
-                    }
+                      });
+                    }}
                   />
                 </FormControl>
               </Grid>
@@ -666,14 +689,17 @@ export default function RSUProperties({ rsu, onDelete }: RSUPropertiesProps) {
                       type="number"
                       slotProps={numInputSlot}
                       value={rsu.opencda_sensing?.[key] ?? def}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const parsed_value = parseNumberInputChange(e.target);
+                        if (parsed_value === undefined || isNaN(parsed_value))
+                          return;
                         updateRSU(rsu.id, {
                           opencda_sensing: {
                             ...rsu.opencda_sensing,
-                            [key]: parseFloat(e.target.value),
+                            [key]: parsed_value,
                           },
-                        })
-                      }
+                        });
+                      }}
                     />
                   </FormControl>
                 </Grid>
@@ -740,14 +766,17 @@ export default function RSUProperties({ rsu, onDelete }: RSUPropertiesProps) {
                       type="number"
                       slotProps={numInputSlot}
                       value={rsu.opencda_sensing?.[key] ?? def}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const parsed_value = parseNumberInputChange(e.target);
+                        if (parsed_value === undefined || isNaN(parsed_value))
+                          return;
                         updateRSU(rsu.id, {
                           opencda_sensing: {
                             ...rsu.opencda_sensing,
-                            [key]: parseFloat(e.target.value),
+                            [key]: parsed_value,
                           },
-                        })
-                      }
+                        });
+                      }}
                     />
                   </FormControl>
                 </Grid>
@@ -766,10 +795,10 @@ export default function RSUProperties({ rsu, onDelete }: RSUPropertiesProps) {
             <textarea
               rows={8}
               style={RsuPropertiesTextareaStyles}
-              placeholder="// RSU script..."
-              value={rsu.script ?? ''}
+              placeholder="// RSU scenario..."
+              value={rsu.scenario ?? ''}
               onKeyDown={(e) => e.stopPropagation()}
-              onChange={(e) => updateRSU(rsu.id, { script: e.target.value })}
+              onChange={(e) => updateRSU(rsu.id, { scenario: e.target.value })}
             />
           </FormControl>
         </AccordionDetails>

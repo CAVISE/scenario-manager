@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { TransformControls } from 'three-stdlib';
+import { ToastApi } from '../../../../../../../../components/AppToast/types/toastTypes';
 
 export interface handleDeleteNodeProps {
   id: string;
@@ -13,4 +14,5 @@ export interface handleDeleteNodeProps {
   detachTransformControls: () => void;
   pointsObjsRef: React.RefObject<THREE.Object3D[]>;
   rsuMeshesRef: React.RefObject<THREE.Mesh[]>;
+  toast: ToastApi;
 }

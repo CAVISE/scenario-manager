@@ -50,9 +50,14 @@ export type OpenCDABgSpawnRange = {
   y_step: number;
 };
 
+export type AttackStageType = 'sniffer' | 'dropper' | 'replayer' | 'spoofer';
+
+export type AttackStageTypeWithCustom =
+  AttackStageType | (string & { __brand?: 'custom_attack_type' });
+
 export type OpenCDAAttackStage = {
   id: string;
-  type: 'sniffer' | 'dropper' | 'replayer' | 'spoofer' | string;
+  type: AttackStageTypeWithCustom;
   capabilities?: string[];
   params?: Record<string, unknown>;
   requirements?: Record<string, unknown>;
@@ -69,19 +74,39 @@ export type OpenCDAAttackConfig = {
   stages?: OpenCDAAttackStage[];
 };
 
+export function isValidAttackType(type: string): type is AttackStageType {
+  return ['sniffer', 'dropper', 'replayer', 'spoofer'].includes(type);
+}
+
+export function normalizeAttackType(type: string): AttackStageTypeWithCustom {
+  const normalized = type.toLowerCase();
+  if (isValidAttackType(normalized)) {
+    return normalized;
+  }
+  return type as AttackStageTypeWithCustom;
+}
+
 export function normalizeAttackStages(value: unknown): OpenCDAAttackStage[] {
   if (!Array.isArray(value)) return [];
   return value.reduce<OpenCDAAttackStage[]>((acc, item) => {
     if (Array.isArray(item)) {
       item.forEach((inner) => {
         if (inner && typeof inner === 'object' && !Array.isArray(inner)) {
-          acc.push(inner as OpenCDAAttackStage);
+          const stage = inner as OpenCDAAttackStage;
+          if (stage.type) {
+            stage.type = normalizeAttackType(stage.type);
+          }
+          acc.push(stage);
         }
       });
       return acc;
     }
     if (item && typeof item === 'object' && !Array.isArray(item)) {
-      acc.push(item as OpenCDAAttackStage);
+      const stage = item as OpenCDAAttackStage;
+      if (stage.type) {
+        stage.type = normalizeAttackType(stage.type);
+      }
+      acc.push(stage);
     }
     return acc;
   }, []);

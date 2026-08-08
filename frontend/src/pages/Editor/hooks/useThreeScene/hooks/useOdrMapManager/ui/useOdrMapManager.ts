@@ -1,22 +1,18 @@
 import { useRef, useCallback } from 'react';
 import * as THREE from 'three';
-import { OpenDriveMapInstance } from '../../../../../types/editorTypes';
-import {
-  OdrMapMeshes,
-  OpenDriveModule,
-} from '../../../../useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
+import { OdrMapMeshes } from '../../../../useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
 import { createOdrMaterials } from '../../../../useOpenDriveUtils/useOdrMap';
 import { clearScene } from '../utils/clearScene';
 import { buildMap } from '../utils/buildMap';
 import { restoreLidars } from '../../../../../scene/loaders/restoreLidars';
 import {
   EMPTY_ODR_MESHES,
-  ODR_MAP_OPTIONS,
   ODR_PARAMS,
   UseOdrMapManagerProps,
   UseOdrMapManagerResult,
 } from '../types/useOdrMapManagerTypes';
 import { useEditorRefs } from '../../../../../context';
+import { MAP_PATH } from '../../useOdrLoader/types/useOdrLoaderTypes';
 
 export function useOdrMapManager({
   setStep,
@@ -26,7 +22,11 @@ export function useOdrMapManager({
   syncRoadMesh,
   updateSceneGraph,
   buildingModelRef,
+  buildingMeshesRef,
   localLineArrRef,
+  moduleRef,
+  mapRef,
+  odrMapOptions,
 }: UseOdrMapManagerProps): UseOdrMapManagerResult {
   const {
     threeRef,
@@ -42,8 +42,6 @@ export function useOdrMapManager({
   const odrMeshesRef = useRef<OdrMapMeshes>({ ...EMPTY_ODR_MESHES });
   const odrMaterials = useRef(createOdrMaterials()).current;
   const disposableObjs = useRef<THREE.BufferGeometry[]>([]);
-  const moduleRef = useRef<OpenDriveModule | null>(null);
-  const mapRef = useRef<OpenDriveMapInstance | null>(null);
 
   const loadOdrMap = useCallback(
     (clearMap = true, fitView = true) => {
@@ -90,10 +88,10 @@ export function useOdrMapManager({
           syncRoadMesh,
           updateSceneGraph,
           buildingModelRef,
+          buildingMeshesRef,
         });
       } catch (err) {
         console.error(err);
-
         setStep('done');
         setError?.(
           err instanceof Error ? err : new Error('Failed to build map scene'),
@@ -125,6 +123,7 @@ export function useOdrMapManager({
       syncRoadMesh,
       updateSceneGraph,
       buildingModelRef,
+      buildingMeshesRef,
       carMeshesRef,
       pointsObjsRef,
       cubeCirclesRef,
@@ -134,6 +133,8 @@ export function useOdrMapManager({
       localLineArrRef,
       setStep,
       setError,
+      moduleRef,
+      mapRef,
     ],
   );
 
@@ -146,7 +147,7 @@ export function useOdrMapManager({
     }
     try {
       mapRef.current?.delete();
-      mapRef.current = new Module.OpenDriveMap('./data.xodr', ODR_MAP_OPTIONS);
+      mapRef.current = new Module.OpenDriveMap(MAP_PATH, odrMapOptions);
       odrMapRef.current = mapRef.current;
       loadOdrMap(true, false);
       console.log('X offset: ', mapRef.current.x_offs);
@@ -158,13 +159,19 @@ export function useOdrMapManager({
         err instanceof Error ? err : new Error('Failed to reload the map'),
       );
     }
-  }, [loadOdrMap, setStep, setError, moduleRef, mapRef, odrMapRef]);
+  }, [
+    loadOdrMap,
+    setStep,
+    setError,
+    moduleRef,
+    mapRef,
+    odrMapRef,
+    odrMapOptions,
+  ]);
 
   return {
     getOdrMeshes: useCallback(() => odrMeshesRef.current, []),
     loadOdrMap,
     reloadOdrMap,
-    setModuleRef: moduleRef,
-    setMapRef: mapRef,
   };
 }

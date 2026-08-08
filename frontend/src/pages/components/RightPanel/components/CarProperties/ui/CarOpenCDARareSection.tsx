@@ -13,6 +13,7 @@ import type { Car } from '../../../../../../store/types/useEditorStoreTypes';
 import { numInputSlot } from '../../../types/PanelTypes';
 import { formLabelStyles } from '../types/CarPropertiesTypes';
 import OpenCDACollapsibleSection from '../../../../../Editor/components/SimConfigModal/components/OpenCDACollapsibleSection';
+import { parseNumberInputChange } from '../../../../../Editor/components/SimConfigModal/utils/numberInputUtils';
 
 export default function CarOpenCDARareSection({ car }: { car: Car }) {
   const updateCar = useEditorStore((s) => s.updateCar);
@@ -78,7 +79,7 @@ export default function CarOpenCDARareSection({ car }: { car: Car }) {
                     updateCar(car.id, {
                       opencda_spawn_special: Math.max(
                         0,
-                        Math.min(1, Number(e.target.value)),
+                        Math.min(1, parseNumberInputChange(e.target) || 0),
                       ),
                     })
                   }
@@ -134,7 +135,7 @@ export default function CarOpenCDARareSection({ car }: { car: Car }) {
                     onChange={(e) =>
                       setSensing({
                         camera_visualize: e.target.value
-                          ? Number(e.target.value)
+                          ? parseNumberInputChange(e.target)
                           : undefined,
                       })
                     }
@@ -151,7 +152,7 @@ export default function CarOpenCDARareSection({ car }: { car: Car }) {
                     onChange={(e) =>
                       setSensing({
                         camera_num: e.target.value
-                          ? Number(e.target.value)
+                          ? parseNumberInputChange(e.target)
                           : undefined,
                       })
                     }
@@ -180,7 +181,7 @@ export default function CarOpenCDARareSection({ car }: { car: Car }) {
                     onChange={(e) =>
                       setSensing({
                         lidar_channels: e.target.value
-                          ? Number(e.target.value)
+                          ? parseNumberInputChange(e.target)
                           : undefined,
                       })
                     }
@@ -197,7 +198,7 @@ export default function CarOpenCDARareSection({ car }: { car: Car }) {
                     onChange={(e) =>
                       setSensing({
                         lidar_range: e.target.value
-                          ? Number(e.target.value)
+                          ? parseNumberInputChange(e.target)
                           : undefined,
                       })
                     }

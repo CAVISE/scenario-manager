@@ -18,7 +18,7 @@ import {
   scenarioKeys,
   useScenarioCreateMutation,
   useScenarioPatchMutation,
-  useScenarioPutMutation,
+  useScenarioDeleteMutation,
 } from '../../../../../../Editor/hooks/useApiHooks/useScenarioQueries';
 import { scenariosApi } from '../../../../../../../api/scenarios';
 import { useEditorStore } from '../../../../../../../store';
@@ -38,6 +38,71 @@ import {
   setStoredXodrName,
 } from '../../../../../../Editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
 import { buildOpenCDAArtifact } from '../../../../../../Editor/Generators/configGenerators';
+import { defaultSimConfig } from '../../../../../../Editor/Generators/types/configGeneratorsTypes';
+import type * as THREE from 'three';
+
+const MAX_BUILDING_LOAD_ATTEMPTS = 10;
+const BUILDING_LOAD_RETRY_INTERVAL_MS = 300;
+const BUILDING_LOAD_TIMEOUT_MS =
+  MAX_BUILDING_LOAD_ATTEMPTS * BUILDING_LOAD_RETRY_INTERVAL_MS;
+
+function tryAddBuildingsWithRetry(
+  sceneRef: React.RefObject<THREE.Scene | undefined>,
+  buildingModelRef: React.RefObject<THREE.Object3D | null> | undefined,
+  loadRSURef: React.RefObject<() => void> | undefined,
+  updateSceneGraph: (() => void) | undefined,
+  setNotice: (message: string) => void,
+  maxAttempts: number = MAX_BUILDING_LOAD_ATTEMPTS,
+  intervalMs: number = BUILDING_LOAD_RETRY_INTERVAL_MS,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    let attempts = 0;
+
+    const attemptAddBuildings = () => {
+      attempts++;
+
+      const scene = sceneRef.current;
+      const model = buildingModelRef?.current;
+
+      if (scene && model) {
+        const buildings = useEditorStore.getState().buildings;
+
+        buildings.forEach((b) => {
+          const already = scene.children.find(
+            (child: THREE.Object3D) => child.userData.id === b.id,
+          );
+          if (already) return;
+
+          const m = model.clone(true);
+          m.userData = { type: 'building', id: b.id };
+          m.position.set(b.x, b.y, b.z);
+          m.rotation.y = b.rotation ?? 0;
+          m.scale.setScalar(b.scale ?? 0.5);
+          scene.add(m);
+        });
+
+        loadRSURef?.current?.();
+        updateSceneGraph?.();
+        resolve();
+        return;
+      }
+
+      if (attempts >= maxAttempts) {
+        const errorMsg =
+          'Failed to render buildings: 3D scene or building model not ready after ' +
+          `${BUILDING_LOAD_TIMEOUT_MS}ms. Please refresh the page and try again.`;
+        console.error('[tryAddBuildings]', errorMsg);
+        setNotice(errorMsg);
+        reject(new Error(errorMsg));
+        return;
+      }
+
+      setTimeout(attemptAddBuildings, intervalMs);
+    };
+
+    attemptAddBuildings();
+  });
+}
 
 export const handleLoad = async ({
   hasId,
@@ -58,6 +123,7 @@ export const handleLoad = async ({
       queryKey: scenarioKeys.detail(id),
       queryFn: () => scenariosApi.get(id),
     });
+    useEditorStore.setState({ simConfig: defaultSimConfig });
     const s = useEditorStore.getState();
     s.updateScenario({
       id: data.scenario_id ?? '',
@@ -80,8 +146,7 @@ export const handleLoad = async ({
     const scenarioText = rawScenario?.scenario_text;
 
     [...s.cars].forEach((c) => s.removeCar(c.id));
-    const rsuCount = useEditorStore.getState().RSUs.length;
-    for (let i = 0; i < rsuCount; i++) useEditorStore.getState().removeRSU(0);
+    s.removeAllRSUs();
     [...s.points].forEach((p) => s.removePoint(p.id));
     [...s.buildings].forEach((b) => s.removeBuilding(b.id));
     [...s.pedestrians].forEach((p) => s.removePedestrian(p.id));
@@ -138,7 +203,7 @@ export const handleLoad = async ({
             frequency: rsu.frequency,
             range: rsu.range,
             protocol: rsu.protocol as RSU['protocol'] | undefined,
-            script: rsu.script ?? '',
+            scenario: rsu.scenario ?? '',
             beacon_interval: rsu.beacon_interval,
             opencda_name: rsu.opencda_name,
             opencda_id: rsu.opencda_id,
@@ -204,28 +269,17 @@ export const handleLoad = async ({
           });
       });
 
-      const tryAddBuildings = (attempts = 0) => {
-        const scene = sceneRef.current;
-        const model = buildingModelRef?.current;
-        if (!scene || !model) {
-          if (attempts < 10)
-            setTimeout(() => tryAddBuildings(attempts + 1), 300);
-          return;
-        }
-        useEditorStore.getState().buildings.forEach((b) => {
-          const already = scene.children.find((c) => c.userData.id === b.id);
-          if (already) return;
-          const m = model.clone(true);
-          m.userData = { type: 'building', id: b.id };
-          m.position.set(b.x, b.y, b.z);
-          m.rotation.y = b.rotation ?? 0;
-          m.scale.setScalar(b.scale ?? 0.5);
-          scene.add(m);
-        });
-        loadRSURef.current?.();
-        updateSceneGraph?.();
-      };
-      tryAddBuildings();
+      try {
+        await tryAddBuildingsWithRetry(
+          sceneRef,
+          buildingModelRef,
+          loadRSURef,
+          updateSceneGraph,
+          setNotice,
+        );
+      } catch (err) {
+        console.error('[handleLoad] Building rendering error:', err);
+      }
     }
 
     const meta = data.scenario as
@@ -235,14 +289,21 @@ export const handleLoad = async ({
       name: meta?.name_of_scenario ?? '',
     });
     updateSceneGraph();
-    setNotice('The script has been uploaded.');
+    setNotice('The scenario has been uploaded.');
     if (!xodr) {
       setStep?.('done');
     }
   } catch (err) {
     console.error(err);
     setStep?.('done');
-    setNotice(await getApiErrorMessage(err, 'Failed to load script.'));
+    if (
+      err instanceof Error &&
+      err.message.includes('Failed to render buildings')
+    ) {
+      console.error('[handleLoad] Building rendering error:', err);
+    } else {
+      setNotice(await getApiErrorMessage(err, 'Failed to load scenario.'));
+    }
   }
 };
 
@@ -250,6 +311,7 @@ export const handleCreate = async (
   setNotice: (value: string) => void,
   createMutation: ReturnType<typeof useScenarioCreateMutation>,
   scenarioIdInput = '',
+  onIdResolved?: (id: string) => void,
 ) => {
   try {
     const payload = buildScenarioPayload();
@@ -261,20 +323,28 @@ export const handleCreate = async (
       return;
     }
 
-    await createMutation.mutateAsync({
+    const data = await createMutation.mutateAsync({
       payload: {
         ...payload,
         scenario_id: trimmedId || payload.scenario_id,
       },
       scenarioIdInput: trimmedId,
     });
-    if (trimmedId) {
-      useEditorStore.getState().updateScenario({ id: trimmedId });
+
+    const resolvedId =
+      trimmedId ||
+      payload.scenario_id?.trim() ||
+      data?.scenario_id?.trim() ||
+      '';
+
+    if (resolvedId) {
+      useEditorStore.getState().updateScenario({ id: resolvedId });
+      onIdResolved?.(resolvedId);
     }
-    setNotice('Script saved (POST).');
+    setNotice('Script saved.');
   } catch (err) {
     console.error(err);
-    setNotice(await getApiErrorMessage(err, 'Failed to save script.'));
+    setNotice(await getApiErrorMessage(err, 'Failed to save scenario.'));
   }
 };
 
@@ -297,12 +367,10 @@ export const handlePatch = async (
       id,
       payload,
     });
-    setNotice('The script has been updated (PATCH).');
+    setNotice('The scenario has been updated.');
   } catch (err) {
     console.error(err);
-    setNotice(
-      await getApiErrorMessage(err, 'Failed to update the script (PATCH).'),
-    );
+    setNotice(await getApiErrorMessage(err, 'Failed to update the scenario.'));
   }
 };
 
@@ -310,7 +378,7 @@ export const handleDelete = async (
   setNotice: (value: string) => void,
   scenarioIdInput: string,
   hasId: boolean,
-  putMutation: ReturnType<typeof useScenarioPutMutation>,
+  deleteMutation: ReturnType<typeof useScenarioDeleteMutation>,
 ) => {
   if (!hasId) return;
   try {
@@ -320,16 +388,14 @@ export const handleDelete = async (
       setNotice(validation.message);
       return;
     }
-    await putMutation.mutateAsync({
+    await deleteMutation.mutateAsync({
       id,
       payload: buildScenarioPayload(),
     });
-    setNotice('The script has been deleted (DELETE).');
+    setNotice('The scenario has been deleted.');
   } catch (err) {
     console.error(err);
-    setNotice(
-      await getApiErrorMessage(err, 'Failed to delete script (DELETE).'),
-    );
+    setNotice(await getApiErrorMessage(err, 'Failed to delete scenario.'));
   }
 };
 
@@ -369,7 +435,7 @@ export const handleRunSimulation = async (
     console.debug('Start simulation payload (frontend):', debugPayload);
   } catch (e) {
     // eslint-disable-next-line no-console
-    console.debug('Failed to stringify start payload for debug', e);
+    console.error('Failed to stringify start payload for debug', e);
   }
 
   const simulationValidation = validateStartSimulationPayload(payload);

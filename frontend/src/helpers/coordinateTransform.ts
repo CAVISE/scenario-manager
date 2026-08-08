@@ -1,7 +1,4 @@
-export interface MapOffsets {
-  x: number;
-  y: number;
-}
+import { MapOffsets } from './types/coordinateTransformTypes';
 
 export function editorToCarla(
   x: number,

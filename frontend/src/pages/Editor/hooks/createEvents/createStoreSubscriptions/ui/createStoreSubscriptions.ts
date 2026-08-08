@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { useEditorStore } from '../../../../../../store';
 import { CreateStoreSubscriptionsOptions } from '../types/createStoreSubscriptionsTypes';
 
@@ -7,6 +8,7 @@ export function createStoreSubscriptions(
   const {
     sceneRef,
     buildingModelRef,
+    transformControlsRef,
     getIsDragging,
     loadRSU,
     loadPoints,
@@ -28,9 +30,27 @@ export function createStoreSubscriptions(
     const model = buildingModelRef.current;
     if (!scene || !model) return;
 
-    scene.children = scene.children.filter(
-      (obj) => obj.userData.type !== 'building',
+    const tc = transformControlsRef.current;
+    const attached = (tc as unknown as { object?: THREE.Object3D } | undefined)
+      ?.object;
+
+    const toRemove = scene.children.filter(
+      (obj) => obj.userData.type === 'building',
     );
+    toRemove.forEach((obj) => {
+      if (attached && (attached === obj || obj.getObjectById(attached.id)))
+        tc?.detach();
+      scene.remove(obj);
+      obj.traverse((child) => {
+        const m = child as THREE.Mesh;
+        if (m.isMesh) {
+          m.geometry?.dispose();
+          (Array.isArray(m.material) ? m.material : [m.material]).forEach(
+            (mt) => mt?.dispose(),
+          );
+        }
+      });
+    });
     nextBuildings.forEach((b) => {
       const m = model.clone(true);
       m.userData = { type: 'building', id: b.id };

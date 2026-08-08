@@ -5,7 +5,7 @@ import {
   FormControl,
   SelectChangeEvent,
 } from '@mui/material';
-import { SelectVariantsProps } from '../types/Scenario';
+import { SelectVariantsProps } from '../types/ScenarioTypes';
 
 const SelectVariants = ({
   param,

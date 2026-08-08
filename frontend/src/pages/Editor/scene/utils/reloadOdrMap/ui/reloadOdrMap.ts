@@ -1,11 +1,15 @@
 import { useEditorStore } from '../../../../../../store';
-import { setCachedCustomXodrContent } from '../../../../hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
+import {
+  DEFAULT_XODR,
+  setCachedCustomXodrContent,
+} from '../../../../hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
 import { OpenDriveModule } from '../../../../hooks/useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
 import { PARAMS } from '../../../../hooks/useThreeScene/types/useThreeSceneTypes';
 import {
   LOADING_STEPS,
   OpenDriveMapInstance,
 } from '../../../../types/editorTypes';
+import { MAP_PATH } from '../../../../hooks/useThreeScene/hooks/useOdrLoader/types/useOdrLoaderTypes';
 
 export function reloadOdrMap({
   setStep,
@@ -27,8 +31,7 @@ export function reloadOdrMap({
   }
   try {
     if (OpenDriveMap) OpenDriveMap.delete();
-    console.log('JFAOSJHFHSAF(HFHASF');
-    OpenDriveMap = new ModuleOpenDrive.OpenDriveMap('./data.xodr', {
+    OpenDriveMap = new ModuleOpenDrive.OpenDriveMap(MAP_PATH, {
       with_lateralProfile: PARAMS.lateralProfile,
       with_laneHeight: PARAMS.laneHeight,
       with_road_objects: false,
@@ -77,9 +80,10 @@ export function loadFile({
       useEditorStore.getState().removeRSU(0);
     s.points.forEach((p) => s.removePoint(p.id));
     s.buildings.forEach((b) => s.removeBuilding(b.id));
-    setTimeout(() => localStorage.removeItem('editor-scenario-cache'), 100);
+    s.removeSelectedId();
+    useEditorStore.persist.clearStorage();
     try {
-      ModuleOpenDrive.FS_unlink('./data.xodr');
+      ModuleOpenDrive.FS_unlink(MAP_PATH);
     } catch (err) {
       console.error(err);
       setStep('done');
@@ -89,10 +93,10 @@ export function loadFile({
     }
   }
   try {
-    ModuleOpenDrive.FS_createDataFile('.', 'data.xodr', file_text, true, true);
+    ModuleOpenDrive.FS_createDataFile('.', DEFAULT_XODR, file_text, true, true);
     if (OpenDriveMap) OpenDriveMap.delete();
     console.log('JFAOSJHFHSAF(HFHASF');
-    OpenDriveMap = new ModuleOpenDrive.OpenDriveMap('./data.xodr', {
+    OpenDriveMap = new ModuleOpenDrive.OpenDriveMap(MAP_PATH, {
       with_lateralProfile: PARAMS.lateralProfile,
       with_laneHeight: PARAMS.laneHeight,
       with_road_objects: false,

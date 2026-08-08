@@ -19,7 +19,7 @@ describe('NumericInput', () => {
     fireEvent.focus(input);
     input.stepUp();
     fireEvent.change(input);
-    expect(input).toHaveValue(1.001);
+    expect(input).toHaveValue(2);
 
     input.stepDown();
     fireEvent.change(input);

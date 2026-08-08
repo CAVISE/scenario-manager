@@ -43,10 +43,12 @@ export const useEditorHandlers = ({
         modeRef.current.isAddCarModeActive = false;
         modeRef.current.isAddedPoints = false;
         modeRef.current.isAddPedestrianModeActive = false;
+        transformControlsRef.current?.detach();
+        useEditorStore.getState().selectObject(null);
       }
       setBuildingMode(value);
     },
-    [modeRef, setBuildingMode],
+    [modeRef, setBuildingMode, transformControlsRef],
   );
 
   return {

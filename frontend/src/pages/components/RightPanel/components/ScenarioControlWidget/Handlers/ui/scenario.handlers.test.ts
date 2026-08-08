@@ -31,7 +31,7 @@ vi.mock(
     scenarioKeys: { detail: (id: string) => ['scenario', id] },
     useScenarioCreateMutation: () => ({}),
     useScenarioPatchMutation: () => ({}),
-    useScenarioPutMutation: () => ({}),
+    useScenarioDeleteMutation: () => ({}),
   }),
 );
 vi.mock('../../../../../../../api/scenarios', () => ({
@@ -125,7 +125,7 @@ import { LoadScenarioOptions } from '../types/scenario.load.handlerTypes';
 import {
   useScenarioCreateMutation,
   useScenarioPatchMutation,
-  useScenarioPutMutation,
+  useScenarioDeleteMutation,
 } from '../../../../../../Editor/hooks/useApiHooks/useScenarioQueries';
 import { useEditorStore } from '../../../../../../../store';
 import { useStartSimulationMutation } from '../../../../../../Editor/hooks/useApiHooks/useSimulationMutation';
@@ -564,11 +564,12 @@ describe('buildScenarioPayload', () => {
     it('calls mutateAsync and sets success notice', async () => {
       storeState.Scenario = { id: '', name: 'Saved scenario', weather: '' };
       const setNotice = vi.fn();
+      const onIdResolved = vi.fn();
       const createMutation = {
         mutateAsync: vi.fn().mockResolvedValue({}),
       } as unknown as ReturnType<typeof useScenarioCreateMutation>;
 
-      await handleCreate(setNotice, createMutation, 'sc-new');
+      await handleCreate(setNotice, createMutation, 'sc-new', onIdResolved);
 
       expect(createMutation.mutateAsync).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -579,7 +580,27 @@ describe('buildScenarioPayload', () => {
           }),
         }),
       );
-      expect(setNotice).toHaveBeenCalledWith('Script saved (POST).');
+      expect(storeState.updateScenario).toHaveBeenCalledWith({
+        id: 'sc-new',
+      });
+      expect(onIdResolved).toHaveBeenCalledWith('sc-new');
+      expect(setNotice).toHaveBeenCalledWith('Script saved.');
+    });
+
+    it('resolves id from server response when none was provided locally', async () => {
+      storeState.Scenario = { id: '', name: 'Saved scenario', weather: '' };
+      const setNotice = vi.fn();
+      const onIdResolved = vi.fn();
+      const createMutation = {
+        mutateAsync: vi.fn().mockResolvedValue({ scenario_id: 'srv-id' }),
+      } as unknown as ReturnType<typeof useScenarioCreateMutation>;
+
+      await handleCreate(setNotice, createMutation, '', onIdResolved);
+
+      expect(storeState.updateScenario).toHaveBeenCalledWith({
+        id: 'srv-id',
+      });
+      expect(onIdResolved).toHaveBeenCalledWith('srv-id');
     });
 
     it('shows validation message without calling mutate', async () => {
@@ -727,9 +748,7 @@ describe('buildScenarioPayload', () => {
       expect(patchMutation.mutateAsync).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'sc-1' }),
       );
-      expect(setNotice).toHaveBeenCalledWith(
-        'The script has been updated (PATCH).',
-      );
+      expect(setNotice).toHaveBeenCalledWith('The script has been updated.');
     });
     it('calls updateRSU when RSU is found after addRSU', async () => {
       fetchQueryMock.mockResolvedValue({
@@ -888,7 +907,7 @@ describe('buildScenarioPayload', () => {
       await handlePatch(setNotice, 'sc-1', true, patchMutation);
 
       expect(setNotice).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to update the script (PATCH).'),
+        expect.stringContaining('Failed to update the script.'),
       );
     });
   });
@@ -896,41 +915,39 @@ describe('buildScenarioPayload', () => {
   describe('handleDelete', () => {
     it('returns early when hasId is false', async () => {
       const setNotice = vi.fn();
-      const putMutation = { mutateAsync: vi.fn() } as unknown as ReturnType<
-        typeof useScenarioPutMutation
-      >;
+      const deleteMutation = {
+        mutateAsync: vi.fn(),
+      } as unknown as ReturnType<typeof useScenarioDeleteMutation>;
 
-      await handleDelete(setNotice, 'sc-1', false, putMutation);
+      await handleDelete(setNotice, 'sc-1', false, deleteMutation);
 
-      expect(putMutation.mutateAsync).not.toHaveBeenCalled();
+      expect(deleteMutation.mutateAsync).not.toHaveBeenCalled();
     });
 
     it('calls mutateAsync with trimmed id and sets success notice', async () => {
       const setNotice = vi.fn();
-      const putMutation = { mutateAsync: vi.fn() } as unknown as ReturnType<
-        typeof useScenarioPutMutation
-      >;
+      const deleteMutation = {
+        mutateAsync: vi.fn(),
+      } as unknown as ReturnType<typeof useScenarioDeleteMutation>;
 
-      await handleDelete(setNotice, '  sc-1  ', true, putMutation);
+      await handleDelete(setNotice, '  sc-1  ', true, deleteMutation);
 
-      expect(putMutation.mutateAsync).toHaveBeenCalledWith(
+      expect(deleteMutation.mutateAsync).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'sc-1' }),
       );
-      expect(setNotice).toHaveBeenCalledWith(
-        'The script has been deleted (DELETE).',
-      );
+      expect(setNotice).toHaveBeenCalledWith('The script has been deleted.');
     });
 
     it('sets error notice when mutateAsync throws', async () => {
       const setNotice = vi.fn();
-      const putMutation = {
+      const deleteMutation = {
         mutateAsync: vi.fn().mockRejectedValue(new Error('fail')),
-      } as unknown as ReturnType<typeof useScenarioPutMutation>;
+      } as unknown as ReturnType<typeof useScenarioDeleteMutation>;
 
-      await handleDelete(setNotice, 'sc-1', true, putMutation);
+      await handleDelete(setNotice, 'sc-1', true, deleteMutation);
 
       expect(setNotice).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to delete script (DELETE).'),
+        expect.stringContaining('Failed to delete script.'),
       );
     });
   });

@@ -156,7 +156,7 @@ export type RSU = {
   tilt: number;
   cam_interval: number;
   beacon_interval: number;
-  script: string;
+  scenario: string;
   opencda_name?: string;
   opencda_id?: number;
   opencda_behavior_services?: RsuBehaviorService[];
@@ -219,6 +219,22 @@ export type Lidar = {
   rotation_frequency: number;
 };
 
+export type DeletedEntity =
+  | { kind: 'car'; index: number; car: Car; points: Point[]; lidars: Lidar[] }
+  | { kind: 'rsu'; index: number; rsu: RSU }
+  | { kind: 'building'; index: number; building: Building }
+  | { kind: 'pedestrian'; index: number; pedestrian: Pedestrian }
+  | { kind: 'lidar'; index: number; lidar: Lidar }
+  | { kind: 'point'; index: number; point: Point };
+
+export type DeletionSnapshot = {
+  snapshotId: string;
+  deletedAt: number;
+  origin: 'single-delete' | 'clear-scene';
+  label: string;
+  entities: DeletedEntity[];
+};
+
 export type EditorState = {
   cars: Car[];
   RSUs: RSU[];
@@ -264,8 +280,9 @@ export type EditorState = {
     props: Partial<Omit<Pedestrian, 'id'>>,
   ) => void;
   removePedestrian: (id: string) => void;
-  addRSU: (x: number, y: number, z: number) => void;
-  removeRSU: (id: number) => void;
+  addRSU: (x: number, y: number, z: number) => string;
+  removeRSU: (index: number) => void;
+  removeAllRSUs: () => void;
   updateRSU: (id: string, props: Partial<Omit<RSU, 'id'>>) => void;
 
   addLidar: (carId: string, x: number, y: number, z: number) => string;
@@ -277,7 +294,7 @@ export type EditorState = {
   removeLidarsByCarId: (carId: string) => void;
 
   updateScenario: (props: Partial<Scenario>) => void;
-  addPoint: (carId: string, x: number, y: number, z: number) => void;
+  addPoint: (carId: string, x: number, y: number, z: number) => string;
   removePoint: (id: string) => void;
   removePointsByCarId: (carId: string) => void;
   updatePoint: (
@@ -286,7 +303,14 @@ export type EditorState = {
   ) => void;
 
   selectObject: (obj: SelectedObject | null) => void;
-  addBuilding: (x: number, y: number, z: number) => void;
+  addBuilding: (x: number, y: number, z: number) => string;
   updateBuilding: (id: string, props: Partial<Omit<Building, 'id'>>) => void;
   removeBuilding: (id: string) => void;
+
+  deletionHistory: DeletionSnapshot[];
+  pushDeletionSnapshot: (
+    snapshot: Omit<DeletionSnapshot, 'snapshotId' | 'deletedAt'>,
+  ) => string;
+  restoreLastDeletion: (snapshotId?: string) => boolean;
+  clearDeletionHistory: () => void;
 };

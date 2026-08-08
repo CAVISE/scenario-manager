@@ -1,8 +1,8 @@
+import { MapOffsets } from '../../../../../helpers/types/coordinateTransformTypes';
 import type {
   Car,
   Point,
 } from '../../../../../store/types/useEditorStoreTypes';
-import type { MapOffsets } from '../../../../../helpers/coordinateTransform';
 
 type Coordinate = { x: number; y: number };
 type LaneGeometry = {

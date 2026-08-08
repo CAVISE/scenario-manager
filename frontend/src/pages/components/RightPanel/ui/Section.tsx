@@ -1,10 +1,5 @@
 import React, { useState } from 'react';
-
-interface SectionProps {
-  label: string;
-  defaultOpen?: boolean;
-  children: React.ReactNode;
-}
+import { SectionProps } from '../types/PanelTypes';
 
 const Section: React.FC<SectionProps> = ({
   label,

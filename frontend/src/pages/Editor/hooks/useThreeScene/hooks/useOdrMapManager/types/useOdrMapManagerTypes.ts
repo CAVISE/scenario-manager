@@ -7,6 +7,8 @@ import {
   OpenDriveModule,
 } from '../../../../useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
 import * as THREE from 'three';
+import { ODR_MAP_OPTIONS } from '../../useOdrLoader/types/useOdrLoaderTypes';
+
 export const EMPTY_ODR_MESHES: OdrMapMeshes = {
   refline_lines: null,
   road_network_mesh: null,
@@ -23,14 +25,6 @@ export const ODR_PARAMS = {
   view_mode: 'Default',
 };
 
-export const ODR_MAP_OPTIONS = {
-  with_lateralProfile: true,
-  with_laneHeight: true,
-  with_road_objects: false,
-  center_map: true,
-  abs_z_for_for_local_road_obj_outline: true,
-} as const;
-
 export interface UseOdrMapManagerProps {
   setStep: (step: keyof typeof LOADING_STEPS) => void;
   setError: ((err: Error) => void) | undefined;
@@ -39,13 +33,15 @@ export interface UseOdrMapManagerProps {
   syncRoadMesh: (mesh: THREE.Mesh | null) => void;
   updateSceneGraph: () => void;
   buildingModelRef: React.RefObject<THREE.Object3D | null>;
+  buildingMeshesRef: React.RefObject<THREE.Object3D[]>;
   localLineArrRef: React.RefObject<THREE.Line[][]>;
+  moduleRef: React.RefObject<OpenDriveModule | null>;
+  mapRef: React.RefObject<OpenDriveMapInstance | null>;
+  odrMapOptions: typeof ODR_MAP_OPTIONS;
 }
 
 export interface UseOdrMapManagerResult {
   getOdrMeshes: () => OdrMapMeshes;
   loadOdrMap: (clearMap?: boolean, fitView?: boolean) => void;
   reloadOdrMap: () => void;
-  setModuleRef: React.RefObject<OpenDriveModule | null>;
-  setMapRef: React.RefObject<OpenDriveMapInstance | null>;
 }

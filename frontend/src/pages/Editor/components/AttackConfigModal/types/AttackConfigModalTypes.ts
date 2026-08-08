@@ -1,9 +1,34 @@
-import type { OpenCDAAttackConfig } from '../../../Generators/types/configGeneratorsTypes';
+import type {
+  OpenCDAAttackConfig,
+  OpenCDAAttackStage,
+} from '../../../Generators/types/configGeneratorsTypes';
 
 export interface AttackConfigModalProps {
   open: boolean;
   onClose: () => void;
 }
+
+export const GNSS_DRIFT_PARAMS = {
+  mode: 'drift',
+  start_time: 10,
+  ramp_duration: 8,
+  lateral_offset: 1.8,
+  longitudinal_offset: 0.5,
+  drift_rate: 0.08,
+  jitter_stddev: 0.08,
+  max_offset: 3,
+} as const;
+
+export const GNSS_SPOOFER_PRESET: Omit<OpenCDAAttackConfig, 'stages'> & {
+  stages: Omit<OpenCDAAttackStage, 'id'>[];
+} = {
+  name: 'gnss_spoof',
+  requirements: {},
+  start_trigger: {},
+  stop_trigger: {},
+  targets: { cav_index: 1 },
+  stages: [{ type: 'spoofer', params: GNSS_DRIFT_PARAMS }],
+};
 
 export const attackModalSx = {
   position: 'absolute' as const,

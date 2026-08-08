@@ -1,15 +1,16 @@
-import type { ScenarioGroup, ScenarioPayload } from './types/IScenarioTypes';
+import {
+  ALLOWED_VEHICLES,
+  MAX_DESCRIPTION_LEN,
+  MAX_NAME_LEN,
+  MAX_OPENDRIVE_LEN,
+  MAX_PREVIEW_LEN,
+  SCENARIO_ID_RE,
+  ValidationResult,
+  type ScenarioGroup,
+  type ScenarioPayload,
+} from './types/IScenarioTypes';
 import type { StartSimulationPayload } from '../pages/Editor/hooks/useApiHooks/useSimulationMutation/types/useSimulationMutationTypes';
 import { scenarioGroupsFromPayload } from './scenarioRequest';
-
-export type ValidationResult = { ok: true } | { ok: false; message: string };
-
-const SCENARIO_ID_RE = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/;
-const MAX_NAME_LEN = 200;
-const MAX_DESCRIPTION_LEN = 4000;
-const MAX_PREVIEW_LEN = 10_000_000;
-const MAX_OPENDRIVE_LEN = 32_000_000;
-const ALLOWED_VEHICLES = new Set(['car', 'RSU', 'building', 'pedestrian']);
 
 export function validateScenarioId(
   id: string | null | undefined,
@@ -169,6 +170,12 @@ export function validateStartSimulationPayload(
     return {
       ok: false,
       message: 'OpenCDA YAML is required to start simulation.',
+    };
+  }
+  if (!payload.xodr?.trim()) {
+    return {
+      ok: false,
+      message: 'OpenDRIVE map failed to load — try selecting the map again.',
     };
   }
 

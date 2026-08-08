@@ -1,5 +1,7 @@
 import { useState, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { IconButton, Tooltip } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MenuIcon from '@mui/icons-material/Menu';
 import SettingsIcon from '@mui/icons-material/Settings';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -68,6 +70,14 @@ export const EditorToolbar = () => {
 
   return (
     <div style={EditorToolbarStyles}>
+      <div style={EditorToolbarDivStyles}>
+        <Tooltip title="Discard changes?">
+          <IconButton size="small" component={Link} to="/">
+            <ArrowBackIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      </div>
+
       <div style={EditorToolbarDivStyles}>
         <Tooltip title="Menu">
           <IconButton

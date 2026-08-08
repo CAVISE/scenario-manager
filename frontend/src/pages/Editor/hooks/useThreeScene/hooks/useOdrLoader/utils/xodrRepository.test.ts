@@ -6,7 +6,9 @@ import {
   fetchXodrText,
   setCachedCustomXodrContent,
   initXodrCacheFromIndexedDb,
+  DEFAULT_XODR,
 } from './xodrRepository';
+import { MAP_PATH } from '../types/useOdrLoaderTypes';
 
 const localStorageMock = (() => {
   let store: Record<string, string> = {};
@@ -139,14 +141,14 @@ describe('setStoredXodrName', () => {
     );
   });
 
-  it('falls back to data.xodr for raw XML content', () => {
+  it('falls back to DEFAULT_XODR for raw XML content', () => {
     const result = setStoredXodrName('<OpenDRIVE></OpenDRIVE>');
-    expect(result).toBe('data.xodr');
+    expect(result).toBe(DEFAULT_XODR);
   });
 
-  it('falls back to data.xodr for empty string', () => {
+  it('falls back to DEFAULT_XODR for empty string', () => {
     const result = setStoredXodrName('');
-    expect(result).toBe('data.xodr');
+    expect(result).toBe(DEFAULT_XODR);
   });
 });
 
@@ -165,8 +167,8 @@ describe('getStoredXodrName', () => {
     expect(getStoredXodrName('Town10HD')).toBe('Town10HD.xodr');
   });
 
-  it('uses data.xodr when localStorage is empty and no fallback given', () => {
-    expect(getStoredXodrName()).toBe('data.xodr');
+  it('uses DEFAULT_XODR when localStorage is empty and no fallback given', () => {
+    expect(getStoredXodrName()).toBe(DEFAULT_XODR);
   });
 
   it('ignores stored raw XML and uses fallback', () => {
@@ -215,14 +217,14 @@ describe('fetchXodrText', () => {
     expect(fetchMock).toHaveBeenCalledWith('./Town10HD.xodr');
   });
 
-  it('falls back to data.xodr as last resort', async () => {
+  it('falls back to DEFAULT_XODR as last resort', async () => {
     fetchMock
       .mockResolvedValueOnce(notFound() as never)
       .mockResolvedValueOnce(notFound() as never)
       .mockResolvedValue(okResponse(VALID_OPENDRIVE) as never);
     await fetchXodrText('UnknownMap');
     const calls = fetchMock.mock.calls.map((c: unknown[]) => c[0]);
-    expect(calls).toContain('./data.xodr');
+    expect(calls).toContain(MAP_PATH);
   });
 
   it('throws when no candidate returns valid OpenDRIVE', async () => {
