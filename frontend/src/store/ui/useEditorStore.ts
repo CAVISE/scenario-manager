@@ -14,9 +14,12 @@ import type {
   Point,
   Scenario,
   Pedestrian,
+  DeletedEntity,
+  DeletionSnapshot,
 } from '../types/useEditorStoreTypes';
 
 export type { EditorState, Car, RSU, Lidar, Building, Point, Scenario };
+export type { DeletedEntity, DeletionSnapshot };
 export type {
   V2XProtocol,
   BuildingMaterial,
@@ -88,7 +91,7 @@ const persistOptions: PersistOptions<EditorState, EditorPersist> = {
   },
 };
 
-const storeCreator: StateCreator<EditorState> = (set) => ({
+const storeCreator: StateCreator<EditorState> = (set, get) => ({
   cars: [],
   error: null,
   pedestrians: [],
@@ -102,6 +105,7 @@ const storeCreator: StateCreator<EditorState> = (set) => ({
   RSUs: [],
   simConfig: defaultSimConfig,
   isPanelOpen: true,
+  deletionHistory: [],
   Scenario: {
     id: Date.now().toString(),
     name: 'Default Scenario',
@@ -123,25 +127,33 @@ const storeCreator: StateCreator<EditorState> = (set) => ({
   setError: (props) => set({ error: props }),
   updateSimConfigOmnet: (props) =>
     set((s) => {
-      const sim = mergeSimConfigWithDefaults(s.simConfig);
-      return { simConfig: { ...sim, omnet: { ...sim.omnet, ...props } } };
+      const simConfig = mergeSimConfigWithDefaults(s.simConfig);
+      return {
+        simConfig: { ...simConfig, omnet: { ...simConfig.omnet, ...props } },
+      };
     }),
   setChangePanelMode: () => set((s) => ({ isPanelOpen: !s.isPanelOpen })),
   updateSimConfigArtery: (props) =>
     set((s) => {
-      const sim = mergeSimConfigWithDefaults(s.simConfig);
-      return { simConfig: { ...sim, artery: { ...sim.artery, ...props } } };
+      const simConfig = mergeSimConfigWithDefaults(s.simConfig);
+      return {
+        simConfig: { ...simConfig, artery: { ...simConfig.artery, ...props } },
+      };
     }),
 
   updateSimConfigSionna: (props) =>
     set((s) => {
-      const sim = mergeSimConfigWithDefaults(s.simConfig);
-      return { simConfig: { ...sim, sionna: { ...sim.sionna, ...props } } };
+      const simConfig = mergeSimConfigWithDefaults(s.simConfig);
+      return {
+        simConfig: { ...simConfig, sionna: { ...simConfig.sionna, ...props } },
+      };
     }),
   updateSimConfigMPC: (props) =>
     set((s) => {
-      const sim = mergeSimConfigWithDefaults(s.simConfig);
-      return { simConfig: { ...sim, mpc: { ...sim.mpc, ...props } } };
+      const simConfig = mergeSimConfigWithDefaults(s.simConfig);
+      return {
+        simConfig: { ...simConfig, mpc: { ...simConfig.mpc, ...props } },
+      };
     }),
   addPedestrian: (x, y, z) => {
     const ped: Pedestrian = {
@@ -180,23 +192,34 @@ const storeCreator: StateCreator<EditorState> = (set) => ({
 
   updateSimConfigCarla: (props) =>
     set((s) => {
-      const sim = mergeSimConfigWithDefaults(s.simConfig);
-      return { simConfig: { ...sim, carla: { ...sim.carla, ...props } } };
+      const simConfig = mergeSimConfigWithDefaults(s.simConfig);
+      return {
+        simConfig: { ...simConfig, carla: { ...simConfig.carla, ...props } },
+      };
     }),
   updateSimConfigCAPI: (props) =>
     set((s) => {
-      const sim = mergeSimConfigWithDefaults(s.simConfig);
-      return { simConfig: { ...sim, capi: { ...sim.capi, ...props } } };
+      const simConfig = mergeSimConfigWithDefaults(s.simConfig);
+      return {
+        simConfig: { ...simConfig, capi: { ...simConfig.capi, ...props } },
+      };
     }),
   updateSimConfigOpenCDA: (props) =>
     set((s) => {
-      const sim = mergeSimConfigWithDefaults(s.simConfig);
-      return { simConfig: { ...sim, opencda: { ...sim.opencda, ...props } } };
+      const simConfig = mergeSimConfigWithDefaults(s.simConfig);
+      return {
+        simConfig: {
+          ...simConfig,
+          opencda: { ...simConfig.opencda, ...props },
+        },
+      };
     }),
   updateSimConfigSumo: (props) =>
     set((s) => {
-      const sim = mergeSimConfigWithDefaults(s.simConfig);
-      return { simConfig: { ...sim, sumo: { ...sim.sumo, ...props } } };
+      const simConfig = mergeSimConfigWithDefaults(s.simConfig);
+      return {
+        simConfig: { ...simConfig, sumo: { ...simConfig.sumo, ...props } },
+      };
     }),
   addCar: (x, y, z, model, color, speed = 50) => {
     const id = nanoid();
@@ -211,10 +234,11 @@ const storeCreator: StateCreator<EditorState> = (set) => ({
     return id;
   },
 
-  updateCar: (id, props) =>
+  updateCar: (id, props) => {
     set((s) => ({
       cars: s.cars.map((c) => (c.id === id ? { ...c, ...props } : c)),
-    })),
+    }));
+  },
 
   removeCar: (id) =>
     set((s) => {
@@ -226,40 +250,51 @@ const storeCreator: StateCreator<EditorState> = (set) => ({
       };
     }),
 
-  addRSU: (x, y, z) =>
+  addRSU: (x, y, z) => {
+    const rsu: RSU = {
+      id: nanoid(),
+      name: '',
+      x,
+      y,
+      z,
+      tx_power: 23,
+      frequency: 5.9e9,
+      range: 500,
+      protocol: 'ITS-G5',
+      network_protocol: 'GeoNetworking',
+      antenna_type: 'isotropic',
+      antenna_height: 5,
+      antenna_gain: 0,
+      polarization: 'vertical',
+      mimo_rows: 1,
+      mimo_columns: 1,
+      element_spacing: 0.5,
+      azimuth: 0,
+      tilt: 0,
+      cam_interval: 100,
+      beacon_interval: 1000,
+      script: '',
+    };
+
     set((s) => ({
       RSUs: [
         ...s.RSUs,
         {
-          id: crypto.randomUUID(),
+          ...rsu,
           name: `rsu_${s.RSUs.length + 1}`,
-          x,
-          y,
-          z,
-          tx_power: 23,
-          frequency: 5.9e9,
-          range: 500,
-          protocol: 'ITS-G5',
-          network_protocol: 'GeoNetworking',
-          antenna_type: 'isotropic',
-          antenna_height: 5,
-          antenna_gain: 0,
-          polarization: 'vertical',
-          mimo_rows: 1,
-          mimo_columns: 1,
-          element_spacing: 0.5,
-          azimuth: 0,
-          tilt: 0,
-          cam_interval: 100,
-          beacon_interval: 1000,
-          script: '',
         },
       ],
-    })),
+    }));
+
+    return rsu.id;
+  },
 
   removeRSU: (index) =>
     set((s) => ({ RSUs: s.RSUs.filter((_, i) => i !== index) })),
-
+  removeAllRSUs: () =>
+    set(() => ({
+      RSUs: [],
+    })),
   updateRSU: (id, props) =>
     set((s) => ({
       RSUs: s.RSUs.map((r) => (r.id === id ? { ...r, ...props } : r)),
@@ -297,8 +332,11 @@ const storeCreator: StateCreator<EditorState> = (set) => ({
   removeLidarsByCarId: (carId) =>
     set((s) => ({ lidars: s.lidars.filter((l) => l.carId !== carId) })),
 
-  addPoint: (carId, x, y, z) =>
-    set((s) => ({ points: [...s.points, { id: nanoid(), carId, x, y, z }] })),
+  addPoint: (carId, x, y, z) => {
+    const id = nanoid();
+    set((s) => ({ points: [...s.points, { id, carId, x, y, z }] }));
+    return id;
+  },
 
   removePoint: (id) =>
     set((s) => ({ points: s.points.filter((p) => p.id !== id) })),
@@ -320,12 +358,13 @@ const storeCreator: StateCreator<EditorState> = (set) => ({
       };
     }),
 
-  addBuilding: (x, y, z) =>
+  addBuilding: (x, y, z) => {
+    const id = nanoid();
     set((s) => ({
       buildings: [
         ...s.buildings,
         {
-          id: nanoid(),
+          id,
           name: `building_${s.buildings.length + 1}`,
           x,
           y,
@@ -338,7 +377,9 @@ const storeCreator: StateCreator<EditorState> = (set) => ({
           rotation: 0,
         },
       ],
-    })),
+    }));
+    return id;
+  },
 
   updateBuilding: (id, props) =>
     set((s) => ({
@@ -347,6 +388,92 @@ const storeCreator: StateCreator<EditorState> = (set) => ({
 
   removeBuilding: (id) =>
     set((s) => ({ buildings: s.buildings.filter((b) => b.id !== id) })),
+
+  pushDeletionSnapshot: (snapshot) => {
+    const snapshotId = nanoid();
+    set((s) => ({
+      deletionHistory: [
+        ...s.deletionHistory,
+        { ...snapshot, snapshotId, deletedAt: Date.now() },
+      ],
+    }));
+    return snapshotId;
+  },
+
+  restoreLastDeletion: (snapshotId) => {
+    const s = get();
+    if (s.deletionHistory.length === 0) return false;
+
+    const targetIndex = snapshotId
+      ? s.deletionHistory.findIndex((h) => h.snapshotId === snapshotId)
+      : s.deletionHistory.length - 1;
+    if (targetIndex === -1) return false;
+
+    const snapshot = s.deletionHistory[targetIndex];
+
+    set((state) => {
+      const cars = [...state.cars];
+      const RSUs = [...state.RSUs];
+      const buildings = [...state.buildings];
+      const pedestrians = [...state.pedestrians];
+      const lidars = [...state.lidars];
+      const points = [...state.points];
+
+      const insertAt = (arr: unknown[], index: number) =>
+        Math.min(Math.max(index, 0), arr.length);
+
+      for (const entity of snapshot.entities) {
+        switch (entity.kind) {
+          case 'car': {
+            cars.splice(insertAt(cars, entity.index), 0, entity.car);
+
+            points.push(...entity.points);
+            lidars.push(...entity.lidars);
+            break;
+          }
+          case 'rsu':
+            RSUs.splice(insertAt(RSUs, entity.index), 0, entity.rsu);
+            break;
+          case 'building':
+            buildings.splice(
+              insertAt(buildings, entity.index),
+              0,
+              entity.building,
+            );
+            break;
+          case 'pedestrian':
+            pedestrians.splice(
+              insertAt(pedestrians, entity.index),
+              0,
+              entity.pedestrian,
+            );
+            break;
+          case 'lidar':
+            lidars.splice(insertAt(lidars, entity.index), 0, entity.lidar);
+            break;
+          case 'point':
+            points.splice(insertAt(points, entity.index), 0, entity.point);
+            break;
+        }
+      }
+
+      return {
+        cars,
+        RSUs,
+        buildings,
+        pedestrians,
+        lidars,
+        points,
+        deletionHistory: state.deletionHistory.filter(
+          (h) => h.snapshotId !== snapshot.snapshotId,
+        ),
+      };
+    });
+
+    return true;
+  },
+
+  clearDeletionHistory: () => set({ deletionHistory: [] }),
 });
 
 export const useEditorStore = create<EditorState>()(

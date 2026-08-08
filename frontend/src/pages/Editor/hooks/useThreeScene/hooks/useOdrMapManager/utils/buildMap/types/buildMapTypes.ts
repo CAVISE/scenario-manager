@@ -16,6 +16,7 @@ export interface BuildMapParams {
   carMeshesRef: React.RefObject<THREE.Mesh[]>;
   clearMap: boolean;
   fitView: boolean;
+  buildingMeshesRef: React.RefObject<THREE.Object3D[]>;
   resolution: number;
   params: { ref_line: boolean; roadmarks: boolean; view_mode: string };
   loadRSU: () => void;

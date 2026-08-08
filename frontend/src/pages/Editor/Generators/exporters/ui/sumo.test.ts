@@ -5,7 +5,7 @@ import type {
   Car,
 } from '../../../../../store/types/useEditorStoreTypes';
 import { defaultSimConfig } from '../../types/configGeneratorsTypes';
-import { generatePolyXml, generateRouXml, generateSumoCfg } from './sumo';
+import { generatePolyXml, useGenerateRouXml, useGenerateSumoCfg } from './sumo';
 import { getSumoCoordinateOffsets } from './sumoNetwork';
 
 const NET_XML = `<?xml version="1.0" encoding="UTF-8"?>
@@ -50,7 +50,7 @@ describe('SUMO exporters', () => {
       },
     };
 
-    const xml = generateSumoCfg(config, 'sm_poc_town01.sumocfg');
+    const xml = useGenerateSumoCfg(config, 'sm_poc_town01.sumocfg');
 
     expect(xml).toContain('<net-file value="./Town01.net.xml"/>');
     expect(xml).toContain('<route-files value="./sm_poc_town01.rou.xml"/>');
@@ -61,7 +61,7 @@ describe('SUMO exporters', () => {
   });
 
   it('falls back to the configured scenario name without an output filename', () => {
-    const xml = generateSumoCfg({
+    const xml = useGenerateSumoCfg({
       ...defaultSimConfig,
       sumo: { ...defaultSimConfig.sumo, scenario_name: 'my-scenario' },
     });
@@ -84,7 +84,7 @@ describe('SUMO exporters', () => {
       sumo_edges: '27 26 -35.0.00',
     } satisfies Car;
 
-    const xml = generateRouXml(defaultSimConfig, [car]);
+    const xml = useGenerateRouXml(defaultSimConfig, [car]);
 
     expect(xml).toContain('<route edges="27 26 -35.0.00"/>');
   });
@@ -132,7 +132,7 @@ describe('SUMO exporters', () => {
       },
     ] satisfies Car[];
 
-    const xml = generateRouXml(defaultSimConfig, cars);
+    const xml = useGenerateRouXml(defaultSimConfig, cars);
     const sumo0Position = xml.indexOf('<vehicle id="sumo0"');
     const sumo1Position = xml.indexOf('<vehicle id="sumo1"');
     const sumo2Position = xml.indexOf('<vehicle id="sumo2"');
@@ -155,7 +155,7 @@ describe('SUMO exporters', () => {
       speed: 50,
     } satisfies Car;
 
-    const xml = generateRouXml(defaultSimConfig, [car], {
+    const xml = useGenerateRouXml(defaultSimConfig, [car], {
       'car-1': {
         edges: 'edge-a edge-b edge-c',
         depart: {
@@ -197,7 +197,7 @@ describe('SUMO exporters', () => {
       sumo_edges: 'manual-a manual-b',
     } satisfies Car;
 
-    const xml = generateRouXml(defaultSimConfig, [car], {
+    const xml = useGenerateRouXml(defaultSimConfig, [car], {
       'car-1': {
         edges: 'generated-a generated-b',
         warnings: [],
@@ -223,7 +223,7 @@ describe('SUMO exporters', () => {
       sumo_depart_pos: 42,
     } satisfies Car;
 
-    const xml = generateRouXml(defaultSimConfig, [car], {
+    const xml = useGenerateRouXml(defaultSimConfig, [car], {
       'car-1': {
         edges: 'edge-a edge-b',
         depart: {
@@ -263,7 +263,7 @@ describe('SUMO exporters', () => {
       },
     } satisfies Car;
 
-    expect(() => generateRouXml(defaultSimConfig, [car])).toThrow(
+    expect(() => useGenerateRouXml(defaultSimConfig, [car])).toThrow(
       'Static stop is enabled but its Lane field is empty',
     );
   });
@@ -281,7 +281,7 @@ describe('SUMO exporters', () => {
       speed: 50,
     } satisfies Car;
 
-    expect(() => generateRouXml(defaultSimConfig, [car])).toThrow(
+    expect(() => useGenerateRouXml(defaultSimConfig, [car])).toThrow(
       'has no SUMO route',
     );
   });

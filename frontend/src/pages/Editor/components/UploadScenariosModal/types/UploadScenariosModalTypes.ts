@@ -19,6 +19,7 @@ export const boxStyles = {
   justifyContent: 'center',
   color: 'text.secondary',
   fontSize: 12,
+  overflow: 'hidden',
 } as const;
 export const imgStyles = {
   objectFit: 'cover',
@@ -67,7 +68,16 @@ export const MOCK_SCENARIOS: MockScenario[] = [
     thumbnail: '/results/56_localization_plotting.png',
   },
 ];
+export const ModalContainerStyles = {
+  maxHeight: '90vh',
+  overflowY: 'auto',
 
+  '&::-webkit-scrollbar': {
+    display: 'none',
+  },
+  scrollbarWidth: 'none',
+  msOverflowStyle: 'none',
+} as const;
 export const ModalContainer = styled(Box)({
   position: 'absolute',
   top: '50%',

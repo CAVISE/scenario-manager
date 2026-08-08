@@ -14,3 +14,4 @@ export interface ClearSceneParams {
   currentColorRef: React.RefObject<string>;
   syncRoadMesh: (mesh: THREE.Mesh | null) => void;
 }
+export const DEFAULT_COLOR = '00ff00';

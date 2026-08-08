@@ -2,11 +2,42 @@ const XODR_EXT = '.xodr';
 const CACHE_KEY = 'cached_xodr';
 const MAP_NAME_KEY = 'cached_xodr_name';
 const LEGACY_CONTENT_KEY = 'cached_xodr_content';
-const DEFAULT_XODR = 'data.xodr';
-const MAP_ALIASES: Record<string, string[]> = {
-  town10: ['Town10HD', 'Town10HD_Opt'],
-  town10hd: ['Town10HD', 'Town10HD_Opt'],
-};
+export const DEFAULT_XODR = 'data.xodr';
+
+const CARLA_MAPS = [
+  'Town01',
+  'Town02',
+  'Town03',
+  'Town04',
+  'Town05',
+  'Town06',
+  'Town07',
+  'Town10HD',
+  'Town10HD_Opt',
+] as const;
+
+function generateMapAliases(): Record<string, string[]> {
+  const aliases: Record<string, string[]> = {};
+
+  for (const map of CARLA_MAPS) {
+    const lower = map.toLowerCase();
+
+    const base = map.replace('_Opt', '');
+    if (!aliases[lower]) {
+      aliases[lower] = [];
+    }
+    aliases[lower].push(map);
+
+    if (map !== base && !aliases[base.toLowerCase()]) {
+      aliases[base.toLowerCase()] = [base];
+    }
+  }
+
+  return aliases;
+}
+
+const MAP_ALIASES = generateMapAliases();
+
 let cachedXodrContent: string | null = null;
 
 const IDB_NAME = 'scenario-manager-xodr-cache';
@@ -84,16 +115,39 @@ function stripExt(value: string): string {
     : value;
 }
 
+function normalizeMapName(mapName: string): string {
+  const lower = mapName.toLowerCase().replace('.xodr', '');
+
+  for (const map of CARLA_MAPS) {
+    if (
+      map.toLowerCase() === lower ||
+      map.toLowerCase() === lower.replace('_opt', '')
+    ) {
+      return map;
+    }
+  }
+
+  return mapName;
+}
+
 function buildCandidates(mapName: string): string[] {
   const normalized = withXodrExtension(mapName);
   const base = stripExt(normalized);
-  const aliases = MAP_ALIASES[base.toLowerCase()] ?? [];
+  const lowerBase = base.toLowerCase();
+
+  const aliases = MAP_ALIASES[lowerBase] ?? [];
   const candidates = [
     normalized,
     `${base}_Opt${XODR_EXT}`,
     ...aliases.map((name) => withXodrExtension(name)),
     DEFAULT_XODR,
   ];
+
+  for (const map of CARLA_MAPS) {
+    if (map.toLowerCase() === lowerBase) continue;
+    candidates.push(withXodrExtension(map));
+  }
+
   return [...new Set(candidates)];
 }
 
@@ -115,7 +169,10 @@ export function getStoredXodrName(fallbackMapName?: string): string {
   if (stored?.trim() && !isOpenDrive(stored)) {
     return withXodrExtension(stored);
   }
-  return withXodrExtension(fallbackMapName ?? 'data.xodr');
+
+  const fallback = fallbackMapName ?? 'Town10HD';
+  const normalized = normalizeMapName(fallback);
+  return withXodrExtension(normalized);
 }
 
 export async function fetchXodrText(mapName: string): Promise<string> {
@@ -164,3 +221,5 @@ export async function resolveXodrTextForSimulation(
     return undefined;
   }
 }
+
+export { CARLA_MAPS, normalizeMapName };

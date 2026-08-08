@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { libOpenDrive } from '../../../../../types/editorTypes';
 import { useEditorStore } from '../../../../../../../store';
 import type { OpenDriveModule } from '../../../../useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
@@ -8,22 +8,26 @@ import {
   UseOdrLoaderProps,
 } from '../types/useOdrLoaderTypes';
 import {
+  DEFAULT_XODR,
   fetchXodrText,
   getCachedXodrContent,
   getStoredXodrName,
   initXodrCacheFromIndexedDb,
   setCachedCustomXodrContent,
 } from '../utils/xodrRepository';
+import type { OpenDriveMapInstance } from '../../../../../types/editorTypes';
 
 export function useOdrLoader({
   setStep,
   setError,
-  moduleRef,
-  mapRef,
   loadOdrMapRef,
 }: UseOdrLoaderProps) {
+  const moduleRef = useRef<OpenDriveModule | null>(null);
+  const mapRef = useRef<OpenDriveMapInstance | null>(null);
+
   useEffect(() => {
     let cancelled = false;
+
     function processFile(fileText: string, clearMap: boolean) {
       const Module = moduleRef.current;
       if (!Module || cancelled) return;
@@ -31,29 +35,27 @@ export function useOdrLoader({
       if (clearMap) {
         const s = useEditorStore.getState();
         s.cars.forEach((c) => s.removeCar(c.id));
-        while (useEditorStore.getState().RSUs.length > 0) {
-          useEditorStore.getState().removeRSU(0);
-        }
+        s.removeAllRSUs();
         s.points.forEach((p) => s.removePoint(p.id));
         s.buildings.forEach((b) => s.removeBuilding(b.id));
+        s.pedestrians.forEach((p) => s.removePedestrian(p.id));
       }
       try {
-        Module.FS_unlink('/data.xodr');
+        Module.FS_unlink(MAP_PATH);
       } catch {
-        console.warn('FS_unlink failed, maybe /data.xodr did not exist yet');
+        console.warn('FS_unlink failed, maybe /DEFAULT_XODR did not exist yet');
       }
 
       try {
-        Module.FS_createDataFile('.', 'data.xodr', fileText, true, true);
+        Module.FS_createDataFile('.', DEFAULT_XODR, fileText, true, true);
 
         mapRef.current?.delete();
         mapRef.current = new Module.OpenDriveMap(MAP_PATH, ODR_MAP_OPTIONS);
 
         setStep('scene');
 
-        loadOdrMapRef.current(clearMap);
+        loadOdrMapRef.current?.(clearMap);
       } catch (err) {
-        console.error(err);
         setStep('done');
         setError?.(
           err instanceof Error ? err : new Error('Failed to process map file'),
@@ -81,7 +83,6 @@ export function useOdrLoader({
         processFile(text, false);
       } catch (err) {
         if (cancelled) return;
-        console.error(err);
         setStep('done');
         setError?.(
           err instanceof Error ? err : new Error('Failed to load map'),
@@ -95,7 +96,6 @@ export function useOdrLoader({
       await initXodrCacheFromIndexedDb();
       try {
         const Module = await libOpenDrive();
-
         if (cancelled) return;
 
         moduleRef.current = Module as OpenDriveModule;
@@ -104,7 +104,6 @@ export function useOdrLoader({
         await fetchAndLoad();
       } catch (err) {
         if (cancelled) return;
-        console.error(err);
         setStep('done');
         setError?.(
           err instanceof Error
@@ -135,22 +134,21 @@ export function useOdrLoader({
     if (clearMap) {
       const s = useEditorStore.getState();
       s.cars.forEach((c) => s.removeCar(c.id));
-      while (useEditorStore.getState().RSUs.length > 0) {
-        useEditorStore.getState().removeRSU(0);
-      }
+      s.removeAllRSUs();
       s.points.forEach((p) => s.removePoint(p.id));
       s.buildings.forEach((b) => s.removeBuilding(b.id));
+      s.pedestrians.forEach((p) => s.removePedestrian(p.id));
     }
     try {
-      Module.FS_unlink('/data.xodr');
+      Module.FS_unlink(MAP_PATH);
     } catch {
-      console.warn('FS_unlink failed, maybe /data.xodr did not exist yet');
+      console.warn('FS_unlink failed, maybe /DEFAULT_XODR did not exist yet');
     }
 
     try {
-      Module.FS_createDataFile('.', 'data.xodr', fileText, true, true);
+      Module.FS_createDataFile('.', DEFAULT_XODR, fileText, true, true);
     } catch (err) {
-      console.error('FS_createDataFile failed:', err);
+      // console.error('FS_createDataFile failed:', err);
       setStep('done');
       setError?.(
         err instanceof Error ? err : new Error('FS_createDataFile failed'),
@@ -162,7 +160,7 @@ export function useOdrLoader({
       mapRef.current?.delete();
       mapRef.current = new Module.OpenDriveMap(MAP_PATH, ODR_MAP_OPTIONS);
     } catch (err) {
-      console.error('OpenDriveMap failed:', err);
+      // console.error('OpenDriveMap failed:', err);
       setStep('done');
       setError?.(
         err instanceof Error ? err : new Error('OpenDriveMap parse failed'),
@@ -172,13 +170,17 @@ export function useOdrLoader({
 
     try {
       setStep('scene');
-      loadOdrMapRef.current(clearMap);
+      loadOdrMapRef.current?.(clearMap);
     } catch (err) {
-      console.error('loadOdrMapRef failed:', err);
+      // console.error('loadOdrMapRef failed:', err);
       setStep('done');
       setError?.(err instanceof Error ? err : new Error('loadOdrMap failed'));
     }
   }
 
-  return { loadFile };
+  return {
+    loadFile,
+    moduleRef,
+    mapRef,
+  };
 }

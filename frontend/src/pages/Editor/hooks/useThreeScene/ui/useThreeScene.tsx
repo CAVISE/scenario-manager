@@ -37,6 +37,7 @@ export function useThreeScene({
     currentCarRef,
     currentColorRef,
     isDraggingRef,
+    buildingMeshesRef,
   } = useEditorRefs();
 
   const actionsRef = useRef({
@@ -100,6 +101,7 @@ export function useThreeScene({
       syncRoadMesh,
       updateSceneGraph,
       buildingModelRef,
+      buildingMeshesRef,
       localLineArrRef,
     });
   const loadOdrMapRef = useRef(loadOdrMap);
@@ -129,6 +131,7 @@ export function useThreeScene({
     return createStoreSubscriptions({
       sceneRef,
       buildingModelRef,
+      transformControlsRef,
       getIsDragging,
       loadRSU,
       loadPoints,
@@ -142,6 +145,7 @@ export function useThreeScene({
     updateSceneGraph,
     sceneRef,
     buildingModelRef,
+    transformControlsRef,
   ]);
 
   useEffect(() => {

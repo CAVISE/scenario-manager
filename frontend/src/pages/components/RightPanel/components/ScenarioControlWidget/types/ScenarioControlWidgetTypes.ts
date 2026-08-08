@@ -33,7 +33,7 @@ export interface RSUPath {
   frequency?: number;
   range?: number;
   protocol?: string;
-  script?: string | null;
+  scenario?: string | null;
   beacon_interval?: number;
   opencda_name?: string;
   opencda_id?: number;

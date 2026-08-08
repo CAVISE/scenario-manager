@@ -16,6 +16,7 @@ export function useDblClickHandler(ctx: SharedMouseContext) {
     roadMeshRef,
     cubeCirclesRef,
     modeRef,
+    buildingMeshesRef,
   } = useEditorRefs();
   return useCallback(
     (e: MouseEvent) => {
@@ -122,6 +123,7 @@ export function useDblClickHandler(ctx: SharedMouseContext) {
         mesh.userData = { type: 'building', id: `building_${Date.now()}` };
         mesh.position.copy(pt);
         scene.add(mesh);
+        buildingMeshesRef.current.push(mesh);
         useEditorStore.getState().addBuilding(pt.x, pt.y, pt.z);
         const all = useEditorStore.getState().buildings;
         mesh.userData.id = all[all.length - 1]?.id;

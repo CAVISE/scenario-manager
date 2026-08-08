@@ -11,23 +11,93 @@ import {
   Point,
   RSU,
 } from '../../../../../../../store/types/useEditorStoreTypes';
-import { getCachedXodrContent } from '../../../../../../Editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
+import {
+  DEFAULT_XODR,
+  getCachedXodrContent,
+} from '../../../../../../Editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
+
+let canvasRef: HTMLCanvasElement | null = null;
+let cachedPreview: string | null = null;
+let previewGenerationInProgress = false;
+let pendingPreviewCallbacks: Array<(preview: string | null) => void> = [];
+
+export function setCanvasReference(canvas: HTMLCanvasElement | null): void {
+  canvasRef = canvas;
+  cachedPreview = null;
+}
+
+function capturePreview(): string | null {
+  if (!canvasRef) return null;
+  try {
+    return canvasRef.toDataURL('image/png');
+  } catch (error) {
+    console.warn('Failed to capture preview:', error);
+    return null;
+  }
+}
+
+export function invalidatePreviewCache(): void {
+  cachedPreview = null;
+}
+
+export function generatePreviewAsync(): Promise<string | null> {
+  return new Promise((resolve) => {
+    if (!canvasRef) {
+      resolve(null);
+      return;
+    }
+
+    if (cachedPreview) {
+      resolve(cachedPreview);
+      return;
+    }
+
+    if (previewGenerationInProgress) {
+      pendingPreviewCallbacks.push(resolve);
+      return;
+    }
+
+    previewGenerationInProgress = true;
+
+    requestAnimationFrame(() => {
+      try {
+        const preview = capturePreview();
+        if (preview) {
+          cachedPreview = preview;
+        }
+        resolve(preview);
+
+        const callbacks = [...pendingPreviewCallbacks];
+        pendingPreviewCallbacks = [];
+        callbacks.forEach((cb) => cb(preview));
+      } catch (error) {
+        console.warn('Failed to generate preview:', error);
+        resolve(null);
+
+        const callbacks = [...pendingPreviewCallbacks];
+        pendingPreviewCallbacks = [];
+        callbacks.forEach((cb) => cb(null));
+      } finally {
+        previewGenerationInProgress = false;
+      }
+    });
+  });
+}
 
 export function buildScenarioPayload(): ScenarioPayload {
   const s = useEditorStore.getState();
-  const canvas = document.querySelector(
-    '#ThreeJS canvas',
-  ) as HTMLCanvasElement | null;
+
+  const preview = cachedPreview;
+
   return {
     scenario_id: s.Scenario?.id || null,
-    scenario_name: s.Scenario?.name || localStorage.getItem('scenario_name'),
-    weather:
-      s.Scenario?.weather || localStorage.getItem('weather') || undefined,
-    map: s.simConfig?.carla?.map || 'town10',
+    scenario_name: s.Scenario?.name || null,
+    weather: s.Scenario?.weather || undefined,
+    map: s.simConfig?.carla?.map || DEFAULT_XODR,
     id: s.Scenario?.id || null,
     name_of_scenario: s.Scenario?.name || null,
     description: s.Scenario?.description || null,
-    preview: canvas?.toDataURL('image/png') ?? null,
+    preview: preview,
     file_: getCachedXodrContent(),
     scenario: (
       [
@@ -97,7 +167,7 @@ export function buildScenarioPayload(): ScenarioPayload {
             opencda_id: r.opencda_id,
             opencda_color: r.opencda_color,
             opencda_behavior_services: r.opencda_behavior_services,
-            script: r.script || null,
+            scenario: r.scenario || null,
             opencda_perception_activate: r.opencda_sensing?.perception_activate,
             opencda_detection_range: r.opencda_sensing?.detection_range,
             opencda_camera_visualize: r.opencda_sensing?.camera_visualize,

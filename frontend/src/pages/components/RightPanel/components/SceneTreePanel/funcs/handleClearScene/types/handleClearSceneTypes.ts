@@ -1,5 +1,6 @@
 import { TransformControls } from 'three-stdlib';
 import * as THREE from 'three';
+import { ToastApi } from '../../../../../../../../components/AppToast/types/toastTypes';
 export interface handleClearSceneProps {
   carMeshesRef: React.RefObject<THREE.Mesh[]>;
   sceneRef: React.RefObject<THREE.Scene | undefined>;
@@ -9,4 +10,5 @@ export interface handleClearSceneProps {
   rsuMeshesRef: React.RefObject<THREE.Mesh[]>;
   transformControlsRef: React.RefObject<TransformControls | null>;
   detachTransformControls: () => void;
+  toast: ToastApi;
 }

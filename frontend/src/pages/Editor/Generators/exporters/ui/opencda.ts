@@ -23,6 +23,7 @@ import type {
   CavBehaviorService,
   RsuBehaviorService,
 } from '../../../../../store/types/useEditorStoreTypes';
+import { useMemo } from 'react';
 
 const YAML_RESERVED_STRINGS = new Set([
   'true',
@@ -382,16 +383,19 @@ function pushCavBehaviorOverride(lines: string[], car: Car): void {
   }
 }
 
-export function generateOpenCDAConfig(
+export function useGenerateOpenCDAConfig(
   config: SimulationConfig,
   cars: Car[],
   rsus: RSU[],
   points: Point[],
   lidars: Lidar[] = [],
 ): string {
-  const cfg = mergeSimConfigWithDefaults(config);
-  const oc = cfg.opencda;
-  const carla = cfg.carla;
+  const useSimConfig = useMemo(
+    () => mergeSimConfigWithDefaults(config),
+    [config],
+  );
+  const oc = useSimConfig.opencda;
+  const carla = useSimConfig.carla;
   const ls = oc.lidar_sim;
   const bgR = oc.bg_spawn_range;
   const weather = {
@@ -413,7 +417,7 @@ export function generateOpenCDAConfig(
   lines.push('');
 
   if (oc.export_attacks) {
-    const attacks = cfg.attacks ?? [];
+    const attacks = useSimConfig.attacks ?? [];
     if (attacks.length === 0) {
       lines.push('attacks: []');
     } else {

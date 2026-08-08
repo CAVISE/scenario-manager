@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { disposeMesh } from '../../sceneUtils';
 import { useEditorStore } from '../../../../../../../../store/ui/useEditorStore';
 import { getTypeMeta } from '../../../types/SceneTreePanelTypes';
+import { pushSingleDeletionSnapshot } from '../../deletionSnapshots';
 import { handleDeleteNodeProps } from '../types/handleDeleteNodeTypes';
 
 export function handleDeleteNode({
@@ -16,10 +17,12 @@ export function handleDeleteNode({
   sceneRef,
   transformControlsRef,
   detachTransformControls,
+  toast,
 }: handleDeleteNodeProps) {
   e.stopPropagation();
   const s = useEditorStore.getState();
   const meta = getTypeMeta(name);
+  const pushed = pushSingleDeletionSnapshot({ id, label: meta.label });
 
   if (meta.label === 'CAR') {
     const idx = carMeshesRef.current.findIndex((m) => m.userData.id === id);
@@ -99,4 +102,10 @@ export function handleDeleteNode({
   s.selectObject(null);
   transformControlsRef.current?.detach();
   detachTransformControls();
+
+  if (pushed) {
+    toast.undo(pushed.label, () =>
+      useEditorStore.getState().restoreLastDeletion(pushed.snapshotId),
+    );
+  }
 }

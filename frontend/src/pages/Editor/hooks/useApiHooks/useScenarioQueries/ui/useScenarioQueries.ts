@@ -101,27 +101,16 @@ export function useScenarioPatchMutation() {
   });
 }
 
-export function useScenarioPutMutation() {
+export function useScenarioDeleteMutation() {
   const queryClient = useQueryClient();
   const updateScenario = useEditorStore((s) => s.updateScenario);
   return useMutation({
     mutationFn: ({ id }: { id: string; payload: ScenarioPayload }) =>
-      scenariosApi.replace(id),
-    onSuccess: (data, { id }) => {
-      const d = data as unknown as {
-        scenario_name?: string;
-        weather?: string;
-        file_?: string | null;
-      };
-      queryClient.setQueryData(scenarioKeys.detail(id), data);
-      queryClient.invalidateQueries({ queryKey: scenarioKeys.detail(id) });
+      scenariosApi.remove(id),
+    onSuccess: (_data, { id }) => {
+      queryClient.removeQueries({ queryKey: scenarioKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: scenarioKeys.list() });
-      updateScenario({
-        id,
-        name: d.scenario_name ?? undefined,
-        weather: d.weather ?? undefined,
-        file_: d.file_ ?? null,
-      });
+      updateScenario({ id: '', name: '', weather: '', file_: null });
     },
   });
 }

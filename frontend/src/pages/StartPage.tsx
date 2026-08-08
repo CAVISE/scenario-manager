@@ -1,11 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { CP, css, WEATHER_OPTIONS } from './types/StartPageTypes';
 import { useEditorStore } from '../store';
 import {
-  createNewScenario,
-  Scenario,
-} from './components/Inputs/types/Scenario';
+  useScenariosListQuery,
+  useScenarioCreateMutation,
+  useScenarioPatchMutation,
+} from './Editor/hooks/useApiHooks/useScenarioQueries';
+import {
+  handleCreate,
+  handlePatch,
+} from './components/RightPanel/components/ScenarioControlWidget/Handlers';
+import type { ScenarioListItem } from '../api/types/IScenarioTypes';
+import { getApiErrorMessageSync } from '../api/errors';
 
 const Corner: React.FC<{ pos: CP }> = ({ pos }) => (
   <div className={`sm-home-corner sm-home-corner-${pos}`} />
@@ -58,83 +65,65 @@ const HexLogo: React.FC = () => (
 );
 
 const StartPage = () => {
-  const [scenarios] = useState<Scenario[]>([]);
-  const [scenarioName, setScenarioName] = useState(() => {
-    const stored = window.localStorage.getItem('scenario_name');
-    if (stored) return JSON.parse(stored) as string;
-    return 'New Scenario';
-  });
-  const [weather, setWeather] = useState('ClearNoon');
+  const navigate = useNavigate();
+  const scenario = useEditorStore((s) => s.Scenario);
   const updateScenario = useEditorStore((s) => s.updateScenario);
+  const [notice, setNotice] = useState('');
 
-  const kx = 0.086087664180445;
-  const ky = 0.087651516713233;
+  const {
+    data: scenarios = [],
+    isLoading,
+    isError,
+    error,
+  } = useScenariosListQuery(true);
+  const createMutation = useScenarioCreateMutation();
+  const patchMutation = useScenarioPatchMutation();
+  const isSaving = createMutation.isPending || patchMutation.isPending;
 
-  useEffect(() => {
-    if (localStorage.getItem('scenario_name') == null) createNewScenario();
-    else setScenarioName(JSON.parse(localStorage.getItem('scenario_name')!));
-
-    const storedWeather = localStorage.getItem('weather');
-    if (storedWeather) setWeather(JSON.parse(storedWeather));
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('weather', JSON.stringify(weather));
-  }, [weather]);
+  const resetStore = () => {
+    const s = useEditorStore.getState();
+    [...s.cars].forEach((c) => s.removeCar(c.id));
+    s.removeAllRSUs();
+    [...s.points].forEach((p) => s.removePoint(p.id));
+    [...s.buildings].forEach((b) => s.removeBuilding(b.id));
+    [...s.pedestrians].forEach((p) => s.removePedestrian(p.id));
+    [...s.lidars].forEach((l) => s.removeLidar(l.id));
+    s.removeSelectedId();
+    s.updateScenario({
+      id: '',
+      name: 'New Scenario',
+      weather: 'ClearNoon',
+      description: '',
+      file_: null,
+    });
+  };
 
   const handleChangeName = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setScenarioName(event.target.value);
     updateScenario({ name: event.target.value });
-    localStorage.setItem('scenario_name', JSON.stringify(event.target.value));
   };
 
   const handleCreateNewScenario = () => {
-    setScenarioName('');
-    createNewScenario();
+    resetStore();
+    navigate('/editor');
   };
 
   const handleSaveScenario = () => {
-    const scen: Scenario = {
-      scenario_id: JSON.parse(localStorage.getItem('scenario_id')!),
-      scenario_name: JSON.parse(localStorage.getItem('scenario_name')!),
-      weather: JSON.parse(localStorage.getItem('weather')!),
-      scenario: JSON.parse(localStorage.getItem('scenario')!),
-    };
-
-    scen.scenario = scen.scenario.map((item) => ({
-      vehicle: item.vehicle,
-      active: item.active,
-      color: item.color,
-      path: item.path.map((point) => ({
-        x: point.x * kx - 124.13208770751953,
-        y: point.y * ky - 79.5,
-        z: 0.6,
-      })),
-    }));
-
-    localStorage.setItem('scenario', JSON.stringify(scen.scenario));
+    if (!scenario.name.trim()) {
+      setNotice('Scenario name is required.');
+      return;
+    }
+    if (scenario.id) {
+      handlePatch(setNotice, scenario.id, true, patchMutation);
+    } else {
+      handleCreate(setNotice, createMutation);
+    }
   };
 
-  const handleEdit = (index: number) => {
-    setScenarioName(scenarios[index].scenario_name);
-    updateScenario({
-      name: scenarios[index].scenario_name,
-      weather: scenarios[index].weather,
-    });
-    localStorage.setItem(
-      'scenario_id',
-      JSON.stringify(scenarios[index].scenario_id),
-    );
-    localStorage.setItem(
-      'scenario_name',
-      JSON.stringify(scenarios[index].scenario_name),
-    );
-    localStorage.setItem('weather', JSON.stringify(scenarios[index].weather));
-    localStorage.setItem('scenario', JSON.stringify(scenarios[index].scenario));
+  const handleOpenScenario = (item: ScenarioListItem) => {
+    navigate(`/editor?scenario=${encodeURIComponent(item.scenario_id)}`);
   };
 
   const handleWeatherChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setWeather(event.target.value);
     updateScenario({ weather: event.target.value });
   };
   return (
@@ -169,10 +158,12 @@ const StartPage = () => {
               <input
                 className="sm-home-input"
                 placeholder="Scenario name"
-                value={scenarioName}
+                value={scenario.name}
                 onChange={handleChangeName}
               />
             </div>
+
+            {notice ? <div className="sm-home-notice">{notice}</div> : null}
 
             <div className="sm-home-btn-row">
               <button
@@ -181,22 +172,34 @@ const StartPage = () => {
               >
                 + New
               </button>
-              <button className="sm-home-btn" onClick={handleSaveScenario}>
-                Save
+              <button
+                className="sm-home-btn"
+                onClick={handleSaveScenario}
+                disabled={isSaving}
+              >
+                {isSaving ? 'Saving…' : 'Save'}
               </button>
             </div>
 
-            {scenarios.length > 0 && (
+            {isError ? (
+              <div className="sm-home-notice">
+                {getApiErrorMessageSync(error, 'Failed to load scenarios.')}
+              </div>
+            ) : null}
+
+            {isLoading ? (
+              <div className="sm-home-scenario-loading">Loading…</div>
+            ) : null}
+
+            {!isLoading && scenarios.length > 0 && (
               <div className="sm-home-scenario-list">
-                {scenarios.map((scenario, index) => (
+                {scenarios.map((item) => (
                   <div
                     className="sm-home-scenario-item"
-                    key={scenario.scenario_id ?? index}
-                    onClick={() => handleEdit(index)}
+                    key={item.scenario_id}
+                    onClick={() => handleOpenScenario(item)}
                   >
-                    <span className="sm-home-scenario-name">
-                      {scenario.scenario_name}
-                    </span>
+                    <span className="sm-home-scenario-name">{item.name}</span>
                     <span className="sm-home-scenario-arrow">&rarr;</span>
                   </div>
                 ))}
@@ -215,7 +218,7 @@ const StartPage = () => {
             <div className="sm-home-select-wrap">
               <select
                 className="sm-home-select"
-                value={weather}
+                value={scenario.weather}
                 onChange={handleWeatherChange}
               >
                 {WEATHER_OPTIONS.map((val) => (

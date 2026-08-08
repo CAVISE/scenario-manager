@@ -1,3 +1,3 @@
-import index from './ui';
+import index from './ui/SceneTreePanel';
 
 export default index;

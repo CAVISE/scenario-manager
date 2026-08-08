@@ -1,14 +1,8 @@
-import {
-  LOADING_STEPS,
-  OpenDriveMapInstance,
-} from '../../../../../types/editorTypes';
-import { OpenDriveModule } from '../../../../useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
+import { LOADING_STEPS } from '../../../../../types/editorTypes';
 
 export interface UseOdrLoaderProps {
   setStep: (step: keyof typeof LOADING_STEPS) => void;
   setError: ((err: Error) => void) | undefined;
-  moduleRef: React.RefObject<OpenDriveModule | null>;
-  mapRef: React.RefObject<OpenDriveMapInstance | null>;
   loadOdrMapRef: React.RefObject<
     (clearMap?: boolean, fitView?: boolean) => void
   >;

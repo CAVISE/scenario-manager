@@ -2,8 +2,32 @@ import { useCallback } from 'react';
 import * as THREE from 'three';
 import { useEditorStore } from '../../../../../store';
 import { useHooks, useEditorRefs } from '../../../context';
+import { ToastApi } from '../../../../../components/AppToast/types/toastTypes';
+import { pushSingleDeletionSnapshot } from '../../../../components/RightPanel/components/SceneTreePanel/funcs/deletionSnapshots';
 
-export function useKeyDownHandler() {
+function disposeObject3D(obj: THREE.Object3D): void {
+  obj.traverse((child) => {
+    if (child instanceof THREE.Mesh) {
+      child.geometry?.dispose();
+      if (Array.isArray(child.material)) {
+        child.material.forEach((mt) => mt.dispose());
+      } else {
+        child.material?.dispose();
+      }
+    }
+  });
+}
+
+function removeObjectFromScene(obj: THREE.Object3D, scene: THREE.Scene): void {
+  scene.remove(obj);
+  disposeObject3D(obj);
+}
+
+interface UseKeyDownHandlerProps {
+  toast: ToastApi;
+}
+
+export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
   const { updateSceneGraph } = useHooks();
   const {
     sceneRef,
@@ -17,6 +41,33 @@ export function useKeyDownHandler() {
     loadPointsRef,
   } = useEditorRefs();
   const onSelectObject = useEditorStore((s) => s.selectObject);
+
+  const handleDeleteWithUndo = (
+    id: string | undefined,
+    label: string,
+    deleteFn: () => void,
+    attached: THREE.Object3D,
+  ) => {
+    if (!id) return;
+
+    const pushed = pushSingleDeletionSnapshot({ id, label });
+
+    const scene = sceneRef.current;
+    if (scene) {
+      removeObjectFromScene(attached, scene);
+    }
+
+    deleteFn();
+
+    onSelectObject(null);
+    updateSceneGraph();
+
+    if (pushed) {
+      toast.undo(`Deleted ${label}`, () =>
+        useEditorStore.getState().restoreLastDeletion(pushed.snapshotId),
+      );
+    }
+  };
 
   return useCallback(
     (e: KeyboardEvent) => {
@@ -70,111 +121,122 @@ export function useKeyDownHandler() {
         (e.target as HTMLElement)?.isContentEditable
       )
         return;
+
       const tc = transformControls as unknown as {
-        object: THREE.Mesh | undefined;
+        object: THREE.Object3D | undefined;
       };
       const attached = tc?.object;
       if (!attached) return;
+
       const type = attached.userData.type;
+      const id = attached.userData.id as string | undefined;
+
+      transformControls.detach();
 
       if (type === 'car') {
-        transformControls.detach();
-        scene.remove(attached);
-        attached.traverse((child) => {
-          const m = child as THREE.Mesh;
-          if (m.isMesh) {
-            m.geometry?.dispose();
-            (Array.isArray(m.material) ? m.material : [m.material]).forEach(
-              (mt) => mt?.dispose(),
-            );
-          }
-        });
         const carIdx = carMeshes.findIndex((m) => m === attached);
-        if (carIdx !== -1) {
-          carMeshes.splice(carIdx, 1);
-          cubeCircles[carIdx]?.forEach((c) => {
-            scene.remove(c);
-            c.geometry?.dispose();
-            (c.material as THREE.Material)?.dispose();
-          });
-          cubeCircles.splice(carIdx, 1);
-        }
-        if (attached.userData.id) {
-          useEditorStore.getState().removeCar(attached.userData.id);
-        }
-        onSelectObject(null);
-        updateSceneGraph();
+
+        handleDeleteWithUndo(
+          id,
+          'CAR',
+          () => {
+            if (id) {
+              useEditorStore.getState().removeCar(id);
+              const points = useEditorStore
+                .getState()
+                .points.filter((p) => p.carId === id);
+              points.forEach((p) => {
+                useEditorStore.getState().removePoint(p.id);
+              });
+            }
+            if (carIdx !== -1) {
+              cubeCirclesRef.current[carIdx]?.forEach((c) => {
+                scene.remove(c);
+                disposeObject3D(c);
+              });
+              cubeCirclesRef.current.splice(carIdx, 1);
+              carMeshesRef.current.splice(carIdx, 1);
+            }
+          },
+          attached,
+        );
         return;
       }
 
       if (type === 'building') {
-        transformControls.detach();
-        scene.remove(attached);
-        attached.traverse((child) => {
-          const m = child as THREE.Mesh;
-          if (m.isMesh) {
-            m.geometry?.dispose();
-            (Array.isArray(m.material) ? m.material : [m.material]).forEach(
-              (mt) => mt?.dispose(),
-            );
-          }
-        });
-        if (attached.userData.id)
-          useEditorStore.getState().removeBuilding(attached.userData.id);
-        onSelectObject(null);
-        updateSceneGraph();
+        handleDeleteWithUndo(
+          id,
+          'BLD',
+          () => {
+            if (id) {
+              useEditorStore.getState().removeBuilding(id);
+            }
+          },
+          attached,
+        );
         return;
       }
 
       if (type === 'point') {
         let root: THREE.Object3D = attached;
-        while (root.parent && root.userData.type !== 'point')
+        while (root.parent && root.userData.type !== 'point') {
           root = root.parent;
+        }
+
         const idx = pointsArr.findIndex((p) => p === root);
         if (idx !== -1) {
-          transformControls.detach();
-          scene.remove(root);
-          root.traverse((child) => {
-            const m = child as THREE.Mesh;
-            if (m.isMesh) {
-              m.geometry?.dispose();
-              (Array.isArray(m.material) ? m.material : [m.material]).forEach(
-                (mt) => mt?.dispose(),
-              );
-            }
-          });
-          pointsArr.splice(idx, 1);
-          pointsObjs.splice(idx, 1);
-          const rsuMeshIdx = rsuMeshes.findIndex((p) => p === root);
-          if (rsuMeshIdx !== -1) rsuMeshes.splice(rsuMeshIdx, 1);
-          const rsuId = root.userData.id as string | undefined;
-          if (rsuId) {
-            const storeIdx = useEditorStore
-              .getState()
-              .RSUs.findIndex((r) => r.id === rsuId);
-            if (storeIdx !== -1) useEditorStore.getState().removeRSU(storeIdx);
-          }
-          onSelectObject(null);
-          updateSceneGraph();
+          const pointId = root.userData.id as string | undefined;
+
+          handleDeleteWithUndo(
+            pointId,
+            'RSU',
+            () => {
+              if (pointId) {
+                const rsuIdx = rsuMeshes.findIndex((m) => m === root);
+                if (rsuIdx !== -1) {
+                  rsuMeshesRef.current.splice(rsuIdx, 1);
+                }
+                pointsArrRef.current.splice(idx, 1);
+
+                const objsIdx = pointsObjs.findIndex((m) => m === root);
+                if (objsIdx !== -1) {
+                  pointsObjsRef.current.splice(objsIdx, 1);
+                }
+
+                useEditorStore.getState().removePoint(pointId);
+              }
+            },
+            root,
+          );
         }
         return;
       }
 
-      if (type === 'pedestrian' && attached.userData.id) {
-        transformControls.detach();
-        scene.remove(attached);
-        attached.traverse((child) => {
-          const m = child as THREE.Mesh;
-          if (m.isMesh) {
-            m.geometry?.dispose();
-            (Array.isArray(m.material) ? m.material : [m.material]).forEach(
-              (mt) => mt?.dispose(),
-            );
-          }
-        });
-        useEditorStore.getState().removePedestrian(attached.userData.id);
-        onSelectObject(null);
-        updateSceneGraph();
+      if (type === 'pedestrian') {
+        handleDeleteWithUndo(
+          id,
+          'HMN',
+          () => {
+            if (id) {
+              useEditorStore.getState().removePedestrian(id);
+            }
+          },
+          attached,
+        );
+        return;
+      }
+
+      if (type === 'lidar') {
+        handleDeleteWithUndo(
+          id,
+          'LDR',
+          () => {
+            if (id) {
+              useEditorStore.getState().removeLidar(id);
+            }
+          },
+          attached,
+        );
         return;
       }
 
@@ -182,22 +244,60 @@ export function useKeyDownHandler() {
         for (let i = 0; i < cubeCircles.length; i++) {
           const idx = cubeCircles[i].findIndex((c) => c === attached);
           if (idx !== -1) {
-            transformControls.detach();
-            const circle = cubeCircles[i][idx];
-            scene.remove(circle);
-            circle.geometry?.dispose();
-            (circle.material as THREE.Material)?.dispose();
-            cubeCircles[i].splice(idx, 1);
             const carId = carMeshes[i]?.userData.id;
-            const pts = useEditorStore
+            const points = useEditorStore
               .getState()
               .points.filter((p) => p.carId === carId);
-            if (pts[idx]) useEditorStore.getState().removePoint(pts[idx].id);
-            onSelectObject(null);
+            const pointId = points[idx]?.id;
+
+            const circle = cubeCircles[i][idx];
+
+            if (pointId) {
+              const pushed = pushSingleDeletionSnapshot({
+                id: pointId,
+                label: 'WPT',
+              });
+
+              scene.remove(circle);
+              disposeObject3D(circle);
+              cubeCircles[i].splice(idx, 1);
+
+              useEditorStore.getState().removePoint(pointId);
+
+              onSelectObject(null);
+              updateSceneGraph();
+
+              if (pushed) {
+                toast.undo('Deleted WPT', () =>
+                  useEditorStore
+                    .getState()
+                    .restoreLastDeletion(pushed.snapshotId),
+                );
+              }
+            } else {
+              scene.remove(circle);
+              disposeObject3D(circle);
+              cubeCircles[i].splice(idx, 1);
+            }
+
             loadPointsRef.current();
-            updateSceneGraph();
             break;
           }
+        }
+        return;
+      }
+
+      if (id) {
+        const pushed = pushSingleDeletionSnapshot({ id, label: 'OBJ' });
+        scene.remove(attached);
+        disposeObject3D(attached);
+        onSelectObject(null);
+        updateSceneGraph();
+
+        if (pushed) {
+          toast.undo('Deleted OBJ', () =>
+            useEditorStore.getState().restoreLastDeletion(pushed.snapshotId),
+          );
         }
       }
     },
@@ -213,6 +313,7 @@ export function useKeyDownHandler() {
       loadPointsRef,
       updateSceneGraph,
       onSelectObject,
+      toast,
     ],
   );
 }

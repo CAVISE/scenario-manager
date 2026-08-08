@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   Alert,
   Box,
@@ -28,6 +28,7 @@ import { CARLA_MAPS } from '../../SimConfigModal/types/SimConfigModalTypes';
 import { useEditorRefs, useHooks } from '../../../context';
 import { ScenarioGroup } from '../../../../../api/types/IScenarioTypes';
 import { buildOpenCDAArtifact } from '../../../Generators/configGenerators';
+import { clearLoadedSumoNetwork } from '../../../Generators/exporters/ui/sumoNetwork';
 import {
   confirmModalStyles,
   confirmIconWrapStyles,
@@ -59,14 +60,21 @@ export default function EditorModals() {
   const { loadFile } = useHooks();
   const { odrMapRef } = useEditorRefs();
 
-  if (typeof window !== 'undefined') {
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     window.editorModals = {
       openTelemetry: () => setTelemetryModalOpen(true),
       openSimulation: () => setSimulationConfirmOpen(true),
       openMapPicker: () => setMapPickerOpen(true),
     };
-  }
 
+    return () => {
+      delete (window as Window).editorModals;
+    };
+  }, []);
   const handleSelectMap = useCallback(
     async (mapName: string) => {
       setMapPickerError(null);
@@ -75,6 +83,7 @@ export default function EditorModals() {
         const xodrName = setStoredXodrName(mapName);
         const xodrText = await fetchXodrText(xodrName);
         updateSimConfigCarla({ map: mapName });
+        clearLoadedSumoNetwork();
         loadFile(xodrText, true);
         setMapPickerOpen(false);
       } catch (err) {
@@ -111,13 +120,6 @@ export default function EditorModals() {
         ? { x: odrMapRef.current.x_offs, y: -odrMapRef.current.y_offs }
         : undefined,
     };
-
-    // eslint-disable-next-line no-console
-    console.debug('EditorModals start payload', {
-      attacks: payload.attacks?.length,
-      scenario_id: payload.scenario_id,
-      map: payload.map,
-    });
 
     const validation = validateStartSimulationPayload(payload);
     if (!validation.ok) {

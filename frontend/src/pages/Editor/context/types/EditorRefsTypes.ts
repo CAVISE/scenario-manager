@@ -15,6 +15,7 @@ export interface EditorRefs {
   cubeCirclesRef: RefObject<THREE.Mesh[][]>;
   pedestrianObjsRef: RefObject<THREE.Mesh[]>;
   rsuMeshesRef: RefObject<THREE.Mesh[]>;
+  buildingMeshesRef: RefObject<THREE.Object3D[]>;
   roadMeshRef: RefObject<THREE.Mesh | null>;
   currentCarRef: RefObject<string>;
   currentColorRef: RefObject<string>;

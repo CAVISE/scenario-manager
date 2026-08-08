@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Modal,
   Box,
@@ -28,12 +28,15 @@ import {
   SumoTab,
   OmnetTab,
 } from '../tabs';
+import { parseNumberInputChange } from '../utils/numberInputUtils';
 
 export default function SimConfigModal({ open, onClose }: SimConfigModalProps) {
   const [tab, setTab] = useState(0);
   const modalContentRef = useRef<HTMLDivElement | null>(null);
-  const simConfig = mergeSimConfigWithDefaults(
-    useEditorStore((s) => s.simConfig),
+  const rawSimConfig = useEditorStore((s) => s.simConfig);
+  const simConfig = useMemo(
+    () => mergeSimConfigWithDefaults(rawSimConfig),
+    [rawSimConfig],
   );
   const updateSimConfig = useEditorStore((s) => s.updateSimConfig);
 
@@ -44,17 +47,29 @@ export default function SimConfigModal({ open, onClose }: SimConfigModalProps) {
       return undefined;
     }
 
+    const HOLD_DELAY_MS = 350;
+    const HOLD_REPEAT_MS = 90;
+
     let activeInput: HTMLInputElement | null = null;
+    let holdDelayTimeout: number | null = null;
     let holdInterval: number | null = null;
     let step = 1;
     let minimum: number | undefined;
     let maximum: number | undefined;
 
-    const stopHolding = () => {
+    const clearHoldTimers = () => {
+      if (holdDelayTimeout !== null) {
+        window.clearTimeout(holdDelayTimeout);
+        holdDelayTimeout = null;
+      }
       if (holdInterval !== null) {
         window.clearInterval(holdInterval);
         holdInterval = null;
       }
+    };
+
+    const stopHolding = () => {
+      clearHoldTimers();
       activeInput = null;
     };
 
@@ -73,6 +88,16 @@ export default function SimConfigModal({ open, onClose }: SimConfigModalProps) {
       activeInput.dispatchEvent(new Event('change', { bubbles: true }));
     };
 
+    const stepInput = () => {
+      if (!activeInput) {
+        return;
+      }
+      const currentValue = Number(activeInput.value);
+      updateInputValue(
+        (Number.isFinite(currentValue) ? currentValue : 0) + step,
+      );
+    };
+
     const startHolding = (event: Event) => {
       const target = event.target as HTMLElement | null;
       const input = target?.closest(
@@ -83,25 +108,21 @@ export default function SimConfigModal({ open, onClose }: SimConfigModalProps) {
         return;
       }
 
-      event.preventDefault();
+      stopHolding();
       activeInput = input;
       minimum = input.min ? Number(input.min) : undefined;
       maximum = input.max ? Number(input.max) : undefined;
       step = Number(input.step || 1);
       step = Number.isFinite(step) && step > 0 ? step : 1;
 
-      stopHolding();
-      const currentValue = Number(input.value);
-      updateInputValue(
-        (Number.isFinite(currentValue) ? currentValue : 0) + step,
-      );
-
-      holdInterval = window.setInterval(() => {
-        const currentValue = Number(activeInput?.value ?? input.value);
-        updateInputValue(
-          (Number.isFinite(currentValue) ? currentValue : 0) + step,
-        );
-      }, 90);
+      holdDelayTimeout = window.setTimeout(() => {
+        holdDelayTimeout = null;
+        if (!activeInput) {
+          return;
+        }
+        stepInput();
+        holdInterval = window.setInterval(stepInput, HOLD_REPEAT_MS);
+      }, HOLD_DELAY_MS);
     };
 
     container.addEventListener('mousedown', startHolding as EventListener);
@@ -132,13 +153,14 @@ export default function SimConfigModal({ open, onClose }: SimConfigModalProps) {
 
         <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
           <TextField
-            key={`sim_duration-${simConfig.sim_duration}`}
             label="Duration (s)"
             type="number"
             size="small"
             value={simConfig.sim_duration}
             onChange={(e) =>
-              updateSimConfig({ sim_duration: Number(e.target.value) })
+              updateSimConfig({
+                sim_duration: parseNumberInputChange(e.target),
+              })
             }
             sx={{ width: 140 }}
           />

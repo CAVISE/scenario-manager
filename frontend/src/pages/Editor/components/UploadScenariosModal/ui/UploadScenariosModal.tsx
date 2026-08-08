@@ -38,6 +38,7 @@ import {
   saveButtonStyles,
   scenarioCardStyles,
   titleStyles,
+  ModalContainerStyles,
 } from '../types/UploadScenariosModalTypes';
 import type { UploadScenariosModalProps } from '../types/UploadScenariosModalTypes';
 import type { ScenarioListItem } from '../../../../../api/types/IScenarioTypes';
@@ -173,7 +174,7 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
       onClose={handleClose}
       aria-labelledby="upload-scenarios-title"
     >
-      <ModalContainer>
+      <ModalContainer sx={ModalContainerStyles}>
         <ModalHeader>
           <Box sx={uploadModalBoxStyles}>
             {selectedScenario && (

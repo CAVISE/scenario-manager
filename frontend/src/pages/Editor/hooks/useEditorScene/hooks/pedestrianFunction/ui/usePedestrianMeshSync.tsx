@@ -22,6 +22,8 @@ const ensurePedestrianModel = (): Promise<boolean> => {
   });
 };
 
+let pedestrianSyncQueue: Promise<void> = Promise.resolve();
+
 function syncPedestrians(
   scene: THREE.Scene,
   pedestrianMeshesRef: React.RefObject<THREE.Mesh[]>,
@@ -35,7 +37,8 @@ function syncPedestrians(
 
   pedestrianMeshesRef.current = pedestrianMeshesRef.current.filter((p) => {
     if (pedestrians.some((pe) => pe.id === p.userData.id)) return true;
-    if (attached === p) return true;
+    if (attached && (attached === p || p.getObjectById(attached.id)))
+      return true;
     p.traverse((child) => {
       const m = child as THREE.Mesh;
       if (m.isMesh) {
@@ -79,6 +82,27 @@ function syncPedestrians(
   updateSceneGraph();
 }
 
+function queuePedestrianSync(
+  scene: THREE.Scene,
+  pedestrianMeshesRef: React.RefObject<THREE.Mesh[]>,
+  pedestrianObjsRef: React.RefObject<THREE.Mesh[]>,
+  transformControlsRef: React.RefObject<unknown>,
+  updateSceneGraph: () => void,
+): Promise<void> {
+  pedestrianSyncQueue = pedestrianSyncQueue.then(() =>
+    ensurePedestrianModel().then(() => {
+      syncPedestrians(
+        scene,
+        pedestrianMeshesRef,
+        pedestrianObjsRef,
+        transformControlsRef,
+        updateSceneGraph,
+      );
+    }),
+  );
+  return pedestrianSyncQueue;
+}
+
 export function usePedestrianMeshSync() {
   const { updateSceneGraph } = useHooks();
   const {
@@ -95,15 +119,13 @@ export function usePedestrianMeshSync() {
         if (attempts < 10) setTimeout(() => trySync(attempts + 1), 300);
         return;
       }
-      ensurePedestrianModel().then(() => {
-        syncPedestrians(
-          scene,
-          pedestrianMeshesRef,
-          pedestrianObjsRef,
-          transformControlsRef,
-          updateSceneGraph,
-        );
-      });
+      queuePedestrianSync(
+        scene,
+        pedestrianMeshesRef,
+        pedestrianObjsRef,
+        transformControlsRef,
+        updateSceneGraph,
+      );
     };
     trySync();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -113,15 +135,13 @@ export function usePedestrianMeshSync() {
     const unsubscribe = useEditorStore.subscribe(() => {
       const scene = sceneRef.current;
       if (!scene) return;
-      ensurePedestrianModel().then(() => {
-        syncPedestrians(
-          scene,
-          pedestrianMeshesRef,
-          pedestrianObjsRef,
-          transformControlsRef,
-          updateSceneGraph,
-        );
-      });
+      queuePedestrianSync(
+        scene,
+        pedestrianMeshesRef,
+        pedestrianObjsRef,
+        transformControlsRef,
+        updateSceneGraph,
+      );
     });
     return unsubscribe;
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -1,12 +1,16 @@
+import { useMemo } from 'react';
 import {
   mergeSimConfigWithDefaults,
   type SimulationConfig,
 } from '../../types/configGeneratorsTypes';
 
-export function generateCAPIomnetIni(config: SimulationConfig): string {
-  const c = mergeSimConfigWithDefaults(config).capi;
+export function useGenerateCAPIomnetIni(config: SimulationConfig): string {
+  const simConfig = useMemo(
+    () => mergeSimConfigWithDefaults(config).capi,
+    [config],
+  );
 
-  const extraConfigSections = c.extra_configs
+  const extraConfigSections = simConfig.extra_configs
     .map(
       (ec) => `
 [Config ${ec.name}]
@@ -17,49 +21,52 @@ export function generateCAPIomnetIni(config: SimulationConfig): string {
     .join('\n');
 
   return `[General]
-network = ${c.network}
-cmdenv-express-mode = ${c.cmdenv_express_mode}
-cmdenv-output-file = "${c.cmdenv_output_file}"
+network = ${simConfig.network}
+cmdenv-express-mode = ${simConfig.cmdenv_express_mode}
+cmdenv-output-file = "${simConfig.cmdenv_output_file}"
 *.withCAPI = true
-*.capi.cmdenv-log-level = ${c.capi_log_level}
+*.capi.cmdenv-log-level = ${simConfig.capi_log_level}
 **.cmdenv-log-level = warn
-**.scalar-recording = ${c.scalar_recording}
-**.vector-recording = ${c.vector_recording}
+**.scalar-recording = ${simConfig.scalar_recording}
+**.vector-recording = ${simConfig.vector_recording}
 
 *.traci.core.version = -1
 *.traci.launcher.typename = "ConnectLauncher"
-*.traci.launcher.hostname = "${c.traci_hostname}"
-*.traci.launcher.port = ${c.traci_port}
-*.traci.launcher.clientId = ${c.client_id}
+*.traci.launcher.hostname = "${simConfig.traci_hostname}"
+*.traci.launcher.port = ${simConfig.traci_port}
+*.traci.launcher.clientId = ${simConfig.client_id}
 
-*.capi.address = "${c.address}"
+*.capi.address = "${simConfig.address}"
 
 *.node[*].wlan[*].typename = "VanetNic"
-*.node[*].wlan[*].radio.channelNumber = ${c.channel_number}
-*.node[*].wlan[*].radio.carrierFrequency = ${c.carrier_frequency}
-*.node[*].wlan[*].radio.transmitter.power = ${c.tx_power}
+*.node[*].wlan[*].radio.channelNumber = ${simConfig.channel_number}
+*.node[*].wlan[*].radio.carrierFrequency = ${simConfig.carrier_frequency}
+*.node[*].wlan[*].radio.transmitter.power = ${simConfig.tx_power}
 
-*.node[*].middleware.updateInterval = ${c.middleware_update_interval}s
-*.node[*].middleware.datetime = "${c.datetime}"
+*.node[*].middleware.updateInterval = ${simConfig.middleware_update_interval}s
+*.node[*].middleware.datetime = "${simConfig.datetime}"
 *.node[*].middleware.services = xmldoc("services.xml")
 ${extraConfigSections}`;
 }
 
-export function generateCAPIServicesXml(config: SimulationConfig): string {
-  const c = mergeSimConfigWithDefaults(config).capi;
+export function useGenerateCAPIServicesXml(config: SimulationConfig): string {
+  const simConfig = useMemo(
+    () => mergeSimConfigWithDefaults(config).capi,
+    [config],
+  );
   const services: string[] = [];
 
-  if (c.ca_service_enabled) {
+  if (simConfig.ca_service_enabled) {
     services.push(`\t<service type="artery.application.CaService">
-\t\t<listener port="${c.ca_service_port}"/>
+\t\t<listener port="${simConfig.ca_service_port}"/>
 \t</service>`);
   }
 
-  if (c.cosim_service_enabled) {
+  if (simConfig.cosim_service_enabled) {
     services.push(`\t<service type="cavise.application.CosimService">
-\t\t<listener port="${c.cosim_service_port}"/>
+\t\t<listener port="${simConfig.cosim_service_port}"/>
 \t\t<filters>
-\t\t    <name pattern="${c.cosim_filter_pattern}"/>
+\t\t    <name pattern="${simConfig.cosim_filter_pattern}"/>
 \t\t</filters>
 \t</service>`);
   }

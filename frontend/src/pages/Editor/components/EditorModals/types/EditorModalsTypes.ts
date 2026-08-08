@@ -10,6 +10,15 @@ export interface EditorModalsProps {
   onCloseSimulationConfirm: () => void;
   onStartSimulation: () => void;
 }
+declare global {
+  export interface Window {
+    editorModals?: {
+      openTelemetry: () => void;
+      openSimulation: () => void;
+      openMapPicker: () => void;
+    };
+  }
+}
 export const EditorModalsStyles = {
   position: 'absolute',
   top: '50%',

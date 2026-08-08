@@ -24,17 +24,17 @@ import {
   resolveSumoNetwork,
 } from '../../../../../../Generators/exporters/ui/sumoNetwork';
 import { getSumoNetFilename } from '../../../../../../Generators/exporters';
+import { useAppToast } from '../../../../../../../../components/AppToast';
 
-function reportExportError(error: unknown) {
-  useEditorStore
-    .getState()
-    .setError(error instanceof Error ? error : new Error(String(error)));
+function exportErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 export default function SumoExportSection({
   openExportDialog,
 }: SimulatorProps) {
   const { odrMapRef } = useEditorRefs();
+  const toast = useAppToast();
 
   const handleExportSumoCfg = () => {
     const simConfig = mergeSimConfigWithDefaults(
@@ -69,7 +69,7 @@ export default function SumoExportSection({
         () => content,
       );
     } catch (error) {
-      reportExportError(error);
+      toast.error(`Failed to export routes: ${exportErrorMessage(error)}`);
     }
   };
 
@@ -96,7 +96,7 @@ export default function SumoExportSection({
         () => content,
       );
     } catch (error) {
-      reportExportError(error);
+      toast.error(`Failed to export polygons: ${exportErrorMessage(error)}`);
     }
   };
 
@@ -109,7 +109,7 @@ export default function SumoExportSection({
       );
       openExportDialog(network.filename, () => network.content);
     } catch (error) {
-      reportExportError(error);
+      toast.error(`Failed to export network: ${exportErrorMessage(error)}`);
     }
   };
 
@@ -121,7 +121,7 @@ export default function SumoExportSection({
       if (!xodr) throw new Error('OpenDRIVE map is unavailable');
       openExportDialog(getStoredXodrName(simConfig.carla.map), () => xodr);
     } catch (error) {
-      reportExportError(error);
+      toast.error(`Failed to export OpenDRIVE: ${exportErrorMessage(error)}`);
     }
   };
 

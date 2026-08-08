@@ -77,12 +77,12 @@ export function createEditorActions(opts: CreateEditorActionsOptions) {
     },
 
     addDirectionPoints() {
+      modeRef.current.isAddCarModeActive = false;
+      modeRef.current.isAddPointModeActive = false;
+      modeRef.current.isAddPedestrianModeActive = false;
+      useEditorStore.getState().setBuildingMode(false);
       if (useEditorStore.getState().selectedId) {
         modeRef.current.isAddedPoints = true;
-        modeRef.current.isAddCarModeActive = false;
-        modeRef.current.isAddPointModeActive = false;
-        modeRef.current.isAddPedestrianModeActive = false;
-        useEditorStore.getState().setBuildingMode(false);
         loadPoints();
       }
     },

@@ -11,7 +11,7 @@ import {
 import {
   useScenarioCreateMutation,
   useScenarioPatchMutation,
-  useScenarioPutMutation,
+  useScenarioDeleteMutation,
 } from '../../../../../Editor/hooks/useApiHooks/useScenarioQueries';
 import { useEditorStore } from '../../../../../../store';
 import { useStartSimulationMutation } from '../../../../../Editor/hooks/useApiHooks/useSimulationMutation';
@@ -26,11 +26,12 @@ export default function ScenarioControlWidget() {
   const { buildingModelRef, updateSceneGraph, loadFile, setStep } = useHooks();
   const [scenarioIdInput, setScenarioIdInput] = useState(scenario.id ?? '');
   const [notice, setNotice] = useState<string>('');
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const setNoticeWithToast = useNoticeWithToast(setNotice);
 
   const createScenarioMutation = useScenarioCreateMutation();
   const patchScenarioMutation = useScenarioPatchMutation();
-  const putScenarioMutation = useScenarioPutMutation();
+  const deleteScenarioMutation = useScenarioDeleteMutation();
   const startSimulationMutation = useStartSimulationMutation();
 
   const statusesQuery = useStatusesQuery();
@@ -43,7 +44,7 @@ export default function ScenarioControlWidget() {
   const isBusy =
     createScenarioMutation.isPending ||
     patchScenarioMutation.isPending ||
-    putScenarioMutation.isPending ||
+    deleteScenarioMutation.isPending ||
     startSimulationMutation.isPending;
 
   return (
@@ -82,7 +83,7 @@ export default function ScenarioControlWidget() {
             })
           }
         >
-          GET
+          LOAD
         </button>
         <button
           type="button"
@@ -93,10 +94,11 @@ export default function ScenarioControlWidget() {
               setNoticeWithToast,
               createScenarioMutation,
               scenarioIdInput,
+              setScenarioIdInput,
             )
           }
         >
-          POST
+          SAVE
         </button>
         <button
           type="button"
@@ -111,20 +113,13 @@ export default function ScenarioControlWidget() {
             )
           }
         >
-          PATCH
+          UPDATE
         </button>
         <button
           type="button"
           className="rp-btn rp-btn-secondary"
           disabled={!hasId || isBusy}
-          onClick={() =>
-            handleDelete(
-              setNoticeWithToast,
-              scenarioIdInput,
-              hasId,
-              putScenarioMutation,
-            )
-          }
+          onClick={() => setDeleteConfirmOpen(true)}
         >
           DELETE
         </button>
@@ -152,6 +147,97 @@ export default function ScenarioControlWidget() {
       </button>
 
       {notice && <div className="rp-scenario-notice">{notice}</div>}
+
+      {deleteConfirmOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-confirm-title"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setDeleteConfirmOpen(false)}
+        >
+          <div
+            style={{
+              background: '#12161b',
+              border: '1px solid rgba(105, 240, 174, 0.15)',
+              borderRadius: 6,
+              padding: '20px 24px',
+              maxWidth: 360,
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+              fontFamily: "'Courier New', Courier, monospace",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              id="delete-confirm-title"
+              style={{
+                fontSize: 13,
+                letterSpacing: '0.04em',
+                color: 'rgb(255, 121, 121)',
+                marginBottom: 8,
+              }}
+            >
+              Delete scenario?
+            </div>
+            <div
+              style={{
+                fontSize: 11,
+                lineHeight: 1.6,
+                color: 'rgba(255, 255, 255, 0.7)',
+                marginBottom: 18,
+              }}
+            >
+              This permanently deletes scenario{' '}
+              <strong>{scenarioIdInput.trim() || scenario.id}</strong> on the
+              server. This cannot be undone.
+            </div>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: 8,
+              }}
+            >
+              <button
+                type="button"
+                className="rp-btn rp-btn-secondary"
+                onClick={() => setDeleteConfirmOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="rp-btn"
+                style={{
+                  background: 'rgba(255, 90, 90, 0.15)',
+                  border: '1px solid rgba(255, 90, 90, 0.4)',
+                  color: 'rgb(255, 160, 160)',
+                }}
+                disabled={isBusy}
+                onClick={async () => {
+                  setDeleteConfirmOpen(false);
+                  await handleDelete(
+                    setNoticeWithToast,
+                    scenarioIdInput,
+                    hasId,
+                    deleteScenarioMutation,
+                  );
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="rp-scenario-statuses">
         <div className="rp-scenario-statuses-header">

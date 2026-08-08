@@ -1,9 +1,4 @@
-import {
-  Button,
-  ToggleButtonGroup,
-  ToggleButton,
-  TextField,
-} from '@mui/material';
+import { Button, ToggleButtonGroup, ToggleButton } from '@mui/material';
 import {
   Stack,
   FormControl,
@@ -14,13 +9,14 @@ import {
   Typography,
 } from '@mui/material';
 import { numInputSlot } from '../../../types/PanelTypes';
+import { parseNumberInputChange } from '../../../../../Editor/components/SimConfigModal/utils/numberInputUtils';
 import {
-  BuildingPropertiesProps,
   formLabelStyles,
   toggleButtonGroupStyles,
   toggleButtonStyles,
   typographyStyles,
-} from '../types/BuildingPropertiesTypes';
+} from '../../../../../../shared/styles/panelStyles';
+import { BuildingPropertiesProps } from '../types/BuildingPropertiesTypes';
 import { useEditorStore } from '../../../../../../store';
 import { Building } from '../../../../../../store/types/useEditorStoreTypes';
 
@@ -45,17 +41,17 @@ export default function BuildingProperties({
           <Grid xs={4} key={axis}>
             <FormControl>
               <FormLabel sx={formLabelStyles}>{axis.toUpperCase()}</FormLabel>
-              <TextField
-                key={`building ${building.id}`}
+              <Input
+                key={`building-${building.id}-${axis}`}
                 size="small"
                 type="number"
-                // slotProps={numInputSlot}
+                slotProps={numInputSlot}
                 value={building[axis].toFixed(3)}
-                onChange={(e) =>
-                  updateBuilding(building.id, {
-                    [axis]: parseFloat(e.target.value),
-                  })
-                }
+                onChange={(e) => {
+                  const parsed = parseNumberInputChange(e.target);
+                  if (parsed === undefined) return;
+                  updateBuilding(building.id, { [axis]: parsed });
+                }}
               />
             </FormControl>
           </Grid>
@@ -74,9 +70,11 @@ export default function BuildingProperties({
           type="number"
           slotProps={numInputSlot}
           value={building.height ?? 20}
-          onChange={(e) =>
-            updateBuilding(building.id, { height: parseFloat(e.target.value) })
-          }
+          onChange={(e) => {
+            const parsed_height = parseNumberInputChange(e.target);
+            if (parsed_height === undefined) return;
+            updateBuilding(building.id, { height: parsed_height });
+          }}
         />
       </FormControl>
 

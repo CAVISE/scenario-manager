@@ -70,7 +70,7 @@ export default function NumericInput({
     onBlur: handleBlur,
     slotProps: {
       input: {
-        step: 10 ** -precision,
+        step: 1,
         onKeyDown: (event: React.KeyboardEvent) => event.stopPropagation(),
       },
     },

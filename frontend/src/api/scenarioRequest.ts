@@ -1,26 +1,12 @@
-import type { ScenarioGroup, ScenarioPayload } from './types/IScenarioTypes';
+import type {
+  LoadScenarioApiResponse,
+  ScenarioGroup,
+  ScenarioPayload,
+} from './types/IScenarioTypes';
 import {
   validateUpdatePayload,
   validateUploadPayload,
 } from './scenarioValidation';
-
-export interface ScenarioMutationResponse {
-  status: string;
-  message: string;
-  scenario_id?: string | null;
-}
-
-interface LoadScenarioApiResponse {
-  status: string;
-  scenario: {
-    scenario_id: string;
-    name_of_scenario: string | null;
-    scenario_text?: ScenarioGroup[] | Record<string, unknown> | null;
-    preview?: string | null;
-    annotation?: string | null;
-    file_?: string | null;
-  };
-}
 
 export function scenarioGroupsFromPayload(
   scenario: ScenarioPayload['scenario'] | undefined,
@@ -72,7 +58,7 @@ export function toUpdateScenarioBody(
   return {
     scenario_id: payload.scenario_id,
     scenario_name: payload.name_of_scenario ?? undefined,
-    annotation: payload.description ?? undefined,
+    description: payload.description ?? undefined,
     preview: payload.preview ?? undefined,
     file_: payload.file_ ?? undefined,
     ...(payload.scenario !== undefined
@@ -99,7 +85,7 @@ export function normalizeLoadedScenario(
   return {
     scenario_id: row.scenario_id,
     name_of_scenario: row.name_of_scenario,
-    description: row.annotation ?? null,
+    description: row.description ?? null,
     preview: row.preview ?? null,
     file_: row.file_ ?? null,
     scenario: groups.length > 0 ? { scenario_text: groups } : undefined,

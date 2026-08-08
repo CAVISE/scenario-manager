@@ -3,16 +3,17 @@ export { generateOmnetConfig } from './ui/omnet';
 export { generateArteryConfig } from './ui/artery';
 export { generateSionnaConfig } from './ui/sionna';
 export { generateCarlaYaml } from './ui/carla';
-export { generateOpenCDAConfig } from './ui/opencda';
+export { useGenerateOpenCDAConfig as generateOpenCDAConfig } from './ui/opencda';
 export { generateMPCConfig } from './ui/mpc';
 export {
-  generateSumoCfg,
-  generateRouXml,
+  useGenerateSumoCfg as generateSumoCfg,
+  useGenerateRouXml as generateRouXml,
   generatePolyXml,
   getSumoNetFilename,
 } from './ui/sumo';
 export {
-  generateCAPIomnetIni,
-  generateCAPIServicesXml,
+  useGenerateCAPIomnetIni as generateCAPIomnetIni,
+  useGenerateCAPIServicesXml as generateCAPIServicesXml,
   generateCAPISensorsXml,
 } from './ui/capi';
+export { setLoadedSumoNetwork, getLoadedSumoNetwork } from './ui/sumoNetwork';
