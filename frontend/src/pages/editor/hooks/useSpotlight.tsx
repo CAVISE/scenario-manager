@@ -17,7 +17,11 @@ export function startAnimate(p: StartAnimateParams): {
   const onMouseMove = () => {
     mouseMoved = true;
   };
+  const onMouseLeave = () => {
+    mouseMoved = false;
+  };
   canvas.addEventListener('mousemove', onMouseMove);
+  canvas.addEventListener('mouseleave', onMouseLeave);
 
   const handle = { running: true };
   let lastTime = 0;
@@ -41,6 +45,7 @@ export function startAnimate(p: StartAnimateParams): {
       p.spotlightEnabled() &&
       !st.paused &&
       mouseMoved &&
+      p.getRoadMesh() !== null &&
       now - lastPickingTime >= PICKING_MS
     ) {
       mouseMoved = false;
@@ -185,13 +190,13 @@ export function startAnimate(p: StartAnimateParams): {
 
   requestAnimationFrame(animate);
 
-  return {
-    ...handle,
+  return Object.assign(handle, {
     stop: () => {
       handle.running = false;
       canvas.removeEventListener('mousemove', onMouseMove);
+      canvas.removeEventListener('mouseleave', onMouseLeave);
     },
-  };
+  });
 }
 
 export function createSpotlightState(): SpotlightState {

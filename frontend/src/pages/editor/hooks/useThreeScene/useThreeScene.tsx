@@ -120,7 +120,7 @@ export function useThreeScene({
     getIsDragging,
     getOdrMeshes,
     getOpenDriveMap: () => setMapRef.current,
-    spotlightEnabled: () => true,
+    spotlightEnabled: () => document.querySelector('.MuiModal-root') === null,
   });
   useEffect(() => {
     setThreeReady(true);

@@ -114,7 +114,7 @@ export function useSceneAnimator({
     });
 
     return () => {
-      handle.running = false;
+      handle.stop();
     };
   }, []);
 }

@@ -34,9 +34,7 @@ function syncPedestrians(
   const pedestrians = useEditorStore.getState().pedestrians;
   const tc = transformControlsRef.current;
   const attached = (tc as unknown as { object?: THREE.Object3D })?.object;
-  const pedestrianMeshes = pedestrianMeshesRef.current;
-  if (!pedestrianMeshes) return;
-  pedestrianMeshesRef.current = pedestrianMeshes.filter((p) => {
+  const pedestrianMeshes = pedestrianMeshesRef.current.filter((p) => {
     if (pedestrians.some((pe) => pe.id === p.userData.id)) return true;
     if (attached && (attached === p || p.getObjectById(attached.id)))
       return true;
@@ -52,8 +50,7 @@ function syncPedestrians(
     scene.remove(p);
     return false;
   });
-
-  pedestrianObjsRef.current = [...pedestrianMeshesRef.current];
+  pedestrianMeshesRef.current = pedestrianMeshes;
 
   pedestrians.forEach((ped) => {
     const exists = pedestrianMeshes.find((p) => p.userData.id === ped.id);
@@ -75,13 +72,10 @@ function syncPedestrians(
 
     scene.add(modelClone);
 
-    if (!pedestrianMeshes) return;
-    const pedestrianObjs = pedestrianObjsRef.current;
-    if (!pedestrianObjs) return;
     pedestrianMeshes.push(modelClone as THREE.Mesh);
-    pedestrianObjs.push(modelClone as THREE.Mesh);
   });
 
+  pedestrianObjsRef.current = [...pedestrianMeshes];
   updateSceneGraph();
 }
 
