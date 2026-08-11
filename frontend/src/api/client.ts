@@ -1,5 +1,5 @@
 import ky from 'ky';
-import { API_URL } from '../VARS';
+import { API_URL } from '../app/vars';
 
 export const api = ky.create({
   prefixUrl: API_URL,
@@ -8,5 +8,3 @@ export const api = ky.create({
   },
   retry: 0,
 });
-
-export type ApiClient = typeof api;

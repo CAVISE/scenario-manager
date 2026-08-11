@@ -1,2 +1,2 @@
-import { useEditorStore } from './ui/useEditorStore';
+import { useEditorStore } from './useEditorStore';
 export { useEditorStore };

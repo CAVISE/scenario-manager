@@ -1,5 +1,5 @@
 import { HTTPError } from 'ky';
-import { ApiErrorPayload, formatApiDetail } from './types/IScenarioTypes';
+import { ApiErrorPayload, formatApiDetail } from './scenario.types';
 
 export async function getApiErrorMessage(
   err: unknown,
