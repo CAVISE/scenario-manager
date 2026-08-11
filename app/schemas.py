@@ -24,13 +24,6 @@ class MapOffsets(BaseModel):
 
 
 class StartSimulationRequest(BaseModel):
-<<<<<<< HEAD
-    map: str = "Town10HD"
-    max_ticks: int = Field(default=3000, ge=1, le=10000)
-    scenario_name: str = ""
-    description: str = ""
-    weather: Optional[str] = None
-=======
     map: str = Field(default="Town10HD", min_length=1, max_length=128)
     max_ticks: int = Field(default=1000, ge=1, le=10000)
     map_offsets: MapOffsets = Field(default_factory=MapOffsets)
@@ -42,7 +35,6 @@ class StartSimulationRequest(BaseModel):
         max_length=MAX_OPEN_CDA_CONFIG_LENGTH,
     )
     weather: Optional[str] = Field(default=None, max_length=64)
->>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
     scenario: list[dict] = Field(default_factory=list)
     attacks: list[dict] = Field(default_factory=list)
     xodr: Optional[str] = Field(default=None, max_length=MAX_OPENDRIVE_LEN)

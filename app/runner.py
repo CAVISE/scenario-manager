@@ -19,17 +19,6 @@ _stop_event = threading.Event()
 
 log = get_logger(__name__)
 
-<<<<<<< HEAD
-from opencda.core.common.cav_world import CavWorld
-from opencda.scenario_testing.utils import customized_map_api as map_api
-from opencda.scenario_testing.utils import sim_api
-from opencda.scenario_testing.utils.yaml_utils import add_current_time
-from opencda.scenario_testing.evaluations.evaluate_manager import EvaluationManager
-from app.config import get_settings
-from app import utils
-
-=======
->>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
 STANDARD_MAPS = {
     'Town01', 'Town02', 'Town03', 'Town04', 'Town05',
     'Town06', 'Town07', 'Town10HD', 'Town11', 'Town12',
@@ -40,23 +29,6 @@ def request_stop():
     _stop_event.set()
 
 
-<<<<<<< HEAD
-def _build_scene_dict(scenario_raw: dict, carla_map=None) -> OmegaConf:
-    """
-    Convert the raw frontend payload to a fully-merged OmegaConf scene dict.
-
-    When carla_map is provided, spawn yaw values are taken from road waypoints
-    (accurate).  On the first call carla_map is None and yaw falls back to the
-    atan2 heuristic — that dict is used only to boot ScenarioManager so we can
-    obtain the real carla.Map; it is then discarded.
-    """
-    settings = get_settings()
-    base_dict = OmegaConf.load(settings.cfg_dir / "base.yaml")
-    scenario_section = utils.json_to_single_cav_list(scenario_raw, carla_map=carla_map)
-    scene_dict = OmegaConf.merge(base_dict, OmegaConf.create(scenario_section))
-    scene_dict = add_current_time(scene_dict)
-    return scene_dict
-=======
 def _build_scene_dict(scenario_raw: dict, carla_map=None) -> tuple:
     """Compile the canonical frontend YAML for the loaded CARLA map."""
     return compile_open_cda_config(
@@ -64,7 +36,6 @@ def _build_scene_dict(scenario_raw: dict, carla_map=None) -> tuple:
         get_settings(),
         carla_map=carla_map,
     )
->>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
 
 
 def _make_scenario_manager(scene_dict, apply_ml: bool, xodr_path, map_name: str,
@@ -79,9 +50,6 @@ def _make_scenario_manager(scene_dict, apply_ml: bool, xodr_path, map_name: str,
     )
 
 
-<<<<<<< HEAD
-def run_scenario(scenario_raw: dict, params: dict):
-=======
 def _spawn_pedestrians(world, pedestrian_list: list) -> list:
     """Spawn walkers and return actor/controller pairs for cleanup."""
     if not pedestrian_list:
@@ -247,18 +215,14 @@ def _log_rsu_forensic(tick_count: int, rsu) -> None:
 
 def run_scenario(scenario_raw: dict, params: dict):
     settings = get_settings()
->>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
     apply_ml  = params["apply_ml"]
     record    = params["record"]
     map_name  = params["map_name"]
     max_ticks = params.get("max_ticks", 3000)
     current_time = params["current_time"]
-<<<<<<< HEAD
-=======
     run_output_dir = _run_output_dir(map_name, current_time)
     forensic_log_file = os.path.join(run_output_dir, "forensic.log")
     forensic_log_handler = add_run_file_handler(forensic_log_file)
->>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
 
     log.info("=== run_scenario START | map=%s max_ticks=%d carla=%s:%d ===",
              map_name, max_ticks, settings.carla_host, settings.carla_port)
@@ -285,38 +249,6 @@ def run_scenario(scenario_raw: dict, params: dict):
     client.set_timeout(settings.carla_timeout_seconds)
     log.info("CARLA server version: %s", client.get_server_version())
 
-<<<<<<< HEAD
-    # ── Phase 1 ──────────────────────────────────────────────────────────────
-    # Build scene_dict with atan2 yaw (carla_map not yet available).
-    # Create a ScenarioManager solely to load the map and obtain carla.Map.
-    # We close it immediately — the world stays loaded in CARLA.
-    log.info("Phase 1: loading map to obtain carla_map ...")
-    cav_world_phase1 = CavWorld(apply_ml)
-    scene_dict_phase1 = _build_scene_dict(scenario_raw, carla_map=None)
-
-    sm_phase1 = _make_scenario_manager(
-        scene_dict_phase1, apply_ml, xodr_path, map_name, cav_world_phase1
-    )
-    carla_map = sm_phase1.carla_map
-    log.info("carla_map obtained: %s", carla_map.name)
-
-    # Close phase-1 manager — restores world settings but leaves the map loaded.
-    sm_phase1.close()
-
-    # ── Phase 2 ──────────────────────────────────────────────────────────────
-    # Rebuild scene_dict with accurate road-waypoint yaw values.
-    log.info("Phase 2: rebuilding scene_dict with road yaw ...")
-    cav_world = CavWorld(apply_ml)
-    scene_dict = _build_scene_dict(scenario_raw, carla_map=carla_map)
-
-    # Override current_time to match the run_id that api.py already computed.
-    scene_dict_container = OmegaConf.to_container(scene_dict, resolve=True)
-    scene_dict_container["current_time"] = current_time
-    scene_dict = OmegaConf.create(scene_dict_container)
-
-    scenario_manager = _make_scenario_manager(
-        scene_dict, apply_ml, xodr_path, map_name, cav_world
-=======
     log.info("Loading map once via client: %s ...", map_name)
     if xodr_path:
         with open(xodr_path) as f:
@@ -351,11 +283,9 @@ def run_scenario(scenario_raw: dict, params: dict):
 
     scenario_manager = _make_scenario_manager(
         scene_dict, apply_ml, xodr_path=None, map_name=None, cav_world=cav_world
->>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
     )
     log.info("ScenarioManager ready | map loaded: %s", map_name)
 
-    # ── Spawn CAVs ────────────────────────────────────────────────────────────
     log.info("Spawning CAVs ...")
     single_cav_list = scenario_manager.create_vehicle_manager(
         application=["single"],
@@ -372,7 +302,6 @@ def run_scenario(scenario_raw: dict, params: dict):
                  i, cav.vehicle.id, loc.x, loc.y, loc.z,
                  f"({dest.x:.1f}, {dest.y:.1f})" if dest else "unknown")
 
-    # Spectator — центр между всеми CAV'ами
     if single_cav_list:
         locs     = [cav.vehicle.get_location() for cav in single_cav_list]
         center_x = sum(location.x for location in locs) / len(locs)
@@ -384,37 +313,27 @@ def run_scenario(scenario_raw: dict, params: dict):
         ))
         log.debug("Spectator set to center (%.1f, %.1f, z=500)", center_x, center_y)
 
-    # ── Spawn RSUs ────────────────────────────────────────────────────────────
     rsu_list = []
     scene_container = OmegaConf.to_container(scene_dict, resolve=True)
     if scene_container.get("scenario", {}).get("rsu_list"):
         rsu_list = scenario_manager.create_rsu_manager(data_dump=False)
         log.info("Spawned %d RSU(s)", len(rsu_list))
 
-    # ── Background traffic ────────────────────────────────────────────────────
     log.info("Creating background traffic ...")
     traffic_manager, bg_veh_list = scenario_manager.create_traffic_carla()
     log.info("Background vehicles: %d", len(bg_veh_list))
 
-<<<<<<< HEAD
-    # ── Evaluation manager ────────────────────────────────────────────────────
-=======
     spawned_pedestrians = _spawn_pedestrians(scenario_manager.world, pedestrian_list)
 
->>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
     eval_manager = EvaluationManager(
         scenario_manager.cav_world,
         script_name=map_name,
         current_time=current_time,
-<<<<<<< HEAD
-=======
         fixed_delta_seconds=float(scene_dict.world.fixed_delta_seconds),
->>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
     )
 
     spectator = scenario_manager.world.get_spectator()
 
-    # ── Simulation loop ───────────────────────────────────────────────────────
     log.info("Simulation loop starting (max_ticks=%d) ...", max_ticks)
     tick_count = 0
     log_interval = max(1, max_ticks // 20)
@@ -428,16 +347,6 @@ def run_scenario(scenario_raw: dict, params: dict):
 
             active_cavs = [c for c in single_cav_list if c.vehicle.id not in finished_ids]
 
-<<<<<<< HEAD
-            # Follow camera
-            if active_cavs:
-                locs   = [cav.vehicle.get_location() for cav in active_cavs]
-                cx     = sum(l.x for l in locs) / len(locs)
-                cy     = sum(l.y for l in locs) / len(locs)
-                spread = max(
-                    max(l.x for l in locs) - min(l.x for l in locs),
-                    max(l.y for l in locs) - min(l.y for l in locs),
-=======
             # CAV updates consume RSU detections from the current tick.
             for rsu in rsu_list:
                 try:
@@ -455,7 +364,6 @@ def run_scenario(scenario_raw: dict, params: dict):
                     - min(location.x for location in locs),
                     max(location.y for location in locs)
                     - min(location.y for location in locs),
->>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
                 )
                 z = max(80, spread * 1.2)
                 spectator.set_transform(carla.Transform(
@@ -466,13 +374,6 @@ def run_scenario(scenario_raw: dict, params: dict):
             for cav in active_cavs:
                 loc = cav.vehicle.get_location()
 
-<<<<<<< HEAD
-                # Off-road check
-                if not scenario_manager.carla_map.get_waypoint(
-                        loc,
-                        project_to_road=False,
-                        lane_type=carla.LaneType.Driving):
-=======
                 # Projection handles junction geometry; distance rejects off-road poses.
                 _wp = scenario_manager.carla_map.get_waypoint(
                     loc,
@@ -482,7 +383,6 @@ def run_scenario(scenario_raw: dict, params: dict):
                 road_distance = (_wp.transform.location.distance(loc)
                                  if _wp is not None else None)
                 if _wp is None or road_distance > 4.0:
->>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
                     log.warning("CAV id=%d off-road at (%.1f, %.1f) — stopped",
                                 cav.vehicle.id, loc.x, loc.y)
                     log.warning("CAV id=%d off-road road_distance=%s",
