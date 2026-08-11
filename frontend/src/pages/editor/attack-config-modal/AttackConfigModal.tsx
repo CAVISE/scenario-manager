@@ -3,10 +3,8 @@ import AddIcon from '@mui/icons-material/Add';
 import { AttackEditor } from './components/AttackEditor';
 import { AttackList } from './components/AttackList';
 import { useAttackEditor } from './useAttackEditor';
-import {
-  AttackConfigModalProps,
-  attackModalSx,
-} from './AttackConfigModal.types';
+import type { AttackConfigModalProps } from './AttackConfigModal.types';
+import { attackModalSx } from './attackConstants';
 
 export default function AttackConfigModal({
   open,

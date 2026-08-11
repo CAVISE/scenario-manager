@@ -311,3 +311,17 @@ export type EditorState = {
   restoreLastDeletion: (snapshotId?: string) => boolean;
   clearDeletionHistory: () => void;
 };
+
+export type EditorPersist = Pick<
+  EditorState,
+  | 'cars'
+  | 'RSUs'
+  | 'lidars'
+  | 'points'
+  | 'buildings'
+  | 'Scenario'
+  | 'simConfig'
+  | 'selectedId'
+  | 'selectedObject'
+  | 'pedestrians'
+>;

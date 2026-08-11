@@ -10,12 +10,7 @@ import {
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { GnssSpooferForm } from './GnssSpooferForm';
 import type { OpenCDAAttackStage } from '../../generators/generators.types';
-
-interface StageEditorProps {
-  stage: OpenCDAAttackStage | undefined;
-  onUpdate: (stage: OpenCDAAttackStage) => void;
-  onDelete: () => void;
-}
+import type { StageEditorProps } from '../AttackConfigModal.types';
 
 export function StageEditor({ stage, onUpdate, onDelete }: StageEditorProps) {
   const [useStructuredForm, setUseStructuredForm] = useState(

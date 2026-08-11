@@ -23,17 +23,12 @@ import type {
   CavBehaviorService,
   RsuBehaviorService,
 } from '../../../../store/editor-store.types';
-
-const YAML_RESERVED_STRINGS = new Set([
-  'true',
-  'false',
-  'null',
-  'yes',
-  'no',
-  'on',
-  'off',
-  '~',
-]);
+import {
+  CAMERA_POSITIONS,
+  MAX_CAMERA_POSITIONS,
+  OPEN_CDA_WORLD_TIMESTEP,
+  YAML_RESERVED_STRINGS,
+} from './opencda.constants';
 
 function yamlScalar(value: unknown): string {
   if (typeof value === 'string') {
@@ -109,21 +104,12 @@ function pushYamlObject(
   }
 }
 
-const CAM_POSITIONS = [
-  '[2.5, 0, 1.0, 0]',
-  '[0.0, 0.3, 1.8, 100]',
-  '[0.0, -0.3, 1.8, -100]',
-  '[-2.0, 0.0, 1.5, 180]',
-];
-const MAX_CAM_POSITIONS = CAM_POSITIONS.length;
-const OMEGA_DT = '${world.fixed_delta_seconds}';
-
 function fmtColor(rgb: [number, number, number]): string {
   return `[${rgb[0]}, ${rgb[1]}, ${rgb[2]}]`;
 }
 
 function effectiveCamNum(requested: number): number {
-  return Math.max(0, Math.min(requested, MAX_CAM_POSITIONS));
+  return Math.max(0, Math.min(requested, MAX_CAMERA_POSITIONS));
 }
 
 function pushCameraBlock(
@@ -135,7 +121,7 @@ function pushCameraBlock(
 ): void {
   const serializedPositions = positions?.length
     ? positions.map((position) => `[${position.join(', ')}]`)
-    : CAM_POSITIONS;
+    : CAMERA_POSITIONS;
   const num = Math.min(
     effectiveCamNum(requestedNum),
     serializedPositions.length,
@@ -168,7 +154,7 @@ function pushLocalizationBlock(
       `${indent}  navigation_source: ${oc.localization_navigation_source}`,
     );
   }
-  lines.push(`${indent}  dt: ${OMEGA_DT}`);
+  lines.push(`${indent}  dt: ${OPEN_CDA_WORLD_TIMESTEP}`);
   if (includeMetrics) {
     pushLocalizationMetrics(
       lines,
@@ -634,7 +620,7 @@ export function useGenerateOpenCDAConfig(
       lines.push(
         `          activate: ${sensing.localization_activate ?? true}`,
       );
-      lines.push(`          dt: ${OMEGA_DT}`);
+      lines.push(`          dt: ${OPEN_CDA_WORLD_TIMESTEP}`);
       lines.push('          gnss:');
       lines.push(
         `            noise_alt_stddev: ${sensing.gnss_noise_alt_stddev ?? oc.gnss_noise.alt_stddev}`,

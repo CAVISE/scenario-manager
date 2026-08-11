@@ -3,7 +3,7 @@ import { SectionProps } from './right-panel.types';
 
 const Section: React.FC<SectionProps> = ({
   label,
-  defaultOpen = false,
+  defaultOpen = true,
   children,
 }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);

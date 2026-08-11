@@ -1,72 +1,22 @@
 import { MapOffsets } from '../../../../shared/lib/coordinateTransform.types';
 import type { Car, Point } from '../../../../store/editor-store.types';
-
-type Coordinate = { x: number; y: number };
-type LaneGeometry = {
-  id: string;
-  edgeId: string;
-  index: number;
-  length: number;
-  type: string;
-  shape: Coordinate[];
-};
-type LaneConnection = {
-  fromEdge: string;
-  fromLane: number;
-  toEdge: string;
-  toLane: number;
-};
-type SumoNetwork = {
-  offsetX: number;
-  offsetY: number;
-  lanes: LaneGeometry[];
-  connections: LaneConnection[];
-  edgeLengths: Map<string, number>;
-  successors: Map<string, Set<string>>;
-};
-
-export type SumoRouteAnchor = {
-  edgeId: string;
-  laneId: string;
-  laneIndex: number;
-  pos: number;
-  distance: number;
-};
-
-export type GeneratedSumoRoute = {
-  edges: string;
-  depart?: SumoRouteAnchor;
-  arrival?: SumoRouteAnchor;
-  warnings: string[];
-};
-
-export type GeneratedSumoRoutes = Record<string, GeneratedSumoRoute>;
-
-export interface LoadedSumoNetwork {
-  filename: string;
-  content: string;
-}
-
-const MAX_PRECISE_SNAP_DISTANCE = 10;
-const MAX_DIRECTIONAL_SNAP_DISTANCE_DELTA = 2;
-const MIN_LANE_POSITION_MARGIN = 0.1;
-const NON_DRIVING_LANE_TYPES = new Set([
-  'biking',
-  'border',
-  'bus_stop',
-  'parking',
-  'shoulder',
-  'sidewalk',
-  'walking',
-]);
-const DEPART_LANE_KEYWORDS = new Set([
-  'allowed',
-  'best',
-  'best_prob',
-  'first',
-  'free',
-  'random',
-]);
+import {
+  DEPART_LANE_KEYWORDS,
+  MAX_DIRECTIONAL_SNAP_DISTANCE_DELTA,
+  MAX_PRECISE_SNAP_DISTANCE,
+  MIN_LANE_POSITION_MARGIN,
+  NON_DRIVING_LANE_TYPES,
+} from './sumoNetwork.constants';
+import type {
+  Coordinate,
+  GeneratedSumoRoutes,
+  LaneConnection,
+  LaneGeometry,
+  LoadedSumoNetwork,
+  ShapeProjection,
+  SumoNetwork,
+  SumoRouteAnchor,
+} from './sumoNetwork.types';
 
 let loadedNetwork: LoadedSumoNetwork | null = null;
 
@@ -676,12 +626,6 @@ function clampLanePosition(position: number, laneLength: number): number {
     Math.min(laneLength - MIN_LANE_POSITION_MARGIN, position),
   );
 }
-
-type ShapeProjection = {
-  distanceSquared: number;
-  direction: Coordinate | null;
-  position: number;
-};
 
 function distanceToShape(
   point: Coordinate,

@@ -1,5 +1,7 @@
-import { nanoid } from 'nanoid';
-import { OpenCDAAttackConfig } from '../generators/generators.types';
+import type {
+  OpenCDAAttackConfig,
+  OpenCDAAttackStage,
+} from '../generators/generators.types';
 
 export const GNSS_DRIFT_PARAMS = {
   mode: 'drift',
@@ -12,15 +14,15 @@ export const GNSS_DRIFT_PARAMS = {
   max_offset: 3,
 } as const;
 
-export const GNSS_SPOOFER_PRESET: OpenCDAAttackConfig = {
+export const GNSS_SPOOFER_PRESET: Omit<OpenCDAAttackConfig, 'stages'> & {
+  stages: Omit<OpenCDAAttackStage, 'id'>[];
+} = {
   name: 'gnss_spoof',
   requirements: {},
   start_trigger: {},
   stop_trigger: {},
   targets: { cav_index: 1 },
-  stages: [
-    { id: nanoid(6), type: 'spoofer', params: { ...GNSS_DRIFT_PARAMS } },
-  ],
+  stages: [{ type: 'spoofer', params: GNSS_DRIFT_PARAMS }],
 };
 
 export const attackModalSx = {

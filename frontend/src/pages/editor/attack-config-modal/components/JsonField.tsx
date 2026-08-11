@@ -1,12 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { TextField } from '@mui/material';
-
-interface JsonFieldProps {
-  label: string;
-  value: unknown;
-  onChange: (value: Record<string, unknown> | undefined) => void;
-  minRows?: number;
-}
+import type { JsonFieldProps } from '../AttackConfigModal.types';
 
 export function JsonField({
   label,

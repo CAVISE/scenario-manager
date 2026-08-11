@@ -1,11 +1,6 @@
 import { Button, Chip, Stack } from '@mui/material';
 import type { OpenCDAAttackConfig } from '../../generators/generators.types';
-
-interface AttackListProps {
-  attacks: OpenCDAAttackConfig[];
-  selectedAttack: number;
-  onSelect: (index: number) => void;
-}
+import type { AttackListProps } from '../AttackConfigModal.types';
 
 function getStageLabels(stages: OpenCDAAttackConfig['stages']): string {
   if (!stages || stages.length === 0) return '';

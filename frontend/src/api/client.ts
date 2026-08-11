@@ -8,5 +8,3 @@ export const api = ky.create({
   },
   retry: 0,
 });
-
-export type ApiClient = typeof api;

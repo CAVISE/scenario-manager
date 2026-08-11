@@ -1,12 +1,7 @@
 import { Box, Divider, Stack, TextField, Typography } from '@mui/material';
 import { GNSS_DRIFT_PARAMS } from '../attackConstants';
-import type { OpenCDAAttackStage } from '../../generators/generators.types';
 import NumericInput from '../../../../shared/ui/NumericInput';
-
-interface GnssSpooferFormProps {
-  stage: OpenCDAAttackStage | undefined;
-  onUpdate: (stage: OpenCDAAttackStage) => void;
-}
+import type { GnssSpooferFormProps } from '../AttackConfigModal.types';
 
 export function GnssSpooferForm({ stage, onUpdate }: GnssSpooferFormProps) {
   const params = stage?.params as typeof GNSS_DRIFT_PARAMS | undefined;

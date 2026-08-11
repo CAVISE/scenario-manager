@@ -40,11 +40,11 @@ import {
 import { buildOpenCDAArtifact } from '../../../generators/configGenerators';
 import { defaultSimConfig } from '../../../generators/generators.types';
 import type * as THREE from 'three';
-
-const MAX_BUILDING_LOAD_ATTEMPTS = 10;
-const BUILDING_LOAD_RETRY_INTERVAL_MS = 300;
-const BUILDING_LOAD_TIMEOUT_MS =
-  MAX_BUILDING_LOAD_ATTEMPTS * BUILDING_LOAD_RETRY_INTERVAL_MS;
+import {
+  BUILDING_LOAD_RETRY_INTERVAL_MS,
+  BUILDING_LOAD_TIMEOUT_MS,
+  MAX_BUILDING_LOAD_ATTEMPTS,
+} from './scenario.constants';
 
 function tryAddBuildingsWithRetry(
   sceneRef: React.RefObject<THREE.Scene | undefined>,

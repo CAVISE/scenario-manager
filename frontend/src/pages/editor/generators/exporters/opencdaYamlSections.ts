@@ -1,7 +1,6 @@
 import type { SimulationConfig } from '../generators.types';
 import type { Car, Lidar } from '../../../../store/editor-store.types';
-
-const OMEGA_DT = '${world.fixed_delta_seconds}';
+import { OPEN_CDA_WORLD_TIMESTEP } from './opencda.constants';
 
 export function fmtRgb(rgb: [number, number, number]): string {
   return `[${rgb[0]}, ${rgb[1]}, ${rgb[2]}]`;
@@ -52,7 +51,7 @@ export function pushController(
   lines.push(`        k_d: ${c.lon_k_d}`);
   lines.push(`        k_i: ${c.lon_k_i}`);
   lines.push(`      dynamic: ${c.dynamic}`);
-  lines.push(`      dt: ${OMEGA_DT}`);
+  lines.push(`      dt: ${OPEN_CDA_WORLD_TIMESTEP}`);
   lines.push(`      max_brake: ${c.max_brake}`);
   lines.push(`      max_throttle: ${c.max_throttle}`);
   lines.push(`      max_steering: ${c.max_steering}`);

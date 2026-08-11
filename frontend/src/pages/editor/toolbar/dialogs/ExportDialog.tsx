@@ -6,14 +6,7 @@ import {
   DialogTitle,
   TextField,
 } from '@mui/material';
-
-interface ExportDialogProps {
-  open: boolean;
-  filename: string;
-  onFilenameChange: (name: string) => void;
-  onConfirm: () => void;
-  onClose: () => void;
-}
+import type { ExportDialogProps } from '../EditorToolbar.types';
 
 export default function ExportDialog({
   open,

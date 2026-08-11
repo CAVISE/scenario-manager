@@ -8,11 +8,11 @@ import DownloadIcon from '@mui/icons-material/Download';
 import SecurityIcon from '@mui/icons-material/Security';
 import FileMenu from './menus/FileMenu';
 import ExportMenu from './menus/ExportMenu';
+import { PendingExport } from './EditorToolbar.types';
 import {
   EditorToolbarDivStyles,
   EditorToolbarStyles,
-  PendingExport,
-} from './EditorToolbar.types';
+} from './EditorToolbar.styles';
 import { downloadFile } from '../generators/exporters';
 import UploadScenariosModal from '../UploadScenariosModal';
 import SimConfigModal from '../sim-config-modal';

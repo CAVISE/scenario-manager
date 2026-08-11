@@ -11,20 +11,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import AddIcon from '@mui/icons-material/Add';
 import { JsonField } from './JsonField';
 import { StageEditor } from './StageEditor';
-import type {
-  OpenCDAAttackConfig,
-  OpenCDAAttackStage,
-} from '../../generators/generators.types';
-
-interface AttackEditorProps {
-  attack: OpenCDAAttackConfig;
-  attackIndex: number;
-  onUpdate: (patch: Partial<OpenCDAAttackConfig>) => void;
-  onDelete: () => void;
-  onUpdateStage: (index: number, stage: OpenCDAAttackStage) => void;
-  onAddStage: () => void;
-  onDeleteStage: (index: number) => void;
-}
+import type { AttackEditorProps } from '../AttackConfigModal.types';
 
 export function AttackEditor({
   attack,

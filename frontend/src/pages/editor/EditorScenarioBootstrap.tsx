@@ -3,9 +3,10 @@ import { useSearchParams } from 'react-router-dom';
 import { useEditorRefs, useHooks } from './context';
 import { handleLoad } from './right-panel/ScenarioControlWidget/handlers';
 import { useAppToast } from '../../shared/ui/AppToast';
-
-const MAX_SCENE_WAIT_ATTEMPTS = 20;
-const SCENE_WAIT_INTERVAL_MS = 150;
+import {
+  MAX_SCENE_WAIT_ATTEMPTS,
+  SCENE_WAIT_INTERVAL_MS,
+} from './editor.constants';
 
 export const EditorScenarioBootstrap = () => {
   const [searchParams, setSearchParams] = useSearchParams();

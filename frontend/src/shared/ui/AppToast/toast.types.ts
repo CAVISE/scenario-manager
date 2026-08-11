@@ -1,5 +1,11 @@
 export type ToastLevel = 'success' | 'error' | 'info';
 
+export type NoticeLevel = ToastLevel | 'warning';
+
+export interface UseNoticeWithToastOptions {
+  defaultLevel?: NoticeLevel;
+}
+
 export type ToastAction = {
   label: string;
   onClick: () => void;

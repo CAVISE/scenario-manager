@@ -6,10 +6,7 @@ import {
   type OpenCDAAttackConfig,
   type OpenCDAAttackStage,
 } from '../generators/generators.types';
-import {
-  GNSS_DRIFT_PARAMS,
-  GNSS_SPOOFER_PRESET,
-} from './AttackConfigModal.types';
+import { GNSS_DRIFT_PARAMS, GNSS_SPOOFER_PRESET } from './attackConstants';
 import { useEditorStore } from '../../../store';
 
 export function useAttackEditor() {

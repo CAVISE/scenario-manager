@@ -3,7 +3,7 @@ import {
   type SimulationConfig,
 } from '../generators.types';
 import type { Building, Car } from '../../../../store/editor-store.types';
-import type { GeneratedSumoRoutes } from './sumoNetwork';
+import type { GeneratedSumoRoutes } from './sumoNetwork.types';
 import { MapOffsets } from '../../../../shared/lib/coordinateTransform.types';
 
 function xmlAttribute(value: string): string {

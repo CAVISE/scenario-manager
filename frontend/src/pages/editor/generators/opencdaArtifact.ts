@@ -1,11 +1,6 @@
-import type { EditorState } from '../../../store/editor-store.types';
 import { generateOpenCDAConfig } from './exporters';
 import { mergeSimConfigWithDefaults } from './generators.types';
-
-export type OpenCDAArtifactState = Pick<
-  EditorState,
-  'simConfig' | 'cars' | 'RSUs' | 'points' | 'lidars'
->;
+import type { OpenCDAArtifactState } from './opencdaArtifact.types';
 
 export function buildOpenCDAArtifact(state: OpenCDAArtifactState): string {
   return generateOpenCDAConfig(

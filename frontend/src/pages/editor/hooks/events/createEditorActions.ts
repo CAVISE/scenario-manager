@@ -133,5 +133,3 @@ export function createEditorActions(opts: CreateEditorActionsOptions) {
     },
   };
 }
-
-export type EditorActions = ReturnType<typeof createEditorActions>;

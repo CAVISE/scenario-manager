@@ -1,11 +1,6 @@
 import { useCallback } from 'react';
 import { useAppToast } from './AppToastProvider';
-
-type ToastLevel = 'success' | 'error' | 'info' | 'warning';
-
-interface UseNoticeWithToastOptions {
-  defaultLevel?: ToastLevel;
-}
+import type { NoticeLevel, UseNoticeWithToastOptions } from './toast.types';
 
 export function useNoticeWithToast(
   setNotice: (message: string) => void,
@@ -15,7 +10,7 @@ export function useNoticeWithToast(
   const toast = useAppToast();
 
   return useCallback(
-    (message: string, level?: ToastLevel) => {
+    (message: string, level?: NoticeLevel) => {
       const finalLevel =
         level ?? (/error|failed/i.test(message) ? 'error' : defaultLevel);
 

@@ -2,8 +2,8 @@ import { useCallback } from 'react';
 import * as THREE from 'three';
 import { useEditorStore } from '../../../../../store';
 import { useHooks, useEditorRefs } from '../../../context';
-import { ToastApi } from '../../../../../shared/ui/AppToast/toast.types';
 import { pushSingleDeletionSnapshot } from '../../../right-panel/SceneTreePanel/helpers/deletionSnapshots';
+import type { UseKeyDownHandlerProps } from '../mouse-events.types';
 
 function disposeObject3D(obj: THREE.Object3D): void {
   obj.traverse((child) => {
@@ -23,10 +23,6 @@ function removeObjectFromScene(obj: THREE.Object3D, scene: THREE.Scene): void {
   disposeObject3D(obj);
 }
 
-interface UseKeyDownHandlerProps {
-  toast: ToastApi;
-}
-
 export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
   const { updateSceneGraph } = useHooks();
   const {
@@ -42,32 +38,35 @@ export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
   } = useEditorRefs();
   const onSelectObject = useEditorStore((s) => s.selectObject);
 
-  const handleDeleteWithUndo = (
-    id: string | undefined,
-    label: string,
-    deleteFn: () => void,
-    attached: THREE.Object3D,
-  ) => {
-    if (!id) return;
+  const handleDeleteWithUndo = useCallback(
+    (
+      id: string | undefined,
+      label: string,
+      deleteFn: () => void,
+      attached: THREE.Object3D,
+    ) => {
+      if (!id) return;
 
-    const pushed = pushSingleDeletionSnapshot({ id, label });
+      const pushed = pushSingleDeletionSnapshot({ id, label });
 
-    const scene = sceneRef.current;
-    if (scene) {
-      removeObjectFromScene(attached, scene);
-    }
+      const scene = sceneRef.current;
+      if (scene) {
+        removeObjectFromScene(attached, scene);
+      }
 
-    deleteFn();
+      deleteFn();
 
-    onSelectObject(null);
-    updateSceneGraph();
+      onSelectObject(null);
+      updateSceneGraph();
 
-    if (pushed) {
-      toast.undo(`Deleted ${label}`, () =>
-        useEditorStore.getState().restoreLastDeletion(pushed.snapshotId),
-      );
-    }
-  };
+      if (pushed) {
+        toast.undo(`Deleted ${label}`, () =>
+          useEditorStore.getState().restoreLastDeletion(pushed.snapshotId),
+        );
+      }
+    },
+    [onSelectObject, sceneRef, toast, updateSceneGraph],
+  );
 
   return useCallback(
     (e: KeyboardEvent) => {
@@ -311,6 +310,7 @@ export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
       cubeCirclesRef,
       modeRef,
       loadPointsRef,
+      handleDeleteWithUndo,
       updateSceneGraph,
       onSelectObject,
       toast,

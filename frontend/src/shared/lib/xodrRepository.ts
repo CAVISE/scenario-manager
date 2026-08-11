@@ -1,56 +1,27 @@
-const XODR_EXT = '.xodr';
-const CACHE_KEY = 'cached_xodr';
-const MAP_NAME_KEY = 'cached_xodr_name';
-const LEGACY_CONTENT_KEY = 'cached_xodr_content';
-export const DEFAULT_XODR = 'data.xodr';
+import {
+  CARLA_MAPS,
+  DEFAULT_XODR,
+  LEGACY_XODR_CONTENT_KEY,
+  XODR_CACHE_KEY,
+  XODR_DATABASE_NAME,
+  XODR_DATABASE_STORE,
+  XODR_DATABASE_VERSION,
+  XODR_EXT,
+  XODR_MAP_ALIASES,
+  XODR_MAP_NAME_KEY,
+} from './xodrRepository.constants';
 
-const CARLA_MAPS = [
-  'Town01',
-  'Town02',
-  'Town03',
-  'Town04',
-  'Town05',
-  'Town06',
-  'Town07',
-  'Town10HD',
-  'Town10HD_Opt',
-] as const;
-
-function generateMapAliases(): Record<string, string[]> {
-  const aliases: Record<string, string[]> = {};
-
-  for (const map of CARLA_MAPS) {
-    const lower = map.toLowerCase();
-
-    const base = map.replace('_Opt', '');
-    if (!aliases[lower]) {
-      aliases[lower] = [];
-    }
-    aliases[lower].push(map);
-
-    if (map !== base && !aliases[base.toLowerCase()]) {
-      aliases[base.toLowerCase()] = [base];
-    }
-  }
-
-  return aliases;
-}
-
-const MAP_ALIASES = generateMapAliases();
+export { DEFAULT_XODR };
 
 let cachedXodrContent: string | null = null;
 
-const IDB_NAME = 'scenario-manager-xodr-cache';
-const IDB_STORE = 'xodr';
-const IDB_VERSION = 1;
-
 function openXodrCacheDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(IDB_NAME, IDB_VERSION);
+    const request = indexedDB.open(XODR_DATABASE_NAME, XODR_DATABASE_VERSION);
     request.onupgradeneeded = () => {
       const db = request.result;
-      if (!db.objectStoreNames.contains(IDB_STORE)) {
-        db.createObjectStore(IDB_STORE);
+      if (!db.objectStoreNames.contains(XODR_DATABASE_STORE)) {
+        db.createObjectStore(XODR_DATABASE_STORE);
       }
     };
     request.onsuccess = () => resolve(request.result);
@@ -62,8 +33,8 @@ async function idbGetXodrContent(): Promise<string | null> {
   try {
     const db = await openXodrCacheDb();
     return await new Promise<string | null>((resolve, reject) => {
-      const tx = db.transaction(IDB_STORE, 'readonly');
-      const req = tx.objectStore(IDB_STORE).get(CACHE_KEY);
+      const tx = db.transaction(XODR_DATABASE_STORE, 'readonly');
+      const req = tx.objectStore(XODR_DATABASE_STORE).get(XODR_CACHE_KEY);
       req.onsuccess = () => resolve((req.result as string | undefined) ?? null);
       req.onerror = () => reject(req.error);
     });
@@ -77,8 +48,8 @@ async function idbSetXodrContent(content: string): Promise<void> {
   try {
     const db = await openXodrCacheDb();
     await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction(IDB_STORE, 'readwrite');
-      tx.objectStore(IDB_STORE).put(content, CACHE_KEY);
+      const tx = db.transaction(XODR_DATABASE_STORE, 'readwrite');
+      tx.objectStore(XODR_DATABASE_STORE).put(content, XODR_CACHE_KEY);
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });
@@ -135,7 +106,7 @@ function buildCandidates(mapName: string): string[] {
   const base = stripExt(normalized);
   const lowerBase = base.toLowerCase();
 
-  const aliases = MAP_ALIASES[lowerBase] ?? [];
+  const aliases = XODR_MAP_ALIASES[lowerBase] ?? [];
   const candidates = [
     normalized,
     `${base}_Opt${XODR_EXT}`,
@@ -157,15 +128,15 @@ export function isOpenDrive(text: string): boolean {
 
 export function setStoredXodrName(mapName: string): string {
   const normalized = withXodrExtension(mapName);
-  localStorage.setItem(MAP_NAME_KEY, normalized);
+  localStorage.setItem(XODR_MAP_NAME_KEY, normalized);
   return normalized;
 }
 
 export function getStoredXodrName(fallbackMapName?: string): string {
-  const storedName = localStorage.getItem(MAP_NAME_KEY);
+  const storedName = localStorage.getItem(XODR_MAP_NAME_KEY);
   if (storedName?.trim()) return withXodrExtension(storedName);
 
-  const stored = localStorage.getItem(CACHE_KEY);
+  const stored = localStorage.getItem(XODR_CACHE_KEY);
   if (stored?.trim() && !isOpenDrive(stored)) {
     return withXodrExtension(stored);
   }
@@ -189,10 +160,10 @@ export async function fetchXodrText(mapName: string): Promise<string> {
 export function getCachedXodrContent(): string | null {
   if (cachedXodrContent) return cachedXodrContent;
 
-  const stored = localStorage.getItem(CACHE_KEY);
+  const stored = localStorage.getItem(XODR_CACHE_KEY);
   if (stored && isOpenDrive(stored)) return stored;
 
-  const legacyContent = localStorage.getItem(LEGACY_CONTENT_KEY);
+  const legacyContent = localStorage.getItem(LEGACY_XODR_CONTENT_KEY);
   if (legacyContent && isOpenDrive(legacyContent)) return legacyContent;
   return null;
 }
@@ -200,8 +171,8 @@ export function getCachedXodrContent(): string | null {
 export function setCachedCustomXodrContent(content: string): void {
   cachedXodrContent = content;
   try {
-    localStorage.setItem(CACHE_KEY, content);
-    localStorage.removeItem(LEGACY_CONTENT_KEY);
+    localStorage.setItem(XODR_CACHE_KEY, content);
+    localStorage.removeItem(LEGACY_XODR_CONTENT_KEY);
   } catch (error) {
     console.warn('OpenDRIVE map is too large for localStorage.', error);
   }

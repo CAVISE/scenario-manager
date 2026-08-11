@@ -16,6 +16,7 @@ import type {
   Pedestrian,
   DeletedEntity,
   DeletionSnapshot,
+  EditorPersist,
 } from './editor-store.types';
 
 export type { EditorState, Car, RSU, Lidar, Building, Point, Scenario };
@@ -26,20 +27,6 @@ export type {
   CarlaWeather,
 } from './editor-store.types';
 export type { SimulationConfig } from '../pages/editor/generators/generators.types';
-export type EditorPersist = Pick<
-  EditorState,
-  | 'cars'
-  | 'RSUs'
-  | 'lidars'
-  | 'points'
-  | 'buildings'
-  | 'Scenario'
-  | 'simConfig'
-  | 'selectedId'
-  | 'selectedObject'
-  | 'pedestrians'
->;
-
 const persistOptions: PersistOptions<EditorState, EditorPersist> = {
   name: 'editor-scenario-cache',
   version: 1,

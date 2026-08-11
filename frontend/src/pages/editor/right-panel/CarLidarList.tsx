@@ -9,12 +9,12 @@ import {
 
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
-import { CarListProps } from './CarLidarList.types';
+import { CarLidarListProps } from './CarLidarList.types';
 import LidarProperties from './LidarProperties';
 import { useEditorStore } from '../../../store';
 import { useHooks } from '../context';
 
-export default function CarLidarList({ carId, lidars }: CarListProps) {
+export default function CarLidarList({ carId, lidars }: CarLidarListProps) {
   const addLidar = useEditorStore((s) => s.addLidar);
   const removeLidar = useEditorStore((s) => s.removeLidar);
 

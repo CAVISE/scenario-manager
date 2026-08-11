@@ -1,16 +1,5 @@
 import type { CarlaWeather } from '../../../../store/editor-store.types';
-
-export type OpenCDAWeatherParams = {
-  sun_altitude_angle: number;
-  cloudiness: number;
-  precipitation: number;
-  precipitation_deposits: number;
-  wind_intensity: number;
-  fog_density: number;
-  fog_distance: number;
-  fog_falloff: number;
-  wetness: number;
-};
+import type { OpenCDAWeatherParams } from './opencdaWeather.types';
 
 const CLEAR_NOON: OpenCDAWeatherParams = {
   sun_altitude_angle: 75,

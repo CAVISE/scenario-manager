@@ -6,30 +6,12 @@ import LidarProperties from './LidarProperties';
 import RSUProperties from './RSUProperties';
 import BuildingProperties from './BuildingProperties';
 import RoutePointProperties from './RoutePointProperties';
-import type { SectionProps } from './right-panel.types';
 import { css } from './right-panel.types';
 import PedestrianProperties from './PedestrianProperties';
 import ScenarioControlWidget from './ScenarioControlWidget';
 import { useEditorStore } from '../../../store';
 import SceneTreePanel from './SceneTreePanel';
-
-const Section: React.FC<SectionProps> = ({
-  label,
-  children,
-  defaultOpen = true,
-}) => {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-
-  return (
-    <div className="rp-section">
-      <div className="rp-section-header" onClick={() => setIsOpen((v) => !v)}>
-        <span className="rp-section-label">{label}</span>
-        <span className={`rp-section-chevron ${isOpen ? 'open' : ''}`}>▼</span>
-      </div>
-      {isOpen && <div className="rp-section-content">{children}</div>}
-    </div>
-  );
-};
+import Section from './Section';
 
 export default function RightPanel() {
   const [collapsed, setCollapsed] = useState(false);
