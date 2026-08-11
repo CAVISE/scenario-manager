@@ -13,13 +13,7 @@ import {
   hexToRgb,
   parseNumberFromEvent,
 } from '../utils/opencdaFieldUtils';
-
-interface ColorPickerSectionProps {
-  color: [number, number, number];
-  hasColor: boolean;
-  onColorToggle: (enabled: boolean) => void;
-  onColorChange: (newColor: [number, number, number]) => void;
-}
+import type { ColorPickerSectionProps } from '../opencda.types';
 
 export const ColorPickerSection = ({
   color,

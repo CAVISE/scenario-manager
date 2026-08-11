@@ -8,17 +8,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import type {
-  SimulationConfig,
-  CAPIExtraConfig,
-} from '../../../../generators/generators.types';
-
-type CapiConfig = SimulationConfig['capi'];
-
-type Props = {
-  capi: CapiConfig;
-  update: (patch: Partial<CapiConfig>) => void;
-};
+import type { CAPIExtraConfig } from '../../../../generators/generators.types';
+import type { CapiSectionProps } from '../capi.types';
 
 const createDefaultConfig = (): CAPIExtraConfig => ({
   name: 'custom',
@@ -27,7 +18,7 @@ const createDefaultConfig = (): CAPIExtraConfig => ({
   visualization: false,
 });
 
-export const ExtraConfigsSection = ({ capi, update }: Props) => {
+export const ExtraConfigsSection = ({ capi, update }: CapiSectionProps) => {
   const handleAddConfig = () => {
     update({
       extra_configs: [...capi.extra_configs, createDefaultConfig()],

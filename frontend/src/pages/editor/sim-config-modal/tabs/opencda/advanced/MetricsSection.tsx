@@ -1,27 +1,9 @@
 import { Stack } from '@mui/material';
 import { NumField } from '../fields/NumField';
 import OpenCDACollapsibleSection from '../../../OpenCDACollapsibleSection';
+import type { MetricsSectionProps } from '../opencda.types';
 
-type Props = {
-  metrics: Partial<{
-    localization_trace_warmup: number;
-    behavior_speed_warmup: number;
-    behavior_acceleration_warmup: number;
-    behavior_ttc_warmup: number;
-    behavior_hard_brake_warmup: number;
-  }>;
-  patch: (
-    p: Partial<{
-      localization_trace_warmup: number;
-      behavior_speed_warmup: number;
-      behavior_acceleration_warmup: number;
-      behavior_ttc_warmup: number;
-      behavior_hard_brake_warmup: number;
-    }>,
-  ) => void;
-};
-
-export const MetricsSection = ({ metrics, patch }: Props) => (
+export const MetricsSection = ({ metrics, patch }: MetricsSectionProps) => (
   <OpenCDACollapsibleSection title="metrics (warmup_steps)">
     <Stack spacing={1}>
       <NumField

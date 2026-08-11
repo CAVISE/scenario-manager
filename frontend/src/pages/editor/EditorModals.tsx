@@ -24,7 +24,7 @@ import {
   resolveXodrTextForSimulation,
   setStoredXodrName,
 } from '../../shared/lib/xodrRepository';
-import { CARLA_MAPS } from './sim-config-modal/SimConfigModal.types';
+import { CARLA_MAPS } from './sim-config-modal/SimConfigModal.constants';
 import { useEditorRefs, useHooks } from './context';
 import { ScenarioGroup } from '../../api/scenario.types';
 import { buildOpenCDAArtifact } from './generators/configGenerators';

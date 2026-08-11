@@ -11,12 +11,7 @@ import {
   opencdaPanelPaperSx,
   opencdaSectionLabelSx,
 } from '../../../../../../shared/styles/opencdaUiStyles';
-
-interface ExportProfileSectionProps {
-  exportProfile: 'standard' | 'aim_check';
-  onExportProfileChange: (value: 'standard' | 'aim_check') => void;
-  onLoadAimDefaults: () => void;
-}
+import type { ExportProfileSectionProps } from '../opencda.types';
 
 export const ExportProfileSection = ({
   exportProfile,

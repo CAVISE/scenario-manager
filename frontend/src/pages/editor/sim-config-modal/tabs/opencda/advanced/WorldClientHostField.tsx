@@ -1,12 +1,7 @@
 import { TextField } from '@mui/material';
-import { SimulationConfig } from '../../../../generators/generators.types';
+import type { OpenCDASectionProps } from '../opencda.types';
 
-type Props = {
-  oc: Partial<SimulationConfig['opencda']>;
-  update: (patch: Partial<SimulationConfig['opencda']>) => void;
-};
-
-export const WorldClientHostField = ({ oc, update }: Props) => {
+export const WorldClientHostField = ({ oc, update }: OpenCDASectionProps) => {
   if (!oc.export_world_client_host) return null;
 
   return (

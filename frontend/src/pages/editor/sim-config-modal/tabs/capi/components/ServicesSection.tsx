@@ -8,13 +8,8 @@ import {
   Typography,
 } from '@mui/material';
 import { updateStringField, updateSwitchField } from '../utils/capiFieldUtils';
-import { CapiConfig } from '../hooks/useCapiConfig';
 import { parseNumberInputChange } from '../../../../../../shared/utils/numberInput';
-
-type Props = {
-  capi: CapiConfig;
-  update: (patch: Partial<CapiConfig>) => void;
-};
+import type { CapiSectionProps, CapiServiceBoxProps } from '../capi.types';
 
 const ServiceBox = ({
   enabled,
@@ -23,14 +18,7 @@ const ServiceBox = ({
   onPortChange,
   children,
   label,
-}: {
-  enabled: boolean;
-  port: number;
-  onEnabledChange: (checked: boolean) => void;
-  onPortChange: (value: number) => void;
-  children?: React.ReactNode;
-  label: string;
-}) => (
+}: CapiServiceBoxProps) => (
   <Box
     sx={{
       border: '1px solid',
@@ -68,7 +56,7 @@ const ServiceBox = ({
   </Box>
 );
 
-export const ServicesSection = ({ capi, update }: Props) => (
+export const ServicesSection = ({ capi, update }: CapiSectionProps) => (
   <>
     <Divider />
     <Typography variant="subtitle2" color="text.secondary">

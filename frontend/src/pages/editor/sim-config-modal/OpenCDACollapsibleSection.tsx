@@ -4,45 +4,21 @@ import {
   AccordionSummary,
   Typography,
 } from '@mui/material';
-import type { Theme } from '@mui/material/styles';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import type { ReactNode } from 'react';
-
-type Props = {
-  title: string;
-  defaultExpanded?: boolean;
-  children: ReactNode;
-};
-
-const accordionSx = {
-  bgcolor: 'transparent',
-  '&:before': { display: 'none' },
-  border: '1px solid',
-  borderColor: 'divider',
-  borderRadius: 1.5,
-  overflow: 'hidden',
-  transition: (theme: Theme) =>
-    theme.transitions.create(['border-color', 'box-shadow']),
-  '&.Mui-expanded': {
-    borderColor: 'primary.main',
-    boxShadow: (theme: { palette: { mode: string } }) =>
-      theme.palette.mode === 'dark'
-        ? '0 4px 20px rgba(0, 0, 0, 0.35)'
-        : '0 4px 16px rgba(15, 23, 42, 0.08)',
-  },
-} as const;
+import type { OpenCDACollapsibleSectionProps } from './SimConfigModal.types';
+import { openCdaAccordionSx } from './SimConfigModal.constants';
 
 export default function OpenCDACollapsibleSection({
   title,
   defaultExpanded = false,
   children,
-}: Props) {
+}: OpenCDACollapsibleSectionProps) {
   return (
     <Accordion
       disableGutters
       elevation={0}
       defaultExpanded={defaultExpanded}
-      sx={accordionSx}
+      sx={openCdaAccordionSx}
     >
       <AccordionSummary
         expandIcon={<KeyboardArrowDownIcon fontSize="small" />}

@@ -14,7 +14,8 @@ import {
 import { useEditorStore } from '../../../store';
 import { mergeSimConfigWithDefaults } from '../generators/generators.types';
 import { muiPressableRootStyle } from '../../../shared/styles/pressInteraction';
-import { modalBoxSx, type SimConfigModalProps } from './SimConfigModal.types';
+import type { SimConfigModalProps } from './SimConfigModal.types';
+import { modalBoxSx } from './SimConfigModal.constants';
 import {
   ArteryTab,
   CarlaTab,

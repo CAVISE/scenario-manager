@@ -1,25 +1,12 @@
 import { FormControlLabel, Stack, Switch } from '@mui/material';
 import OpenCDACollapsibleSection from '../../../OpenCDACollapsibleSection';
-import { SimulationConfig } from '../../../../generators/generators.types';
+import type { OpenCDASectionProps } from '../opencda.types';
+import { OPEN_CDA_EXPORT_TOGGLES } from '../opencda.constants';
 
-type Props = {
-  oc: Partial<SimulationConfig['opencda']>;
-  update: (patch: Partial<SimulationConfig['opencda']>) => void;
-};
-
-const TOGGLES = [
-  ['export_attacks', 'attacks: []'],
-  ['export_platoon_base', 'platoon_base + empty platoon_list'],
-  ['export_metrics', 'localization/behavior metrics'],
-  ['export_coop_perception', 'cooperative_perception_visualization'],
-  ['export_vehicle_behavior_services', 'vehicle_base behavior_services'],
-  ['export_world_client_host', 'world.client_host'],
-] as const;
-
-export const ExportTogglesSection = ({ oc, update }: Props) => (
+export const ExportTogglesSection = ({ oc, update }: OpenCDASectionProps) => (
   <OpenCDACollapsibleSection title="Export toggles">
     <Stack spacing={0.5}>
-      {TOGGLES.map(([key, label]) => (
+      {OPEN_CDA_EXPORT_TOGGLES.map(([key, label]) => (
         <FormControlLabel
           key={key}
           control={

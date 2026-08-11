@@ -5,17 +5,15 @@ import {
   Select,
   Stack,
 } from '@mui/material';
-import { CARLA_MAPS, WEATHER_PRESETS } from '../../../SimConfigModal.types';
+import { CARLA_MAPS, WEATHER_PRESETS } from '../../../SimConfigModal.constants';
 import type { CarlaWeather } from '../../../../../../store/editor-store.types';
-import { CarlaConfig } from '../utils/carlaUtils';
+import type { CarlaMapWeatherSectionProps } from '../carla.types';
 
-type Props = {
-  carla: CarlaConfig;
-  selectedMap: string;
-  update: (patch: Partial<CarlaConfig>) => void;
-};
-
-export const MapWeatherSection = ({ carla, selectedMap, update }: Props) => (
+export const MapWeatherSection = ({
+  carla,
+  selectedMap,
+  update,
+}: CarlaMapWeatherSectionProps) => (
   <Stack direction="row" spacing={2}>
     <FormControl size="small" fullWidth>
       <InputLabel>Map</InputLabel>

@@ -2,14 +2,9 @@ import { Stack, TextField, Typography } from '@mui/material';
 import { numInputSlot } from '../../../../right-panel/right-panel.types';
 import { validateNumber } from '../utils/opencdaFieldUtils';
 import { parseNumberInputChange } from '../../../../../../shared/utils/numberInput';
+import type { RgbTripleProps } from '../opencda.types';
 
-type Props = {
-  label: string;
-  value: [number, number, number];
-  onChange: (v: [number, number, number]) => void;
-};
-
-export const RgbTriple = ({ label, value, onChange }: Props) => (
+export const RgbTriple = ({ label, value, onChange }: RgbTripleProps) => (
   <Stack spacing={0.5}>
     <Typography variant="caption" color="text.secondary">
       {label}

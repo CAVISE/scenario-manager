@@ -7,14 +7,10 @@ import {
   Typography,
 } from '@mui/material';
 import { parseNumberInputChange } from '../../../../../../shared/utils/numberInput';
-import { createDefaultVType, SumoConfig } from '../utils/sumoUtils';
+import { createDefaultVType } from '../utils/sumoUtils';
+import type { SumoConfig, SumoSectionProps } from '../sumo.types';
 
-type Props = {
-  sumo: SumoConfig;
-  onUpdate: (patch: Partial<SumoConfig>) => void;
-};
-
-export const VTypesSection = ({ sumo, onUpdate }: Props) => {
+export const VTypesSection = ({ sumo, onUpdate }: SumoSectionProps) => {
   const handleAddVType = () => {
     onUpdate({
       vtypes: [...sumo.vtypes, createDefaultVType(sumo.vtypes.length)],

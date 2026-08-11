@@ -11,17 +11,14 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { Car } from '../../../../../../store/editor-store.types';
 import { parseNumberInputChange } from '../../../../../../shared/utils/numberInput';
-import { SumoConfig } from '../utils/sumoUtils';
+import type { VehicleRoutesSectionProps } from '../sumo.types';
 
-type Props = {
-  cars: Car[];
-  vtypes: SumoConfig['vtypes'];
-  onUpdateCar: (id: string, patch: Partial<Car>) => void;
-};
-
-export const VehicleRoutesSection = ({ cars, vtypes, onUpdateCar }: Props) => {
+export const VehicleRoutesSection = ({
+  cars,
+  vtypes,
+  onUpdateCar,
+}: VehicleRoutesSectionProps) => {
   if (cars.length === 0) {
     return (
       <>

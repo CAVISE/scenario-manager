@@ -1,7 +1,5 @@
 import { getSumoNetFilename } from '../../../../generators/exporters';
-import type { SimulationConfig } from '../../../../generators/generators.types';
-
-export type SumoConfig = SimulationConfig['sumo'];
+import type { SumoConfig } from '../sumo.types';
 
 export const createDefaultVType = (
   index: number,

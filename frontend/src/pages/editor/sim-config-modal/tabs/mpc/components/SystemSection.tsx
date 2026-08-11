@@ -1,13 +1,8 @@
 import { Stack, TextField, Typography } from '@mui/material';
 import { parseNumberInputChange } from '../../../../../../shared/utils/numberInput';
-import { MPCConfig } from '../utils/MpcUtils';
+import type { MpcSectionProps } from '../mpc.types';
 
-type Props = {
-  mpc: MPCConfig;
-  update: (patch: Partial<MPCConfig>) => void;
-};
-
-export const SystemSection = ({ mpc, update }: Props) => (
+export const SystemSection = ({ mpc, update }: MpcSectionProps) => (
   <>
     <Typography variant="subtitle2" color="text.secondary">
       System

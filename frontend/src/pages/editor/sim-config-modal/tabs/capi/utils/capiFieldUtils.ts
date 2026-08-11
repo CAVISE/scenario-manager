@@ -1,8 +1,6 @@
 // utils/capiFieldUtils.ts
 import { parseNumberInputChange } from '../../../../../../shared/utils/numberInput';
-import type { SimulationConfig } from '../../../../generators/generators.types';
-
-type CapiConfig = SimulationConfig['capi'];
+import type { CapiConfig } from '../capi.types';
 
 export const updateNumberField = (
   e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,

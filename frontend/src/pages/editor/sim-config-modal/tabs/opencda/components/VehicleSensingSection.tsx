@@ -14,22 +14,7 @@ import {
   createNumberFieldOnChange,
 } from '../utils/opencdaFieldUtils';
 import { SimulationConfig } from '../../../../generators/generators.types';
-
-interface VehicleSensingSectionProps {
-  cameraVisualize: number;
-  camNum: number;
-  lidarChannels: number;
-  lidarRange: number;
-  lidarPointsPerSecond: number;
-  lidarRotationFrequency: number;
-  lidarUpperFov: number;
-  lidarLowerFov: number;
-  perceptionActivate: boolean;
-  localizationActivate: boolean;
-  localizationSource: 'estimated' | 'ground_truth';
-  lidarVisualize: boolean;
-  onUpdate: (update: Partial<SimulationConfig['opencda']>) => void;
-}
+import type { VehicleSensingSectionProps } from '../opencda.types';
 
 export const VehicleSensingSection = ({
   cameraVisualize,

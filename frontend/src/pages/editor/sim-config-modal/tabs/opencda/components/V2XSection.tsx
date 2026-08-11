@@ -15,20 +15,14 @@ import {
   createNumberFieldOnChange,
 } from '../utils/opencdaFieldUtils';
 import { SimulationConfig } from '../../../../generators/generators.types';
-
-interface V2XSectionProps {
-  enabled: boolean;
-  range: number;
-  positionSource: 'estimated' | 'ground_truth';
-  onUpdate: (update: Partial<SimulationConfig['opencda']>) => void;
-}
+import type { V2xSectionProps } from '../opencda.types';
 
 export const V2XSection = ({
   enabled,
   range,
   positionSource,
   onUpdate,
-}: V2XSectionProps) => {
+}: V2xSectionProps) => {
   const updateField = (
     field: keyof SimulationConfig['opencda'],
     value: SimulationConfig['opencda'][keyof SimulationConfig['opencda']],

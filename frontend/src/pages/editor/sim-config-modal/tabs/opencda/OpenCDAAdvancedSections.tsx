@@ -3,7 +3,10 @@ import {
   opencdaPanelPaperSx,
   opencdaSectionLabelSx,
 } from '../../../../../shared/styles/opencdaUiStyles';
-import type { SimulationConfig } from '../../../generators/generators.types';
+import type {
+  OpenCDAAdvancedSectionsProps,
+  OpenCDAConfig,
+} from './opencda.types';
 
 import {
   ExportTogglesSection,
@@ -19,23 +22,23 @@ import {
   WorldClientHostField,
 } from './advanced';
 
-type Oc = SimulationConfig['opencda'];
-type Props = { oc: Oc; update: (patch: Partial<Oc>) => void };
-
-export default function OpenCDATabRareSections({ oc, update }: Props) {
-  const patchMm = (p: Partial<Oc['map_manager']>) =>
+export default function OpenCDAAdvancedSections({
+  oc,
+  update,
+}: OpenCDAAdvancedSectionsProps) {
+  const patchMm = (p: Partial<OpenCDAConfig['map_manager']>) =>
     update({ map_manager: { ...oc.map_manager, ...p } });
-  const patchSm = (p: Partial<Oc['safety_manager']>) =>
+  const patchSm = (p: Partial<OpenCDAConfig['safety_manager']>) =>
     update({ safety_manager: { ...oc.safety_manager, ...p } });
-  const patchCtrl = (p: Partial<Oc['controller_pid']>) =>
+  const patchCtrl = (p: Partial<OpenCDAConfig['controller_pid']>) =>
     update({ controller_pid: { ...oc.controller_pid, ...p } });
-  const patchPb = (p: Partial<Oc['platoon_base']>) =>
+  const patchPb = (p: Partial<OpenCDAConfig['platoon_base']>) =>
     update({ platoon_base: { ...oc.platoon_base, ...p } });
-  const patchMet = (p: Partial<Oc['metrics']>) =>
+  const patchMet = (p: Partial<OpenCDAConfig['metrics']>) =>
     update({ metrics: { ...oc.metrics, ...p } });
-  const patchCp = (p: Partial<Oc['coop_perception']>) =>
+  const patchCp = (p: Partial<OpenCDAConfig['coop_perception']>) =>
     update({ coop_perception: { ...oc.coop_perception, ...p } });
-  const patchGnss = (p: Partial<Oc['gnss_noise']>) =>
+  const patchGnss = (p: Partial<OpenCDAConfig['gnss_noise']>) =>
     update({ gnss_noise: { ...oc.gnss_noise, ...p } });
 
   return (

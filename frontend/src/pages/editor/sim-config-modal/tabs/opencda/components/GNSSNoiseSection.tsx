@@ -7,14 +7,7 @@ import {
 } from '@mui/material';
 import { numInputSlot, parseNumberFromEvent } from '../utils/opencdaFieldUtils';
 import { SimulationConfig } from '../../../../generators/generators.types';
-
-interface GNSSNoiseSectionProps {
-  altStddev: number;
-  latStddev: number;
-  lonStddev: number;
-  debugAnimation: boolean;
-  onUpdate: (update: Partial<SimulationConfig['opencda']>) => void;
-}
+import type { GnssNoiseSectionProps } from '../opencda.types';
 
 export const GNSSNoiseSection = ({
   altStddev,
@@ -22,7 +15,7 @@ export const GNSSNoiseSection = ({
   lonStddev,
   debugAnimation,
   onUpdate,
-}: GNSSNoiseSectionProps) => {
+}: GnssNoiseSectionProps) => {
   const updateField = (
     field: keyof SimulationConfig['opencda'],
     value: SimulationConfig['opencda'][keyof SimulationConfig['opencda']],

@@ -6,16 +6,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { getNetFilePath, SumoConfig } from '../utils/sumoUtils';
-
-type Props = {
-  sumo: SumoConfig;
-  carlaMap: string;
-  loadedNetFilename: string;
-  onUpdate: (patch: Partial<SumoConfig>) => void;
-  onLoadNetwork: (file: File) => void;
-  onNetFileChange: (name: string) => void;
-};
+import { getNetFilePath } from '../utils/sumoUtils';
+import type { SumoFilesSectionProps } from '../sumo.types';
 
 export const SumoFilesSection = ({
   sumo,
@@ -24,7 +16,7 @@ export const SumoFilesSection = ({
   onUpdate,
   onLoadNetwork,
   onNetFileChange,
-}: Props) => {
+}: SumoFilesSectionProps) => {
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {

@@ -1,14 +1,12 @@
 import { Stack } from '@mui/material';
 import { NumField } from '../fields/NumField';
 import OpenCDACollapsibleSection from '../../../OpenCDACollapsibleSection';
-import { SimulationConfig } from '../../../../generators/generators.types';
+import type { OpenCDASectionProps } from '../opencda.types';
 
-type Props = {
-  oc: Partial<SimulationConfig['opencda']>;
-  update: (patch: Partial<SimulationConfig['opencda']>) => void;
-};
-
-export const CarlaTrafficManagerSection = ({ oc, update }: Props) => (
+export const CarlaTrafficManagerSection = ({
+  oc,
+  update,
+}: OpenCDASectionProps) => (
   <OpenCDACollapsibleSection title="carla_traffic_manager (extra %)">
     <Stack spacing={1}>
       <NumField

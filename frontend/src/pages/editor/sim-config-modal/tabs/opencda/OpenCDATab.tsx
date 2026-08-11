@@ -1,5 +1,5 @@
 import { Divider, Stack } from '@mui/material';
-import OpenCDATabRareSections from './OpenCDAAdvancedSections';
+import OpenCDAAdvancedSections from './OpenCDAAdvancedSections';
 import { BackgroundTrafficSection } from './components/BackgroundTrafficSection';
 import { BlueprintSection } from './components/BlueprintSection';
 import { ColorPickerSection } from './components/ColorPickerSection';
@@ -167,7 +167,7 @@ export default function OpenCDATab() {
         onUpdate={updateSimConfigOpenCDA}
       />
 
-      <OpenCDATabRareSections oc={oc} update={updateSimConfigOpenCDA} />
+      <OpenCDAAdvancedSections oc={oc} update={updateSimConfigOpenCDA} />
     </Stack>
   );
 }

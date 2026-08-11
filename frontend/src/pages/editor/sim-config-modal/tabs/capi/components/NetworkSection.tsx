@@ -1,13 +1,8 @@
 import { Stack, TextField, Typography } from '@mui/material';
 import { updateStringField } from '../utils/capiFieldUtils';
-import { CapiConfig } from '../hooks/useCapiConfig';
+import type { CapiSectionProps } from '../capi.types';
 
-type Props = {
-  capi: CapiConfig;
-  update: (patch: Partial<CapiConfig>) => void;
-};
-
-export const NetworkSection = ({ capi, update }: Props) => (
+export const NetworkSection = ({ capi, update }: CapiSectionProps) => (
   <Stack spacing={2}>
     <Typography variant="subtitle2" color="text.secondary">
       Network

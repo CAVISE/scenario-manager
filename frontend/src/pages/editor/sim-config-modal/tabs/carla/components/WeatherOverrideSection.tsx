@@ -7,23 +7,17 @@ import {
   Typography,
 } from '@mui/material';
 import { weatherParamsFromPreset } from '../../../../generators/exporters/opencdaWeather';
-import {
-  CarlaConfig,
-  WEATHER_KEYS,
-  type WeatherKey,
-} from '../utils/carlaUtils';
-
-type Props = {
-  carla: CarlaConfig;
-  customWeatherEnabled: boolean;
-  update: (patch: Partial<CarlaConfig>) => void;
-};
+import { CARLA_WEATHER_KEYS } from '../carla.constants';
+import type {
+  CarlaWeatherKey,
+  CarlaWeatherOverrideSectionProps,
+} from '../carla.types';
 
 export const WeatherOverrideSection = ({
   carla,
   customWeatherEnabled,
   update,
-}: Props) => (
+}: CarlaWeatherOverrideSectionProps) => (
   <>
     <Divider />
     <Typography variant="subtitle2" color="text.secondary">
@@ -50,7 +44,7 @@ export const WeatherOverrideSection = ({
         gridTemplateColumns="repeat(2, minmax(0, 1fr))"
         gap={1.5}
       >
-        {WEATHER_KEYS.map((key) => (
+        {CARLA_WEATHER_KEYS.map((key) => (
           <TextField
             key={key}
             label={key}
@@ -63,7 +57,7 @@ export const WeatherOverrideSection = ({
               if (raw === '') {
                 delete next[key];
               } else {
-                next[key as WeatherKey] = Number(raw);
+                next[key as CarlaWeatherKey] = Number(raw);
               }
               update({ weather_override: next });
             }}

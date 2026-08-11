@@ -3,23 +3,12 @@ import { Stack } from '@mui/material';
 import OpenCDACollapsibleSection from '../../../OpenCDACollapsibleSection';
 import { RgbTriple } from '../fields/RgbTriple';
 import { NumField } from '../fields/NumField';
+import type { CoopPerceptionSectionProps } from '../opencda.types';
 
-type Props = {
-  coopPerception: Partial<{
-    background: [number, number, number];
-    bbox_line_thickness: number;
-    image_dpi: number;
-  }>;
-  patch: (
-    p: Partial<{
-      background: [number, number, number];
-      bbox_line_thickness: number;
-      image_dpi: number;
-    }>,
-  ) => void;
-};
-
-export const CoopPerceptionSection = ({ coopPerception, patch }: Props) => (
+export const CoopPerceptionSection = ({
+  coopPerception,
+  patch,
+}: CoopPerceptionSectionProps) => (
   <OpenCDACollapsibleSection title="cooperative_perception_visualization">
     <Stack spacing={1}>
       <RgbTriple

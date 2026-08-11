@@ -7,14 +7,9 @@ import {
   Typography,
 } from '@mui/material';
 import { updateStringField, updateSwitchField } from '../utils/capiFieldUtils';
-import { CapiConfig } from '../hooks/useCapiConfig';
+import type { CapiSectionProps } from '../capi.types';
 
-type Props = {
-  capi: CapiConfig;
-  update: (patch: Partial<CapiConfig>) => void;
-};
-
-export const CommandEnvSection = ({ capi, update }: Props) => (
+export const CommandEnvSection = ({ capi, update }: CapiSectionProps) => (
   <>
     <Divider />
     <Typography variant="subtitle2" color="text.secondary">

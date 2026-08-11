@@ -16,28 +16,7 @@ import {
   parseNumberFromEvent,
 } from '../utils/opencdaFieldUtils';
 import { SimulationConfig } from '../../../../generators/generators.types';
-
-interface BackgroundTrafficSectionProps {
-  enabled: boolean;
-  random: boolean;
-  spawnRange: {
-    x_min: number;
-    x_max: number;
-    y_min: number;
-    y_max: number;
-    x_step: number;
-    y_step: number;
-  };
-  globalSpeedPerc: number;
-  vehicleNum: number;
-  globalDistance: number;
-  osmMode: boolean;
-  ignoreLightsPerc: number;
-  ignoreSignsPerc: number;
-  ignoreWalkersPerc: number;
-  autoLaneChange: boolean;
-  onUpdate: (update: Partial<SimulationConfig['opencda']>) => void;
-}
+import type { BackgroundTrafficSectionProps } from '../opencda.types';
 
 export const BackgroundTrafficSection = ({
   enabled,

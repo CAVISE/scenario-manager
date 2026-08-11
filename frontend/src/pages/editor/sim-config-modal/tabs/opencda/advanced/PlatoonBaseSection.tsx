@@ -1,14 +1,12 @@
 import { FormControlLabel, Stack, Switch } from '@mui/material';
 import { NumField } from '../fields/NumField';
 import OpenCDACollapsibleSection from '../../../OpenCDACollapsibleSection';
-import { SimulationConfig } from '../../../../generators/generators.types';
+import type { PlatoonBaseSectionProps } from '../opencda.types';
 
-type Props = {
-  platoonBase: Partial<SimulationConfig['opencda']['platoon_base']>;
-  patch: (p: Partial<SimulationConfig['opencda']['platoon_base']>) => void;
-};
-
-export const PlatoonBaseSection = ({ platoonBase, patch }: Props) => {
+export const PlatoonBaseSection = ({
+  platoonBase,
+  patch,
+}: PlatoonBaseSectionProps) => {
   const leaderSpeedsProfile = platoonBase.leader_speeds_profile ?? [0, 0];
 
   return (

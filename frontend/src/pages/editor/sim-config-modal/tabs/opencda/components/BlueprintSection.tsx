@@ -11,19 +11,7 @@ import {
   createFieldUpdater,
 } from '../utils/opencdaFieldUtils';
 import { SimulationConfig } from '../../../../generators/generators.types';
-
-interface BlueprintSectionProps {
-  useMultiClass: boolean;
-  bpMetaPath: string;
-  classProbabilities: {
-    car: number;
-    truck: number;
-    bus: number;
-    bicycle: number;
-    motorcycle: number;
-  };
-  onUpdate: (update: Partial<SimulationConfig['opencda']>) => void;
-}
+import type { BlueprintSectionProps } from '../opencda.types';
 
 export const BlueprintSection = ({
   useMultiClass,

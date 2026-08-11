@@ -2,17 +2,16 @@ import { TextField } from '@mui/material';
 import { numInputSlot } from '../../../../right-panel/right-panel.types';
 import { validateNumber } from '../utils/opencdaFieldUtils';
 import { parseNumberInputChange } from '../../../../../../shared/utils/numberInput';
+import type { NumFieldProps } from '../opencda.types';
 
-type Props = {
-  label: string;
-  value: number;
-  onChange: (v: number) => void;
-  step?: number;
-  min?: number;
-  max?: number;
-};
-
-export const NumField = ({ label, value, onChange, step, min, max }: Props) => (
+export const NumField = ({
+  label,
+  value,
+  onChange,
+  step,
+  min,
+  max,
+}: NumFieldProps) => (
   <TextField
     label={label}
     type="number"

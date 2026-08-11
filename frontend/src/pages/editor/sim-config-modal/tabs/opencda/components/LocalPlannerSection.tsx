@@ -14,17 +14,7 @@ import {
   getChipColor,
 } from '../utils/opencdaFieldUtils';
 import { SimulationConfig } from '../../../../generators/generators.types';
-
-interface LocalPlannerSectionProps {
-  bufferSize: number;
-  trajectoryUpdateFreq: number;
-  waypointUpdateFreq: number;
-  minDist: number;
-  trajectoryDt: number;
-  debug: boolean;
-  debugTrajectory: boolean;
-  onUpdate: (update: Partial<SimulationConfig['opencda']>) => void;
-}
+import type { LocalPlannerSectionProps } from '../opencda.types';
 
 export const LocalPlannerSection = ({
   bufferSize,

@@ -1,14 +1,12 @@
 import { FormControlLabel, Stack, Switch } from '@mui/material';
 import OpenCDACollapsibleSection from '../../../OpenCDACollapsibleSection';
 import { NumField } from '../fields/NumField';
-import { SimulationConfig } from '../../../../generators/generators.types';
+import type { SafetyManagerSectionProps } from '../opencda.types';
 
-type Props = {
-  safetyManager: Partial<SimulationConfig['opencda']['safety_manager']>;
-  patch: (p: Partial<SimulationConfig['opencda']['safety_manager']>) => void;
-};
-
-export const SafetyManagerSection = ({ safetyManager, patch }: Props) => (
+export const SafetyManagerSection = ({
+  safetyManager,
+  patch,
+}: SafetyManagerSectionProps) => (
   <OpenCDACollapsibleSection title="safety_manager">
     <Stack spacing={1}>
       <FormControlLabel

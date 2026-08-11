@@ -1,13 +1,8 @@
 import { Divider, Typography, TextField, Stack } from '@mui/material';
 import { parseNumberInputChange } from '../../../../../../shared/utils/numberInput';
-import { MPCConfig } from '../utils/MpcUtils';
+import type { MpcSectionProps } from '../mpc.types';
 
-type Props = {
-  mpc: MPCConfig;
-  update: (patch: Partial<MPCConfig>) => void;
-};
-
-export const MPCWeightsSection = ({ mpc, update }: Props) => {
+export const MPCWeightsSection = ({ mpc, update }: MpcSectionProps) => {
   const handleQfChange = (idx: number, value?: number) => {
     const Qf = [...mpc.Qf] as [number, number, number, number];
     Qf[idx] = value || 0;

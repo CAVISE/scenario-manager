@@ -7,21 +7,17 @@ import {
   Typography,
 } from '@mui/material';
 import { parseNumberInputChange } from '../../../../../../shared/utils/numberInput';
-import { CarlaConfig, SENSORS } from '../utils/carlaUtils';
+import { CARLA_SENSORS } from '../carla.constants';
+import type { CarlaSectionProps } from '../carla.types';
 
-type Props = {
-  carla: CarlaConfig;
-  update: (patch: Partial<CarlaConfig>) => void;
-};
-
-export const SensorsSection = ({ carla, update }: Props) => (
+export const SensorsSection = ({ carla, update }: CarlaSectionProps) => (
   <>
     <Divider />
     <Typography variant="subtitle2" color="text.secondary">
       Sensors
     </Typography>
     <Stack direction="row" flexWrap="wrap" gap={1}>
-      {SENSORS.map((s) => (
+      {CARLA_SENSORS.map((s) => (
         <FormControlLabel
           key={s}
           control={

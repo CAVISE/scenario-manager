@@ -13,21 +13,10 @@ import {
   updateSelectField,
   updateStringField,
 } from '../utils/capiFieldUtils';
-import { CapiConfig } from '../hooks/useCapiConfig';
+import type { CapiConfig, CapiSectionProps } from '../capi.types';
+import { CAPI_LOG_LEVELS } from '../capi.constants';
 
-type Props = {
-  capi: CapiConfig;
-  update: (patch: Partial<CapiConfig>) => void;
-};
-
-const LOG_LEVELS: CapiConfig['capi_log_level'][] = [
-  'debug',
-  'info',
-  'warn',
-  'error',
-];
-
-export const CAPIConnectionSection = ({ capi, update }: Props) => (
+export const CAPIConnectionSection = ({ capi, update }: CapiSectionProps) => (
   <>
     <Divider />
     <Typography variant="subtitle2" color="text.secondary">
@@ -64,7 +53,7 @@ export const CAPIConnectionSection = ({ capi, update }: Props) => (
           )
         }
       >
-        {LOG_LEVELS.map((level) => (
+        {CAPI_LOG_LEVELS.map((level) => (
           <MenuItem key={level} value={level}>
             {level}
           </MenuItem>

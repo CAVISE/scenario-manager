@@ -1,15 +1,13 @@
 import { FormControlLabel, Stack, Switch } from '@mui/material';
 import OpenCDACollapsibleSection from '../../../OpenCDACollapsibleSection';
-import { SimulationConfig } from '../../../../generators/generators.types';
+import type { OpenCDAConfig, OpenCDASectionProps } from '../opencda.types';
 
-type Props = {
-  oc: SimulationConfig['opencda'];
-  update: (patch: Partial<SimulationConfig['opencda']>) => void;
-};
-
-export const BehaviorServicesSection = ({ oc, update }: Props) => {
+export const BehaviorServicesSection = ({
+  oc,
+  update,
+}: OpenCDASectionProps) => {
   const patchBehaviorServices = (
-    field: keyof SimulationConfig['opencda']['vehicle_behavior_services'],
+    field: keyof OpenCDAConfig['vehicle_behavior_services'],
     value: boolean,
   ) => {
     update({

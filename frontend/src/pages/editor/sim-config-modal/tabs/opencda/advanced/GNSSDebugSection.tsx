@@ -1,15 +1,13 @@
 import { Stack } from '@mui/material';
 import OpenCDACollapsibleSection from '../../../OpenCDACollapsibleSection';
 import { NumField } from '../fields/NumField';
-import { SimulationConfig } from '../../../../generators/generators.types';
+import type { GnssDebugSectionProps } from '../opencda.types';
 
-type Props = {
-  oc: Partial<SimulationConfig['opencda']>;
-  patchGnss: (p: Partial<SimulationConfig['opencda']['gnss_noise']>) => void;
-  update: (patch: Partial<SimulationConfig['opencda']>) => void;
-};
-
-export const GNSSDebugSection = ({ oc, patchGnss, update }: Props) => (
+export const GNSSDebugSection = ({
+  oc,
+  patchGnss,
+  update,
+}: GnssDebugSectionProps) => (
   <OpenCDACollapsibleSection title="GNSS & localization debug">
     <Stack spacing={1}>
       <NumField

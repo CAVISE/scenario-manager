@@ -1,12 +1,8 @@
 import { Divider, Stack, TextField, Typography } from '@mui/material';
 import { updateNumberField, updateStringField } from '../utils/capiFieldUtils';
-import { CapiConfig } from '../hooks/useCapiConfig';
-type Props = {
-  capi: CapiConfig;
-  update: (patch: Partial<CapiConfig>) => void;
-};
+import type { CapiSectionProps } from '../capi.types';
 
-export const RadioSection = ({ capi, update }: Props) => (
+export const RadioSection = ({ capi, update }: CapiSectionProps) => (
   <>
     <Divider />
     <Typography variant="subtitle2" color="text.secondary">

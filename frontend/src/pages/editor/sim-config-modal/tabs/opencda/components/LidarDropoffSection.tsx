@@ -2,14 +2,7 @@ import React from 'react';
 import { Stack, TextField, Typography } from '@mui/material';
 import { numInputSlot, parseNumberFromEvent } from '../utils/opencdaFieldUtils';
 import { SimulationConfig } from '../../../../generators/generators.types';
-
-interface LidarDropoffSectionProps {
-  dropoffGeneralRate: number;
-  dropoffIntensityLimit: number;
-  dropoffZeroIntensity: number;
-  noiseStddev: number;
-  onUpdate: (update: Partial<SimulationConfig['opencda']>) => void;
-}
+import type { LidarDropoffSectionProps } from '../opencda.types';
 
 export const LidarDropoffSection = ({
   dropoffGeneralRate,

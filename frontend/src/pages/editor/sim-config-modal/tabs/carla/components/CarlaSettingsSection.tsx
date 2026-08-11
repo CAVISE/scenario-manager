@@ -1,13 +1,8 @@
 import { FormControlLabel, Stack, Switch, TextField } from '@mui/material';
 import { parseNumberInputChange } from '../../../../../../shared/utils/numberInput';
-import { CarlaConfig } from '../utils/carlaUtils';
+import type { CarlaSectionProps } from '../carla.types';
 
-type Props = {
-  carla: CarlaConfig;
-  update: (patch: Partial<CarlaConfig>) => void;
-};
-
-export const CarlaSettingsSection = ({ carla, update }: Props) => (
+export const CarlaSettingsSection = ({ carla, update }: CarlaSectionProps) => (
   <>
     <Stack direction="row" spacing={2}>
       <TextField

@@ -10,21 +10,7 @@ import {
   createNumberFieldOnChange,
 } from '../utils/opencdaFieldUtils';
 import { SimulationConfig } from '../../../../generators/generators.types';
-
-interface VehicleBehaviorSectionProps {
-  maxSpeed: number;
-  tailgateSpeed: number;
-  safetyTime: number;
-  emergencyParam: number;
-  collisionTimeAhead: number;
-  sampleResolution: number;
-  speedLimDist: number;
-  speedDecrease: number;
-  overtakeCounterRecover: number;
-  ignoreTrafficLight: boolean;
-  overtakeAllowed: boolean;
-  onUpdate: (update: Partial<SimulationConfig['opencda']>) => void;
-}
+import type { VehicleBehaviorSectionProps } from '../opencda.types';
 
 export const VehicleBehaviorSection = ({
   maxSpeed,

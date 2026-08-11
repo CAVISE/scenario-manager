@@ -7,27 +7,12 @@ import {
 } from '@mui/material';
 import { NumField } from '../fields/NumField';
 import OpenCDACollapsibleSection from '../../../OpenCDACollapsibleSection';
+import type { ControllerPidSectionProps } from '../opencda.types';
 
-type ControllerConfig = {
-  type?: string;
-  lat_k_p?: number;
-  lat_k_d?: number;
-  lat_k_i?: number;
-  lon_k_p?: number;
-  lon_k_d?: number;
-  lon_k_i?: number;
-  dynamic?: boolean;
-  max_brake?: number;
-  max_throttle?: number;
-  max_steering?: number;
-};
-
-type Props = {
-  controller: ControllerConfig;
-  patch: (p: Partial<ControllerConfig>) => void;
-};
-
-export const ControllerPIDSection = ({ controller, patch }: Props) => (
+export const ControllerPIDSection = ({
+  controller,
+  patch,
+}: ControllerPidSectionProps) => (
   <OpenCDACollapsibleSection title="controller (pid_controller)">
     <Stack spacing={1}>
       <TextField

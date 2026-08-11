@@ -11,19 +11,7 @@ import {
   createFieldUpdater,
 } from '../utils/opencdaFieldUtils';
 import { SimulationConfig } from '../../../../generators/generators.types';
-
-export type RSUFields = Pick<
-  SimulationConfig['opencda'],
-  | 'rsu_lidar_channels'
-  | 'rsu_lidar_range'
-  | 'rsu_camera_visualize'
-  | 'rsu_cam_num'
-  | 'rsu_perception_activate'
->;
-
-interface RSUSectionProps extends RSUFields {
-  onUpdate: (update: Partial<RSUFields>) => void;
-}
+import type { RsuFields, RsuSectionProps } from '../opencda.types';
 
 export const RSUSection = ({
   rsu_lidar_channels,
@@ -32,10 +20,10 @@ export const RSUSection = ({
   rsu_cam_num,
   rsu_perception_activate,
   onUpdate,
-}: RSUSectionProps) => {
+}: RsuSectionProps) => {
   const updateField = createFieldUpdater<SimulationConfig['opencda']>(onUpdate);
 
-  const numberField = <K extends keyof RSUFields & string>(
+  const numberField = <K extends keyof RsuFields & string>(
     field: K,
     min?: number,
     max?: number,

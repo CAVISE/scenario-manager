@@ -12,14 +12,7 @@ import {
   createNumberFieldOnChange,
 } from '../utils/opencdaFieldUtils';
 import { SimulationConfig } from '../../../../generators/generators.types';
-
-interface SUMOSectionProps {
-  host: string;
-  port: number;
-  clientOrder: number;
-  gui: boolean;
-  onUpdate: (update: Partial<SimulationConfig['opencda']>) => void;
-}
+import type { SumoSectionProps } from '../opencda.types';
 
 export const SUMOSection = ({
   host,
@@ -27,7 +20,7 @@ export const SUMOSection = ({
   clientOrder,
   gui,
   onUpdate,
-}: SUMOSectionProps) => {
+}: SumoSectionProps) => {
   const updateField = (
     field: keyof SimulationConfig['opencda'],
     value: SimulationConfig['opencda'][keyof SimulationConfig['opencda']],

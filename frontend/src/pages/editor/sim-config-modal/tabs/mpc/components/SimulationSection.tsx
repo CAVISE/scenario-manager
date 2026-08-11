@@ -1,13 +1,8 @@
 import { Divider, Typography, TextField, Stack } from '@mui/material';
 import { parseNumberInputChange } from '../../../../../../shared/utils/numberInput';
-import { MPCConfig } from '../utils/MpcUtils';
+import type { MpcSectionProps } from '../mpc.types';
 
-type Props = {
-  mpc: MPCConfig;
-  update: (patch: Partial<MPCConfig>) => void;
-};
-
-export const SimulationSection = ({ mpc, update }: Props) => (
+export const SimulationSection = ({ mpc, update }: MpcSectionProps) => (
   <>
     <Divider />
     <Typography variant="subtitle2" color="text.secondary">
