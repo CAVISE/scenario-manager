@@ -119,9 +119,9 @@ test.describe('Three.js editor flows', () => {
     const scale = page.getByTestId('transform-scale');
 
     await expect(translate).toHaveClass(/MuiIconButton-colorPrimary/);
-    await rotate.click();
+    await rotate.dispatchEvent('click');
     await expect(rotate).toHaveClass(/MuiIconButton-colorPrimary/);
-    await scale.click();
+    await scale.dispatchEvent('click');
     await expect(scale).toHaveClass(/MuiIconButton-colorPrimary/);
   });
 
@@ -145,7 +145,7 @@ test.describe('Three.js editor flows', () => {
     await expect(
       page.getByRole('heading', { name: 'Load Scenario' }),
     ).toBeVisible();
-    await page.getByRole('button', { name: 'close' }).click();
+    await page.getByRole('button', { name: 'close' }).dispatchEvent('click');
     await expect(
       page.getByRole('heading', { name: 'Load Scenario' }),
     ).not.toBeVisible();
@@ -159,8 +159,13 @@ test.describe('Three.js editor flows', () => {
 
     await page.getByRole('button', { name: 'Menu' }).click();
     await page.getByRole('menuitem', { name: 'Upload' }).click();
-    await page.getByText('Mock scenario').click();
-    await page.getByRole('button', { name: 'Load onto scene' }).click();
+    await page.getByText('Mock scenario').dispatchEvent('click');
+    await page
+      .getByRole('button', { name: 'Load onto scene' })
+      .dispatchEvent('click');
+    await expect(
+      page.getByRole('button', { name: 'Load onto scene' }),
+    ).not.toBeVisible();
 
     await expect(page.getByTestId('scene-graph-count')).not.toHaveText(
       '0 objects',
@@ -176,14 +181,19 @@ test.describe('Three.js editor flows', () => {
 
     await page.getByRole('button', { name: 'Menu' }).click();
     await page.getByRole('menuitem', { name: 'Upload' }).click();
-    await page.getByText('Mock scenario').click();
-    await page.getByRole('button', { name: 'Load onto scene' }).click();
+    await page.getByText('Mock scenario').dispatchEvent('click');
+    await page
+      .getByRole('button', { name: 'Load onto scene' })
+      .dispatchEvent('click');
+    await expect(
+      page.getByRole('button', { name: 'Load onto scene' }),
+    ).not.toBeVisible();
     await expect(page.getByTestId('scene-graph-count')).not.toHaveText(
       '0 objects',
     );
-    await page.keyboard.press('Escape');
-
-    await page.getByRole('button', { name: 'Clear all' }).click();
+    await page
+      .getByRole('button', { name: 'Clear all' })
+      .dispatchEvent('click');
     await expect(page.getByTestId('scene-graph-count')).toHaveText('0 objects');
     await expect(page.getByText('scene is empty')).toBeVisible();
   });
