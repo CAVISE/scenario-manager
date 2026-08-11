@@ -4,7 +4,7 @@ import {
   toUpdateScenarioBody,
   toUploadScenarioBody,
 } from '../scenarioRequest';
-import { ScenarioPayload } from '../types/IScenarioTypes';
+import { ScenarioPayload } from '../scenario.types';
 
 describe('toUploadScenarioBody', () => {
   it('wraps scenario groups for upload', () => {

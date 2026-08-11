@@ -2,7 +2,7 @@ import type {
   LoadScenarioApiResponse,
   ScenarioGroup,
   ScenarioPayload,
-} from './types/IScenarioTypes';
+} from './scenario.types';
 import {
   validateUpdatePayload,
   validateUploadPayload,
