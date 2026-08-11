@@ -50,7 +50,6 @@ import { handleLoad } from './right-panel/ScenarioControlWidget/handlers';
 import { useEditorRefs, useHooks } from './context';
 import { getApiErrorMessageSync } from '../../api/errors';
 import { useNoticeWithToast } from '../../shared/ui/AppToast';
-import { useModalOpenTracking } from './hooks/useModalOpenTracking';
 
 function previewSrc(preview: string | null): string | undefined {
   if (!preview) return undefined;
@@ -69,7 +68,6 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
   open,
   onClose,
 }) => {
-  useModalOpenTracking(open);
   const { sceneRef, loadRSURef } = useEditorRefs();
   const [selectedScenario, setSelectedScenario] =
     useState<ScenarioListItem | null>(null);

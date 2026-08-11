@@ -7,13 +7,11 @@ import {
   AttackConfigModalProps,
   attackModalSx,
 } from './AttackConfigModal.types';
-import { useModalOpenTracking } from '../hooks/useModalOpenTracking';
 
 export default function AttackConfigModal({
   open,
   onClose,
 }: AttackConfigModalProps) {
-  useModalOpenTracking(open);
   const {
     attacks,
     selectedAttack,

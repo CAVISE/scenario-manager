@@ -32,5 +32,4 @@ export interface EditorRefs {
   }>;
   threeRef: MutableRefObject<ThreeSetup | null>;
   odrMapRef: MutableRefObject<OpenDriveMapInstance | null>;
-  modalOpenCountRef: MutableRefObject<number>;
 }

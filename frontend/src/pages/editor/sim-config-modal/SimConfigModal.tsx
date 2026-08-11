@@ -14,7 +14,6 @@ import {
 import { useEditorStore } from '../../../store';
 import { mergeSimConfigWithDefaults } from '../generators/generators.types';
 import { muiPressableRootStyle } from '../../../shared/styles/pressInteraction';
-import { useModalOpenTracking } from '../hooks/useModalOpenTracking';
 import { modalBoxSx, type SimConfigModalProps } from './SimConfigModal.types';
 import {
   ArteryTab,
@@ -29,7 +28,6 @@ import {
 import { parseNumberInputChange } from '../../../shared/utils/numberInput';
 
 export default function SimConfigModal({ open, onClose }: SimConfigModalProps) {
-  useModalOpenTracking(open);
   const [tab, setTab] = useState(0);
   const modalContentRef = useRef<HTMLDivElement | null>(null);
   const rawSimConfig = useEditorStore((s) => s.simConfig);

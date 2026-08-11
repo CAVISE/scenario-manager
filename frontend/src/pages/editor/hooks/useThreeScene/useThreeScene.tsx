@@ -38,7 +38,6 @@ export function useThreeScene({
     currentColorRef,
     isDraggingRef,
     buildingMeshesRef,
-    modalOpenCountRef,
   } = useEditorRefs();
 
   const actionsRef = useRef({
@@ -121,12 +120,7 @@ export function useThreeScene({
     getIsDragging,
     getOdrMeshes,
     getOpenDriveMap: () => setMapRef.current,
-    // Skip GPU picking while any modal is open: the canvas stays mounted
-    // (and its animate loop keeps running) underneath open modals, and
-    // readRenderTargetPixels is a blocking GPU readback that has no
-    // reason to run while the user's pointer is over the modal, not the
-    // scene. See modalOpenCountRef in EditorRefsTypes for details.
-    spotlightEnabled: () => modalOpenCountRef.current === 0,
+    spotlightEnabled: () => true,
   });
   useEffect(() => {
     setThreeReady(true);
