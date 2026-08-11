@@ -7,7 +7,6 @@ export type OpenCDAArtifactState = Pick<
   'simConfig' | 'cars' | 'RSUs' | 'points' | 'lidars'
 >;
 
-/** Build the exact YAML artifact shared by export and simulation startup. */
 export function buildOpenCDAArtifact(state: OpenCDAArtifactState): string {
   return generateOpenCDAConfig(
     mergeSimConfigWithDefaults(state.simConfig),

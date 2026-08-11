@@ -13,38 +13,118 @@ import {
   generateRouXml,
   generateSumoCfg,
 } from '../../../../../../Generators/exporters';
+import {
+  getStoredXodrName,
+  resolveXodrTextForSimulation,
+} from '../../../../../../hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
+import { useEditorRefs } from '../../../../../../context';
+import {
+  buildSumoRoutes,
+  getSumoCoordinateOffsets,
+  resolveSumoNetwork,
+} from '../../../../../../Generators/exporters/ui/sumoNetwork';
+import { getSumoNetFilename } from '../../../../../../Generators/exporters';
+import { useAppToast } from '../../../../../../../../components/AppToast';
+
+function exportErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 export default function SumoExportSection({
   openExportDialog,
 }: SimulatorProps) {
+  const { odrMapRef } = useEditorRefs();
+  const toast = useAppToast();
+
   const handleExportSumoCfg = () => {
     const simConfig = mergeSimConfigWithDefaults(
       useEditorStore.getState().simConfig,
     );
-    openExportDialog(`${simConfig.sumo.scenario_name}.sumocfg`, () => {
+    openExportDialog(`${simConfig.sumo.scenario_name}.sumocfg`, (filename) => {
       const { simConfig: raw } = useEditorStore.getState();
-      return generateSumoCfg(mergeSimConfigWithDefaults(raw));
+      return generateSumoCfg(mergeSimConfigWithDefaults(raw), filename);
     });
   };
 
-  const handleExportRouXml = () => {
-    const simConfig = mergeSimConfigWithDefaults(
-      useEditorStore.getState().simConfig,
-    );
-    openExportDialog(`${simConfig.sumo.scenario_name}.rou.xml`, () => {
-      const { simConfig: raw, cars } = useEditorStore.getState();
-      return generateRouXml(mergeSimConfigWithDefaults(raw), cars);
-    });
+  const handleExportRouXml = async () => {
+    try {
+      const { simConfig: raw, cars, points } = useEditorStore.getState();
+      const simConfig = mergeSimConfigWithDefaults(raw);
+      const network = await resolveSumoNetwork(
+        getSumoNetFilename(simConfig.carla.map),
+      );
+      const map = odrMapRef.current;
+      if (!map) {
+        throw new Error(
+          'OpenDRIVE map offsets are unavailable; wait for the map to finish loading',
+        );
+      }
+      const routes = buildSumoRoutes(network.content, cars, points, {
+        x: map.x_offs,
+        y: map.y_offs,
+      });
+      const content = generateRouXml(simConfig, cars, routes);
+      openExportDialog(
+        `${simConfig.sumo.scenario_name}.rou.xml`,
+        () => content,
+      );
+    } catch (error) {
+      toast.error(`Failed to export routes: ${exportErrorMessage(error)}`);
+    }
   };
 
-  const handleExportPolyXml = () => {
-    const simConfig = mergeSimConfigWithDefaults(
-      useEditorStore.getState().simConfig,
-    );
-    openExportDialog(`${simConfig.sumo.scenario_name}.poly.xml`, () => {
-      const { buildings } = useEditorStore.getState();
-      return generatePolyXml(buildings);
-    });
+  const handleExportPolyXml = async () => {
+    try {
+      const { simConfig: raw, buildings } = useEditorStore.getState();
+      const simConfig = mergeSimConfigWithDefaults(raw);
+      const network = await resolveSumoNetwork(
+        getSumoNetFilename(simConfig.carla.map),
+      );
+      const map = odrMapRef.current;
+      if (!map) {
+        throw new Error(
+          'OpenDRIVE map offsets are unavailable; wait for the map to finish loading',
+        );
+      }
+      const offsets = getSumoCoordinateOffsets(network.content, {
+        x: map.x_offs,
+        y: map.y_offs,
+      });
+      const content = generatePolyXml(buildings, offsets);
+      openExportDialog(
+        `${simConfig.sumo.scenario_name}.poly.xml`,
+        () => content,
+      );
+    } catch (error) {
+      toast.error(`Failed to export polygons: ${exportErrorMessage(error)}`);
+    }
   };
+
+  const handleExportNetXml = async () => {
+    try {
+      const { simConfig: raw } = useEditorStore.getState();
+      const simConfig = mergeSimConfigWithDefaults(raw);
+      const network = await resolveSumoNetwork(
+        getSumoNetFilename(simConfig.carla.map),
+      );
+      openExportDialog(network.filename, () => network.content);
+    } catch (error) {
+      toast.error(`Failed to export network: ${exportErrorMessage(error)}`);
+    }
+  };
+
+  const handleExportXodr = async () => {
+    try {
+      const { simConfig: raw } = useEditorStore.getState();
+      const simConfig = mergeSimConfigWithDefaults(raw);
+      const xodr = await resolveXodrTextForSimulation(simConfig.carla.map);
+      if (!xodr) throw new Error('OpenDRIVE map is unavailable');
+      openExportDialog(getStoredXodrName(simConfig.carla.map), () => xodr);
+    } catch (error) {
+      toast.error(`Failed to export OpenDRIVE: ${exportErrorMessage(error)}`);
+    }
+  };
+
   return (
     <>
       <ListSubheader sx={ListSubheaderStyles}>SUMO</ListSubheader>
@@ -59,6 +139,14 @@ export default function SumoExportSection({
       <MenuItem onClick={handleExportPolyXml}>
         <DownloadIcon fontSize="small" style={DownloadIconStyles} />
         Polygons (.poly.xml)
+      </MenuItem>
+      <MenuItem onClick={handleExportNetXml}>
+        <DownloadIcon fontSize="small" style={DownloadIconStyles} />
+        Network (.net.xml)
+      </MenuItem>
+      <MenuItem onClick={handleExportXodr}>
+        <DownloadIcon fontSize="small" style={DownloadIconStyles} />
+        OpenDRIVE source (.xodr)
       </MenuItem>
     </>
   );

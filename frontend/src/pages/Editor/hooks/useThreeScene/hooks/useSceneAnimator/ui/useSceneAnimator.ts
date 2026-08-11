@@ -9,6 +9,19 @@ import { useEditorStore } from '../../../../../../../store/ui/useEditorStore';
 import { UseSceneAnimatorProps } from '../types/useSceneAnimatorTypes';
 import { useEditorRefs } from '../../../../../context';
 
+function createIdIndexCache<T extends THREE.Object3D>() {
+  let lastArray: T[] | null = null;
+  let cache: Map<string, T> = new Map();
+
+  return (array: T[]): Map<string, T> => {
+    if (array !== lastArray) {
+      cache = new Map(array.map((item) => [String(item.userData.id), item]));
+      lastArray = array;
+    }
+    return cache;
+  };
+}
+
 export function useSceneAnimator({
   getIsDragging,
   getOdrMeshes,
@@ -24,6 +37,10 @@ export function useSceneAnimator({
   } = useEditorRefs();
 
   const spotlightStateRef = useRef(createSpotlightState());
+  const carMeshIndexRef = useRef(createIdIndexCache<THREE.Mesh>());
+  const rsuMeshIndexRef = useRef(createIdIndexCache<THREE.Mesh>());
+  const pedestrianMeshIndexRef = useRef(createIdIndexCache<THREE.Mesh>());
+
   /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     const three = threeRef.current;
@@ -52,10 +69,9 @@ export function useSceneAnimator({
         const { cars, RSUs, buildings, pedestrians, points } =
           useEditorStore.getState();
 
+        const carMeshById = carMeshIndexRef.current(carMeshesRef.current);
         cars.forEach((car, i) => {
-          const mesh = carMeshesRef.current.find(
-            (m) => m.userData.id === car.id,
-          );
+          const mesh = carMeshById.get(car.id);
           if (!mesh) return;
           mesh.position.set(car.x, car.y, car.z);
           mesh.scale.setScalar(car.scale ?? 1);
@@ -70,27 +86,31 @@ export function useSceneAnimator({
             });
         });
 
+        const rsuMeshById = rsuMeshIndexRef.current(pointsObjsRef.current);
         RSUs.forEach((rsu) => {
-          const mesh = pointsObjsRef.current.find(
-            (m) => m.userData.id === rsu.id,
-          );
+          const mesh = rsuMeshById.get(rsu.id);
           mesh?.position.set(rsu.x, rsu.y, rsu.z);
         });
 
+        const buildingMeshById = new Map<string, THREE.Object3D>();
+        scene.children.forEach((c) => {
+          if (c.userData.type === 'building') {
+            buildingMeshById.set(String(c.userData.id), c);
+          }
+        });
         buildings.forEach((building) => {
-          const mesh = scene.children.find(
-            (c) => c.userData.id === building.id,
-          );
+          const mesh = buildingMeshById.get(building.id);
           if (!mesh) return;
           mesh.position.set(building.x, building.y, building.z);
           mesh.rotation.y = building.rotation ?? 0;
           mesh.scale.setScalar(building.scale ?? 0.5);
         });
 
+        const pedestrianMeshById = pedestrianMeshIndexRef.current(
+          pedestrianMeshesRef.current,
+        );
         pedestrians.forEach((pedestrian) => {
-          const mesh = pedestrianMeshesRef.current.find(
-            (p) => p.userData.id === pedestrian.id,
-          );
+          const mesh = pedestrianMeshById.get(pedestrian.id);
           mesh?.position.set(pedestrian.x, pedestrian.y, pedestrian.z ?? 0);
         });
       },

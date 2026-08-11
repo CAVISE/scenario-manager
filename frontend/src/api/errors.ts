@@ -1,39 +1,5 @@
 import { HTTPError } from 'ky';
-
-type ValidationIssue = {
-  msg?: string;
-  loc?: (string | number)[];
-};
-
-type ApiErrorPayload =
-  | {
-      detail?: string | ValidationIssue[];
-      message?: string;
-      error?: string;
-    }
-  | string
-  | null
-  | undefined;
-
-function formatApiDetail(
-  detail: string | ValidationIssue[] | undefined,
-): string | null {
-  if (!detail) return null;
-  if (typeof detail === 'string' && detail.trim()) return detail;
-  if (Array.isArray(detail)) {
-    const lines = detail
-      .map((issue) => {
-        const path = issue.loc
-          ?.filter((part: string | number) => part !== 'body')
-          .join('.');
-        const msg = issue.msg ?? 'Validation error';
-        return path ? `${path}: ${msg}` : msg;
-      })
-      .filter(Boolean);
-    return lines.length > 0 ? lines.join('; ') : null;
-  }
-  return null;
-}
+import { ApiErrorPayload, formatApiDetail } from './types/IScenarioTypes';
 
 export async function getApiErrorMessage(
   err: unknown,

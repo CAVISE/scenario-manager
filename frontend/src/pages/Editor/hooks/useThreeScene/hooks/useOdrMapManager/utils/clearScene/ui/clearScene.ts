@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ClearSceneParams } from '../types/clearSceneTypes';
+import { ClearSceneParams, DEFAULT_COLOR } from '../types/clearSceneTypes';
 import { clearOdrScene } from '../../../../../../useOpenDriveUtils/useOdrMap';
 import { useEditorStore } from '../../../../../../../../../store';
 
@@ -47,7 +47,7 @@ export function clearScene({
   carMeshesRef.current = [];
   localLineArrRef.current = [];
   pointsObjsRef.current = [];
-  currentColorRef.current = '00ff00';
+  currentColorRef.current = DEFAULT_COLOR;
   currentCarRef.current = '';
   carQuaternionsRef.current.clear();
 
@@ -55,9 +55,7 @@ export function clearScene({
   transformControls.parent?.remove(transformControls);
 
   const s = useEditorStore.getState();
-  while (useEditorStore.getState().RSUs.length > 0) {
-    useEditorStore.getState().removeRSU(0);
-  }
+  useEditorStore.getState().removeAllRSUs();
   s.points.forEach((p) => s.removePoint(p.id));
   s.cars.forEach((c) => s.removeCar(c.id.toString()));
   s.selectObject(null);

@@ -1,7 +1,7 @@
 import {
   useScenarioCreateMutation,
   useScenarioPatchMutation,
-  useScenarioPutMutation,
+  useScenarioDeleteMutation,
   useScenariosListQuery,
   scenarioKeys,
 } from './ui/useScenarioQueries';
@@ -10,6 +10,6 @@ export {
   scenarioKeys,
   useScenarioCreateMutation,
   useScenarioPatchMutation,
-  useScenarioPutMutation,
+  useScenarioDeleteMutation,
   useScenariosListQuery,
 };

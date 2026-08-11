@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback } from 'react';
 import * as THREE from 'three';
 import { OpenDriveMapInstance } from '../../../../../types/editorTypes';
 import {
@@ -17,6 +17,7 @@ import {
   UseOdrMapManagerResult,
 } from '../types/useOdrMapManagerTypes';
 import { useEditorRefs } from '../../../../../context';
+import { MAP_PATH } from '../../useOdrLoader/types/useOdrLoaderTypes';
 
 export function useOdrMapManager({
   setStep,
@@ -26,6 +27,7 @@ export function useOdrMapManager({
   syncRoadMesh,
   updateSceneGraph,
   buildingModelRef,
+  buildingMeshesRef,
   localLineArrRef,
 }: UseOdrMapManagerProps): UseOdrMapManagerResult {
   const {
@@ -44,8 +46,6 @@ export function useOdrMapManager({
   const disposableObjs = useRef<THREE.BufferGeometry[]>([]);
   const moduleRef = useRef<OpenDriveModule | null>(null);
   const mapRef = useRef<OpenDriveMapInstance | null>(null);
-
-
 
   const loadOdrMap = useCallback(
     (clearMap = true, fitView = true) => {
@@ -92,10 +92,10 @@ export function useOdrMapManager({
           syncRoadMesh,
           updateSceneGraph,
           buildingModelRef,
+          buildingMeshesRef,
         });
       } catch (err) {
         console.error(err);
-
         setStep('done');
         setError?.(
           err instanceof Error ? err : new Error('Failed to build map scene'),
@@ -108,8 +108,17 @@ export function useOdrMapManager({
       console.log('[OdrMapManager] loadOdrMap finished, calling setStep done');
       console.log('X offset: ', mapRef?.current?.x_offs);
       console.log('Y offset: ', mapRef?.current?.y_offs);
+      try {
+        three.renderer.compile(three.scene, three.camera);
+      } catch (err) {
+        console.error('renderer.compile failed:', err);
+      }
 
-      setStep('done');
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setStep('done');
+        });
+      });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
@@ -118,6 +127,7 @@ export function useOdrMapManager({
       syncRoadMesh,
       updateSceneGraph,
       buildingModelRef,
+      buildingMeshesRef,
       carMeshesRef,
       pointsObjsRef,
       cubeCirclesRef,
@@ -139,7 +149,7 @@ export function useOdrMapManager({
     }
     try {
       mapRef.current?.delete();
-      mapRef.current = new Module.OpenDriveMap('./data.xodr', ODR_MAP_OPTIONS);
+      mapRef.current = new Module.OpenDriveMap(MAP_PATH, ODR_MAP_OPTIONS);
       odrMapRef.current = mapRef.current;
       loadOdrMap(true, false);
       console.log('X offset: ', mapRef.current.x_offs);

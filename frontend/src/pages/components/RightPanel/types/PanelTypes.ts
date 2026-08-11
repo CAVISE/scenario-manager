@@ -9,6 +9,12 @@ export const numInputSlot = {
 
 export type SceneNode = { id: string; name: string; children?: SceneNode[] };
 
+export interface SectionProps {
+  label: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}
+
 export type SelectedObject = {
   type:
     'car' | 'rsu' | 'point' | 'building' | 'lidar' | 'circle' | 'pedestrian';
@@ -145,7 +151,7 @@ export const css = `
   padding: 11px 20px;
   cursor: pointer;
   user-select: none;
-  transition: background 0.12s;
+  transition: background 0.12s, transform 140ms cubic-bezier(0.4,0,0.2,1);
 }
 .rp-section-header:hover { background: #f2f0ec; }
 
@@ -334,9 +340,3 @@ export const css = `
   box-shadow: 0 0 4px rgba(34,197,94,0.5);
 }
 `;
-
-export interface SectionProps {
-  label: string;
-  defaultOpen?: boolean;
-  children: React.ReactNode;
-}

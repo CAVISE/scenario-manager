@@ -17,6 +17,8 @@ import type {
   TelemetryModalProps,
   TabCategories,
   ImagesByTabType,
+  ResultsResponse,
+  SimStatus,
 } from '../types/TelemetryModalTypes';
 import {
   ModalContainer,
@@ -31,21 +33,6 @@ import {
   ImagePreviewImg,
   ImageCaption,
 } from '../types/TelemetryModalTypes';
-
-interface SimStatus {
-  run_id: string | null;
-  status: string;
-}
-
-interface FileEntry {
-  filename: string;
-  url: string;
-}
-
-interface ResultsResponse {
-  files: FileEntry[];
-  run_id: string;
-}
 
 const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
   const [activeTab, setActiveTab] = useState<TabCategories>('routes');

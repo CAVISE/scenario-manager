@@ -11,59 +11,94 @@ import {
   Point,
   RSU,
 } from '../../../../../../../store/types/useEditorStoreTypes';
-import { getCachedXodrContent } from '../../../../../../Editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
+import {
+  DEFAULT_XODR,
+  getCachedXodrContent,
+} from '../../../../../../Editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
+
+let canvasRef: HTMLCanvasElement | null = null;
+let cachedPreview: string | null = null;
+let previewGenerationInProgress = false;
+let pendingPreviewCallbacks: Array<(preview: string | null) => void> = [];
+
+export function setCanvasReference(canvas: HTMLCanvasElement | null): void {
+  canvasRef = canvas;
+  cachedPreview = null;
+}
+
+function capturePreview(): string | null {
+  if (!canvasRef) return null;
+  try {
+    return canvasRef.toDataURL('image/png');
+  } catch (error) {
+    console.warn('Failed to capture preview:', error);
+    return null;
+  }
+}
+
+export function invalidatePreviewCache(): void {
+  cachedPreview = null;
+}
+
+export function generatePreviewAsync(): Promise<string | null> {
+  return new Promise((resolve) => {
+    if (!canvasRef) {
+      resolve(null);
+      return;
+    }
+
+    if (cachedPreview) {
+      resolve(cachedPreview);
+      return;
+    }
+
+    if (previewGenerationInProgress) {
+      pendingPreviewCallbacks.push(resolve);
+      return;
+    }
+
+    previewGenerationInProgress = true;
+
+    requestAnimationFrame(() => {
+      try {
+        const preview = capturePreview();
+        if (preview) {
+          cachedPreview = preview;
+        }
+        resolve(preview);
+
+        const callbacks = [...pendingPreviewCallbacks];
+        pendingPreviewCallbacks = [];
+        callbacks.forEach((cb) => cb(preview));
+      } catch (error) {
+        console.warn('Failed to generate preview:', error);
+        resolve(null);
+
+        const callbacks = [...pendingPreviewCallbacks];
+        pendingPreviewCallbacks = [];
+        callbacks.forEach((cb) => cb(null));
+      } finally {
+        previewGenerationInProgress = false;
+      }
+    });
+  });
+}
 
 export function buildScenarioPayload(): ScenarioPayload {
   const s = useEditorStore.getState();
-  const canvas = document.querySelector(
-    '#ThreeJS canvas',
-  ) as HTMLCanvasElement | null;
+
+  const preview = cachedPreview;
+
   return {
     scenario_id: s.Scenario?.id || null,
-<<<<<<< HEAD
-    scenario_name:
-      s.Scenario?.name ?? localStorage.getItem('scenario_name') ?? undefined,
-    weather:
-      s.Scenario?.weather ?? localStorage.getItem('weather') ?? undefined,
-    map: s.simConfig?.carla?.map || 'town10',
+    scenario_name: s.Scenario?.name || null,
+    weather: s.Scenario?.weather || undefined,
+    map: s.simConfig?.carla?.map || DEFAULT_XODR,
     id: s.Scenario?.id || null,
     name_of_scenario: s.Scenario?.name || null,
-    preview: (() => {
-      if (!canvas) return null;
-      try {
-        const thumb = document.createElement('canvas');
-        thumb.width = 320;
-        thumb.height = 180;
-        const ctx = thumb.getContext('2d');
-        if (!ctx) return null;
-        const scale = Math.min(320 / canvas.width, 180 / canvas.height);
-        const dx = (320 - canvas.width * scale) / 2;
-        const dy = (180 - canvas.height * scale) / 2;
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, 320, 180);
-        ctx.drawImage(
-          canvas,
-          dx,
-          dy,
-          canvas.width * scale,
-          canvas.height * scale,
-        );
-        return thumb.toDataURL('image/jpeg', 0.72);
-      } catch {
-        return null;
-      }
-    })(),
-    file_: localStorage.getItem('cached_xodr') ?? null,
-=======
-    scenario_name: s.Scenario?.name || localStorage.getItem('scenario_name'),
-    weather:
-      s.Scenario?.weather || localStorage.getItem('weather') || undefined,
-    map: s.simConfig?.carla?.map || 'town10',
-    id: s.Scenario?.id || null,
-    name_of_scenario: s.Scenario?.name || null,
-    preview: canvas?.toDataURL('image/png') ?? null,
+    description: s.Scenario?.description || null,
+    preview: preview,
     file_: getCachedXodrContent(),
->>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
     scenario: (
       [
         {
@@ -89,6 +124,13 @@ export function buildScenarioPayload(): ScenarioPayload {
               car.opencda_v2x?.communication_range,
             opencda_carla_model: car.opencda_carla_model,
             opencda_color: car.opencda_color,
+            sumo_depart: car.sumo_depart,
+            sumo_depart_lane: car.sumo_depart_lane,
+            sumo_depart_pos: car.sumo_depart_pos,
+            sumo_max_speed: car.sumo_max_speed,
+            sumo_edges: car.sumo_edges,
+            sumo_vtype: car.sumo_vtype,
+            sumo_stop: car.sumo_stop,
             points: s.points
               .filter((p: Point) => p.carId === car.id)
               .map((p: Point, i: number) => ({
@@ -125,7 +167,7 @@ export function buildScenarioPayload(): ScenarioPayload {
             opencda_id: r.opencda_id,
             opencda_color: r.opencda_color,
             opencda_behavior_services: r.opencda_behavior_services,
-            script: r.script || null,
+            scenario: r.scenario || null,
             opencda_perception_activate: r.opencda_sensing?.perception_activate,
             opencda_detection_range: r.opencda_sensing?.detection_range,
             opencda_camera_visualize: r.opencda_sensing?.camera_visualize,

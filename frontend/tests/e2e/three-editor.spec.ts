@@ -11,7 +11,9 @@ const openEditor = async (page: Page) => {
 
   await expect(page).toHaveURL(/\/editor$/);
 };
-
+test.beforeEach(async ({ page }) => {
+  await page.route('**/api/ws/simulation', (route) => route.abort());
+});
 const openSpeedDial = async (page: Page) => {
   const dial = page.locator('[aria-label="SpeedDial tooltip example"]');
   await dial.click();
@@ -164,7 +166,7 @@ test.describe('Three.js editor flows', () => {
       '0 objects',
     );
     await expect(
-      page.getByText('The script has been uploaded.').first(),
+      page.getByText('The scenario has been uploaded.').first(),
     ).toBeVisible();
   });
 

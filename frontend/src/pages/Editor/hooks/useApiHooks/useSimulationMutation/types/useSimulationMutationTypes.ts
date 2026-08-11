@@ -12,8 +12,5 @@ export interface StartSimulationPayload {
   xodr?: string | undefined;
   max_ticks?: number;
   map_offsets?: { x: number; y: number };
-<<<<<<< HEAD
-=======
   attacks?: OpenCDAAttackConfig[];
->>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
 }

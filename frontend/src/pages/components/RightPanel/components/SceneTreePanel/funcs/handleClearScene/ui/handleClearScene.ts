@@ -1,16 +1,21 @@
 import { disposeMesh } from '../../sceneUtils';
 import * as THREE from 'three';
 import { useEditorStore } from '../../../../../../../../store';
+import { pushClearSceneSnapshot } from '../../deletionSnapshots';
 import { handleClearSceneProps } from '../types/handleClearSceneTypes';
 export function handleClearScene({
   carMeshesRef,
   sceneRef,
   cubeCirclesRef,
   pointsArrRef,
+  pointsObjsRef,
+  rsuMeshesRef,
   transformControlsRef,
   detachTransformControls,
+  toast,
 }: handleClearSceneProps) {
   const s = useEditorStore.getState();
+  const pushed = pushClearSceneSnapshot();
 
   [...carMeshesRef.current].forEach((mesh) => {
     disposeMesh(mesh);
@@ -36,6 +41,8 @@ export function handleClearScene({
     materials.forEach((mt) => mt?.dispose());
   });
   pointsArrRef.current.length = 0;
+  pointsObjsRef.current.length = 0;
+  rsuMeshesRef.current.length = 0;
 
   [...s.buildings].forEach((b) => {
     const mesh = sceneRef.current?.children.find((c) => c.userData.id === b.id);
@@ -55,4 +62,10 @@ export function handleClearScene({
   s.selectObject(null);
   transformControlsRef.current?.detach();
   detachTransformControls();
+
+  if (pushed) {
+    toast.undo(pushed.label, () =>
+      useEditorStore.getState().restoreLastDeletion(pushed.snapshotId),
+    );
+  }
 }

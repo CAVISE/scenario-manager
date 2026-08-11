@@ -6,8 +6,10 @@ import { useClickHandler } from '../handlers/useClickHandler';
 import { useDblClickHandler } from '../handlers/useDblClickHandler';
 import { useContextMenuHandler } from '../handlers/useContextMenuHandler';
 import { useKeyDownHandler } from '../handlers/useKeyDownHandler';
+import { useAppToast } from '../../../../../components/AppToast';
 
 export function useMouseEvents() {
+  const toast = useAppToast();
   const mouseRef = useRef(new THREE.Vector2());
   const raycasterRef = useRef(new THREE.Raycaster());
   const ctx: SharedMouseContext = {
@@ -17,15 +19,17 @@ export function useMouseEvents() {
       mouseRef.current.x = (e.clientX / window.innerWidth) * 2 - 1;
       mouseRef.current.y = -(e.clientY / window.innerHeight) * 2 + 1;
     },
-    insidePanel: (e: MouseEvent) =>
-      !!document.querySelector('.rp-root')?.contains(e.target as Node),
+    insideEditorCanvas: (e: MouseEvent) =>
+      !!document
+        .querySelector('[data-testid="editor-canvas"]')
+        ?.contains(e.target as Node),
   };
 
   const onMouseMove = useMouseMoveHandler(ctx);
   const onClick = useClickHandler(ctx);
   const onDblClick = useDblClickHandler(ctx);
   const onContextMenu = useContextMenuHandler(ctx);
-  const onKeyDown = useKeyDownHandler();
+  const onKeyDown = useKeyDownHandler({ toast });
 
   useEffect(() => {
     window.addEventListener('mousemove', onMouseMove);

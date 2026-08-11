@@ -2438,9 +2438,10 @@ var libOpenDrive = (() => {
             var xhr = new XMLHttpRequest();
             xhr.open('HEAD', url, false);
             xhr.send(null);
-            if (
-              !((xhr.status >= 200 && xhr.status < 300) || xhr.status === 304)
-            )
+            if (!(
+              (xhr.status >= 200 && xhr.status < 300) ||
+              xhr.status === 304
+            ))
               throw new Error(
                 "Couldn't load " + url + '. Status: ' + xhr.status,
               );
@@ -2476,9 +2477,10 @@ var libOpenDrive = (() => {
                 xhr.overrideMimeType('text/plain; charset=x-user-defined');
               }
               xhr.send(null);
-              if (
-                !((xhr.status >= 200 && xhr.status < 300) || xhr.status === 304)
-              )
+              if (!(
+                (xhr.status >= 200 && xhr.status < 300) ||
+                xhr.status === 304
+              ))
                 throw new Error(
                   "Couldn't load " + url + '. Status: ' + xhr.status,
                 );
@@ -4420,14 +4422,12 @@ var libOpenDrive = (() => {
           }
           var length;
           var valueIsOfTypeString = typeof value == 'string';
-          if (
-            !(
-              valueIsOfTypeString ||
-              value instanceof Uint8Array ||
-              value instanceof Uint8ClampedArray ||
-              value instanceof Int8Array
-            )
-          ) {
+          if (!(
+            valueIsOfTypeString ||
+            value instanceof Uint8Array ||
+            value instanceof Uint8ClampedArray ||
+            value instanceof Int8Array
+          )) {
             throwBindingError('Cannot pass non-string to std::string');
           }
           if (stdStringIsUTF8 && valueIsOfTypeString) {

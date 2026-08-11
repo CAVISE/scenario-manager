@@ -20,6 +20,7 @@ export function useSceneObjects({
     pointsObjsRef,
     cubeCirclesRef,
     roadMeshRef,
+    transformControlsRef,
   } = useEditorRefs();
 
   const localLineArrRef = useRef<THREE.Line[][]>([]);
@@ -28,8 +29,14 @@ export function useSceneObjects({
     const scene = threeRef.current?.scene;
     if (!scene) return;
 
+    const tc = transformControlsRef.current;
+    const attached = (tc as unknown as { object?: THREE.Object3D } | undefined)
+      ?.object;
+
     pointsObjsRef.current.forEach((obj) => {
       if (obj.userData.type !== 'point') return;
+      if (attached && (attached === obj || obj.getObjectById(attached.id)))
+        tc?.detach();
       obj.parent?.remove(obj);
       obj.geometry?.dispose();
       const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
@@ -45,12 +52,20 @@ export function useSceneObjects({
       points_objs: pointsObjsRef.current,
       isAddPointModeActive: modeRef.current.isAddPointModeActive,
       updateSceneGraph,
+      transformControlsRef,
     });
 
     pointsArrRef.current.push(...result.points_arr);
     pointsObjsRef.current.push(...result.points_objs);
     modeRef.current.isAddPointModeActive = result.isAddPointModeActive;
-  }, [updateSceneGraph, modeRef, pointsArrRef, pointsObjsRef, threeRef]);
+  }, [
+    updateSceneGraph,
+    modeRef,
+    pointsArrRef,
+    pointsObjsRef,
+    threeRef,
+    transformControlsRef,
+  ]);
 
   const loadPoints = useCallback(() => {
     const scene = threeRef.current?.scene;

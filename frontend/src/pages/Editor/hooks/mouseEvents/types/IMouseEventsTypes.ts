@@ -3,5 +3,5 @@ export interface SharedMouseContext {
   mouse: THREE.Vector2;
   raycaster: THREE.Raycaster;
   setMouse: (e: MouseEvent) => void;
-  insidePanel: (e: MouseEvent) => boolean;
+  insideEditorCanvas: (e: MouseEvent) => boolean;
 }

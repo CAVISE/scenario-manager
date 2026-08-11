@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useEditorStore } from './useEditorStore';
 import { act } from 'react';
+import { DEFAULT_COLOR } from '../../pages/Editor/hooks/useThreeScene/hooks/useOdrMapManager/utils/clearScene/types/clearSceneTypes';
 
 describe('useEditorStore — additional branch coverage', () => {
   beforeEach(() => {
@@ -33,7 +34,7 @@ describe('useEditorStore — additional branch coverage', () => {
 
   it('removeCar clears selectedId when deleted car was selected', () => {
     const s = useEditorStore.getState();
-    const carId = s.addCar(0, 0, 0, 'car', '00ff00');
+    const carId = s.addCar(0, 0, 0, 'car', DEFAULT_COLOR);
     s.selectObject({ id: carId, type: 'car' } as never);
     s.removeCar(carId);
     expect(useEditorStore.getState().selectedId).toBeNull();
@@ -41,8 +42,8 @@ describe('useEditorStore — additional branch coverage', () => {
 
   it('removeCar keeps selectedId when a different car is selected', () => {
     const s = useEditorStore.getState();
-    const carId1 = s.addCar(0, 0, 0, 'car', '00ff00');
-    const carId2 = s.addCar(1, 1, 1, 'car', '0000ff');
+    const carId1 = s.addCar(0, 0, 0, 'car', DEFAULT_COLOR);
+    const carId2 = s.addCar(1, 1, 1, 'car', DEFAULT_COLOR);
     s.selectObject({ id: carId2, type: 'car' } as never);
     s.removeCar(carId1);
     expect(useEditorStore.getState().selectedId).toBe(carId2);
@@ -50,7 +51,7 @@ describe('useEditorStore — additional branch coverage', () => {
 
   it('setBuildingMode true clears selectedId', () => {
     const s = useEditorStore.getState();
-    const carId = s.addCar(0, 0, 0, 'car', 'ff0000');
+    const carId = s.addCar(0, 0, 0, 'car', DEFAULT_COLOR);
     s.selectObject({ id: carId, type: 'car' } as never);
     s.setBuildingMode(true);
     expect(useEditorStore.getState().isBuildingMode).toBe(true);
@@ -59,7 +60,7 @@ describe('useEditorStore — additional branch coverage', () => {
 
   it('setBuildingMode false does not clear selectedId', () => {
     const s = useEditorStore.getState();
-    const carId = s.addCar(0, 0, 0, 'car', 'ff0000');
+    const carId = s.addCar(0, 0, 0, 'car', DEFAULT_COLOR);
     s.selectObject({ id: carId, type: 'car' } as never);
     s.setBuildingMode(false);
     expect(useEditorStore.getState().isBuildingMode).toBe(false);
@@ -132,7 +133,7 @@ describe('useEditorStore — additional branch coverage', () => {
 
   it('updateLidar updates matching lidar', () => {
     const s = useEditorStore.getState();
-    const carId = s.addCar(0, 0, 0, 'car', 'ff0000');
+    const carId = s.addCar(0, 0, 0, 'car', DEFAULT_COLOR);
     const lidarId = s.addLidar(carId, 0, 0, 0);
     s.updateLidar(lidarId, { range: 100 });
     expect(useEditorStore.getState().lidars[0].range).toBe(100);
@@ -140,7 +141,7 @@ describe('useEditorStore — additional branch coverage', () => {
 
   it('removeLidar removes by id', () => {
     const s = useEditorStore.getState();
-    const carId = s.addCar(0, 0, 0, 'car', 'ff0000');
+    const carId = s.addCar(0, 0, 0, 'car', DEFAULT_COLOR);
     const lidarId = s.addLidar(carId, 0, 0, 0);
     s.removeLidar(lidarId);
     expect(useEditorStore.getState().lidars).toHaveLength(0);
@@ -148,7 +149,7 @@ describe('useEditorStore — additional branch coverage', () => {
 
   it('removeLidarsByCarId removes all lidars for a car', () => {
     const s = useEditorStore.getState();
-    const carId = s.addCar(0, 0, 0, 'car', 'ff0000');
+    const carId = s.addCar(0, 0, 0, 'car', DEFAULT_COLOR);
     s.addLidar(carId, 0, 0, 0);
     s.addLidar(carId, 1, 1, 1);
     s.removeLidarsByCarId(carId);
@@ -157,7 +158,7 @@ describe('useEditorStore — additional branch coverage', () => {
 
   it('updatePoint updates matching point', () => {
     const s = useEditorStore.getState();
-    const carId = s.addCar(0, 0, 0, 'car', 'ff0000');
+    const carId = s.addCar(0, 0, 0, 'car', DEFAULT_COLOR);
     s.addPoint(carId, 1, 2, 3);
     const pt = useEditorStore.getState().points[0];
     s.updatePoint(pt.id, { x: 99 });
@@ -166,7 +167,7 @@ describe('useEditorStore — additional branch coverage', () => {
 
   it('removePoint removes by id', () => {
     const s = useEditorStore.getState();
-    const carId = s.addCar(0, 0, 0, 'car', 'ff0000');
+    const carId = s.addCar(0, 0, 0, 'car', DEFAULT_COLOR);
     s.addPoint(carId, 1, 2, 3);
     const pt = useEditorStore.getState().points[0];
     s.removePoint(pt.id);
@@ -175,7 +176,7 @@ describe('useEditorStore — additional branch coverage', () => {
 
   it('removePointsByCarId removes all points for a car', () => {
     const s = useEditorStore.getState();
-    const carId = s.addCar(0, 0, 0, 'car', 'ff0000');
+    const carId = s.addCar(0, 0, 0, 'car', DEFAULT_COLOR);
     s.addPoint(carId, 1, 2, 3);
     s.addPoint(carId, 4, 5, 6);
     s.removePointsByCarId(carId);

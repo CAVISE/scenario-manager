@@ -48,33 +48,16 @@ export type OpenCDABgSpawnRange = {
   y_max: number;
   x_step: number;
   y_step: number;
-<<<<<<< HEAD
 };
+
+export type AttackStageType = 'sniffer' | 'dropper' | 'replayer' | 'spoofer';
+
+export type AttackStageTypeWithCustom =
+  AttackStageType | (string & { __brand?: 'custom_attack_type' });
 
 export type OpenCDAAttackStage = {
   id: string;
-  type: 'sniffer' | 'dropper' | 'replayer' | 'spoofer' | string;
-  capabilities?: string[];
-  params?: Record<string, unknown>;
-  requirements?: Record<string, unknown>;
-  stage_start_trigger?: Record<string, unknown>;
-  stage_stop_trigger?: Record<string, unknown>;
-};
-
-export type OpenCDAAttackConfig = {
-  name: string;
-  requirements?: Record<string, unknown>;
-  start_trigger?: Record<string, unknown>;
-  stop_trigger?: Record<string, unknown>;
-  targets?: Record<string, unknown>;
-  stages?: OpenCDAAttackStage[];
-=======
->>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
-};
-
-export type OpenCDAAttackStage = {
-  id: string;
-  type: 'sniffer' | 'dropper' | 'replayer' | 'spoofer' | string;
+  type: AttackStageTypeWithCustom;
   capabilities?: string[];
   params?: Record<string, unknown>;
   requirements?: Record<string, unknown>;
@@ -91,20 +74,39 @@ export type OpenCDAAttackConfig = {
   stages?: OpenCDAAttackStage[];
 };
 
-/** Normalize edited and persisted stages to a flat array. */
+export function isValidAttackType(type: string): type is AttackStageType {
+  return ['sniffer', 'dropper', 'replayer', 'spoofer'].includes(type);
+}
+
+export function normalizeAttackType(type: string): AttackStageTypeWithCustom {
+  const normalized = type.toLowerCase();
+  if (isValidAttackType(normalized)) {
+    return normalized;
+  }
+  return type as AttackStageTypeWithCustom;
+}
+
 export function normalizeAttackStages(value: unknown): OpenCDAAttackStage[] {
   if (!Array.isArray(value)) return [];
   return value.reduce<OpenCDAAttackStage[]>((acc, item) => {
     if (Array.isArray(item)) {
       item.forEach((inner) => {
         if (inner && typeof inner === 'object' && !Array.isArray(inner)) {
-          acc.push(inner as OpenCDAAttackStage);
+          const stage = inner as OpenCDAAttackStage;
+          if (stage.type) {
+            stage.type = normalizeAttackType(stage.type);
+          }
+          acc.push(stage);
         }
       });
       return acc;
     }
     if (item && typeof item === 'object' && !Array.isArray(item)) {
-      acc.push(item as OpenCDAAttackStage);
+      const stage = item as OpenCDAAttackStage;
+      if (stage.type) {
+        stage.type = normalizeAttackType(stage.type);
+      }
+      acc.push(stage);
     }
     return acc;
   }, []);
@@ -211,8 +213,9 @@ export type SimulationConfig = {
     rsu_denm_enabled: boolean;
   };
   sumo: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    [x: string]: any;
     scenario_name: string;
-    net_file: string;
     full_output: boolean;
     vtypes: SumoVType[];
   };
@@ -305,11 +308,7 @@ export type SimulationConfig = {
     vehicle_base_color?: [number, number, number];
     v2x_enabled: boolean;
     v2x_communication_range: number;
-<<<<<<< HEAD
-    export_full_vehicle_base: boolean;
-=======
     v2x_position_source: 'estimated' | 'ground_truth';
->>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
     export_profile: 'standard' | 'aim_check';
     export_attacks: boolean;
     export_platoon_base: boolean;
@@ -394,9 +393,6 @@ export const defaultSimConfig: SimulationConfig = {
   carla: {
     map: 'Town03',
     weather_preset: 'ClearNoon',
-<<<<<<< HEAD
-    weather_override: {},
-=======
     weather_override: {
       cloudiness: 80,
       precipitation: 70,
@@ -408,7 +404,6 @@ export const defaultSimConfig: SimulationConfig = {
       fog_falloff: 80,
       wetness: 0,
     },
->>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
     client_port: 2000,
     seed: 42,
     num_vehicles: 50,
@@ -488,15 +483,9 @@ export const defaultSimConfig: SimulationConfig = {
       debug_trajectory: true,
     },
     gnss_noise: {
-<<<<<<< HEAD
-      alt_stddev: 0.05,
-      lat_stddev: 3e-6,
-      lon_stddev: 3e-6,
-=======
       alt_stddev: 0.001,
       lat_stddev: 1e-6,
       lon_stddev: 1e-6,
->>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
       heading_direction_stddev: 0.1,
       speed_stddev: 0.2,
     },
@@ -506,11 +495,7 @@ export const defaultSimConfig: SimulationConfig = {
     vehicle_base_color: undefined,
     v2x_enabled: true,
     v2x_communication_range: 35,
-<<<<<<< HEAD
-    export_full_vehicle_base: true,
-=======
     v2x_position_source: 'estimated',
->>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
     export_profile: 'standard',
     export_attacks: true,
     export_platoon_base: false,
@@ -529,11 +514,7 @@ export const defaultSimConfig: SimulationConfig = {
     metrics: { ...defaultOpenCDAMetrics },
     vehicle_behavior_services: { ...defaultOpenCDAVehicleBehaviorServices },
     coop_perception: { ...defaultOpenCDACoopPerceptionViz },
-<<<<<<< HEAD
-    bg_traffic_random: true,
-=======
     bg_traffic_random: false,
->>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
     bg_spawn_range: {
       x_min: 0,
       x_max: 500,
@@ -545,7 +526,6 @@ export const defaultSimConfig: SimulationConfig = {
   },
   sumo: {
     scenario_name: 'scenario',
-    net_file: 'map.net.xml',
     full_output: false,
     vtypes: [
       {
@@ -630,14 +610,10 @@ export function mergeSimConfigWithDefaults(
   return {
     ...defaultSimConfig,
     ...p,
-<<<<<<< HEAD
-    attacks: p.attacks ?? defaultSimConfig.attacks,
-=======
     attacks: (p.attacks ?? defaultSimConfig.attacks).map((attack) => ({
       ...attack,
       stages: normalizeAttackStages(attack.stages),
     })),
->>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
     omnet,
     artery: { ...defaultSimConfig.artery, ...p.artery },
     sumo: {
@@ -651,19 +627,12 @@ export function mergeSimConfigWithDefaults(
       ...p.carla,
       map: normalizedCarlaMap,
       sensors: { ...defaultSimConfig.carla.sensors, ...p.carla?.sensors },
-<<<<<<< HEAD
-      weather_override: {
-        ...defaultSimConfig.carla.weather_override,
-        ...p.carla?.weather_override,
-      },
-=======
       weather_override: Object.prototype.hasOwnProperty.call(
         p.carla ?? {},
         'weather_override',
       )
         ? (p.carla?.weather_override ?? {})
         : { ...defaultSimConfig.carla.weather_override },
->>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
     },
     opencda: {
       ...defaultSimConfig.opencda,

@@ -2,13 +2,12 @@ import {
   Stack,
   FormControl,
   FormLabel,
-  OutlinedInput,
   Slider,
   Grid,
   Button,
 } from '@mui/material';
 import { useEditorStore } from '../../../../../../store';
-import { numInputSlot } from '../../../types/PanelTypes';
+import NumericInput from '../../NumericInput';
 import { ILidarProps } from '../types/LidarPropertiesTypes';
 
 export default function LidarProperties({ lidar, onDelete }: ILidarProps) {
@@ -24,13 +23,12 @@ export default function LidarProperties({ lidar, onDelete }: ILidarProps) {
               <FormLabel sx={{ fontSize: 'xs', mb: 0.5 }}>
                 {axis.toUpperCase()}
               </FormLabel>
-              <OutlinedInput
-                size="small"
-                type="number"
-                slotProps={numInputSlot}
-                value={lidar[axis].toFixed(2)}
-                onChange={(e) =>
-                  updateLidar(lidar.id, { [axis]: parseFloat(e.target.value) })
+              <NumericInput
+                variant="outlined"
+                precision={2}
+                value={lidar[axis]}
+                onValueChange={(value) =>
+                  updateLidar(lidar.id, { [axis]: value })
                 }
               />
             </FormControl>

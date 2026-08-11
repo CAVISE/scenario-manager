@@ -4,6 +4,7 @@ import type { SharedMouseContext } from '../types/IMouseEventsTypes';
 export function useMouseMoveHandler(ctx: SharedMouseContext) {
   return useCallback(
     (e: MouseEvent) => {
+      if (!ctx.insideEditorCanvas(e)) return;
       e.preventDefault();
       ctx.setMouse(e);
     },

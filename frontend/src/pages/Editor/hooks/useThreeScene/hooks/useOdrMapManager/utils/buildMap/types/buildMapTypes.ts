@@ -1,3 +1,4 @@
+import type { MutableRefObject } from 'react';
 import { OpenDriveMapInstance } from '../../../../../../../types/editorTypes';
 import {
   OdrMapMaterials,
@@ -12,10 +13,11 @@ export interface BuildMapParams {
   OdrMap: OpenDriveMapInstance;
   odrMaterials: OdrMapMaterials;
   disposableObjs: THREE.BufferGeometry[];
-  odrMeshesRef: React.RefObject<OdrMapMeshes>;
-  carMeshesRef: React.RefObject<THREE.Mesh[]>;
+  odrMeshesRef: MutableRefObject<OdrMapMeshes>;
+  carMeshesRef: MutableRefObject<THREE.Mesh[]>;
   clearMap: boolean;
   fitView: boolean;
+  buildingMeshesRef: MutableRefObject<THREE.Object3D[]>;
   resolution: number;
   params: { ref_line: boolean; roadmarks: boolean; view_mode: string };
   loadRSU: () => void;

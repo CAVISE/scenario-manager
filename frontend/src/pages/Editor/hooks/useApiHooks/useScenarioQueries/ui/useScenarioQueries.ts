@@ -33,6 +33,7 @@ export function useScenarioDetailQuery(id: string | null) {
         id: data.scenario_id ?? '',
         name: data.scenario_name ?? data.name_of_scenario ?? '',
         weather: data.weather ?? '',
+        description: data.description ?? '',
         file_: data.file_ ?? null,
       });
       return data;
@@ -84,21 +85,6 @@ export function useScenarioPatchMutation() {
         ...payload,
         scenario_id: id,
       }),
-<<<<<<< HEAD
-    onSuccess: (data, { id }) => {
-      const d = data as unknown as {
-        scenario_name?: string;
-        weather?: string;
-        file_?: string | null;
-      };
-      queryClient.invalidateQueries({ queryKey: scenarioKeys.detail(id) });
-      updateScenario({
-        id,
-        name: d.scenario_name ?? undefined,
-        weather: d.weather ?? undefined,
-        file_: d.file_ ?? null,
-      });
-=======
     onSuccess: (_data, { id, payload }) => {
       const p = payload as Record<string, unknown>;
       queryClient.invalidateQueries({ queryKey: scenarioKeys.detail(id) });
@@ -111,32 +97,20 @@ export function useScenarioPatchMutation() {
       if (p.file_ !== undefined) update.file_ = p.file_;
 
       updateScenario(update as Parameters<typeof updateScenario>[0]);
->>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
     },
   });
 }
 
-export function useScenarioPutMutation() {
+export function useScenarioDeleteMutation() {
   const queryClient = useQueryClient();
   const updateScenario = useEditorStore((s) => s.updateScenario);
   return useMutation({
     mutationFn: ({ id }: { id: string; payload: ScenarioPayload }) =>
-      scenariosApi.replace(id),
-    onSuccess: (data, { id }) => {
-      const d = data as unknown as {
-        scenario_name?: string;
-        weather?: string;
-        file_?: string | null;
-      };
-      queryClient.setQueryData(scenarioKeys.detail(id), data);
-      queryClient.invalidateQueries({ queryKey: scenarioKeys.detail(id) });
+      scenariosApi.remove(id),
+    onSuccess: (_data, { id }) => {
+      queryClient.removeQueries({ queryKey: scenarioKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: scenarioKeys.list() });
-      updateScenario({
-        id,
-        name: d.scenario_name ?? undefined,
-        weather: d.weather ?? undefined,
-        file_: d.file_ ?? null,
-      });
+      updateScenario({ id: '', name: '', weather: '', file_: null });
     },
   });
 }
