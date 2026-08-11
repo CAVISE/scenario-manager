@@ -4,12 +4,12 @@ import {
   toUpdateScenarioBody,
   toUploadScenarioBody,
   type LoadScenarioApiResponse,
-  type ScenarioMutationResponse,
 } from './scenarioRequest';
 import { validateDeletePayload } from './scenarioValidation';
 import type {
   LoadAllScenariosResponse,
   ScenarioDetail,
+  ScenarioMutationResponse,
   ScenarioPayload,
 } from './types/IScenarioTypes';
 
@@ -36,7 +36,7 @@ export const scenariosApi = {
       .post('api/update_scenario', { json: toUpdateScenarioBody(payload) })
       .json<ScenarioMutationResponse>(),
 
-  replace: (scenarioId: string) => {
+  remove: (scenarioId: string) => {
     const validation = validateDeletePayload(scenarioId);
     if (!validation.ok) {
       throw new Error(validation.message);

@@ -175,7 +175,7 @@ export const css = `
     text-transform: uppercase;
     padding: 8px 14px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s, transform 140ms cubic-bezier(0.4,0,0.2,1);
   }
   .sm-home-btn:hover {
     background: rgba(105,240,174,0.08);
@@ -186,6 +186,31 @@ export const css = `
     background: rgba(105,240,174,0.08);
     border-color: rgba(105,240,174,0.4);
   }
+  .sm-home-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+  .sm-home-btn:disabled:hover {
+    background: transparent;
+    border-color: rgba(105,240,174,0.25);
+    color: rgba(105,240,174,0.8);
+  }
+
+  .sm-home-notice {
+    font-size: 11px;
+    color: rgba(255,138,128,0.9);
+    border: 1px solid rgba(255,138,128,0.25);
+    background: rgba(255,138,128,0.06);
+    padding: 6px 10px;
+    letter-spacing: 0.02em;
+  }
+
+  .sm-home-scenario-loading {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.04em;
+    padding: 6px 2px;
+  }
 
   .sm-home-scenario-list {
     display: flex;
@@ -193,6 +218,11 @@ export const css = `
     gap: 4px;
     max-height: 160px;
     overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .sm-home-scenario-list::-webkit-scrollbar {
+    display: none;
   }
   .sm-home-scenario-item {
     display: flex;
@@ -202,7 +232,7 @@ export const css = `
     background: rgba(255,255,255,0.02);
     border: 1px solid rgba(105,240,174,0.07);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s, transform 140ms cubic-bezier(0.4,0,0.2,1);
   }
   .sm-home-scenario-item:hover {
     background: rgba(105,240,174,0.05);
@@ -273,7 +303,7 @@ export const css = `
     text-decoration: none;
     padding: 10px 24px;
     cursor: pointer;
-    transition: all 0.25s;
+    transition: all 0.25s, transform 140ms cubic-bezier(0.4,0,0.2,1);
   }
   .sm-home-editor-link:hover {
     background: rgba(105,240,174,0.12);

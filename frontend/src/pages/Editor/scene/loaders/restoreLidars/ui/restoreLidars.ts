@@ -4,11 +4,11 @@ import { RestoreLidarsOptions } from '../types/restoreLidarsTypes';
 
 export function restoreLidars(opts: RestoreLidarsOptions): void {
   const { carMeshesRef, updateSceneGraph } = opts;
-
+  const carMeshes = carMeshesRef.current;
+  if (!carMeshes) return;
   useEditorStore.getState().lidars.forEach((lidar) => {
-    const wrapper = carMeshesRef.current.find(
-      (m) => m.userData.id === lidar.carId,
-    ) as THREE.Group | undefined;
+    const wrapper = carMeshes.find((m) => m.userData.id === lidar.carId) as
+      THREE.Group | undefined;
     if (!wrapper) return;
     if (wrapper.children.find((c) => c.userData.id === lidar.id)) return;
 

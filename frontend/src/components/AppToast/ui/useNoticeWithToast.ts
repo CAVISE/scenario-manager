@@ -1,26 +1,42 @@
 import { useCallback } from 'react';
 import { useAppToast } from './AppToastProvider';
 
+type ToastLevel = 'success' | 'error' | 'info' | 'warning';
+
+interface UseNoticeWithToastOptions {
+  defaultLevel?: ToastLevel;
+}
+
 export function useNoticeWithToast(
   setNotice: (message: string) => void,
-  mode: 'success-default' | 'info-default' = 'success-default',
+  options: UseNoticeWithToastOptions = {},
 ) {
+  const { defaultLevel = 'success' } = options;
   const toast = useAppToast();
 
   return useCallback(
-    (message: string) => {
+    (message: string, level?: ToastLevel) => {
+      const finalLevel =
+        level ?? (/error|failed/i.test(message) ? 'error' : defaultLevel);
+
       setNotice(message);
-      const msg = message.toLowerCase();
-      if (msg.includes('failed') || msg.includes('error')) {
-        toast.error(message);
-        return;
+
+      switch (finalLevel) {
+        case 'error':
+          toast.error(message);
+          break;
+        case 'success':
+          toast.success(message);
+          break;
+        case 'warning':
+          toast.info(message);
+          break;
+        case 'info':
+        default:
+          toast.info(message);
+          break;
       }
-      if (mode === 'info-default') {
-        toast.info(message);
-        return;
-      }
-      toast.success(message);
     },
-    [setNotice, toast, mode],
+    [setNotice, toast, defaultLevel],
   );
 }

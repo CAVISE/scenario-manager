@@ -13,6 +13,7 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
+    "types": ["node"],
     "target": "ES2020",
     "useDefineForClassFields": true
   },

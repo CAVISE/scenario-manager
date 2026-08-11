@@ -1,3 +1,4 @@
+import type { MutableRefObject } from 'react';
 import {
   LOADING_STEPS,
   OpenDriveMapInstance,
@@ -7,6 +8,7 @@ import {
   OpenDriveModule,
 } from '../../../../useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
 import * as THREE from 'three';
+
 export const EMPTY_ODR_MESHES: OdrMapMeshes = {
   refline_lines: null,
   road_network_mesh: null,
@@ -38,14 +40,15 @@ export interface UseOdrMapManagerProps {
   loadPoints: () => void;
   syncRoadMesh: (mesh: THREE.Mesh | null) => void;
   updateSceneGraph: () => void;
-  buildingModelRef: React.RefObject<THREE.Object3D | null>;
-  localLineArrRef: React.RefObject<THREE.Line[][]>;
+  buildingModelRef: MutableRefObject<THREE.Object3D | null>;
+  buildingMeshesRef: MutableRefObject<THREE.Object3D[]>;
+  localLineArrRef: MutableRefObject<THREE.Line[][]>;
 }
 
 export interface UseOdrMapManagerResult {
   getOdrMeshes: () => OdrMapMeshes;
   loadOdrMap: (clearMap?: boolean, fitView?: boolean) => void;
   reloadOdrMap: () => void;
-  setModuleRef: React.RefObject<OpenDriveModule | null>;
-  setMapRef: React.RefObject<OpenDriveMapInstance | null>;
+  setModuleRef: MutableRefObject<OpenDriveModule | null>;
+  setMapRef: MutableRefObject<OpenDriveMapInstance | null>;
 }

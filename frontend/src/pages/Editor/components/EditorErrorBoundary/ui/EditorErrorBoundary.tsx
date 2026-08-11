@@ -1,19 +1,5 @@
-import { Component, type ErrorInfo, type ReactNode } from 'react';
-
-interface Props {
-  children: ReactNode;
-}
-
-interface State {
-  hasError: boolean;
-  error: Error | null;
-}
-
-function setStoreError(error: Error | null) {
-  import('../../../../../store').then(({ useEditorStore }) => {
-    useEditorStore.getState().setError(error);
-  });
-}
+import { Component, type ErrorInfo } from 'react';
+import { Props, setStoreError, State } from '../types/EditorErrorBoundaryTypes';
 
 export class EditorErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {

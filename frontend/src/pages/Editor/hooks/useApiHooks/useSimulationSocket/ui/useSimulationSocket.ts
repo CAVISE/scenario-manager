@@ -1,19 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { API_URL } from '../../../../../../VARS';
-
-export interface SimulationStatus {
-  running: boolean;
-  status: 'idle' | 'running' | 'stopping' | 'finished' | 'error';
-  error: string | null;
-  map: string | null;
-  run_id: string | null;
-}
-
-const WS_URL =
-  API_URL.replace(/^http/, 'ws').replace(/\/$/, '') + '/api/ws/simulation';
-
-const RECONNECT_DELAY_MS = 3_000;
-const MAX_RECONNECT_DELAY_MS = 30_000;
+import {
+  MAX_RECONNECT_DELAY_MS,
+  RECONNECT_DELAY_MS,
+  SimulationStatus,
+  WS_URL,
+} from '../types/useSimulationSocketTypes';
 
 export function useSimulationSocket() {
   const [state, setState] = useState<SimulationStatus | null>(null);

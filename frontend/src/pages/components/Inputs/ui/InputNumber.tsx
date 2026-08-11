@@ -1,6 +1,6 @@
 import { NumberFormatValues, NumericFormat } from 'react-number-format';
 import { TextField } from '@mui/material';
-import { InputNumberProps } from '../types/Scenario';
+import { InputNumberProps } from '../types/ScenarioTypes';
 
 const InputNumber = ({ param, state, setState }: InputNumberProps) => {
   const handleChange = (values: NumberFormatValues) => {

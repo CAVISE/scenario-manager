@@ -8,8 +8,11 @@ import {
   UseOdrLoaderProps,
 } from '../types/useOdrLoaderTypes';
 import {
+  DEFAULT_XODR,
   fetchXodrText,
+  getCachedXodrContent,
   getStoredXodrName,
+  initXodrCacheFromIndexedDb,
   setCachedCustomXodrContent,
 } from '../utils/xodrRepository';
 
@@ -29,22 +32,19 @@ export function useOdrLoader({
       if (clearMap) {
         const s = useEditorStore.getState();
         s.cars.forEach((c) => s.removeCar(c.id));
-        while (useEditorStore.getState().RSUs.length > 0) {
-          useEditorStore.getState().removeRSU(0);
-        }
+        s.removeAllRSUs();
         s.points.forEach((p) => s.removePoint(p.id));
         s.buildings.forEach((b) => s.removeBuilding(b.id));
-
-        setTimeout(() => localStorage.removeItem('editor-scenario-cache'), 100);
+        s.pedestrians.forEach((p) => s.removePedestrian(p.id));
       }
       try {
-        Module.FS_unlink('/data.xodr');
+        Module.FS_unlink(MAP_PATH);
       } catch {
-        // ignore when /data.xodr does not exist yet
+        // Файл мог не существовать — это нормально, продолжаем
       }
 
       try {
-        Module.FS_createDataFile('.', 'data.xodr', fileText, true, true);
+        Module.FS_createDataFile('.', DEFAULT_XODR, fileText, true, true);
 
         mapRef.current?.delete();
         mapRef.current = new Module.OpenDriveMap(MAP_PATH, ODR_MAP_OPTIONS);
@@ -63,11 +63,21 @@ export function useOdrLoader({
 
     async function fetchAndLoad() {
       try {
+        const cached = getCachedXodrContent();
+        if (cached) {
+          console.log('[OdrLoader] restoring map content from cache');
+          processFile(cached, false);
+          return;
+        }
+
         const mapName = getStoredXodrName(
           useEditorStore.getState().simConfig?.carla?.map,
         );
         const text = await fetchXodrText(mapName);
         if (cancelled) return;
+        console.log(
+          `[OdrLoader] map "${mapName}" size: ${(text.length / 1024 / 1024).toFixed(2)} MB`,
+        );
         processFile(text, false);
       } catch (err) {
         if (cancelled) return;
@@ -81,6 +91,8 @@ export function useOdrLoader({
 
     async function init() {
       setStep('wasm');
+
+      await initXodrCacheFromIndexedDb();
       try {
         const Module = await libOpenDrive();
 
@@ -116,27 +128,26 @@ export function useOdrLoader({
       setError?.(new Error('OpenDRIVE module not initialized'));
       return;
     }
+    setCachedCustomXodrContent(fileText);
     setStep('map');
     const Module = moduleRef.current;
 
     if (clearMap) {
       const s = useEditorStore.getState();
       s.cars.forEach((c) => s.removeCar(c.id));
-      while (useEditorStore.getState().RSUs.length > 0) {
-        useEditorStore.getState().removeRSU(0);
-      }
+      s.removeAllRSUs();
       s.points.forEach((p) => s.removePoint(p.id));
       s.buildings.forEach((b) => s.removeBuilding(b.id));
-      setTimeout(() => localStorage.removeItem('editor-scenario-cache'), 100);
+      s.pedestrians.forEach((p) => s.removePedestrian(p.id));
     }
     try {
-      Module.FS_unlink('/data.xodr');
+      Module.FS_unlink(MAP_PATH);
     } catch {
-      // ignore when /data.xodr does not exist yet
+      console.warn('FS_unlink failed, maybe /DEFAULT_XODR did not exist yet');
     }
 
     try {
-      Module.FS_createDataFile('.', 'data.xodr', fileText, true, true);
+      Module.FS_createDataFile('.', DEFAULT_XODR, fileText, true, true);
     } catch (err) {
       console.error('FS_createDataFile failed:', err);
       setStep('done');

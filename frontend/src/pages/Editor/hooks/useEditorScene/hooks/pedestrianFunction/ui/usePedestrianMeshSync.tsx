@@ -22,6 +22,8 @@ const ensurePedestrianModel = (): Promise<boolean> => {
   });
 };
 
+let pedestrianSyncQueue: Promise<void> = Promise.resolve();
+
 function syncPedestrians(
   scene: THREE.Scene,
   pedestrianMeshesRef: React.RefObject<THREE.Mesh[]>,
@@ -32,10 +34,12 @@ function syncPedestrians(
   const pedestrians = useEditorStore.getState().pedestrians;
   const tc = transformControlsRef.current;
   const attached = (tc as unknown as { object?: THREE.Object3D })?.object;
-
-  pedestrianMeshesRef.current = pedestrianMeshesRef.current.filter((p) => {
+  const pedestrianMeshes = pedestrianMeshesRef.current;
+  if (!pedestrianMeshes) return;
+  pedestrianMeshesRef.current = pedestrianMeshes.filter((p) => {
     if (pedestrians.some((pe) => pe.id === p.userData.id)) return true;
-    if (attached === p) return true;
+    if (attached && (attached === p || p.getObjectById(attached.id)))
+      return true;
     p.traverse((child) => {
       const m = child as THREE.Mesh;
       if (m.isMesh) {
@@ -52,9 +56,7 @@ function syncPedestrians(
   pedestrianObjsRef.current = [...pedestrianMeshesRef.current];
 
   pedestrians.forEach((ped) => {
-    const exists = pedestrianMeshesRef.current.find(
-      (p) => p.userData.id === ped.id,
-    );
+    const exists = pedestrianMeshes.find((p) => p.userData.id === ped.id);
     if (exists) return;
     if (!pedestrianModel) return;
 
@@ -72,11 +74,36 @@ function syncPedestrians(
     modelClone.position.set(ped.x, ped.y, (ped.z ?? 0) + offsetZ + 0.05);
 
     scene.add(modelClone);
-    pedestrianMeshesRef.current.push(modelClone as THREE.Mesh);
-    pedestrianObjsRef.current.push(modelClone as THREE.Mesh);
+
+    if (!pedestrianMeshes) return;
+    const pedestrianObjs = pedestrianObjsRef.current;
+    if (!pedestrianObjs) return;
+    pedestrianMeshes.push(modelClone as THREE.Mesh);
+    pedestrianObjs.push(modelClone as THREE.Mesh);
   });
 
   updateSceneGraph();
+}
+
+function queuePedestrianSync(
+  scene: THREE.Scene,
+  pedestrianMeshesRef: React.RefObject<THREE.Mesh[]>,
+  pedestrianObjsRef: React.RefObject<THREE.Mesh[]>,
+  transformControlsRef: React.RefObject<unknown>,
+  updateSceneGraph: () => void,
+): Promise<void> {
+  pedestrianSyncQueue = pedestrianSyncQueue.then(() =>
+    ensurePedestrianModel().then(() => {
+      syncPedestrians(
+        scene,
+        pedestrianMeshesRef,
+        pedestrianObjsRef,
+        transformControlsRef,
+        updateSceneGraph,
+      );
+    }),
+  );
+  return pedestrianSyncQueue;
 }
 
 export function usePedestrianMeshSync() {
@@ -95,15 +122,13 @@ export function usePedestrianMeshSync() {
         if (attempts < 10) setTimeout(() => trySync(attempts + 1), 300);
         return;
       }
-      ensurePedestrianModel().then(() => {
-        syncPedestrians(
-          scene,
-          pedestrianMeshesRef,
-          pedestrianObjsRef,
-          transformControlsRef,
-          updateSceneGraph,
-        );
-      });
+      queuePedestrianSync(
+        scene,
+        pedestrianMeshesRef,
+        pedestrianObjsRef,
+        transformControlsRef,
+        updateSceneGraph,
+      );
     };
     trySync();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -113,15 +138,13 @@ export function usePedestrianMeshSync() {
     const unsubscribe = useEditorStore.subscribe(() => {
       const scene = sceneRef.current;
       if (!scene) return;
-      ensurePedestrianModel().then(() => {
-        syncPedestrians(
-          scene,
-          pedestrianMeshesRef,
-          pedestrianObjsRef,
-          transformControlsRef,
-          updateSceneGraph,
-        );
-      });
+      queuePedestrianSync(
+        scene,
+        pedestrianMeshesRef,
+        pedestrianObjsRef,
+        transformControlsRef,
+        updateSceneGraph,
+      );
     });
     return unsubscribe;
     // eslint-disable-next-line react-hooks/exhaustive-deps

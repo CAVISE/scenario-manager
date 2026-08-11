@@ -1,13 +1,7 @@
 import { Button } from '@mui/material';
-import {
-  Stack,
-  FormControl,
-  FormLabel,
-  Input,
-  Grid,
-  Typography,
-} from '@mui/material';
+import { Stack, FormControl, FormLabel, Grid, Typography } from '@mui/material';
 import { useEditorStore } from '../../../../../../store';
+import NumericInput from '../../NumericInput';
 import { RoutePointPropertiesProps } from '../types/RoutePointPropertiesTypes';
 
 export default function RoutePointProperties({
@@ -28,19 +22,11 @@ export default function RoutePointProperties({
               <FormLabel sx={{ fontSize: 'xs', mb: 0.5 }}>
                 {axis.toUpperCase()}
               </FormLabel>
-              <Input
-                size="small"
-                type="number"
-                slotProps={{
-                  input: {
-                    onKeyDown: (e: React.KeyboardEvent) => e.stopPropagation(),
-                  },
-                }}
-                value={point[axis].toFixed(3)}
-                onChange={(e) => {
-                  const value = parseFloat(e.target.value);
-                  if (!isNaN(value)) updatePoint(point.id, { [axis]: value });
-                }}
+              <NumericInput
+                value={point[axis]}
+                onValueChange={(value) =>
+                  updatePoint(point.id, { [axis]: value })
+                }
               />
             </FormControl>
           </Grid>

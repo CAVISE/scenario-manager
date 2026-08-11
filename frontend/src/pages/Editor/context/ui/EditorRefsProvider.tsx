@@ -5,6 +5,7 @@ import { EditorRefsContext } from '../ui/EditorRefsContext';
 import { EditorRefs } from '../types/EditorRefsTypes';
 import { ThreeSetup } from '../../hooks/useOpenDriveUtils/useThreeSetup/types/useThreeSetupTypes';
 import { OpenDriveMapInstance } from '../../types/editorTypes';
+import { DEFAULT_COLOR } from '../../hooks/useThreeScene/hooks/useOdrMapManager/utils/clearScene/types/clearSceneTypes';
 
 export const EditorRefsProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -20,9 +21,10 @@ export const EditorRefsProvider: React.FC<{ children: React.ReactNode }> = ({
     cubeCirclesRef: useRef<THREE.Mesh[][]>([]),
     pedestrianObjsRef: useRef<THREE.Mesh[]>([]),
     rsuMeshesRef: useRef<THREE.Mesh[]>([]),
+    buildingMeshesRef: useRef<THREE.Object3D[]>([]),
     roadMeshRef: useRef<THREE.Mesh | null>(null),
     currentCarRef: useRef<string>(''),
-    currentColorRef: useRef<string>('00ff00'),
+    currentColorRef: useRef<string>(DEFAULT_COLOR),
     loadPointsRef: useRef<() => void>(() => {}),
     loadRSURef: useRef<() => void>(() => {}),
     pedestrianMeshesRef: useRef<THREE.Mesh[]>([]),

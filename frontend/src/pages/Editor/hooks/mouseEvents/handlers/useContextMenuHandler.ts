@@ -5,7 +5,7 @@ import type { SharedMouseContext } from '../types/IMouseEventsTypes';
 export function useContextMenuHandler(ctx: SharedMouseContext) {
   return useCallback(
     (e: MouseEvent) => {
-      if (ctx.insidePanel(e)) return;
+      if (!ctx.insideEditorCanvas(e)) return;
       e.preventDefault();
       useEditorStore.getState().setBuildingMode(false);
     },

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from '@mui/material';
 import {
   Stack,
@@ -13,14 +12,16 @@ import {
 import { Box } from '@mui/material';
 import { HexColorPicker } from 'react-colorful';
 import { useEditorStore } from '../../../../../../store';
-import { numInputSlot } from '../../../types/PanelTypes';
 import CarLidarList from '../../CarLidarList';
+import NumericInput from '../../NumericInput';
 import CarOpenCDASection from './CarOpenCDASection';
 import CarOpenCDARareSection from './CarOpenCDARareSection';
+import { CarPropertiesProps } from '../types/CarPropertiesTypes';
 import {
-  CarPropertiesProps,
   formLabelStyles,
-} from '../types/CarPropertiesTypes';
+  DEFAULT_CAR_COLOR,
+} from '../../../../../../shared/styles/panelStyles';
+import { numInputSlot } from '../../../types/PanelTypes';
 
 export default function CarProperties({ car, onDelete }: CarPropertiesProps) {
   const updateCar = useEditorStore((s) => s.updateCar);
@@ -33,11 +34,7 @@ export default function CarProperties({ car, onDelete }: CarPropertiesProps) {
         <FormLabel>Car name</FormLabel>
         <Input
           value={car.model ?? ''}
-          slotProps={{
-            input: {
-              onKeyDown: (e: React.KeyboardEvent) => e.stopPropagation(),
-            },
-          }}
+          slotProps={numInputSlot}
           onChange={(e) => {
             updateCar(car.id, { model: e.target.value });
           }}
@@ -50,17 +47,9 @@ export default function CarProperties({ car, onDelete }: CarPropertiesProps) {
           <Grid item xs={4} key={axis}>
             <FormControl>
               <FormLabel sx={formLabelStyles}>{axis.toUpperCase()}</FormLabel>
-              <Input
-                size="small"
-                type="number"
-                slotProps={numInputSlot}
-                value={car[axis].toFixed(3)}
-                onChange={(e) => {
-                  const value = parseFloat(e.target.value);
-                  if (!isNaN(value)) {
-                    updateCar(car.id, { [axis]: value });
-                  }
-                }}
+              <NumericInput
+                value={car[axis]}
+                onValueChange={(value) => updateCar(car.id, { [axis]: value })}
               />
             </FormControl>
           </Grid>
@@ -102,7 +91,7 @@ export default function CarProperties({ car, onDelete }: CarPropertiesProps) {
       >
         <FormLabel>Color</FormLabel>
         <HexColorPicker
-          color={`#${car.color ?? '00ff00'}`}
+          color={`#${car.color ?? DEFAULT_CAR_COLOR}`}
           onChange={(hex) => updateCar(car.id, { color: hex.replace('#', '') })}
         />
         <Box
@@ -110,12 +99,12 @@ export default function CarProperties({ car, onDelete }: CarPropertiesProps) {
             mt: 1,
             width: 36,
             height: 14,
-            backgroundColor: `#${car.color ?? '00ff00'}`,
+            backgroundColor: `#${car.color ?? DEFAULT_CAR_COLOR}`,
             border: '1px solid #ccc',
           }}
         />
         <Typography variant="body2" sx={{ mt: 0.5 }}>
-          Current color: #{car.color ?? '00ff00'}
+          Current color: #{car.color ?? DEFAULT_CAR_COLOR}
         </Typography>
       </FormControl>
 

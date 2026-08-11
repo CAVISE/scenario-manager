@@ -2,6 +2,7 @@ import {
   Lidar,
   Point,
   RsuBehaviorService,
+  SumoStop,
 } from '../../../../../../store/types/useEditorStoreTypes';
 export interface CarPath {
   x: number;
@@ -13,6 +14,13 @@ export interface CarPath {
   rotation?: number;
   selected?: boolean;
   speed?: number;
+  sumo_depart?: number;
+  sumo_depart_lane?: string;
+  sumo_depart_pos?: number;
+  sumo_max_speed?: number;
+  sumo_edges?: string;
+  sumo_vtype?: string;
+  sumo_stop?: SumoStop;
   points?: Pick<Point, 'x' | 'y' | 'z'>[];
   lidars?: Omit<Lidar, 'id' | 'carId'>[];
 }
@@ -25,7 +33,7 @@ export interface RSUPath {
   frequency?: number;
   range?: number;
   protocol?: string;
-  script?: string | null;
+  scenario?: string | null;
   beacon_interval?: number;
   opencda_name?: string;
   opencda_id?: number;

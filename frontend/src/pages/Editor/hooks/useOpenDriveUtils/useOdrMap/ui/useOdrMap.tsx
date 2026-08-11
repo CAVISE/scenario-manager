@@ -191,6 +191,9 @@ export function buildOdrScene(p: LoadOdrMapParams): OdrMapMeshes {
   const bbox = new THREE.Box3().setFromObject(refline_lines);
   const diag = bbox.min.distanceTo(bbox.max);
   camera.far = diag * 1.5;
+
+  camera.near = Math.max(0.1, camera.far / 20000);
+  camera.updateProjectionMatrix();
   controls.autoRotate = fit_view;
   if (fit_view) fitViewToBbox(bbox, camera, controls);
 
@@ -208,6 +211,13 @@ export function buildOdrScene(p: LoadOdrMapParams): OdrMapMeshes {
   light.target.updateMatrixWorld();
 
   if (!scene.children.includes(transformControls)) scene.add(transformControls);
+
+  console.log(
+    '[buildOdrScene] geometry added to scene at',
+    performance.now().toFixed(0),
+    'ms, scene.children.length =',
+    scene.children.length,
+  );
 
   if (import.meta.env.DEV) {
     console.log(`Heap: ${(Module.HEAP8.length / 1024 / 1024) | 0} MB`);

@@ -1,3 +1,4 @@
+import type { MutableRefObject } from 'react';
 import { OdrMapMeshes } from '../../../../../../useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
 import { ThreeSetup } from '../../../../../../useOpenDriveUtils/useThreeSetup/types/useThreeSetupTypes';
 import * as THREE from 'three';
@@ -5,12 +6,13 @@ export interface ClearSceneParams {
   three: ThreeSetup;
   odrMeshes: OdrMapMeshes;
   disposableObjs: THREE.BufferGeometry[];
-  localLineArrRef: React.RefObject<THREE.Line[][]>;
-  carMeshesRef: React.RefObject<THREE.Mesh[]>;
-  pointsObjsRef: React.RefObject<THREE.Mesh[]>;
-  cubeCirclesRef: React.RefObject<THREE.Mesh[][]>;
-  carQuaternionsRef: React.RefObject<Map<string, THREE.Quaternion>>;
-  currentCarRef: React.RefObject<string>;
-  currentColorRef: React.RefObject<string>;
+  localLineArrRef: MutableRefObject<THREE.Line[][]>;
+  carMeshesRef: MutableRefObject<THREE.Mesh[]>;
+  pointsObjsRef: MutableRefObject<THREE.Mesh[]>;
+  cubeCirclesRef: MutableRefObject<THREE.Mesh[][]>;
+  carQuaternionsRef: MutableRefObject<Map<string, THREE.Quaternion>>;
+  currentCarRef: MutableRefObject<string>;
+  currentColorRef: MutableRefObject<string>;
   syncRoadMesh: (mesh: THREE.Mesh | null) => void;
 }
+export const DEFAULT_COLOR = '00ff00';

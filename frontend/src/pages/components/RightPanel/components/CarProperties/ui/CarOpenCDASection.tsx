@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Box,
   Button,
@@ -27,8 +27,33 @@ import type {
 } from '../../../../../../store/types/useEditorStoreTypes';
 import { numInputSlot } from '../../../types/PanelTypes';
 import { formLabelStyles } from '../types/CarPropertiesTypes';
+import { parseNumberInputChange } from '../../../../../Editor/components/SimConfigModal/utils/numberInputUtils';
 
 const DEFAULT_CAV_COLOR: [number, number, number] = [156, 255, 206];
+
+function clampRgbValue(value: number): number {
+  return Math.max(0, Math.min(255, value));
+}
+
+function parseRgbValueFromEvent(
+  event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+): number | undefined {
+  const parsed = parseNumberInputChange(event.target);
+  if (parsed === undefined || !Number.isFinite(parsed)) {
+    return undefined;
+  }
+  return clampRgbValue(parsed);
+}
+
+function parseNumberFromEvent(
+  event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+): number | undefined {
+  const parsed = parseNumberInputChange(event.target);
+  if (parsed === undefined || !Number.isFinite(parsed)) {
+    return undefined;
+  }
+  return parsed;
+}
 
 function RgbEditor({
   color,
@@ -49,12 +74,10 @@ function RgbEditor({
               slotProps={numInputSlot}
               value={color[idx]}
               onChange={(e) => {
-                const val = Math.max(
-                  0,
-                  Math.min(255, parseInt(e.target.value, 10) || 0),
-                );
+                const parsed = parseRgbValueFromEvent(e);
+                if (parsed === undefined) return;
                 const next = [...color] as [number, number, number];
-                next[idx] = val;
+                next[idx] = parsed;
                 onChange(next);
               }}
             />
@@ -169,11 +192,7 @@ export default function CarOpenCDASection({ car }: { car: Car }) {
               <Input
                 size="small"
                 value={car.opencda_name ?? ''}
-                slotProps={{
-                  input: {
-                    onKeyDown: (e: React.KeyboardEvent) => e.stopPropagation(),
-                  },
-                }}
+                slotProps={numInputSlot}
                 onChange={(e) =>
                   updateCar(car.id, { opencda_name: e.target.value })
                 }
@@ -204,11 +223,13 @@ export default function CarOpenCDASection({ car }: { car: Car }) {
                 type="number"
                 slotProps={numInputSlot}
                 value={car.opencda_id ?? 100}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const parsed = parseNumberFromEvent(e);
+                  if (parsed === undefined) return;
                   updateCar(car.id, {
-                    opencda_id: parseInt(e.target.value, 10) || 0,
-                  })
-                }
+                    opencda_id: parsed,
+                  });
+                }}
               />
             </FormControl>
           )}
@@ -236,11 +257,7 @@ export default function CarOpenCDASection({ car }: { car: Car }) {
               <Input
                 size="small"
                 value={car.opencda_carla_model ?? ''}
-                slotProps={{
-                  input: {
-                    onKeyDown: (e: React.KeyboardEvent) => e.stopPropagation(),
-                  },
-                }}
+                slotProps={numInputSlot}
                 onChange={(e) =>
                   updateCar(car.id, { opencda_carla_model: e.target.value })
                 }
@@ -293,11 +310,13 @@ export default function CarOpenCDASection({ car }: { car: Car }) {
                 type="number"
                 slotProps={numInputSlot}
                 value={car.opencda_max_speed ?? 60}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const parsed = parseNumberFromEvent(e);
+                  if (parsed === undefined) return;
                   updateCar(car.id, {
-                    opencda_max_speed: parseFloat(e.target.value),
-                  })
-                }
+                    opencda_max_speed: parsed,
+                  });
+                }}
               />
             </FormControl>
           )}
@@ -311,7 +330,7 @@ export default function CarOpenCDASection({ car }: { car: Car }) {
                   setShowCollisionAhead(e.target.checked);
                   updateCar(car.id, {
                     opencda_collision_time_ahead: e.target.checked
-                      ? 2.0
+                      ? 2
                       : undefined,
                   });
                 }}
@@ -327,11 +346,13 @@ export default function CarOpenCDASection({ car }: { car: Car }) {
                 type="number"
                 slotProps={numInputSlot}
                 value={car.opencda_collision_time_ahead ?? 2}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const parsed = parseNumberFromEvent(e);
+                  if (parsed === undefined) return;
                   updateCar(car.id, {
-                    opencda_collision_time_ahead: parseFloat(e.target.value),
-                  })
-                }
+                    opencda_collision_time_ahead: parsed,
+                  });
+                }}
               />
             </FormControl>
           )}
@@ -491,14 +512,16 @@ export default function CarOpenCDASection({ car }: { car: Car }) {
                   type="number"
                   slotProps={numInputSlot}
                   value={car.opencda_v2x?.communication_range ?? 45}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const parsed = parseNumberFromEvent(e);
+                    if (parsed === undefined) return;
                     updateCar(car.id, {
                       opencda_v2x: {
                         ...car.opencda_v2x,
-                        communication_range: parseFloat(e.target.value),
+                        communication_range: parsed,
                       },
-                    })
-                  }
+                    });
+                  }}
                 />
               </FormControl>
             </Stack>

@@ -1,3 +1,4 @@
+import type { MutableRefObject } from 'react';
 import {
   LOADING_STEPS,
   OpenDriveMapInstance,
@@ -7,9 +8,9 @@ import { OpenDriveModule } from '../../../../useOpenDriveUtils/useOdrMap/types/u
 export interface UseOdrLoaderProps {
   setStep: (step: keyof typeof LOADING_STEPS) => void;
   setError: ((err: Error) => void) | undefined;
-  moduleRef: React.RefObject<OpenDriveModule | null>;
-  mapRef: React.RefObject<OpenDriveMapInstance | null>;
-  loadOdrMapRef: React.RefObject<
+  moduleRef: MutableRefObject<OpenDriveModule | null>;
+  mapRef: MutableRefObject<OpenDriveMapInstance | null>;
+  loadOdrMapRef: MutableRefObject<
     (clearMap?: boolean, fitView?: boolean) => void
   >;
 }

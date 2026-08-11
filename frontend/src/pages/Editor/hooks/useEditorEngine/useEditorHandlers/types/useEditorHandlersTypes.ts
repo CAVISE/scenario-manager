@@ -1,19 +1,20 @@
+import type { MutableRefObject } from 'react';
 import { TransformControls } from 'three-stdlib';
 
 export interface UseEditorHandlersProps {
-  actionsRef: React.RefObject<{
+  actionsRef: MutableRefObject<{
     addCube: () => void;
     addRSU: () => void;
     addPoints: () => void;
     addPedestrian: () => void;
     deleteCube: () => void;
   }>;
-  currentCarRef: React.RefObject<string>;
-  modeRef: React.RefObject<{
+  currentCarRef: MutableRefObject<string>;
+  modeRef: MutableRefObject<{
     isAddCarModeActive: boolean;
     isAddPointModeActive: boolean;
     isAddPedestrianModeActive: boolean;
     isAddedPoints: boolean;
   }>;
-  transformControlsRef: React.RefObject<TransformControls | null>;
+  transformControlsRef: MutableRefObject<TransformControls | null>;
 }

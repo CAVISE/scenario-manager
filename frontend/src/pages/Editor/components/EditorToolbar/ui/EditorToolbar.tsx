@@ -1,5 +1,7 @@
 import { useState, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { IconButton, Tooltip } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MenuIcon from '@mui/icons-material/Menu';
 import SettingsIcon from '@mui/icons-material/Settings';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -16,7 +18,6 @@ import UploadScenariosModal from '../../UploadScenariosModal';
 import SimConfigModal from '../../SimConfigModal';
 import AttackConfigModal from '../../AttackConfigModal';
 import ExportDialog from '../dialogs';
-import AttackConfigModal from '../../AttackConfigModal';
 
 function sanitizeDownloadFilename(name: string, fallback: string): string {
   const t = name.trim() || fallback;
@@ -44,7 +45,7 @@ export const EditorToolbar = () => {
   const [exportFilename, setExportFilename] = useState('');
 
   const openExportDialog = useCallback(
-    (defaultFilename: string, getContent: () => string) => {
+    (defaultFilename: string, getContent: (filename: string) => string) => {
       setExportMenuAnchor(null);
       setExportFilename(defaultFilename);
       setPendingExport({ defaultFilename, getContent });
@@ -63,12 +64,20 @@ export const EditorToolbar = () => {
       exportFilename,
       pendingExport.defaultFilename,
     );
-    downloadFile(safe, pendingExport.getContent());
+    downloadFile(safe, pendingExport.getContent(safe));
     closeExportDialog();
   };
 
   return (
     <div style={EditorToolbarStyles}>
+      <div style={EditorToolbarDivStyles}>
+        <Tooltip title="Discard changes?">
+          <IconButton size="small" component={Link} to="/">
+            <ArrowBackIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      </div>
+
       <div style={EditorToolbarDivStyles}>
         <Tooltip title="Menu">
           <IconButton
@@ -108,14 +117,6 @@ export const EditorToolbar = () => {
           </IconButton>
         </Tooltip>
       </div>
-      <div style={EditorToolbarDivStyles}>
-        <Tooltip title="Attack settings">
-          <IconButton size="small" onClick={() => setAttackConfigOpen(true)}>
-            <SecurityIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      </div>
-
       <div style={EditorToolbarDivStyles}>
         <Tooltip title="Attack settings">
           <IconButton size="small" onClick={() => setAttackConfigOpen(true)}>

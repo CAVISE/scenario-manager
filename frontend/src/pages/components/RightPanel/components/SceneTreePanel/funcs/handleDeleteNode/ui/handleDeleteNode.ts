@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { disposeMesh } from '../../sceneUtils';
 import { useEditorStore } from '../../../../../../../../store/ui/useEditorStore';
 import { getTypeMeta } from '../../../types/SceneTreePanelTypes';
+import { pushSingleDeletionSnapshot } from '../../deletionSnapshots';
 import { handleDeleteNodeProps } from '../types/handleDeleteNodeTypes';
 
 export function handleDeleteNode({
@@ -11,13 +12,17 @@ export function handleDeleteNode({
   carMeshesRef,
   cubeCirclesRef,
   pointsArrRef,
+  pointsObjsRef,
+  rsuMeshesRef,
   sceneRef,
   transformControlsRef,
   detachTransformControls,
+  toast,
 }: handleDeleteNodeProps) {
   e.stopPropagation();
   const s = useEditorStore.getState();
   const meta = getTypeMeta(name);
+  const pushed = pushSingleDeletionSnapshot({ id, label: meta.label });
 
   if (meta.label === 'CAR') {
     const idx = carMeshesRef.current.findIndex((m) => m.userData.id === id);
@@ -51,6 +56,17 @@ export function handleDeleteNode({
         materials.forEach((mt) => mt?.dispose());
         pointsArrRef.current.splice(meshIdx, 1);
       }
+
+      const objsIdx = pointsObjsRef.current.findIndex(
+        (m) => m.userData.id === id,
+      );
+      if (objsIdx !== -1) pointsObjsRef.current.splice(objsIdx, 1);
+
+      const rsuMeshIdx = rsuMeshesRef.current.findIndex(
+        (m) => m.userData.id === id,
+      );
+      if (rsuMeshIdx !== -1) rsuMeshesRef.current.splice(rsuMeshIdx, 1);
+
       s.removeRSU(rsuIdx);
     }
   } else if (meta.label === 'BLD') {
@@ -86,4 +102,10 @@ export function handleDeleteNode({
   s.selectObject(null);
   transformControlsRef.current?.detach();
   detachTransformControls();
+
+  if (pushed) {
+    toast.undo(pushed.label, () =>
+      useEditorStore.getState().restoreLastDeletion(pushed.snapshotId),
+    );
+  }
 }

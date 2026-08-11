@@ -1,3 +1,4 @@
+import type { MutableRefObject } from 'react';
 import * as THREE from 'three';
 import { LOADING_STEPS } from '../../types/editorTypes';
 import { SceneNode } from '../../hooks/useEditorEngine/useSceneGraph/types/useSceneGraphTypes';
@@ -8,7 +9,7 @@ export interface hooksContextTypes {
   loadingProgress: number;
   loadingText: string | null;
   setStep: (step: keyof typeof LOADING_STEPS) => void;
-  actionsRef: React.RefObject<{
+  actionsRef: MutableRefObject<{
     addCube: () => void;
     addRSU: () => void;
     addPoints: () => void;
