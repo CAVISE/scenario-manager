@@ -8,7 +8,6 @@ import {
 import {
   numInputSlot,
   parseNumberFromEvent,
-  createNestedUpdate,
 } from '../utils/opencdaFieldUtils';
 import { SimulationConfig } from '../../../../../../Generators/types/configGeneratorsTypes';
 
@@ -34,25 +33,28 @@ export const GNSSNoiseSection = ({
     onUpdate({ [field]: value } as Partial<SimulationConfig['opencda']>);
   };
 
+  const currentGnssNoise: SimulationConfig['opencda']['gnss_noise'] = {
+    alt_stddev: altStddev,
+    lat_stddev: latStddev,
+    lon_stddev: lonStddev,
+    heading_direction_stddev: 0,
+    speed_stddev: 0,
+  };
+
   const handleNumberChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-    field: string,
+    field: keyof SimulationConfig['opencda']['gnss_noise'],
     min?: number,
     max?: number,
   ) => {
     const val = parseNumberFromEvent(e, min, max);
     if (val === undefined) return;
-    onUpdate(
-      createNestedUpdate(
-        'gnss_noise',
-        {
-          alt_stddev: altStddev,
-          lat_stddev: latStddev,
-          lon_stddev: lonStddev,
-        },
-        { [field]: val },
-      ),
-    );
+    onUpdate({
+      gnss_noise: {
+        ...currentGnssNoise,
+        [field]: val,
+      },
+    });
   };
 
   return (

@@ -168,7 +168,7 @@ describe('getStoredXodrName', () => {
   });
 
   it('uses DEFAULT_XODR when localStorage is empty and no fallback given', () => {
-    expect(getStoredXodrName()).toBe(DEFAULT_XODR);
+    expect(getStoredXodrName()).toBe('Town10HD.xodr');
   });
 
   it('ignores stored raw XML and uses fallback', () => {
@@ -214,7 +214,7 @@ describe('fetchXodrText', () => {
       .mockResolvedValue(okResponse(VALID_OPENDRIVE) as never);
     const result = await fetchXodrText('town10');
     expect(result).toBe(VALID_OPENDRIVE);
-    expect(fetchMock).toHaveBeenCalledWith('./Town10HD.xodr');
+    expect(fetchMock).toHaveBeenCalledWith(MAP_PATH);
   });
 
   it('falls back to DEFAULT_XODR as last resort', async () => {

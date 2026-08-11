@@ -1,3 +1,4 @@
+import type { MutableRefObject } from 'react';
 import type * as THREE from 'three';
 import { LOADING_STEPS } from '../../../types/editorTypes';
 export const localLineArr: THREE.Line[][] = [];
@@ -7,7 +8,7 @@ export interface useThreeSceneProps {
   updateSceneGraph: () => void;
 }
 export interface UseThreeSceneResult {
-  actionsRef: React.RefObject<{
+  actionsRef: MutableRefObject<{
     addCube: () => void;
     addRSU: () => void;
     addPoints: () => void;

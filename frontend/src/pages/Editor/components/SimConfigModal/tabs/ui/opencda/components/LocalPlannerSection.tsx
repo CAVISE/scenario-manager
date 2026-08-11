@@ -11,7 +11,6 @@ import {
 import {
   numInputSlot,
   parseNumberFromEvent,
-  createNestedUpdate,
   getChipColor,
 } from '../utils/opencdaFieldUtils';
 import { SimulationConfig } from '../../../../../../Generators/types/configGeneratorsTypes';
@@ -37,7 +36,7 @@ export const LocalPlannerSection = ({
   debugTrajectory,
   onUpdate,
 }: LocalPlannerSectionProps) => {
-  const currentPlanner = {
+  const currentPlanner: SimulationConfig['opencda']['local_planner'] = {
     buffer_size: bufferSize,
     trajectory_update_freq: trajectoryUpdateFreq,
     waypoint_update_freq: waypointUpdateFreq,
@@ -49,22 +48,23 @@ export const LocalPlannerSection = ({
 
   const handleNumberChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-    field: string,
+    field: keyof SimulationConfig['opencda']['local_planner'],
     min?: number,
     max?: number,
   ) => {
     const val = parseNumberFromEvent(e, min, max);
     if (val === undefined) return;
-    onUpdate(
-      createNestedUpdate('local_planner', currentPlanner, {
+    onUpdate({
+      local_planner: {
+        ...currentPlanner,
         [field]: val,
-      }),
-    );
+      },
+    });
   };
 
   const createNumberField = (
     label: string,
-    field: string,
+    field: keyof SimulationConfig['opencda']['local_planner'],
     value: number,
     options?: {
       min?: number;
@@ -105,12 +105,16 @@ export const LocalPlannerSection = ({
     </Tooltip>
   );
 
-  const handleSwitchChange = (field: string, checked: boolean) => {
-    onUpdate(
-      createNestedUpdate('local_planner', currentPlanner, {
+  const handleSwitchChange = (
+    field: keyof SimulationConfig['opencda']['local_planner'],
+    checked: boolean,
+  ) => {
+    onUpdate({
+      local_planner: {
+        ...currentPlanner,
         [field]: checked,
-      }),
-    );
+      },
+    });
   };
 
   return (

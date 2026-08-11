@@ -1,19 +1,20 @@
 import * as THREE from 'three';
+import type { MutableRefObject } from 'react';
 import { OdrMapMeshes } from '../../../useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
 
 export interface CreateEditorActionsOptions {
-  modeRef: React.RefObject<{
+  modeRef: MutableRefObject<{
     isAddCarModeActive: boolean;
     isAddPointModeActive: boolean;
     isAddPedestrianModeActive: boolean;
     isAddedPoints: boolean;
   }>;
-  carMeshesRef: React.RefObject<THREE.Mesh[]>;
-  cubeCirclesRef: React.RefObject<THREE.Mesh[][]>;
-  currentCarRef: React.RefObject<string>;
-  currentColorRef: React.RefObject<string>;
+  carMeshesRef: MutableRefObject<THREE.Mesh[]>;
+  cubeCirclesRef: MutableRefObject<THREE.Mesh[][]>;
+  currentCarRef: MutableRefObject<string>;
+  currentColorRef: MutableRefObject<string>;
   transformControls: { detach: () => void; parent?: THREE.Object3D | null };
-  localLineArrRef: React.RefObject<THREE.Line[][]>;
+  localLineArrRef: MutableRefObject<THREE.Line[][]>;
   camera: THREE.PerspectiveCamera;
   controls: { update?: () => void };
   getOdrMeshes: () => OdrMapMeshes;

@@ -8,7 +8,6 @@ import type {
 } from '../../../../../store/types/useEditorStoreTypes';
 import type { GeneratedSumoRoutes } from './sumoNetwork';
 import { MapOffsets } from '../../../../../helpers/types/coordinateTransformTypes';
-import { useMemo } from 'react';
 
 function xmlAttribute(value: string): string {
   return value
@@ -46,10 +45,8 @@ export function useGenerateSumoCfg(
   config: SimulationConfig,
   outputFilename?: string,
 ): string {
-  const useSimConfig = useMemo(
-    () => mergeSimConfigWithDefaults(config),
-    [config],
-  );
+  const useSimConfig = mergeSimConfigWithDefaults(config);
+
   const { scenario_name, full_output } = useSimConfig.sumo;
   const artifactName = xmlAttribute(
     sumoArtifactBaseName(outputFilename, scenario_name),
@@ -81,10 +78,8 @@ export function useGenerateRouXml(
   cars: Car[],
   generatedRoutes: GeneratedSumoRoutes = {},
 ): string {
-  const useSimConfig = useMemo(
-    () => mergeSimConfigWithDefaults(config),
-    [config],
-  );
+  const useSimConfig = mergeSimConfigWithDefaults(config);
+
   const vtypeLines = useSimConfig.sumo.vtypes
     .map(
       (vt) =>

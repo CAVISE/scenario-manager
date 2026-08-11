@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
-
+test.beforeEach(async ({ page }) => {
+  await page.route('**/api/ws/simulation', (route) => route.abort());
+});
 test('CARLA synchronous mode can be toggled off and back on', async ({
   page,
 }) => {

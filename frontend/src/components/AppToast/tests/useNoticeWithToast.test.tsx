@@ -32,7 +32,7 @@ describe('useNoticeWithToast', () => {
 
   it('should call toast.info if mode is "info-default"', () => {
     const { result } = renderHook(() =>
-      useNoticeWithToast(setNoticeMock, 'info-default'),
+      useNoticeWithToast(setNoticeMock, { defaultLevel: 'info' }),
     );
 
     result.current('General info');
