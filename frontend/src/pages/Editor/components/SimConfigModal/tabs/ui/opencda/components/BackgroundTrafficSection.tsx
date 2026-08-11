@@ -66,8 +66,14 @@ export const BackgroundTrafficSection = ({
   ) => {
     const val = parseNumberFromEvent(e);
     if (val !== undefined) {
+      const stringSpawnRange = Object.fromEntries(
+        Object.entries(spawnRange).map(([key, value]) => [key, String(value)]),
+      ) as Record<string, string>;
+
       onUpdate(
-        createNestedUpdate('bg_spawn_range', spawnRange, { [field]: val }),
+        createNestedUpdate('bg_spawn_range', stringSpawnRange, {
+          [field]: String(val),
+        }),
       );
     }
   };

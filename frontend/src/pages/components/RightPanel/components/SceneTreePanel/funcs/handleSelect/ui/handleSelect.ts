@@ -28,15 +28,17 @@ export function handleSelect({
   tc.detach();
 
   if (type === 'point') {
-    const idx = pointsArrRef.current.findIndex((p) => p.userData.id === itemId);
-    let rsuMesh = idx !== -1 ? pointsArrRef.current[idx] : undefined;
+    const pointsArr = pointsArrRef.current;
+    if (!pointsArr) return;
+    const idx = pointsArr.findIndex((p) => p.userData.id === itemId);
+    let rsuMesh = idx !== -1 ? pointsArr[idx] : undefined;
 
     if (!rsuMesh || rsuMesh !== found) {
       rsuMesh = found as THREE.Mesh;
       if (idx !== -1) {
-        pointsArrRef.current[idx] = rsuMesh;
+        pointsArr[idx] = rsuMesh;
       } else {
-        pointsArrRef.current.push(rsuMesh);
+        pointsArr.push(rsuMesh);
       }
     }
 
@@ -50,7 +52,9 @@ export function handleSelect({
 
   if (type === 'lidar') {
     let lidarMesh: THREE.Object3D | null = null;
-    carMeshesRef.current.forEach((car) => {
+    const carMeshes = carMeshesRef.current;
+    if (!carMeshes) return;
+    carMeshes.forEach((car) => {
       car.traverse((child) => {
         if (child.userData.id === itemId) lidarMesh = child;
       });

@@ -1,14 +1,15 @@
+import type { MutableRefObject } from 'react';
 import { TransformControls } from 'three-stdlib';
 import * as THREE from 'three';
 import { ToastApi } from '../../../../../../../../components/AppToast/types/toastTypes';
 export interface handleClearSceneProps {
-  carMeshesRef: React.RefObject<THREE.Mesh[]>;
-  sceneRef: React.RefObject<THREE.Scene | undefined>;
-  cubeCirclesRef: React.RefObject<THREE.Mesh[][]>;
-  pointsArrRef: React.RefObject<THREE.Mesh[]>;
-  pointsObjsRef: React.RefObject<THREE.Object3D[]>;
-  rsuMeshesRef: React.RefObject<THREE.Mesh[]>;
-  transformControlsRef: React.RefObject<TransformControls | null>;
+  carMeshesRef: MutableRefObject<THREE.Mesh[]>;
+  sceneRef: MutableRefObject<THREE.Scene | undefined>;
+  cubeCirclesRef: MutableRefObject<THREE.Mesh[][]>;
+  pointsArrRef: MutableRefObject<THREE.Mesh[]>;
+  pointsObjsRef: MutableRefObject<THREE.Object3D[]>;
+  rsuMeshesRef: MutableRefObject<THREE.Mesh[]>;
+  transformControlsRef: MutableRefObject<TransformControls | null>;
   detachTransformControls: () => void;
   toast: ToastApi;
 }

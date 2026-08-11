@@ -1,5 +1,6 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
+import process from 'process';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 

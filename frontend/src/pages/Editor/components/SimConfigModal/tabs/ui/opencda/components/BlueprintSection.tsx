@@ -8,7 +8,6 @@ import {
 import {
   numInputSlot,
   parseNumberFromEvent,
-  createNestedUpdate,
   createFieldUpdater,
 } from '../utils/opencdaFieldUtils';
 import { SimulationConfig } from '../../../../../../Generators/types/configGeneratorsTypes';
@@ -82,13 +81,12 @@ export const BlueprintSection = ({
               onChange={(e) => {
                 const val = parseNumberFromEvent(e, 0, 1);
                 if (val === undefined) return;
-                onUpdate(
-                  createNestedUpdate(
-                    'bp_class_sample_prob',
-                    classProbabilities,
-                    { [cls]: val },
-                  ),
-                );
+                onUpdate({
+                  bp_class_sample_prob: {
+                    ...classProbabilities,
+                    [cls]: val,
+                  },
+                });
               }}
               sx={{ width: 90 }}
             />

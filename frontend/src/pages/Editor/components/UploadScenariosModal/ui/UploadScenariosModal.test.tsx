@@ -25,6 +25,7 @@ vi.mock('../../../context', () => ({
   useEditorRefs: () => ({
     sceneRef: { current: { children: [], add: vi.fn() } },
     loadRSURef: { current: vi.fn() },
+    modalOpenCountRef: { current: 0 },
   }),
   useHooks: () => ({
     buildingModelRef: { current: null },
@@ -201,7 +202,7 @@ describe('UploadScenariosModal', () => {
 
     handleLoadMock.mockImplementation(
       async ({ setNotice }: { setNotice: (v: string) => void }) => {
-        setNotice('The script has been uploaded.');
+        setNotice('The scenario has been uploaded.');
       },
     );
 

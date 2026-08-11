@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { libOpenDrive } from '../../../../../types/editorTypes';
 import { useEditorStore } from '../../../../../../../store';
 import type { OpenDriveModule } from '../../../../useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
@@ -15,19 +15,16 @@ import {
   initXodrCacheFromIndexedDb,
   setCachedCustomXodrContent,
 } from '../utils/xodrRepository';
-import type { OpenDriveMapInstance } from '../../../../../types/editorTypes';
 
 export function useOdrLoader({
   setStep,
   setError,
+  moduleRef,
+  mapRef,
   loadOdrMapRef,
 }: UseOdrLoaderProps) {
-  const moduleRef = useRef<OpenDriveModule | null>(null);
-  const mapRef = useRef<OpenDriveMapInstance | null>(null);
-
   useEffect(() => {
     let cancelled = false;
-
     function processFile(fileText: string, clearMap: boolean) {
       const Module = moduleRef.current;
       if (!Module || cancelled) return;
@@ -43,7 +40,7 @@ export function useOdrLoader({
       try {
         Module.FS_unlink(MAP_PATH);
       } catch {
-        console.warn('FS_unlink failed, maybe /DEFAULT_XODR did not exist yet');
+        // Файл мог не существовать — это нормально, продолжаем
       }
 
       try {
@@ -54,8 +51,9 @@ export function useOdrLoader({
 
         setStep('scene');
 
-        loadOdrMapRef.current?.(clearMap);
+        loadOdrMapRef.current(clearMap);
       } catch (err) {
+        console.error(err);
         setStep('done');
         setError?.(
           err instanceof Error ? err : new Error('Failed to process map file'),
@@ -83,6 +81,7 @@ export function useOdrLoader({
         processFile(text, false);
       } catch (err) {
         if (cancelled) return;
+        console.error(err);
         setStep('done');
         setError?.(
           err instanceof Error ? err : new Error('Failed to load map'),
@@ -96,6 +95,7 @@ export function useOdrLoader({
       await initXodrCacheFromIndexedDb();
       try {
         const Module = await libOpenDrive();
+
         if (cancelled) return;
 
         moduleRef.current = Module as OpenDriveModule;
@@ -104,6 +104,7 @@ export function useOdrLoader({
         await fetchAndLoad();
       } catch (err) {
         if (cancelled) return;
+        console.error(err);
         setStep('done');
         setError?.(
           err instanceof Error
@@ -148,7 +149,7 @@ export function useOdrLoader({
     try {
       Module.FS_createDataFile('.', DEFAULT_XODR, fileText, true, true);
     } catch (err) {
-      // console.error('FS_createDataFile failed:', err);
+      console.error('FS_createDataFile failed:', err);
       setStep('done');
       setError?.(
         err instanceof Error ? err : new Error('FS_createDataFile failed'),
@@ -160,7 +161,7 @@ export function useOdrLoader({
       mapRef.current?.delete();
       mapRef.current = new Module.OpenDriveMap(MAP_PATH, ODR_MAP_OPTIONS);
     } catch (err) {
-      // console.error('OpenDriveMap failed:', err);
+      console.error('OpenDriveMap failed:', err);
       setStep('done');
       setError?.(
         err instanceof Error ? err : new Error('OpenDriveMap parse failed'),
@@ -170,17 +171,13 @@ export function useOdrLoader({
 
     try {
       setStep('scene');
-      loadOdrMapRef.current?.(clearMap);
+      loadOdrMapRef.current(clearMap);
     } catch (err) {
-      // console.error('loadOdrMapRef failed:', err);
+      console.error('loadOdrMapRef failed:', err);
       setStep('done');
       setError?.(err instanceof Error ? err : new Error('loadOdrMap failed'));
     }
   }
 
-  return {
-    loadFile,
-    moduleRef,
-    mapRef,
-  };
+  return { loadFile };
 }

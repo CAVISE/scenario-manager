@@ -32,7 +32,7 @@ export interface RSUScenarioPath {
   range?: number;
   protocol?: string;
   network_protocol?: string;
-  script?: string | null;
+  scenario?: string | null;
   antenna_type?: string;
   antenna_height?: number;
   antenna_gain?: number;

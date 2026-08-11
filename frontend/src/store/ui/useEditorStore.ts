@@ -273,7 +273,7 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
       tilt: 0,
       cam_interval: 100,
       beacon_interval: 1000,
-      script: '',
+      scenario: '',
     };
 
     set((s) => ({

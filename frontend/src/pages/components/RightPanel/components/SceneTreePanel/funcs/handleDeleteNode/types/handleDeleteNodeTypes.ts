@@ -2,17 +2,19 @@ import * as THREE from 'three';
 import { TransformControls } from 'three-stdlib';
 import { ToastApi } from '../../../../../../../../components/AppToast/types/toastTypes';
 
+import type { MutableRefObject } from 'react';
+
 export interface handleDeleteNodeProps {
   id: string;
   e: React.MouseEvent;
   name: string;
-  carMeshesRef: React.RefObject<THREE.Mesh[]>;
-  cubeCirclesRef: React.RefObject<THREE.Mesh[][]>;
-  pointsArrRef: React.RefObject<THREE.Mesh[]>;
-  sceneRef: React.RefObject<THREE.Scene | undefined>;
-  transformControlsRef: React.RefObject<TransformControls | null>;
+  carMeshesRef: MutableRefObject<THREE.Mesh[]>;
+  cubeCirclesRef: MutableRefObject<THREE.Mesh[][]>;
+  pointsArrRef: MutableRefObject<THREE.Mesh[]>;
+  sceneRef: MutableRefObject<THREE.Scene | undefined>;
+  transformControlsRef: MutableRefObject<TransformControls | null>;
   detachTransformControls: () => void;
-  pointsObjsRef: React.RefObject<THREE.Object3D[]>;
-  rsuMeshesRef: React.RefObject<THREE.Mesh[]>;
+  pointsObjsRef: MutableRefObject<THREE.Object3D[]>;
+  rsuMeshesRef: MutableRefObject<THREE.Mesh[]>;
   toast: ToastApi;
 }

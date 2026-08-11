@@ -23,7 +23,6 @@ import type {
   CavBehaviorService,
   RsuBehaviorService,
 } from '../../../../../store/types/useEditorStoreTypes';
-import { useMemo } from 'react';
 
 const YAML_RESERVED_STRINGS = new Set([
   'true',
@@ -390,10 +389,7 @@ export function useGenerateOpenCDAConfig(
   points: Point[],
   lidars: Lidar[] = [],
 ): string {
-  const useSimConfig = useMemo(
-    () => mergeSimConfigWithDefaults(config),
-    [config],
-  );
+  const useSimConfig = mergeSimConfigWithDefaults(config);
   const oc = useSimConfig.opencda;
   const carla = useSimConfig.carla;
   const ls = oc.lidar_sim;

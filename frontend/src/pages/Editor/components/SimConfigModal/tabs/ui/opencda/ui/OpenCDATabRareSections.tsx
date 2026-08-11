@@ -1,10 +1,8 @@
-// OpenCDATabRareSections.tsx (~80 строк)
 import { Box, Divider, Stack, Typography } from '@mui/material';
 import {
   opencdaPanelPaperSx,
   opencdaSectionLabelSx,
 } from '../../../../opencdaUiStyles';
-import { createNestedUpdate } from '../utils/opencdaFieldUtils';
 import type { SimulationConfig } from '../../../../../../Generators/types/configGeneratorsTypes';
 
 import {
@@ -26,19 +24,19 @@ type Props = { oc: Oc; update: (patch: Partial<Oc>) => void };
 
 export default function OpenCDATabRareSections({ oc, update }: Props) {
   const patchMm = (p: Partial<Oc['map_manager']>) =>
-    update(createNestedUpdate('map_manager', oc.map_manager, p));
+    update({ map_manager: { ...oc.map_manager, ...p } });
   const patchSm = (p: Partial<Oc['safety_manager']>) =>
-    update(createNestedUpdate('safety_manager', oc.safety_manager, p));
+    update({ safety_manager: { ...oc.safety_manager, ...p } });
   const patchCtrl = (p: Partial<Oc['controller_pid']>) =>
-    update(createNestedUpdate('controller_pid', oc.controller_pid, p));
+    update({ controller_pid: { ...oc.controller_pid, ...p } });
   const patchPb = (p: Partial<Oc['platoon_base']>) =>
-    update(createNestedUpdate('platoon_base', oc.platoon_base, p));
+    update({ platoon_base: { ...oc.platoon_base, ...p } });
   const patchMet = (p: Partial<Oc['metrics']>) =>
-    update(createNestedUpdate('metrics', oc.metrics, p));
+    update({ metrics: { ...oc.metrics, ...p } });
   const patchCp = (p: Partial<Oc['coop_perception']>) =>
-    update(createNestedUpdate('coop_perception', oc.coop_perception, p));
+    update({ coop_perception: { ...oc.coop_perception, ...p } });
   const patchGnss = (p: Partial<Oc['gnss_noise']>) =>
-    update(createNestedUpdate('gnss_noise', oc.gnss_noise, p));
+    update({ gnss_noise: { ...oc.gnss_noise, ...p } });
 
   return (
     <Stack spacing={1.5}>

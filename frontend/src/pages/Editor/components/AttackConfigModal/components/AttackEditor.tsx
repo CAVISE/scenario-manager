@@ -90,7 +90,6 @@ export function AttackEditor({
         Advanced (JSON)
       </Divider>
 
-      {/* Добавляем key для каждого JsonField */}
       <JsonField
         key={`${keyPrefix}-requirements`}
         label="requirements"

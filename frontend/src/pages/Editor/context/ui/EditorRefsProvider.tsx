@@ -38,6 +38,7 @@ export const EditorRefsProvider: React.FC<{ children: React.ReactNode }> = ({
     }),
     threeRef: useRef<ThreeSetup | null>(null),
     odrMapRef: useRef<OpenDriveMapInstance | null>(null),
+    modalOpenCountRef: useRef(0),
   };
 
   return (

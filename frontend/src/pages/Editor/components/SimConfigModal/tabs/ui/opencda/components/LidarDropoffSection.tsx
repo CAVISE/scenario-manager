@@ -3,7 +3,6 @@ import { Stack, TextField, Typography } from '@mui/material';
 import {
   numInputSlot,
   parseNumberFromEvent,
-  createNestedUpdate,
 } from '../utils/opencdaFieldUtils';
 import { SimulationConfig } from '../../../../../../Generators/types/configGeneratorsTypes';
 
@@ -22,26 +21,27 @@ export const LidarDropoffSection = ({
   noiseStddev,
   onUpdate,
 }: LidarDropoffSectionProps) => {
+  const currentLidarSim: SimulationConfig['opencda']['lidar_sim'] = {
+    dropoff_general_rate: dropoffGeneralRate,
+    dropoff_intensity_limit: dropoffIntensityLimit,
+    dropoff_zero_intensity: dropoffZeroIntensity,
+    noise_stddev: noiseStddev,
+  };
+
   const handleNumberChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-    field: string,
+    field: keyof SimulationConfig['opencda']['lidar_sim'],
     min?: number,
     max?: number,
   ) => {
     const val = parseNumberFromEvent(e, min, max);
     if (val === undefined) return;
-    onUpdate(
-      createNestedUpdate(
-        'lidar_sim',
-        {
-          dropoff_general_rate: dropoffGeneralRate,
-          dropoff_intensity_limit: dropoffIntensityLimit,
-          dropoff_zero_intensity: dropoffZeroIntensity,
-          noise_stddev: noiseStddev,
-        },
-        { [field]: val },
-      ),
-    );
+    onUpdate({
+      lidar_sim: {
+        ...currentLidarSim,
+        [field]: val,
+      },
+    });
   };
 
   return (

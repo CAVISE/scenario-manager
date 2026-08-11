@@ -48,7 +48,7 @@ const BUILDING_LOAD_TIMEOUT_MS =
 
 function tryAddBuildingsWithRetry(
   sceneRef: React.RefObject<THREE.Scene | undefined>,
-  buildingModelRef: React.RefObject<THREE.Object3D | null> | undefined,
+  buildingModelRef: React.MutableRefObject<THREE.Object3D | null> | undefined,
   loadRSURef: React.RefObject<() => void> | undefined,
   updateSceneGraph: (() => void) | undefined,
   setNotice: (message: string) => void,
@@ -341,7 +341,7 @@ export const handleCreate = async (
       useEditorStore.getState().updateScenario({ id: resolvedId });
       onIdResolved?.(resolvedId);
     }
-    setNotice('Script saved.');
+    setNotice('Scenario saved.');
   } catch (err) {
     console.error(err);
     setNotice(await getApiErrorMessage(err, 'Failed to save scenario.'));
