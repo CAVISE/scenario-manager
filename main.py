@@ -40,6 +40,7 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     settings = get_settings()
+    settings.eval_dir.mkdir(parents=True, exist_ok=True)
 
     app = FastAPI(
         title="Scenario Manager",

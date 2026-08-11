@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from app.config import Settings
 
 
@@ -28,3 +30,15 @@ def test_settings_accept_docker_database_and_carla_timeout():
 def test_settings_accepts_configured_database_host():
     settings = Settings(**settings_values(db_host="external.example.com"))
     assert settings.db_host == "external.example.com"
+
+
+def test_create_app_creates_missing_evaluation_directory(tmp_path):
+    from main import create_app
+
+    eval_dir = tmp_path / "evaluation_outputs"
+    settings = Settings(**settings_values(), eval_dir=eval_dir)
+
+    with patch("main.get_settings", return_value=settings):
+        create_app()
+
+    assert eval_dir.is_dir()
