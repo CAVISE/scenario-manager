@@ -81,19 +81,11 @@ async def start_opencda(request: Request, body: StartSimulationRequest):
 
     log.debug("start_opencda map=%s max_ticks=%d", map_name, body.max_ticks)
 
-<<<<<<< HEAD
-    # Сохраняем xodr файл если пришёл с фронтенда
-=======
->>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
     if body.xodr:
         xodr_dir = settings.xodr_dir
         xodr_dir.mkdir(parents=True, exist_ok=True)
         (xodr_dir / f"{map_name}.xodr").write_text(body.xodr)
 
-<<<<<<< HEAD
-    # current_time для run_id — формат совпадает с add_current_time из OpenCDA
-=======
->>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
     current_time = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
     run_id = f"{map_name}_{current_time}"
 
@@ -101,12 +93,6 @@ async def start_opencda(request: Request, body: StartSimulationRequest):
         simulation_state["map"] = map_name
         simulation_state["run_id"] = run_id
 
-<<<<<<< HEAD
-    # Передаём сырой payload — runner сам вызовет json_to_single_cav_list
-    # дважды: сначала без carla_map (чтобы получить карту), потом с carla_map
-    # (чтобы взять yaw из road waypoint).
-    scenario_raw = body.model_dump()
-=======
     scenario_raw = body.model_dump()
     try:
         keys = list(scenario_raw.keys())
@@ -124,7 +110,6 @@ async def start_opencda(request: Request, body: StartSimulationRequest):
         log.info("Received attacks field from request: %s", scenario_raw.get("attacks"))
     except Exception:
         log.exception("Failed to log request payload for debugging")
->>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
 
     params = {
         "apply_ml": False,

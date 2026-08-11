@@ -29,10 +29,6 @@ env/
 ENV/
 
 __pycache__/
-<<<<<<< HEAD
-*.pyc
-evaluation_outputs/
-=======
 *.py[cod]
 .pytest_cache/
 .ruff_cache/
@@ -47,4 +43,3 @@ assets/xodrs/
 frontend/coverage/
 frontend/test-results/
 frontend/stats.html
->>>>>>> c8ef1d03840f60d256ebb625220cd565f0cd09ad
