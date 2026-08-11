@@ -1,9 +1,5 @@
 # ScenarioManager | CAVISE
 
-ScenarioManager is a web editor and execution service for connected autonomous
-vehicle scenarios. It combines a React editor, a FastAPI backend, PostgreSQL,
-CARLA, and the bundled OpenCDA runtime.
-
 ## Demo
 
 ### Scene Editor
