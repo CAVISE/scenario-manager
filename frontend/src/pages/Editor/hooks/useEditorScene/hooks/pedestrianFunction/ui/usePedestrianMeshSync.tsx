@@ -75,10 +75,11 @@ function syncPedestrians(
 
     scene.add(modelClone);
 
-    if (!pedestrianMeshes) return;
+    const currentMeshes = pedestrianMeshesRef.current;
+    if (!currentMeshes) return;
+    currentMeshes.push(modelClone as THREE.Mesh);
     const pedestrianObjs = pedestrianObjsRef.current;
     if (!pedestrianObjs) return;
-    pedestrianMeshes.push(modelClone as THREE.Mesh);
     pedestrianObjs.push(modelClone as THREE.Mesh);
   });
 

@@ -267,4 +267,347 @@ describe('useScenarioQueries', () => {
       file_: '<OpenDRIVE></OpenDRIVE>',
     });
   });
+  it('covers lines 33-36: updates store with scenario data using scenario_name', async () => {
+    getMock.mockResolvedValue({
+      scenario_id: 'sc-2',
+      scenario_name: 'Scenario Name Only',
+      weather: 'Sunny',
+      description: 'Description only',
+    });
+
+    const queryClient = new QueryClient();
+    const { result } = renderHook(() => useScenarioDetailQuery('sc-2'), {
+      wrapper: makeWrapper(queryClient),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(updateScenarioMock).toHaveBeenCalledWith({
+      id: 'sc-2',
+      name: 'Scenario Name Only',
+      weather: 'Sunny',
+      description: 'Description only',
+      file_: null,
+    });
+  });
+
+  it('covers lines 33-36: updates store with scenario data using name_of_scenario', async () => {
+    getMock.mockResolvedValue({
+      scenario_id: 'sc-3',
+      name_of_scenario: 'Name Of Scenario',
+      weather: 'Rainy',
+      description: 'Description from name_of_scenario',
+    });
+
+    const queryClient = new QueryClient();
+    const { result } = renderHook(() => useScenarioDetailQuery('sc-3'), {
+      wrapper: makeWrapper(queryClient),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(updateScenarioMock).toHaveBeenCalledWith({
+      id: 'sc-3',
+      name: 'Name Of Scenario',
+      weather: 'Rainy',
+      description: 'Description from name_of_scenario',
+      file_: null,
+    });
+  });
+
+  it('covers lines 33-36: handles missing scenario_name and name_of_scenario', async () => {
+    getMock.mockResolvedValue({
+      scenario_id: 'sc-4',
+      weather: 'Cloudy',
+      description: 'Description only',
+    });
+
+    const queryClient = new QueryClient();
+    const { result } = renderHook(() => useScenarioDetailQuery('sc-4'), {
+      wrapper: makeWrapper(queryClient),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(updateScenarioMock).toHaveBeenCalledWith({
+      id: 'sc-4',
+      name: '',
+      weather: 'Cloudy',
+      description: 'Description only',
+      file_: null,
+    });
+  });
+
+  it('covers weather and file_ update in patch mutation', async () => {
+    updateMock.mockResolvedValue({ status: 'success', message: 'updated' });
+    const queryClient = new QueryClient();
+
+    const { result } = renderHook(() => useScenarioPatchMutation(), {
+      wrapper: makeWrapper(queryClient),
+    });
+
+    await result.current.mutateAsync({
+      id: 's-5',
+      payload: {
+        name_of_scenario: 'Scenario 5',
+        description: 'Description 5',
+        weather: 'Snowy',
+        file_: '<OpenDRIVE>updated</OpenDRIVE>',
+      },
+    });
+    expect(updateScenarioMock).toHaveBeenCalledWith({
+      id: 's-5',
+      name: 'Scenario 5',
+      description: 'Description 5',
+      weather: 'Snowy',
+      file_: '<OpenDRIVE>updated</OpenDRIVE>',
+    });
+  });
+
+  it('covers weather update only in patch mutation', async () => {
+    updateMock.mockResolvedValue({ status: 'success', message: 'updated' });
+    const queryClient = new QueryClient();
+
+    const { result } = renderHook(() => useScenarioPatchMutation(), {
+      wrapper: makeWrapper(queryClient),
+    });
+
+    await result.current.mutateAsync({
+      id: 's-6',
+      payload: {
+        weather: 'Windy',
+      },
+    });
+    expect(updateScenarioMock).toHaveBeenCalledWith({
+      id: 's-6',
+      weather: 'Windy',
+    });
+  });
+
+  it('covers file_ update only in patch mutation', async () => {
+    updateMock.mockResolvedValue({ status: 'success', message: 'updated' });
+    const queryClient = new QueryClient();
+
+    const { result } = renderHook(() => useScenarioPatchMutation(), {
+      wrapper: makeWrapper(queryClient),
+    });
+
+    await result.current.mutateAsync({
+      id: 's-7',
+      payload: {
+        file_: '<OpenDRIVE>new file</OpenDRIVE>',
+      },
+    });
+    expect(updateScenarioMock).toHaveBeenCalledWith({
+      id: 's-7',
+      file_: '<OpenDRIVE>new file</OpenDRIVE>',
+    });
+  });
+
+  it('covers weather and file_ updates separately in patch mutation', async () => {
+    updateMock.mockResolvedValue({ status: 'success', message: 'updated' });
+    const queryClient = new QueryClient();
+
+    const { result } = renderHook(() => useScenarioPatchMutation(), {
+      wrapper: makeWrapper(queryClient),
+    });
+
+    await result.current.mutateAsync({
+      id: 's-8',
+      payload: {
+        weather: 'Foggy',
+      },
+    });
+    expect(updateScenarioMock).toHaveBeenCalledWith({
+      id: 's-8',
+      weather: 'Foggy',
+    });
+
+    await result.current.mutateAsync({
+      id: 's-8',
+      payload: {
+        file_: '<OpenDRIVE>updated again</OpenDRIVE>',
+      },
+    });
+    expect(updateScenarioMock).toHaveBeenCalledWith({
+      id: 's-8',
+      file_: '<OpenDRIVE>updated again</OpenDRIVE>',
+    });
+  });
+  it('covers line 33: updates store with scenario_id using nullish coalescing', async () => {
+    getMock.mockResolvedValue({
+      scenario_id: null,
+      scenario_name: 'Test',
+      weather: 'Clear',
+      description: 'Desc',
+    });
+
+    const queryClient = new QueryClient();
+    const { result } = renderHook(() => useScenarioDetailQuery('test-id'), {
+      wrapper: makeWrapper(queryClient),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(updateScenarioMock).toHaveBeenCalledWith({
+      id: '',
+      name: 'Test',
+      weather: 'Clear',
+      description: 'Desc',
+      file_: null,
+    });
+  });
+
+  it('covers line 35: updates store with weather using nullish coalescing', async () => {
+    getMock.mockResolvedValue({
+      scenario_id: 's-5',
+      scenario_name: 'Weather Test',
+      weather: null,
+      description: 'Desc',
+    });
+
+    const queryClient = new QueryClient();
+    const { result } = renderHook(() => useScenarioDetailQuery('s-5'), {
+      wrapper: makeWrapper(queryClient),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(updateScenarioMock).toHaveBeenCalledWith({
+      id: 's-5',
+      name: 'Weather Test',
+      weather: '',
+      description: 'Desc',
+      file_: null,
+    });
+  });
+
+  it('covers line 36: updates store with description using nullish coalescing', async () => {
+    getMock.mockResolvedValue({
+      scenario_id: 's-6',
+      scenario_name: 'Description Test',
+      weather: 'Sunny',
+      description: null,
+    });
+
+    const queryClient = new QueryClient();
+    const { result } = renderHook(() => useScenarioDetailQuery('s-6'), {
+      wrapper: makeWrapper(queryClient),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(updateScenarioMock).toHaveBeenCalledWith({
+      id: 's-6',
+      name: 'Description Test',
+      weather: 'Sunny',
+      description: '',
+      file_: null,
+    });
+  });
+
+  it('covers lines 33, 35, 36: all fields null/undefined', async () => {
+    getMock.mockResolvedValue({
+      scenario_id: undefined,
+      scenario_name: 'All Null Test',
+      weather: undefined,
+      description: undefined,
+    });
+
+    const queryClient = new QueryClient();
+    const { result } = renderHook(() => useScenarioDetailQuery('s-7'), {
+      wrapper: makeWrapper(queryClient),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(updateScenarioMock).toHaveBeenCalledWith({
+      id: '',
+      name: 'All Null Test',
+      weather: '',
+      description: '',
+      file_: null,
+    });
+  });
+
+  it('covers weather update in patch mutation with undefined check', async () => {
+    updateMock.mockResolvedValue({ status: 'success', message: 'updated' });
+    const queryClient = new QueryClient();
+
+    const { result } = renderHook(() => useScenarioPatchMutation(), {
+      wrapper: makeWrapper(queryClient),
+    });
+
+    await result.current.mutateAsync({
+      id: 's-8',
+      payload: {
+        weather: 'Stormy',
+      },
+    });
+    expect(updateScenarioMock).toHaveBeenCalledWith({
+      id: 's-8',
+      weather: 'Stormy',
+    });
+  });
+
+  it('covers file_ update in patch mutation with undefined check', async () => {
+    updateMock.mockResolvedValue({ status: 'success', message: 'updated' });
+    const queryClient = new QueryClient();
+
+    const { result } = renderHook(() => useScenarioPatchMutation(), {
+      wrapper: makeWrapper(queryClient),
+    });
+
+    await result.current.mutateAsync({
+      id: 's-9',
+      payload: {
+        file_: '<OpenDRIVE>new file content</OpenDRIVE>',
+      },
+    });
+    expect(updateScenarioMock).toHaveBeenCalledWith({
+      id: 's-9',
+      file_: '<OpenDRIVE>new file content</OpenDRIVE>',
+    });
+  });
+
+  it('covers both weather and file_ updates together in patch', async () => {
+    updateMock.mockResolvedValue({ status: 'success', message: 'updated' });
+    const queryClient = new QueryClient();
+
+    const { result } = renderHook(() => useScenarioPatchMutation(), {
+      wrapper: makeWrapper(queryClient),
+    });
+
+    await result.current.mutateAsync({
+      id: 's-10',
+      payload: {
+        weather: 'Rainy',
+        file_: '<OpenDRIVE>updated file</OpenDRIVE>',
+      },
+    });
+    expect(updateScenarioMock).toHaveBeenCalledWith({
+      id: 's-10',
+      weather: 'Rainy',
+      file_: '<OpenDRIVE>updated file</OpenDRIVE>',
+    });
+  });
+
+  it('covers patch with name, description, weather and file_ all together', async () => {
+    updateMock.mockResolvedValue({ status: 'success', message: 'updated' });
+    const queryClient = new QueryClient();
+
+    const { result } = renderHook(() => useScenarioPatchMutation(), {
+      wrapper: makeWrapper(queryClient),
+    });
+
+    await result.current.mutateAsync({
+      id: 's-11',
+      payload: {
+        name_of_scenario: 'Full Update',
+        description: 'Full description',
+        weather: 'Snowy',
+        file_: '<OpenDRIVE>full file</OpenDRIVE>',
+      },
+    });
+    expect(updateScenarioMock).toHaveBeenCalledWith({
+      id: 's-11',
+      name: 'Full Update',
+      description: 'Full description',
+      weather: 'Snowy',
+      file_: '<OpenDRIVE>full file</OpenDRIVE>',
+    });
+  });
 });

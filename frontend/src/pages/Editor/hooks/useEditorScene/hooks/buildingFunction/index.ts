@@ -1,2 +1,3 @@
 import { useBuildingLoader } from './ui/useBuildingLoader';
-export { useBuildingLoader };
+import { useBuildingMeshSync } from './ui/useBuildingMeshSync';
+export { useBuildingLoader, useBuildingMeshSync };

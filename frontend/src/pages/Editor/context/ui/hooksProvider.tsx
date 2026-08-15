@@ -19,7 +19,6 @@ export const HooksProvider: React.FC<{ children: React.ReactNode }> = ({
   const { actionsRef, loadFile } = useThreeScene({
     updateSceneGraph,
     setStep,
-    buildingModelRef,
   });
   const {
     handleAddCube,

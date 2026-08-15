@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { AppToastProvider, useAppToast } from '../ui/AppToastProvider';
 
 const TestComponent = ({
@@ -76,7 +76,7 @@ describe('AppToastProvider', () => {
     fireEvent.click(closeButton);
   });
 
-  it('should close toast when close button is clicked (covers line 53)', async () => {
+  it('should close toast when close button is clicked', async () => {
     render(
       <AppToastProvider>
         <TestComponent message="Close test" level="success" />
@@ -90,7 +90,8 @@ describe('AppToastProvider', () => {
 
     fireEvent.click(closeButton);
   });
-  it('closes snackbar via Snackbar onClose (line 53)', async () => {
+
+  it('closes snackbar via Snackbar onClose', async () => {
     render(
       <AppToastProvider>
         <TestComponent message="Snackbar close" level="info" />
@@ -106,5 +107,153 @@ describe('AppToastProvider', () => {
       code: 'Escape',
     });
     await act(async () => {});
+  });
+
+  it('covers line: executes undo action when undo button is clicked', async () => {
+    const onUndo = vi.fn();
+    const TestUndoComponent = () => {
+      const toast = useAppToast();
+      return (
+        <button onClick={() => toast.undo('Item deleted', onUndo, 'Restore')}>
+          Show undo
+        </button>
+      );
+    };
+
+    render(
+      <AppToastProvider>
+        <TestUndoComponent />
+      </AppToastProvider>,
+    );
+
+    fireEvent.click(screen.getByText('Show undo'));
+    expect(screen.getByText('Item deleted')).toBeDefined();
+
+    const undoButton = screen.getByText('Restore');
+    fireEvent.click(undoButton);
+
+    expect(onUndo).toHaveBeenCalledTimes(1);
+  });
+
+  it('covers line: handles action with custom label', async () => {
+    const onUndo = vi.fn();
+    const TestUndoComponent = () => {
+      const toast = useAppToast();
+      return (
+        <button
+          onClick={() => toast.undo('File removed', onUndo, 'Restore File')}
+        >
+          Show undo with custom label
+        </button>
+      );
+    };
+
+    render(
+      <AppToastProvider>
+        <TestUndoComponent />
+      </AppToastProvider>,
+    );
+
+    fireEvent.click(screen.getByText('Show undo with custom label'));
+    expect(screen.getByText('File removed')).toBeDefined();
+    expect(screen.getByText('Restore File')).toBeDefined();
+  });
+
+  it('covers line: autoHideDuration is null when action exists', async () => {
+    const onUndo = vi.fn();
+    const TestUndoComponent = () => {
+      const toast = useAppToast();
+      return (
+        <button onClick={() => toast.undo('Item deleted', onUndo, 'Restore')}>
+          Show undo with action
+        </button>
+      );
+    };
+
+    render(
+      <AppToastProvider>
+        <TestUndoComponent />
+      </AppToastProvider>,
+    );
+
+    fireEvent.click(screen.getByText('Show undo with action'));
+    expect(screen.getByText('Item deleted')).toBeDefined();
+    expect(screen.getByText('Restore')).toBeDefined();
+  });
+
+  it('covers line: default undo label is "Undo" when not specified', async () => {
+    const onUndo = vi.fn();
+    const TestDefaultUndoComponent = () => {
+      const toast = useAppToast();
+      return (
+        <button onClick={() => toast.undo('Item deleted', onUndo)}>
+          Show default undo
+        </button>
+      );
+    };
+
+    render(
+      <AppToastProvider>
+        <TestDefaultUndoComponent />
+      </AppToastProvider>,
+    );
+
+    fireEvent.click(screen.getByText('Show default undo'));
+    expect(screen.getByText('Item deleted')).toBeDefined();
+    expect(screen.getByText('Undo')).toBeDefined();
+  });
+
+  it('covers line 72: prevents closing on clickaway when action exists', async () => {
+    const onUndo = vi.fn();
+    const TestUndoComponent = () => {
+      const toast = useAppToast();
+      return (
+        <button onClick={() => toast.undo('Item deleted', onUndo, 'Restore')}>
+          Show undo
+        </button>
+      );
+    };
+
+    render(
+      <AppToastProvider>
+        <TestUndoComponent />
+      </AppToastProvider>,
+    );
+
+    fireEvent.click(screen.getByText('Show undo'));
+    expect(screen.getByText('Item deleted')).toBeDefined();
+    fireEvent.click(document.body);
+
+    expect(screen.getByText('Item deleted')).toBeDefined();
+  });
+
+  it('covers line 72: closes toast when undo button is clicked', async () => {
+    const onUndo = vi.fn();
+    const TestUndoComponent = () => {
+      const toast = useAppToast();
+      return (
+        <button onClick={() => toast.undo('Item deleted', onUndo, 'Restore')}>
+          Show undo
+        </button>
+      );
+    };
+
+    render(
+      <AppToastProvider>
+        <TestUndoComponent />
+      </AppToastProvider>,
+    );
+
+    fireEvent.click(screen.getByText('Show undo'));
+    expect(screen.getByText('Item deleted')).toBeDefined();
+
+    const undoButton = screen.getByText('Restore');
+    fireEvent.click(undoButton);
+
+    expect(onUndo).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
   });
 });

@@ -4,12 +4,24 @@ import {
   setStoredXodrName,
   getStoredXodrName,
   fetchXodrText,
-  setCachedCustomXodrContent,
-  initXodrCacheFromIndexedDb,
+  resolveXodrTextForSimulation,
   DEFAULT_XODR,
+  normalizeMapName,
+  CARLA_MAPS,
 } from './xodrRepository';
 import { MAP_PATH } from '../types/useOdrLoaderTypes';
+describe('Module initialization - line 32 coverage', () => {
+  it('covers line 32: MAP_ALIASES is generated on module import', () => {
+    expect(CARLA_MAPS).toContain('Town10HD_Opt');
+    expect(CARLA_MAPS).toContain('Town10HD');
 
+    const optMaps = CARLA_MAPS.filter((map) => map.includes('_Opt'));
+    expect(optMaps).toEqual(['Town10HD_Opt']);
+
+    expect(normalizeMapName('Town10')).toBe('Town10');
+    expect(normalizeMapName('Town10HD_Opt')).toBe('Town10HD');
+  });
+});
 const localStorageMock = (() => {
   let store: Record<string, string> = {};
   return {
@@ -30,6 +42,9 @@ Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock });
 function createIndexedDbMock() {
   let stored: string | undefined;
   let shouldFailOpen = false;
+  let shouldFailGet = false;
+  let shouldFailPut = false;
+  let triggerUpgrade = false;
 
   const fakeIndexedDb = {
     open: vi.fn(() => {
@@ -44,14 +59,20 @@ function createIndexedDbMock() {
           request.onerror?.();
           return;
         }
+        const containsStore = vi.fn(() => true);
         const fakeStore = {
           get: vi.fn(() => {
             const getRequest: Partial<IDBRequest> & {
               onsuccess?: (() => void) | null;
               onerror?: (() => void) | null;
               result?: unknown;
+              error?: Error;
             } = {};
             queueMicrotask(() => {
+              if (shouldFailGet) {
+                getRequest.onerror?.();
+                return;
+              }
               getRequest.result = stored;
               getRequest.onsuccess?.();
             });
@@ -66,6 +87,7 @@ function createIndexedDbMock() {
         const fakeTx: Partial<IDBTransaction> & {
           oncomplete?: (() => void) | null;
           onerror?: (() => void) | null;
+          error?: Error;
         } = {
           objectStore: vi.fn(
             () => fakeStore,
@@ -73,14 +95,27 @@ function createIndexedDbMock() {
         };
         const fakeDb: Partial<IDBDatabase> = {
           objectStoreNames: {
-            contains: vi.fn(() => true),
+            contains: containsStore,
           } as unknown as DOMStringList,
+          createObjectStore:
+            vi.fn() as unknown as IDBDatabase['createObjectStore'],
           transaction: vi.fn(() => {
-            queueMicrotask(() => fakeTx.oncomplete?.());
+            queueMicrotask(() => {
+              if (shouldFailPut) {
+                fakeTx.onerror?.();
+                return;
+              }
+              fakeTx.oncomplete?.();
+            });
             return fakeTx as IDBTransaction;
           }) as unknown as IDBDatabase['transaction'],
         };
         (request as { result: IDBDatabase }).result = fakeDb as IDBDatabase;
+        if (triggerUpgrade) {
+          containsStore.mockReturnValue(false);
+          request.onupgradeneeded?.();
+          containsStore.mockReturnValue(true);
+        }
         request.onsuccess?.();
       });
       return request as IDBOpenDBRequest;
@@ -94,6 +129,15 @@ function createIndexedDbMock() {
     },
     setShouldFailOpen: (value: boolean) => {
       shouldFailOpen = value;
+    },
+    setShouldFailGet: (value: boolean) => {
+      shouldFailGet = value;
+    },
+    setShouldFailPut: (value: boolean) => {
+      shouldFailPut = value;
+    },
+    triggerUpgradeOnNextOpen: () => {
+      triggerUpgrade = true;
     },
   };
 }
@@ -256,7 +300,17 @@ describe('fetchXodrText', () => {
 });
 
 describe('IndexedDB-backed cache for large maps', () => {
-  it('setCachedCustomXodrContent still works when localStorage throws QuotaExceededError', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  async function freshModule() {
+    return await import('./xodrRepository');
+  }
+
+  it('setCachedCustomXodrContent still works when localStorage throws QuotaExceededError', async () => {
+    const { setCachedCustomXodrContent, getCachedXodrContent } =
+      await freshModule();
     const { fakeIndexedDb } = createIndexedDbMock();
     vi.stubGlobal('indexedDB', fakeIndexedDb);
     localStorageMock.setItem.mockImplementationOnce(() => {
@@ -270,8 +324,93 @@ describe('IndexedDB-backed cache for large maps', () => {
   });
 
   it('initXodrCacheFromIndexedDb restores content persisted by a previous session', async () => {
+    const { initXodrCacheFromIndexedDb, getCachedXodrContent } =
+      await freshModule();
     const { fakeIndexedDb, setStoredValue } = createIndexedDbMock();
     setStoredValue(VALID_OPENDRIVE);
+    vi.stubGlobal('indexedDB', fakeIndexedDb);
+
+    expect(getCachedXodrContent()).toBeNull();
+
+    await initXodrCacheFromIndexedDb();
+    expect(getCachedXodrContent()).toBe(VALID_OPENDRIVE);
+
+    vi.unstubAllGlobals();
+  });
+
+  it('initXodrCacheFromIndexedDb does not restore content that fails the OpenDRIVE check', async () => {
+    const { initXodrCacheFromIndexedDb, getCachedXodrContent } =
+      await freshModule();
+    const { fakeIndexedDb, setStoredValue } = createIndexedDbMock();
+    setStoredValue('not valid opendrive content');
+    vi.stubGlobal('indexedDB', fakeIndexedDb);
+
+    await initXodrCacheFromIndexedDb();
+    expect(getCachedXodrContent()).toBeNull();
+
+    vi.unstubAllGlobals();
+  });
+
+  it('initXodrCacheFromIndexedDb is a no-op when nothing was persisted', async () => {
+    const { initXodrCacheFromIndexedDb, getCachedXodrContent } =
+      await freshModule();
+    const { fakeIndexedDb } = createIndexedDbMock();
+    vi.stubGlobal('indexedDB', fakeIndexedDb);
+
+    await initXodrCacheFromIndexedDb();
+    expect(getCachedXodrContent()).toBeNull();
+
+    vi.unstubAllGlobals();
+  });
+
+  it('initXodrCacheFromIndexedDb resolves without throwing when IndexedDB is unavailable', async () => {
+    const { initXodrCacheFromIndexedDb, getCachedXodrContent } =
+      await freshModule();
+    vi.stubGlobal('indexedDB', {
+      open: () => {
+        throw new Error('IndexedDB not supported in this environment');
+      },
+    });
+
+    await expect(initXodrCacheFromIndexedDb()).resolves.toBeUndefined();
+    expect(getCachedXodrContent()).toBeNull();
+
+    vi.unstubAllGlobals();
+  });
+
+  it('initXodrCacheFromIndexedDb resolves without throwing when the DB open request errors out', async () => {
+    const { initXodrCacheFromIndexedDb, getCachedXodrContent } =
+      await freshModule();
+    const { fakeIndexedDb, setShouldFailOpen } = createIndexedDbMock();
+    setShouldFailOpen(true);
+    vi.stubGlobal('indexedDB', fakeIndexedDb);
+
+    await expect(initXodrCacheFromIndexedDb()).resolves.toBeUndefined();
+    expect(getCachedXodrContent()).toBeNull();
+
+    vi.unstubAllGlobals();
+  });
+
+  it('initXodrCacheFromIndexedDb resolves without throwing when the read transaction errors out', async () => {
+    const { initXodrCacheFromIndexedDb, getCachedXodrContent } =
+      await freshModule();
+    const { fakeIndexedDb, setShouldFailGet } = createIndexedDbMock();
+    setShouldFailGet(true);
+    vi.stubGlobal('indexedDB', fakeIndexedDb);
+
+    await expect(initXodrCacheFromIndexedDb()).resolves.toBeUndefined();
+    expect(getCachedXodrContent()).toBeNull();
+
+    vi.unstubAllGlobals();
+  });
+
+  it('creates the object store on a first-time (upgrade-needed) database open', async () => {
+    const { initXodrCacheFromIndexedDb, getCachedXodrContent } =
+      await freshModule();
+    const { fakeIndexedDb, setStoredValue, triggerUpgradeOnNextOpen } =
+      createIndexedDbMock();
+    setStoredValue(VALID_OPENDRIVE);
+    triggerUpgradeOnNextOpen();
     vi.stubGlobal('indexedDB', fakeIndexedDb);
 
     await initXodrCacheFromIndexedDb();
@@ -280,15 +419,109 @@ describe('IndexedDB-backed cache for large maps', () => {
     vi.unstubAllGlobals();
   });
 
-  it('initXodrCacheFromIndexedDb resolves without throwing when IndexedDB is unavailable', async () => {
-    vi.stubGlobal('indexedDB', {
-      open: () => {
-        throw new Error('IndexedDB not supported in this environment');
-      },
-    });
+  it('setCachedCustomXodrContent still resolves its background IndexedDB write when the write transaction errors out', async () => {
+    const { setCachedCustomXodrContent, getCachedXodrContent } =
+      await freshModule();
+    const { fakeIndexedDb, setShouldFailPut } = createIndexedDbMock();
+    setShouldFailPut(true);
+    vi.stubGlobal('indexedDB', fakeIndexedDb);
 
-    await expect(initXodrCacheFromIndexedDb()).resolves.toBeUndefined();
+    expect(() => setCachedCustomXodrContent(VALID_OPENDRIVE)).not.toThrow();
+    expect(getCachedXodrContent()).toBe(VALID_OPENDRIVE);
 
     vi.unstubAllGlobals();
+  });
+});
+
+describe('resolveXodrTextForSimulation', () => {
+  it('returns the already-cached content without calling fetch', async () => {
+    localStorageMock.setItem('cached_xodr', VALID_OPENDRIVE);
+
+    const result = await resolveXodrTextForSimulation();
+
+    expect(result).toBe(VALID_OPENDRIVE);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('falls back to fetching when nothing is cached, using the stored map name', async () => {
+    localStorageMock.setItem('cached_xodr_name', 'Town04');
+    fetchMock.mockResolvedValue(okResponse(VALID_OPENDRIVE) as never);
+
+    const result = await resolveXodrTextForSimulation();
+
+    expect(result).toBe(VALID_OPENDRIVE);
+    expect(fetchMock).toHaveBeenCalledWith('./Town04.xodr');
+  });
+
+  it('uses the given fallbackMapName when nothing is cached or stored', async () => {
+    fetchMock.mockResolvedValue(okResponse(VALID_OPENDRIVE) as never);
+
+    const result = await resolveXodrTextForSimulation('Town07');
+
+    expect(result).toBe(VALID_OPENDRIVE);
+    expect(fetchMock).toHaveBeenCalledWith('./Town07.xodr');
+  });
+
+  it('returns undefined and logs the error when fetchXodrText ultimately fails', async () => {
+    fetchMock.mockResolvedValue(notFound() as never);
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const result = await resolveXodrTextForSimulation('NoSuchMap');
+
+    expect(result).toBeUndefined();
+    expect(errorSpy).toHaveBeenCalled();
+
+    errorSpy.mockRestore();
+  });
+});
+
+describe('CARLA_MAPS and normalizeMapName', () => {
+  it('contains Town10HD_Opt in CARLA_MAPS', () => {
+    expect(CARLA_MAPS).toContain('Town10HD_Opt');
+  });
+
+  it('normalizeMapName returns Town10HD for Town10HD_Opt', () => {
+    const result = normalizeMapName('Town10HD_Opt');
+    expect(result).toBe('Town10HD');
+  });
+
+  it('normalizeMapName handles lowercase variants', () => {
+    expect(normalizeMapName('town10hd_opt')).toBe('Town10HD');
+    expect(normalizeMapName('town10hd')).toBe('Town10HD');
+  });
+
+  it('normalizeMapName returns original name for unknown maps', () => {
+    expect(normalizeMapName('UnknownMap')).toBe('UnknownMap');
+  });
+});
+
+describe('generateMapAliases - line 32 coverage', () => {
+  it('covers line 32: creates alias for Town10HD_Opt', async () => {
+    expect(CARLA_MAPS).toContain('Town10HD_Opt');
+
+    const optMaps = CARLA_MAPS.filter((map) => map.includes('_Opt'));
+    expect(optMaps).toEqual(['Town10HD_Opt']);
+
+    const VALID_OPENDRIVE = '<?xml version="1.0"?>\n<OpenDRIVE>\n</OpenDRIVE>';
+    const fetchMock = vi.fn();
+    globalThis.fetch = fetchMock;
+
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: false,
+        text: () => Promise.resolve(''),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        text: () => Promise.resolve(VALID_OPENDRIVE),
+      } as Response);
+
+    const result = await fetchXodrText('Town10HD');
+
+    expect(result).toBe(VALID_OPENDRIVE);
+    expect(fetchMock).toHaveBeenNthCalledWith(1, './Town10HD.xodr');
+    expect(fetchMock).toHaveBeenNthCalledWith(2, './Town10HD_Opt.xodr');
+
+    vi.restoreAllMocks();
   });
 });

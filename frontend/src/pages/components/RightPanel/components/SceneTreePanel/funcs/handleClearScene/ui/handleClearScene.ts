@@ -44,14 +44,7 @@ export function handleClearScene({
   pointsObjsRef.current.length = 0;
   rsuMeshesRef.current.length = 0;
 
-  [...s.buildings].forEach((b) => {
-    const mesh = sceneRef.current?.children.find((c) => c.userData.id === b.id);
-    if (mesh) {
-      disposeMesh(mesh);
-      sceneRef.current?.remove(mesh);
-    }
-    s.removeBuilding(b.id);
-  });
+  [...s.buildings].forEach((b) => s.removeBuilding(b.id));
 
   [...s.cars].forEach((c) => s.removeCar(c.id));
   [...s.RSUs].forEach(() => s.removeRSU(0));

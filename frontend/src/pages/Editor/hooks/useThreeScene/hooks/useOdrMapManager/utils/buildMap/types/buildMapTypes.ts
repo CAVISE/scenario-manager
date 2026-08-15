@@ -20,9 +20,7 @@ export interface BuildMapParams {
   buildingMeshesRef: MutableRefObject<THREE.Object3D[]>;
   resolution: number;
   params: { ref_line: boolean; roadmarks: boolean; view_mode: string };
-  loadRSU: () => void;
   loadPoints: () => void;
   syncRoadMesh: (mesh: THREE.Mesh | null) => void;
   updateSceneGraph: () => void;
-  buildingModelRef: React.RefObject<THREE.Object3D | null>;
 }

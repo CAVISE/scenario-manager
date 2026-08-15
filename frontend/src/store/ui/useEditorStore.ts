@@ -16,16 +16,19 @@ import type {
   Pedestrian,
   DeletedEntity,
   DeletionSnapshot,
+  HistoryEntry,
 } from '../types/useEditorStoreTypes';
 
 export type { EditorState, Car, RSU, Lidar, Building, Point, Scenario };
-export type { DeletedEntity, DeletionSnapshot };
+export type { DeletedEntity, DeletionSnapshot, HistoryEntry };
 export type {
   V2XProtocol,
   BuildingMaterial,
   CarlaWeather,
 } from '../types/useEditorStoreTypes';
 export type { SimulationConfig } from '../../pages/Editor/Generators/types/configGeneratorsTypes';
+
+const MAX_HISTORY_SIZE = 100;
 export type EditorPersist = Pick<
   EditorState,
   | 'cars'
@@ -106,6 +109,9 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
   simConfig: defaultSimConfig,
   isPanelOpen: true,
   deletionHistory: [],
+  historyStack: [],
+  historyCursor: 0,
+  isApplyingHistory: false,
   Scenario: {
     id: Date.now().toString(),
     name: 'Default Scenario',
@@ -457,6 +463,23 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
         }
       }
 
+      const historyIndex = state.historyStack.findIndex(
+        (h) => h.sourceSnapshotId === snapshot.snapshotId,
+      );
+      const historyStack =
+        historyIndex === -1
+          ? state.historyStack
+          : [
+              ...state.historyStack.slice(0, historyIndex),
+              ...state.historyStack.slice(historyIndex + 1),
+            ];
+      const historyCursor =
+        historyIndex === -1
+          ? state.historyCursor
+          : historyIndex < state.historyCursor
+            ? state.historyCursor - 1
+            : state.historyCursor;
+
       return {
         cars,
         RSUs,
@@ -467,6 +490,8 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
         deletionHistory: state.deletionHistory.filter(
           (h) => h.snapshotId !== snapshot.snapshotId,
         ),
+        historyStack,
+        historyCursor,
       };
     });
 
@@ -474,6 +499,63 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
   },
 
   clearDeletionHistory: () => set({ deletionHistory: [] }),
+
+  pushHistoryEntry: (entry) => {
+    set((s) => {
+      const base = s.historyStack.slice(0, s.historyCursor);
+      const next = [...base, { ...entry, id: nanoid(), timestamp: Date.now() }];
+      const overflow = next.length - MAX_HISTORY_SIZE;
+      const trimmed = overflow > 0 ? next.slice(overflow) : next;
+      return {
+        historyStack: trimmed,
+        historyCursor: trimmed.length,
+      };
+    });
+  },
+
+  undo: () => {
+    const before = get();
+    if (before.historyCursor === 0) return false;
+    const entryIndex = before.historyCursor - 1;
+    const entry = before.historyStack[entryIndex];
+
+    set({ isApplyingHistory: true });
+    try {
+      entry.undo();
+    } finally {
+      set({ isApplyingHistory: false });
+    }
+
+    const after = get();
+    if (after.historyStack[entryIndex]?.id === entry.id) {
+      set({ historyCursor: entryIndex });
+    }
+    return true;
+  },
+
+  redo: () => {
+    const before = get();
+    if (before.historyCursor >= before.historyStack.length) return false;
+    const entryIndex = before.historyCursor;
+    const entry = before.historyStack[entryIndex];
+
+    set({ isApplyingHistory: true });
+    try {
+      entry.redo();
+    } finally {
+      set({ isApplyingHistory: false });
+    }
+
+    const after = get();
+    if (after.historyStack[entryIndex]?.id === entry.id) {
+      set({ historyCursor: entryIndex + 1 });
+    }
+    return true;
+  },
+
+  canUndo: () => get().historyCursor > 0,
+  canRedo: () => get().historyCursor < get().historyStack.length,
+  clearHistory: () => set({ historyStack: [], historyCursor: 0 }),
 });
 
 export const useEditorStore = create<EditorState>()(

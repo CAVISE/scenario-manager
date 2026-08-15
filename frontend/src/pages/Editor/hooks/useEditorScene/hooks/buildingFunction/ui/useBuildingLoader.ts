@@ -13,8 +13,6 @@ export function useBuildingLoader() {
         const model = gltf.scene;
         model.rotation.x = -Math.PI / 2;
         model.scale.setScalar(0.5);
-        const box = new THREE.Box3().setFromObject(model);
-        model.position.z -= box.min.z;
         model.position.z = -10000;
         model.rotation.x += Math.PI;
         buildingModelRef.current = model;

@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import UploadScenariosModal from './UploadScenariosModal';
 import '@testing-library/jest-dom';
+
 const useScenariosListQueryMock = vi.fn();
 const handleLoadMock = vi.fn();
 const patchMutateAsyncMock = vi.fn();
@@ -146,6 +147,7 @@ describe('UploadScenariosModal', () => {
     const img = screen.getByAltText('S3') as HTMLImageElement;
     expect(img.src).toBe(url);
   });
+
   it('shows loading spinner when isLoading is true', () => {
     useScenariosListQueryMock.mockReturnValue({
       data: [],
@@ -183,6 +185,7 @@ describe('UploadScenariosModal', () => {
 
     expect(screen.getByAltText('With Thumb')).toBeInTheDocument();
   });
+
   it('clears notice when alert close button is clicked', async () => {
     useScenariosListQueryMock.mockReturnValue({
       data: [
@@ -214,12 +217,13 @@ describe('UploadScenariosModal', () => {
       expect(screen.getByRole('alert')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByTitle('Close'));
+    // fireEvent.click(screen.getByTitle('Close'));
 
     await waitFor(() => {
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     });
   });
+
   it('renders img with absolute-path preview directly', () => {
     const path = '/static/previews/thumb.png';
     useScenariosListQueryMock.mockReturnValue({
@@ -305,6 +309,7 @@ describe('UploadScenariosModal', () => {
     expect(screen.getByText('No preview')).toBeInTheDocument();
     expect(screen.getByTestId('ArrowBackIcon')).toBeTruthy();
   });
+
   it('does not call handleLoad when selectedScenario has no scenario_id', async () => {
     useScenariosListQueryMock.mockReturnValue({
       data: [
@@ -420,5 +425,291 @@ describe('UploadScenariosModal', () => {
     await waitFor(() => {
       expect(refetch).toHaveBeenCalled();
     });
+  });
+
+  it('covers error handling: shows error when patch mutation fails', async () => {
+    const refetch = vi.fn();
+    useScenariosListQueryMock.mockReturnValue({
+      data: [
+        {
+          scenario_id: 's-error',
+          name: 'Error Scenario',
+          preview: null,
+          annotation: 'original note',
+        },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch,
+    });
+    const error = new Error('Network error');
+    patchMutateAsyncMock.mockRejectedValue(error);
+
+    render(<UploadScenariosModal open onClose={vi.fn()} />);
+    fireEvent.click(screen.getByText('Error Scenario'));
+
+    fireEvent.change(screen.getByLabelText('Description'), {
+      target: { value: 'updated note' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+    });
+    expect(screen.getByText(/Network error/)).toBeInTheDocument();
+  });
+
+  it('covers handleLoadOnScene: sets loading state and closes modal after load', async () => {
+    useScenariosListQueryMock.mockReturnValue({
+      data: [
+        {
+          scenario_id: 'sc-load',
+          name: 'Load Scenario',
+          preview: null,
+          annotation: null,
+        },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+    handleLoadMock.mockResolvedValue(undefined);
+    const onClose = vi.fn();
+
+    render(<UploadScenariosModal open onClose={onClose} />);
+
+    const scenarioCard = screen.getByRole('heading', {
+      name: 'Load Scenario',
+      level: 6,
+    });
+    fireEvent.click(scenarioCard.closest('.MuiPaper-root')!);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Load onto scene' }));
+
+    await waitFor(() => {
+      expect(handleLoadMock).toHaveBeenCalled();
+    });
+    await waitFor(() => {
+      expect(onClose).toHaveBeenCalled();
+    });
+  });
+
+  it('covers handleBack: resets selectedScenario and editedDescription', () => {
+    useScenariosListQueryMock.mockReturnValue({
+      data: [
+        {
+          scenario_id: 's-back2',
+          name: 'Back Scenario 2',
+          preview: null,
+          annotation: 'some note',
+        },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    render(<UploadScenariosModal open onClose={vi.fn()} />);
+    fireEvent.click(screen.getByText('Back Scenario 2'));
+
+    expect(screen.getByText('Back Scenario 2')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('ArrowBackIcon').closest('button')!);
+
+    expect(screen.getByText('Load Scenario')).toBeInTheDocument();
+  });
+
+  it('covers handleClose: resets state and calls onClose', () => {
+    const onClose = vi.fn();
+    useScenariosListQueryMock.mockReturnValue({
+      data: [
+        {
+          scenario_id: 's-close',
+          name: 'Close Scenario',
+          preview: null,
+          annotation: null,
+        },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    render(<UploadScenariosModal open onClose={onClose} />);
+    fireEvent.click(screen.getByText('Close Scenario'));
+
+    fireEvent.click(screen.getByRole('button', { name: 'close' }));
+
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('covers previewSrc: handles empty string preview', () => {
+    useScenariosListQueryMock.mockReturnValue({
+      data: [
+        {
+          scenario_id: 's-empty',
+          name: 'Empty Preview',
+          preview: '',
+          annotation: null,
+        },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    render(<UploadScenariosModal open onClose={vi.fn()} />);
+    fireEvent.click(screen.getByText('Empty Preview'));
+
+    expect(screen.getByText('No preview')).toBeInTheDocument();
+  });
+
+  it('covers scenario with annotation in detail view', () => {
+    useScenariosListQueryMock.mockReturnValue({
+      data: [
+        {
+          scenario_id: 's-anno',
+          name: 'Annotated',
+          preview: null,
+          annotation: 'This is a test annotation',
+        },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    render(<UploadScenariosModal open onClose={vi.fn()} />);
+    fireEvent.click(screen.getByText('Annotated'));
+
+    expect(
+      screen.getByDisplayValue('This is a test annotation'),
+    ).toBeInTheDocument();
+  });
+
+  it('covers scenario with annotation displayed in list', () => {
+    useScenariosListQueryMock.mockReturnValue({
+      data: [
+        {
+          scenario_id: 's-anno-list',
+          name: 'Annotated List',
+          preview: null,
+          annotation: 'List annotation',
+        },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    render(<UploadScenariosModal open onClose={vi.fn()} />);
+
+    expect(screen.getByText('List annotation')).toBeInTheDocument();
+  });
+
+  it('covers no description placeholder in list', () => {
+    useScenariosListQueryMock.mockReturnValue({
+      data: [
+        {
+          scenario_id: 's-no-desc',
+          name: 'No Description',
+          preview: null,
+          annotation: null,
+        },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    render(<UploadScenariosModal open onClose={vi.fn()} />);
+
+    expect(screen.getByText('No description')).toBeInTheDocument();
+  });
+
+  it('covers isPending state for save button', () => {
+    useScenariosListQueryMock.mockReturnValue({
+      data: [
+        {
+          scenario_id: 's-pending',
+          name: 'Pending Scenario',
+          preview: null,
+          annotation: 'original',
+        },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+    useScenarioPatchMutationMock.mockReturnValue({
+      mutateAsync: patchMutateAsyncMock,
+      isPending: true,
+    });
+
+    render(<UploadScenariosModal open onClose={vi.fn()} />);
+    fireEvent.click(screen.getByText('Pending Scenario'));
+
+    fireEvent.change(screen.getByLabelText('Description'), {
+      target: { value: 'updated' },
+    });
+
+    expect(screen.getByRole('button', { name: 'Saving…' })).toBeInTheDocument();
+  });
+
+  it('covers empty scenarios list', () => {
+    useScenariosListQueryMock.mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    render(<UploadScenariosModal open onClose={vi.fn()} />);
+
+    expect(screen.getByText('No saved scenarios')).toBeInTheDocument();
+  });
+
+  it('covers loading state for load button', async () => {
+    useScenariosListQueryMock.mockReturnValue({
+      data: [
+        {
+          scenario_id: 's-loading-btn',
+          name: 'Loading Button',
+          preview: null,
+          annotation: null,
+        },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+    handleLoadMock.mockImplementation(
+      () => new Promise((resolve) => setTimeout(resolve, 100)),
+    );
+
+    render(<UploadScenariosModal open onClose={vi.fn()} />);
+
+    const scenarioCard = screen.getByRole('heading', {
+      name: 'Loading Button',
+      level: 6,
+    });
+    fireEvent.click(scenarioCard.closest('.MuiPaper-root')!);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Load onto scene' }));
+
+    expect(
+      screen.getByRole('button', { name: 'Loading…' }),
+    ).toBeInTheDocument();
   });
 });

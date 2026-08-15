@@ -2,9 +2,8 @@ import { useEditorStore } from '../../../../../../store';
 import { RestoreObjectsOptions } from '../types/restoreObjectsTypes';
 
 export function restoreObjects(opts: RestoreObjectsOptions): void {
-  const { scene, loadRSU, buildingModelRef, updateSceneGraph } = opts;
+  const { scene, buildingModelRef, updateSceneGraph } = opts;
   const s = useEditorStore.getState();
-  if (s.RSUs.length) loadRSU();
 
   function tryRestoreBuildings(attempt = 0) {
     if (!buildingModelRef.current) {

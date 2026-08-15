@@ -235,6 +235,16 @@ export type DeletionSnapshot = {
   entities: DeletedEntity[];
 };
 
+export type HistoryEntry = {
+  id: string;
+  label: string;
+  timestamp: number;
+  undo: () => void;
+  redo: () => void;
+
+  sourceSnapshotId?: string;
+};
+
 export type EditorState = {
   cars: Car[];
   RSUs: RSU[];
@@ -313,4 +323,15 @@ export type EditorState = {
   ) => string;
   restoreLastDeletion: (snapshotId?: string) => boolean;
   clearDeletionHistory: () => void;
+
+  historyStack: HistoryEntry[];
+  historyCursor: number;
+
+  isApplyingHistory: boolean;
+  pushHistoryEntry: (entry: Omit<HistoryEntry, 'id' | 'timestamp'>) => void;
+  undo: () => boolean;
+  redo: () => boolean;
+  canUndo: () => boolean;
+  canRedo: () => boolean;
+  clearHistory: () => void;
 };

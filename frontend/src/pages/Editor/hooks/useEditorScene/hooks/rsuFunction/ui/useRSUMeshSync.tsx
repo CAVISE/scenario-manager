@@ -24,14 +24,13 @@ export function useRSUMeshSync(): void {
         if (attempts < 10) setTimeout(() => trySync(attempts + 1), 300);
         return;
       }
-      const rsuSnapshot = RSUs.map((r) => ({ ...r }));
-
       ensureRsuModel().then((hasModel) => {
         if (cancelled) return;
         const tc = transformControlsRef.current;
         const attached = (tc as unknown as { object?: THREE.Object3D })?.object;
 
-        const rsuIds = new Set(rsuSnapshot.map((r) => r.id));
+        const currentRSUs = useEditorStore.getState().RSUs;
+        const rsuIds = new Set(currentRSUs.map((r) => r.id));
 
         pointsArrRef.current = pointsArrRef.current.filter((p) => {
           if (rsuIds.has(p.userData.id)) return true;
@@ -52,7 +51,7 @@ export function useRSUMeshSync(): void {
         pointsObjsRef.current = [...pointsArrRef.current];
         rsuMeshesRef.current = [...pointsArrRef.current];
 
-        RSUs.forEach((rsu) => {
+        currentRSUs.forEach((rsu) => {
           const existing = pointsArrRef.current.find(
             (p) => p.userData.id === rsu.id,
           );

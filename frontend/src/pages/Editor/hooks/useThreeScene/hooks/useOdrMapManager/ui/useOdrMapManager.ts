@@ -22,11 +22,9 @@ import { MAP_PATH } from '../../useOdrLoader/types/useOdrLoaderTypes';
 export function useOdrMapManager({
   setStep,
   setError,
-  loadRSU,
   loadPoints,
   syncRoadMesh,
   updateSceneGraph,
-  buildingModelRef,
   buildingMeshesRef,
   localLineArrRef,
 }: UseOdrMapManagerProps): UseOdrMapManagerResult {
@@ -87,11 +85,9 @@ export function useOdrMapManager({
             roadmarks: ODR_PARAMS.roadmarks,
             view_mode: ODR_PARAMS.view_mode,
           },
-          loadRSU,
           loadPoints,
           syncRoadMesh,
           updateSceneGraph,
-          buildingModelRef,
           buildingMeshesRef,
         });
       } catch (err) {
@@ -122,11 +118,9 @@ export function useOdrMapManager({
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
-      loadRSU,
       loadPoints,
       syncRoadMesh,
       updateSceneGraph,
-      buildingModelRef,
       buildingMeshesRef,
       carMeshesRef,
       pointsObjsRef,

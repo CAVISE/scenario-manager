@@ -13,6 +13,8 @@ import {
   clearLoadedSumoNetwork,
   resolveSumoNetwork,
   setLoadedSumoNetwork,
+  getSumoCoordinateOffsets,
+  isSumoNetXml,
 } from './sumoNetwork';
 
 const NET_XML = `<?xml version="1.0" encoding="UTF-8"?>
@@ -30,6 +32,7 @@ const NET_XML = `<?xml version="1.0" encoding="UTF-8"?>
   <connection from="edge-a" to="edge-b" fromLane="0" toLane="0"/>
   <connection from="edge-b" to="edge-c" fromLane="0" toLane="0"/>
 </net>`;
+
 const TOWN01_NET_XML = readFileSync(
   resolve(process.cwd(), 'public/Town01.net.xml'),
   'utf8',
@@ -327,5 +330,420 @@ describe('SUMO frontend routing', () => {
       content: NET_XML,
     });
     expect(fetchMock).toHaveBeenCalledWith('./Town01.net.xml');
+  });
+
+  it('validates departPos is non-negative', () => {
+    expect(() =>
+      buildSumoRoutes(
+        NET_XML,
+        [
+          {
+            ...car,
+            sumo_edges: 'edge-a edge-b',
+            sumo_depart_pos: -1,
+          },
+        ],
+        [],
+      ),
+    ).toThrow('departPos must be a non-negative number');
+  });
+
+  it('validates departPos is within edge length', () => {
+    expect(() =>
+      buildSumoRoutes(
+        NET_XML,
+        [
+          {
+            ...car,
+            sumo_edges: 'edge-a edge-b',
+            sumo_depart_pos: 100,
+          },
+        ],
+        [],
+      ),
+    ).toThrow('departPos 100 is outside edge edge-a (length 10.00)');
+  });
+
+  it('validates static stop lane exists', () => {
+    expect(() =>
+      buildSumoRoutes(
+        NET_XML,
+        [
+          {
+            ...car,
+            sumo_edges: 'edge-a edge-b',
+            sumo_stop: {
+              lane: 'non-existent',
+              startPos: 1,
+              endPos: 2,
+              duration: 10,
+            },
+          },
+        ],
+        [],
+      ),
+    ).toThrow('stop lane "non-existent" is not a passenger driving lane');
+  });
+
+  it('validates static stop is on the route', () => {
+    expect(() =>
+      buildSumoRoutes(
+        NET_XML,
+        [
+          {
+            ...car,
+            sumo_edges: 'edge-a edge-b',
+            sumo_stop: {
+              lane: 'edge-c_0',
+              startPos: 1,
+              endPos: 2,
+              duration: 10,
+            },
+          },
+        ],
+        [],
+      ),
+    ).toThrow('stop lane "edge-c_0" is not part of its route');
+  });
+
+  it('validates static stop positions are valid', () => {
+    expect(() =>
+      buildSumoRoutes(
+        NET_XML,
+        [
+          {
+            ...car,
+            sumo_edges: 'edge-a edge-b',
+            sumo_stop: {
+              lane: 'edge-a_0',
+              startPos: -1,
+              endPos: 2,
+              duration: 10,
+            },
+          },
+        ],
+        [],
+      ),
+    ).toThrow('stop positions must satisfy 0 <= startPos < endPos <= 10.00');
+  });
+
+  it('validates static stop duration is non-negative', () => {
+    expect(() =>
+      buildSumoRoutes(
+        NET_XML,
+        [
+          {
+            ...car,
+            sumo_edges: 'edge-a edge-b',
+            sumo_stop: {
+              lane: 'edge-a_0',
+              startPos: 1,
+              endPos: 2,
+              duration: -5,
+            },
+          },
+        ],
+        [],
+      ),
+    ).toThrow('stop duration must be a non-negative number');
+  });
+
+  it('validates stop is not behind depart position on same edge', () => {
+    expect(() =>
+      buildSumoRoutes(
+        NET_XML,
+        [
+          {
+            ...car,
+            sumo_edges: 'edge-a edge-b',
+            sumo_depart_pos: 5,
+            sumo_stop: {
+              lane: 'edge-a_0',
+              startPos: 1,
+              endPos: 2,
+              duration: 10,
+            },
+          },
+        ],
+        [],
+      ),
+    ).toThrow('stop on edge-a_0 is behind departPos 5');
+  });
+
+  it('handles unsupported departLane keyword', () => {
+    expect(() =>
+      buildSumoRoutes(
+        NET_XML,
+        [
+          {
+            ...car,
+            sumo_edges: 'edge-a edge-b',
+            sumo_depart_lane: 'unsupported',
+          },
+        ],
+        [],
+      ),
+    ).toThrow('unsupported SUMO departLane "unsupported"');
+  });
+
+  it('handles invalid departPos type', () => {
+    expect(() =>
+      buildSumoRoutes(
+        NET_XML,
+        [
+          {
+            ...car,
+            sumo_edges: 'edge-a edge-b',
+            sumo_depart_pos: Infinity,
+          },
+        ],
+        [],
+      ),
+    ).toThrow('departPos must be a non-negative number');
+  });
+
+  it('handles edge with no passenger lanes', () => {
+    const network = `<?xml version="1.0" encoding="UTF-8"?>
+<net>
+  <location netOffset="0,0"/>
+  <edge id="edge-a">
+    <lane id="edge-a_0" index="0" length="10" shape="0,0 10,0" disallow="passenger"/>
+  </edge>
+</net>`;
+    const localCar = { ...car, x: 2, y: 0, sumo_edges: 'edge-a' };
+    const localDestination = { ...destination, x: 8, y: 0 };
+
+    expect(() =>
+      buildSumoRoutes(network, [localCar], [localDestination]),
+    ).toThrow('SUMO network contains no passenger vehicle edges');
+  });
+
+  it('handles invalid XML in parseNetwork', () => {
+    const invalidXml = 'not valid xml';
+    const localCar = { ...car, x: 2, y: 0 };
+    const localDestination = { ...destination, x: 8, y: 0 };
+
+    expect(() =>
+      buildSumoRoutes(invalidXml, [localCar], [localDestination]),
+    ).toThrow('SUMO network contains invalid XML');
+  });
+
+  it('handles invalid netOffset in parseNetwork', () => {
+    const network = `<?xml version="1.0" encoding="UTF-8"?>
+<net>
+  <location netOffset="invalid,200"/>
+  <edge id="edge-a">
+    <lane id="edge-a_0" index="0" length="10" shape="0,0 10,0"/>
+  </edge>
+</net>`;
+    const localCar = { ...car, x: 2, y: 0 };
+    const localDestination = { ...destination, x: 8, y: 0 };
+
+    expect(() =>
+      buildSumoRoutes(network, [localCar], [localDestination]),
+    ).toThrow('Invalid SUMO coordinate pair: invalid,200');
+  });
+
+  it('handles network with no passenger lanes', () => {
+    const network = `<?xml version="1.0" encoding="UTF-8"?>
+<net>
+  <location netOffset="0,0"/>
+  <edge id="edge-a">
+    <lane id="edge-a_0" index="0" length="10" shape="0,0 10,0" disallow="all"/>
+  </edge>
+</net>`;
+    const localCar = { ...car, x: 2, y: 0 };
+    const localDestination = { ...destination, x: 8, y: 0 };
+
+    expect(() =>
+      buildSumoRoutes(network, [localCar], [localDestination]),
+    ).toThrow('SUMO network contains no passenger vehicle edges');
+  });
+
+  it('handles isSumoNetXml with invalid content', () => {
+    expect(isSumoNetXml('not xml')).toBe(false);
+  });
+
+  it('handles getSumoCoordinateOffsets with invalid XML', () => {
+    expect(() => getSumoCoordinateOffsets('not xml')).toThrow(
+      'SUMO network contains invalid XML',
+    );
+  });
+
+  it('handles getSumoCoordinateOffsets with missing netOffset', () => {
+    const network = `<?xml version="1.0" encoding="UTF-8"?>
+<net>
+  <location/>
+  <edge id="edge-a">
+    <lane id="edge-a_0" index="0" length="10" shape="0,0 10,0"/>
+  </edge>
+</net>`;
+    expect(getSumoCoordinateOffsets(network)).toEqual({ x: 0, y: 0 });
+  });
+
+  it('handles resolveSumoNetwork with failed fetch', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(resolveSumoNetwork('Town01.net.xml')).rejects.toThrow(
+      'SUMO network Town01.net.xml is unavailable; load it in SUMO settings',
+    );
+  });
+  it('covers lines 155-170: handles manual edges with no route points and valid depart', () => {
+    const localCar = {
+      ...car,
+      sumo_edges: 'edge-a edge-b',
+    };
+
+    const routes = buildSumoRoutes(NET_XML, [localCar], []);
+
+    expect(routes['car-1']).toMatchObject({
+      edges: 'edge-a edge-b',
+      depart: expect.objectContaining({
+        edgeId: 'edge-a',
+        laneId: 'edge-a_0',
+        laneIndex: 0,
+      }),
+      warnings: [],
+    });
+  });
+
+  it('covers lines 155-170: throws error when manual edges provided but first edge does not contain spawn', () => {
+    const localCar = {
+      ...car,
+      sumo_edges: 'edge-c',
+    };
+
+    expect(() => buildSumoRoutes(NET_XML, [localCar], [destination])).toThrow(
+      'scene spawn is not on the first manual SUMO edge edge-c',
+    );
+  });
+
+  it('covers lines 155-170: throws error when no route points and no manual edges', () => {
+    const localCar = { ...car };
+
+    expect(() => buildSumoRoutes(NET_XML, [localCar], [])).toThrow(
+      'has no route points',
+    );
+  });
+
+  it('covers lines 155-170: manual edges with depart lane keyword "best"', () => {
+    const localCar = {
+      ...car,
+      sumo_edges: 'edge-a edge-b',
+      sumo_depart_lane: 'best',
+      sumo_depart_pos: 2,
+    };
+
+    const routes = buildSumoRoutes(NET_XML, [localCar], []);
+
+    expect(routes['car-1'].edges).toBe('edge-a edge-b');
+    expect(routes['car-1'].depart).toBeDefined();
+  });
+
+  it('covers lines 155-170: manual edges with depart lane keyword "free"', () => {
+    const localCar = {
+      ...car,
+      sumo_edges: 'edge-a edge-b',
+      sumo_depart_lane: 'free',
+      sumo_depart_pos: 3,
+    };
+
+    const routes = buildSumoRoutes(NET_XML, [localCar], []);
+
+    expect(routes['car-1'].edges).toBe('edge-a edge-b');
+    expect(routes['car-1'].depart).toBeDefined();
+  });
+
+  it('covers lines 155-170: manual edges with depart lane keyword "first"', () => {
+    const localCar = {
+      ...car,
+      sumo_edges: 'edge-a edge-b',
+      sumo_depart_lane: 'first',
+      sumo_depart_pos: 1,
+    };
+
+    const routes = buildSumoRoutes(NET_XML, [localCar], []);
+
+    expect(routes['car-1'].edges).toBe('edge-a edge-b');
+    expect(routes['car-1'].depart).toBeDefined();
+  });
+
+  it('covers lines 155-170: manual edges with depart lane keyword "random"', () => {
+    const localCar = {
+      ...car,
+      sumo_edges: 'edge-a edge-b',
+      sumo_depart_lane: 'random',
+      sumo_depart_pos: 4,
+    };
+
+    const routes = buildSumoRoutes(NET_XML, [localCar], []);
+
+    expect(routes['car-1'].edges).toBe('edge-a edge-b');
+    expect(routes['car-1'].depart).toBeDefined();
+  });
+
+  it('covers lines 155-170: manual edges with static stop on route', () => {
+    const localCar = {
+      ...car,
+      sumo_edges: 'edge-a edge-b',
+      sumo_stop: {
+        lane: 'edge-a_0',
+        startPos: 2,
+        endPos: 3,
+        duration: 10,
+      },
+    };
+
+    const routes = buildSumoRoutes(NET_XML, [localCar], []);
+
+    expect(routes['car-1'].edges).toBe('edge-a edge-b');
+    expect(routes['car-1'].warnings).toEqual([]);
+  });
+
+  it('covers lines 155-170: rejects manual edges with invalid depart lane index', () => {
+    const localCar = {
+      ...car,
+      sumo_edges: 'edge-a',
+      sumo_depart_lane: '5',
+    };
+
+    expect(() => buildSumoRoutes(NET_XML, [localCar], [])).toThrow(
+      'departLane 5 is not a passenger driving lane on edge edge-a',
+    );
+  });
+
+  it('covers lines 155-170: rejects manual edges with non-driving lane type', () => {
+    const network = `<?xml version="1.0" encoding="UTF-8"?>
+<net>
+  <location netOffset="0,0"/>
+  <edge id="edge-a">
+    <lane id="edge-a_0" index="0" type="sidewalk" length="10" shape="0,0 10,0"/>
+  </edge>
+</net>`;
+    const localCar = {
+      ...car,
+      x: 2,
+      y: 0,
+      sumo_edges: 'edge-a',
+    };
+
+    expect(() => buildSumoRoutes(network, [localCar], [])).toThrow(
+      'its scene spawn is not on the first manual SUMO edge edge-a',
+    );
+  });
+
+  it('covers lines 155-170: multiple cars with manual edges and no points', () => {
+    const car1 = { ...car, id: 'car-1', sumo_edges: 'edge-a edge-b' };
+    const car2 = { ...car, id: 'car-2', sumo_edges: 'edge-b edge-c' };
+
+    const routes = buildSumoRoutes(NET_XML, [car1, car2], []);
+
+    expect(routes['car-1'].edges).toBe('edge-a edge-b');
+    expect(routes['car-2'].edges).toBe('edge-b edge-c');
+    expect(routes['car-1'].depart).toBeDefined();
+    expect(routes['car-2'].depart).toBeDefined();
   });
 });

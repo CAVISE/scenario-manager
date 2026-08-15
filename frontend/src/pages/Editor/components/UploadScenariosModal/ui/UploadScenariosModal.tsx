@@ -47,7 +47,7 @@ import {
   useScenarioPatchMutation,
 } from '../../../hooks/useApiHooks/useScenarioQueries';
 import { handleLoad } from '../../../../components/RightPanel/components/ScenarioControlWidget/Handlers';
-import { useEditorRefs, useHooks } from '../../../context';
+import { useHooks } from '../../../context';
 import { getApiErrorMessageSync } from '../../../../../api/errors';
 import { useNoticeWithToast } from '../../../../../components/AppToast';
 
@@ -68,7 +68,6 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
   open,
   onClose,
 }) => {
-  const { sceneRef, loadRSURef } = useEditorRefs();
   const [selectedScenario, setSelectedScenario] =
     useState<ScenarioListItem | null>(null);
   const [editedDescription, setEditedDescription] = useState('');
@@ -98,12 +97,12 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
     setNotice('');
   };
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setSelectedScenario(null);
     setEditedDescription('');
     setNotice('');
     onClose();
-  };
+  }, [onClose]);
 
   const isDescriptionDirty =
     !!selectedScenario &&
@@ -133,7 +132,7 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
     setNoticeWithToast,
     refetch,
   ]);
-  const { buildingModelRef, updateSceneGraph, loadFile, setStep } = useHooks();
+  const { updateSceneGraph, loadFile, setStep } = useHooks();
   const handleLoadOnScene = useCallback(async () => {
     if (!selectedScenario?.scenario_id) return;
     setLoadingScene(true);
@@ -142,28 +141,22 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
       await handleLoad({
         hasId: true,
         scenarioIdInput: selectedScenario.scenario_id,
-        sceneRef,
         setNotice: setNoticeWithToast,
-        loadRSURef,
-        buildingModelRef,
         updateSceneGraph,
         loadFile,
         setStep,
       });
     } finally {
       setLoadingScene(false);
-      onClose();
+      handleClose();
     }
   }, [
     selectedScenario,
-    sceneRef,
-    loadRSURef,
-    buildingModelRef,
     updateSceneGraph,
     setNoticeWithToast,
     loadFile,
     setStep,
-    onClose,
+    handleClose,
   ]);
 
   const thumb = selectedScenario
@@ -208,7 +201,7 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
         </ModalHeader>
 
         {notice ? (
-          <Alert severity="info" sx={alertStyles} onClose={() => setNotice('')}>
+          <Alert severity="info" sx={alertStyles} onClose={handleClose}>
             {notice}
           </Alert>
         ) : null}

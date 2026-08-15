@@ -4,6 +4,7 @@ import { useEditorStore } from '../../../../../store';
 import { useHooks, useEditorRefs } from '../../../context';
 import { ToastApi } from '../../../../../components/AppToast/types/toastTypes';
 import { pushSingleDeletionSnapshot } from '../../../../components/RightPanel/components/SceneTreePanel/funcs/deletionSnapshots';
+import { useHistoryActions } from '../../createEvents/useHistoryActions';
 
 function disposeObject3D(obj: THREE.Object3D): void {
   obj.traverse((child) => {
@@ -41,36 +42,37 @@ export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
     loadPointsRef,
   } = useEditorRefs();
   const onSelectObject = useEditorStore((s) => s.selectObject);
-
-  const handleDeleteWithUndo = (
-    id: string | undefined,
-    label: string,
-    deleteFn: () => void,
-    attached: THREE.Object3D,
-  ) => {
-    if (!id) return;
-
-    const pushed = pushSingleDeletionSnapshot({ id, label });
-
-    const scene = sceneRef.current;
-    if (scene) {
-      removeObjectFromScene(attached, scene);
-    }
-
-    deleteFn();
-
-    onSelectObject(null);
-    updateSceneGraph();
-
-    if (pushed) {
-      toast.undo(`Deleted ${label}`, () =>
-        useEditorStore.getState().restoreLastDeletion(pushed.snapshotId),
-      );
-    }
-  };
+  const { undo, redo } = useHistoryActions();
 
   return useCallback(
     (e: KeyboardEvent) => {
+      const handleDeleteWithUndo = (
+        id: string | undefined,
+        label: string,
+        deleteFn: () => void,
+        attached: THREE.Object3D,
+      ) => {
+        if (!id) return;
+
+        const pushed = pushSingleDeletionSnapshot({ id, label });
+
+        const scene = sceneRef.current;
+        if (scene) {
+          removeObjectFromScene(attached, scene);
+        }
+
+        deleteFn();
+
+        onSelectObject(null);
+        updateSceneGraph();
+
+        if (pushed) {
+          toast.undo(`Deleted ${label}`, () =>
+            useEditorStore.getState().restoreLastDeletion(pushed.snapshotId),
+          );
+        }
+      };
+
       const transformControls = transformControlsRef.current;
       if (!transformControls) return;
       const scene = sceneRef.current;
@@ -81,6 +83,25 @@ export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
       const pointsObjs = pointsObjsRef.current;
       const rsuMeshes = rsuMeshesRef.current;
       const cubeCircles = cubeCirclesRef.current;
+
+      const isTypingTarget =
+        (e.target as HTMLElement)?.tagName === 'INPUT' ||
+        (e.target as HTMLElement)?.tagName === 'TEXTAREA' ||
+        (e.target as HTMLElement)?.isContentEditable;
+
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        e.key.toLowerCase() === 'z' &&
+        !isTypingTarget
+      ) {
+        e.preventDefault();
+        if (e.shiftKey) {
+          redo();
+        } else {
+          undo();
+        }
+        return;
+      }
 
       if (e.key === 'Escape') {
         onSelectObject(null);
@@ -312,6 +333,8 @@ export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
       modeRef,
       loadPointsRef,
       updateSceneGraph,
+      undo,
+      redo,
       onSelectObject,
       toast,
     ],

@@ -40,7 +40,7 @@ export function useOdrLoader({
       try {
         Module.FS_unlink(MAP_PATH);
       } catch {
-        // Файл мог не существовать — это нормально, продолжаем
+        //
       }
 
       try {

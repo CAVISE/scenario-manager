@@ -22,8 +22,8 @@ import { useNoticeWithToast } from '../../../../../../components/AppToast';
 export default function ScenarioControlWidget() {
   const scenario = useEditorStore((s) => s.Scenario);
   const updateScenario = useEditorStore((s) => s.updateScenario);
-  const { sceneRef, loadRSURef, odrMapRef } = useEditorRefs();
-  const { buildingModelRef, updateSceneGraph, loadFile, setStep } = useHooks();
+  const { odrMapRef } = useEditorRefs();
+  const { updateSceneGraph, loadFile, setStep } = useHooks();
   const [scenarioIdInput, setScenarioIdInput] = useState(scenario.id ?? '');
   const [notice, setNotice] = useState<string>('');
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -73,10 +73,7 @@ export default function ScenarioControlWidget() {
             handleLoad({
               hasId,
               scenarioIdInput,
-              sceneRef,
               setNotice: setNoticeWithToast,
-              loadRSURef,
-              buildingModelRef,
               updateSceneGraph,
               loadFile,
               setStep,

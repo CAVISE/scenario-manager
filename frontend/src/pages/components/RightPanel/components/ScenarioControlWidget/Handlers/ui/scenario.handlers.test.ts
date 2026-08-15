@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import * as THREE from 'three';
+
 const { fetchQueryMock, getScenarioMock, resolveXodrMock } = vi.hoisted(() => ({
   fetchQueryMock: vi.fn(),
   getScenarioMock: vi.fn(),
@@ -51,6 +51,7 @@ vi.mock(
 vi.mock('../../../../../../../api/errors', () => ({
   getApiErrorMessage: vi.fn((_err, fallback) => Promise.resolve(fallback)),
 }));
+
 const createStoreState = () => {
   const state = {
     cars: [] as Array<Record<string, unknown> & { id: string }>,
@@ -228,7 +229,6 @@ import {
   RSU,
   Scenario,
 } from '../../../../../../../store/types/useEditorStoreTypes';
-import { LoadScenarioOptions } from '../types/scenario.load.handlerTypes';
 import {
   useScenarioCreateMutation,
   useScenarioPatchMutation,
@@ -252,6 +252,7 @@ describe('handleLoad regression', () => {
     fetchQueryMock.mockResolvedValue({
       scenario: {
         scenario_id: 'full-1',
+        file_: VALID_XODR,
         scenario_text: [
           {
             vehicle: 'car',
@@ -274,20 +275,15 @@ describe('handleLoad regression', () => {
     });
 
     const setNotice = vi.fn();
+    const loadFile = vi.fn();
+    const updateSceneGraph = vi.fn();
 
     await handleLoad({
       hasId: true,
       scenarioIdInput: 'full-1',
-      sceneRef: {
-        current: new THREE.Scene(),
-      } as LoadScenarioOptions['sceneRef'],
       setNotice,
-      loadRSURef: { current: vi.fn() } as LoadScenarioOptions['loadRSURef'],
-      buildingModelRef: {
-        current: {},
-      } as LoadScenarioOptions['buildingModelRef'],
-      updateSceneGraph: vi.fn(),
-      loadFile: vi.fn(),
+      updateSceneGraph,
+      loadFile,
     });
 
     expect(storeState.addCar).toHaveBeenCalled();
@@ -298,14 +294,15 @@ describe('handleLoad regression', () => {
     expect(storeState.addPedestrian).toHaveBeenCalled();
     expect(storeState.addRSU).toHaveBeenCalled();
     expect(setNotice).toHaveBeenCalledWith('The scenario has been uploaded.');
+    expect(loadFile).toHaveBeenCalled();
   });
 
   it('handles a missing building model without crashing', async () => {
-    vi.useFakeTimers();
     fetchQueryMock.mockResolvedValue({
       scenario: {
         scenario_id: 's1',
         name_of_scenario: 'Scenario 1',
+        file_: VALID_XODR,
         scenario_text: [
           {
             vehicle: 'building',
@@ -316,25 +313,27 @@ describe('handleLoad regression', () => {
     });
 
     const setNotice = vi.fn();
-    const loadPromise = handleLoad({
+    const loadFile = vi.fn();
+    const updateSceneGraph = vi.fn();
+
+    await handleLoad({
       hasId: true,
       scenarioIdInput: 's1',
-      sceneRef: { current: { children: [], add: vi.fn() } } as never,
       setNotice,
-      loadRSURef: { current: vi.fn() } as never,
-      buildingModelRef: undefined as never,
-      updateSceneGraph: vi.fn(),
-      loadFile: vi.fn(),
+      updateSceneGraph,
+      loadFile,
     });
 
-    await vi.advanceTimersByTimeAsync(300 * 10);
-    await loadPromise;
-
-    expect(setNotice).toHaveBeenCalledWith('The scenario has been uploaded.');
-    expect(setNotice).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to render buildings:'),
+    expect(storeState.addBuilding).toHaveBeenCalledWith(1, 2, 3);
+    expect(storeState.updateBuilding).toHaveBeenCalledWith(
+      'b-1',
+      expect.objectContaining({
+        height: 10,
+        material: 'concrete',
+      }),
     );
-    vi.useRealTimers();
+    expect(setNotice).toHaveBeenCalledWith('The scenario has been uploaded.');
+    expect(loadFile).toHaveBeenCalled();
   });
 });
 
@@ -565,7 +564,7 @@ describe('buildScenarioPayload', () => {
 
   it('calls scenariosApi.get via queryFn', async () => {
     getScenarioMock.mockResolvedValue({
-      scenario: { scenario_id: 'q-1', scenario_text: [] },
+      scenario: { scenario_id: 'q-1', file_: VALID_XODR, scenario_text: [] },
     });
 
     fetchQueryMock.mockImplementation(
@@ -575,65 +574,14 @@ describe('buildScenarioPayload', () => {
     await handleLoad({
       hasId: true,
       scenarioIdInput: 'q-1',
-      sceneRef: { current: null } as unknown as React.RefObject<
-        THREE.Scene | undefined
-      >,
       setNotice: vi.fn(),
-      loadRSURef: { current: vi.fn() } as unknown as React.RefObject<
-        () => void
-      >,
-      buildingModelRef: {
-        current: null,
-      } as unknown as React.RefObject<THREE.Mesh | null>,
       updateSceneGraph: vi.fn(),
       loadFile: vi.fn(),
     });
 
     expect(getScenarioMock).toHaveBeenCalledWith('q-1');
   });
-  it('stops retrying after 10 attempts when scene is never ready', async () => {
-    vi.useFakeTimers();
 
-    fetchQueryMock.mockResolvedValue({
-      scenario: {
-        scenario_id: 'retry-max',
-        scenario_text: [
-          {
-            vehicle: 'building',
-            path: [{ x: 1, y: 2, z: 3 }],
-          },
-        ],
-      },
-    });
-
-    storeState.buildings = [{ id: 'b-1', x: 1, y: 2, z: 3 }] as Building[];
-
-    const mockModel = { clone: vi.fn() };
-
-    const loadPromise = handleLoad({
-      hasId: true,
-      scenarioIdInput: 'retry-max',
-      sceneRef: { current: null } as unknown as React.RefObject<
-        THREE.Scene | undefined
-      >,
-      setNotice: vi.fn(),
-      loadRSURef: { current: vi.fn() } as unknown as React.RefObject<
-        () => void
-      >,
-      buildingModelRef: {
-        current: mockModel,
-      } as unknown as React.RefObject<THREE.Mesh | null>,
-      updateSceneGraph: vi.fn(),
-      loadFile: vi.fn(),
-    });
-
-    await vi.advanceTimersByTimeAsync(300 * 10);
-    await loadPromise;
-
-    expect(mockModel.clone).not.toHaveBeenCalled();
-
-    vi.useRealTimers();
-  });
   it('defaults car rotation to 0 when rotation is undefined', () => {
     storeState.cars = [
       {
@@ -653,464 +601,442 @@ describe('buildScenarioPayload', () => {
     const carPath = carGroup.path[0];
     expect(carPath.rotation).toBe(0);
   });
-  describe('handleCreate', () => {
-    it('calls mutateAsync and sets success notice', async () => {
-      storeState.Scenario = { id: '', name: 'Saved scenario', weather: '' };
-      const setNotice = vi.fn();
-      const onIdResolved = vi.fn();
-      const createMutation = {
-        mutateAsync: vi.fn().mockResolvedValue({}),
-      } as unknown as ReturnType<typeof useScenarioCreateMutation>;
+});
 
-      await handleCreate(setNotice, createMutation, 'sc-new', onIdResolved);
+describe('handleCreate', () => {
+  it('calls mutateAsync and sets success notice', async () => {
+    storeState.Scenario = { id: '', name: 'Saved scenario', weather: '' };
+    const setNotice = vi.fn();
+    const onIdResolved = vi.fn();
+    const createMutation = {
+      mutateAsync: vi.fn().mockResolvedValue({}),
+    } as unknown as ReturnType<typeof useScenarioCreateMutation>;
 
-      expect(createMutation.mutateAsync).toHaveBeenCalledWith(
-        expect.objectContaining({
-          scenarioIdInput: 'sc-new',
-          payload: expect.objectContaining({
-            scenario_id: 'sc-new',
-            name_of_scenario: 'Saved scenario',
-          }),
+    await handleCreate(setNotice, createMutation, 'sc-new', onIdResolved);
+
+    expect(createMutation.mutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        scenarioIdInput: 'sc-new',
+        payload: expect.objectContaining({
+          scenario_id: 'sc-new',
+          name_of_scenario: 'Saved scenario',
         }),
-      );
-      expect(storeState.updateScenario).toHaveBeenCalledWith({
-        id: 'sc-new',
-      });
-      expect(onIdResolved).toHaveBeenCalledWith('sc-new');
-      expect(setNotice).toHaveBeenCalledWith('Scenario saved.');
+      }),
+    );
+    expect(storeState.updateScenario).toHaveBeenCalledWith({
+      id: 'sc-new',
     });
-
-    it('resolves id from server response when none was provided locally', async () => {
-      storeState.Scenario = { id: '', name: 'Saved scenario', weather: '' };
-      const setNotice = vi.fn();
-      const onIdResolved = vi.fn();
-      const createMutation = {
-        mutateAsync: vi.fn().mockResolvedValue({ scenario_id: 'srv-id' }),
-      } as unknown as ReturnType<typeof useScenarioCreateMutation>;
-
-      await handleCreate(setNotice, createMutation, '', onIdResolved);
-
-      expect(storeState.updateScenario).toHaveBeenCalledWith({
-        id: 'srv-id',
-      });
-      expect(onIdResolved).toHaveBeenCalledWith('srv-id');
-    });
-
-    it('shows validation message without calling mutate', async () => {
-      storeState.Scenario = { id: '', name: '', weather: '' };
-      const setNotice = vi.fn();
-      const createMutation = {
-        mutateAsync: vi.fn(),
-      } as unknown as ReturnType<typeof useScenarioCreateMutation>;
-
-      await handleCreate(setNotice, createMutation, 'sc-new');
-
-      expect(createMutation.mutateAsync).not.toHaveBeenCalled();
-      expect(setNotice).toHaveBeenCalledWith('Scenario name is required.');
-    });
-
-    it('sets error notice when mutateAsync throws', async () => {
-      storeState.Scenario = { id: '', name: 'Saved scenario', weather: '' };
-      const setNotice = vi.fn();
-      const createMutation = {
-        mutateAsync: vi.fn().mockRejectedValue(new Error('network error')),
-      } as unknown as ReturnType<typeof useScenarioCreateMutation>;
-
-      await handleCreate(setNotice, createMutation);
-
-      expect(setNotice).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to save scenario.'),
-      );
-    });
+    expect(onIdResolved).toHaveBeenCalledWith('sc-new');
+    expect(setNotice).toHaveBeenCalledWith('Scenario saved.');
   });
 
-  describe('handlePatch', () => {
-    it('returns early when hasId is false', async () => {
-      const setNotice = vi.fn();
+  it('resolves id from server response when none was provided locally', async () => {
+    storeState.Scenario = { id: '', name: 'Saved scenario', weather: '' };
+    const setNotice = vi.fn();
+    const onIdResolved = vi.fn();
+    const createMutation = {
+      mutateAsync: vi.fn().mockResolvedValue({ scenario_id: 'srv-id' }),
+    } as unknown as ReturnType<typeof useScenarioCreateMutation>;
 
-      await handleLoad({
-        hasId: false,
-        scenarioIdInput: 'sc-1',
-        sceneRef: { current: null } as unknown as React.RefObject<
-          THREE.Scene | undefined
-        >,
-        setNotice,
-        loadRSURef: { current: vi.fn() } as unknown as React.RefObject<
-          () => void
-        >,
-        buildingModelRef: {
-          current: null,
-        } as unknown as React.RefObject<THREE.Mesh | null>,
-        updateSceneGraph: vi.fn(),
-        loadFile: vi.fn(),
-      });
+    await handleCreate(setNotice, createMutation, '', onIdResolved);
 
-      expect(fetchQueryMock).not.toHaveBeenCalled();
-      expect(setNotice).not.toHaveBeenCalled();
+    expect(storeState.updateScenario).toHaveBeenCalledWith({
+      id: 'srv-id',
     });
-    it('does not perform building rendering itself', async () => {
-      const setNotice = vi.fn();
-      const patchMutation = {
-        mutateAsync: vi.fn().mockResolvedValue({}),
-      } as unknown as ReturnType<typeof useScenarioPatchMutation>;
-
-      await handlePatch(setNotice, 'sc-1', true, patchMutation);
-
-      expect(patchMutation.mutateAsync).toHaveBeenCalled();
-      expect(setNotice).toHaveBeenCalledWith('The scenario has been updated.');
-    });
-
-    it('updatePedestrian with wrong id leaves pedestrians unchanged', () => {
-      storeState.pedestrians = [
-        {
-          id: 'ped-1',
-          x: 3,
-          y: 4,
-          z: 0,
-          speed: 1.2,
-          cross_factor: 0.5,
-          is_invincible: false,
-          tx_power: 10,
-          frequency: 5.9e9,
-          protocol: 'DSRC',
-          beacon_interval: 1000,
-        } as Pedestrian,
-      ];
-
-      useEditorStore.getState().updatePedestrian('wrong-id', { speed: 99 });
-
-      expect(useEditorStore.getState().pedestrians[0].speed).toBe(1.2);
-    });
-    it('calls mutateAsync with trimmed id and sets success notice', async () => {
-      const setNotice = vi.fn();
-      const patchMutation = {
-        mutateAsync: vi.fn().mockResolvedValue({}),
-      } as unknown as ReturnType<typeof useScenarioPatchMutation>;
-
-      await handlePatch(setNotice, '  sc-1  ', true, patchMutation);
-
-      expect(patchMutation.mutateAsync).toHaveBeenCalledWith(
-        expect.objectContaining({ id: 'sc-1' }),
-      );
-      expect(setNotice).toHaveBeenCalledWith('The scenario has been updated.');
-    });
-    it('calls updateRSU when RSU is found after addRSU', async () => {
-      fetchQueryMock.mockResolvedValue({
-        scenario: {
-          scenario_id: 'rsu-update',
-          scenario_text: [
-            {
-              vehicle: 'RSU',
-              path: [
-                {
-                  x: 1,
-                  y: 2,
-                  z: 3,
-                  tx_power: 30,
-                  frequency: 5.9e9,
-                  range: 300,
-                  protocol: 'ITS-G5',
-                  scenario: 'my-scenario',
-                },
-              ],
-            },
-          ],
-        },
-      });
-
-      const newRSU = { id: 'rsu-new' };
-      storeState.addRSU.mockImplementationOnce(() => {
-        storeState.RSUs.push(newRSU as RSU);
-      });
-      storeState.RSUs = [];
-
-      await handleLoad({
-        hasId: true,
-        scenarioIdInput: 'rsu-update',
-        sceneRef: {
-          current: { children: [], add: vi.fn() },
-        } as unknown as React.RefObject<THREE.Scene | undefined>,
-        setNotice: vi.fn(),
-        loadRSURef: { current: vi.fn() } as unknown as React.RefObject<
-          () => void
-        >,
-        buildingModelRef: {
-          current: null,
-        } as unknown as React.RefObject<THREE.Mesh | null>,
-        updateSceneGraph: vi.fn(),
-        loadFile: vi.fn(),
-      });
-
-      expect(storeState.updateRSU).toHaveBeenCalledWith(
-        'rsu-new',
-        expect.objectContaining({
-          tx_power: 30,
-          range: 300,
-          scenario: 'my-scenario',
-        }),
-      );
-    });
-    it('skips updateRSU when RSUs is empty after addRSU', async () => {
-      fetchQueryMock.mockResolvedValue({
-        scenario: {
-          scenario_id: 'rsu-skip',
-          scenario_text: [
-            {
-              vehicle: 'RSU',
-              path: [
-                {
-                  x: 0,
-                  y: 0,
-                  z: 0,
-                  tx_power: 23,
-                  frequency: 5.9e9,
-                  range: 500,
-                  protocol: 'ITS-G5',
-                  scenario: '',
-                },
-              ],
-            },
-          ],
-        },
-      });
-
-      storeState.RSUs = [];
-      storeState.addRSU.mockImplementationOnce(() => undefined);
-
-      await handleLoad({
-        hasId: true,
-        scenarioIdInput: 'rsu-skip',
-        sceneRef: {
-          current: { children: [], add: vi.fn() },
-        } as unknown as React.RefObject<THREE.Scene | undefined>,
-        setNotice: vi.fn(),
-        loadRSURef: { current: vi.fn() } as unknown as React.RefObject<
-          () => void
-        >,
-        buildingModelRef: {
-          current: null,
-        } as unknown as React.RefObject<THREE.Mesh | null>,
-        updateSceneGraph: vi.fn(),
-        loadFile: vi.fn(),
-      });
-
-      expect(storeState.updateRSU).not.toHaveBeenCalled();
-    });
-    it('skips updateRSU when added RSU is not found', async () => {
-      fetchQueryMock.mockResolvedValue({
-        scenario: {
-          scenario_id: 'rsu-skip',
-          scenario_text: [
-            {
-              vehicle: 'RSU',
-              path: [
-                {
-                  x: 0,
-                  y: 0,
-                  z: 0,
-                  tx_power: 23,
-                  frequency: 5.9e9,
-                  range: 500,
-                  protocol: 'ITS-G5',
-                  scenario: '',
-                },
-              ],
-            },
-          ],
-        },
-      });
-
-      storeState.RSUs = [];
-      storeState.addRSU.mockImplementationOnce(() => undefined);
-
-      await handleLoad({
-        hasId: true,
-        scenarioIdInput: 'rsu-skip',
-        sceneRef: {
-          current: { children: [], add: vi.fn() },
-        } as unknown as React.RefObject<THREE.Scene | undefined>,
-        setNotice: vi.fn(),
-        loadRSURef: { current: vi.fn() } as unknown as React.RefObject<
-          () => void
-        >,
-        buildingModelRef: {
-          current: null,
-        } as unknown as React.RefObject<THREE.Mesh | null>,
-        updateSceneGraph: vi.fn(),
-        loadFile: vi.fn(),
-      });
-
-      expect(storeState.updateRSU).not.toHaveBeenCalled();
-    });
-    it('sets error notice when mutateAsync throws', async () => {
-      const setNotice = vi.fn();
-      const patchMutation = {
-        mutateAsync: vi.fn().mockRejectedValue(new Error('fail')),
-      } as unknown as ReturnType<typeof useScenarioPatchMutation>;
-
-      await handlePatch(setNotice, 'sc-1', true, patchMutation);
-
-      expect(setNotice).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to update the scenario.'),
-      );
-    });
+    expect(onIdResolved).toHaveBeenCalledWith('srv-id');
   });
 
-  describe('handleDelete', () => {
-    it('returns early when hasId is false', async () => {
-      const setNotice = vi.fn();
-      const deleteMutation = {
-        mutateAsync: vi.fn(),
-      } as unknown as ReturnType<typeof useScenarioDeleteMutation>;
+  it('shows validation message without calling mutate', async () => {
+    storeState.Scenario = { id: '', name: '', weather: '' };
+    const setNotice = vi.fn();
+    const createMutation = {
+      mutateAsync: vi.fn(),
+    } as unknown as ReturnType<typeof useScenarioCreateMutation>;
 
-      await handleDelete(setNotice, 'sc-1', false, deleteMutation);
+    await handleCreate(setNotice, createMutation, 'sc-new');
 
-      expect(deleteMutation.mutateAsync).not.toHaveBeenCalled();
-    });
-
-    it('calls mutateAsync with trimmed id and sets success notice', async () => {
-      const setNotice = vi.fn();
-      const deleteMutation = {
-        mutateAsync: vi.fn(),
-      } as unknown as ReturnType<typeof useScenarioDeleteMutation>;
-
-      await handleDelete(setNotice, '  sc-1  ', true, deleteMutation);
-
-      expect(deleteMutation.mutateAsync).toHaveBeenCalledWith(
-        expect.objectContaining({ id: 'sc-1' }),
-      );
-      expect(setNotice).toHaveBeenCalledWith('The scenario has been deleted.');
-    });
-
-    it('sets error notice when mutateAsync throws', async () => {
-      const setNotice = vi.fn();
-      const deleteMutation = {
-        mutateAsync: vi.fn().mockRejectedValue(new Error('fail')),
-      } as unknown as ReturnType<typeof useScenarioDeleteMutation>;
-
-      await handleDelete(setNotice, 'sc-1', true, deleteMutation);
-
-      expect(setNotice).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to delete scenario.'),
-      );
-    });
+    expect(createMutation.mutateAsync).not.toHaveBeenCalled();
+    expect(setNotice).toHaveBeenCalledWith('Scenario name is required.');
   });
 
-  describe('handleRunSimulation', () => {
-    it('calls mutate with correct payload and triggers onSuccess', async () => {
-      storeState.Scenario = {
-        id: 'sc-1',
-        name: 'Test',
+  it('sets error notice when mutateAsync throws', async () => {
+    storeState.Scenario = { id: '', name: 'Saved scenario', weather: '' };
+    const setNotice = vi.fn();
+    const createMutation = {
+      mutateAsync: vi.fn().mockRejectedValue(new Error('network error')),
+    } as unknown as ReturnType<typeof useScenarioCreateMutation>;
+
+    await handleCreate(setNotice, createMutation);
+
+    expect(setNotice).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to save scenario.'),
+    );
+  });
+});
+
+describe('handlePatch', () => {
+  it('returns early when hasId is false', async () => {
+    const setNotice = vi.fn();
+
+    await handleLoad({
+      hasId: false,
+      scenarioIdInput: 'sc-1',
+      setNotice,
+      updateSceneGraph: vi.fn(),
+      loadFile: vi.fn(),
+    });
+
+    expect(fetchQueryMock).not.toHaveBeenCalled();
+    expect(setNotice).not.toHaveBeenCalled();
+  });
+
+  it('does not perform building rendering itself', async () => {
+    const setNotice = vi.fn();
+    const patchMutation = {
+      mutateAsync: vi.fn().mockResolvedValue({}),
+    } as unknown as ReturnType<typeof useScenarioPatchMutation>;
+
+    await handlePatch(setNotice, 'sc-1', true, patchMutation);
+
+    expect(patchMutation.mutateAsync).toHaveBeenCalled();
+    expect(setNotice).toHaveBeenCalledWith('The scenario has been updated.');
+  });
+
+  it('updatePedestrian with wrong id leaves pedestrians unchanged', () => {
+    storeState.pedestrians = [
+      {
+        id: 'ped-1',
+        x: 3,
+        y: 4,
+        z: 0,
+        speed: 1.2,
+        cross_factor: 0.5,
+        is_invincible: false,
+        tx_power: 10,
+        frequency: 5.9e9,
+        protocol: 'DSRC',
+        beacon_interval: 1000,
+      } as Pedestrian,
+    ];
+
+    useEditorStore.getState().updatePedestrian('wrong-id', { speed: 99 });
+
+    expect(useEditorStore.getState().pedestrians[0].speed).toBe(1.2);
+  });
+
+  it('calls mutateAsync with trimmed id and sets success notice', async () => {
+    const setNotice = vi.fn();
+    const patchMutation = {
+      mutateAsync: vi.fn().mockResolvedValue({}),
+    } as unknown as ReturnType<typeof useScenarioPatchMutation>;
+
+    await handlePatch(setNotice, '  sc-1  ', true, patchMutation);
+
+    expect(patchMutation.mutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'sc-1' }),
+    );
+    expect(setNotice).toHaveBeenCalledWith('The scenario has been updated.');
+  });
+
+  it('calls updateRSU when RSU is found after addRSU', async () => {
+    fetchQueryMock.mockResolvedValue({
+      scenario: {
+        scenario_id: 'rsu-update',
+        file_: VALID_XODR,
+        scenario_text: [
+          {
+            vehicle: 'RSU',
+            path: [
+              {
+                x: 1,
+                y: 2,
+                z: 3,
+                tx_power: 30,
+                frequency: 5.9e9,
+                range: 300,
+                protocol: 'ITS-G5',
+                scenario: 'my-scenario',
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    const newRSU = { id: 'rsu-new' };
+    storeState.addRSU.mockImplementationOnce(() => {
+      storeState.RSUs.push(newRSU as RSU);
+    });
+    storeState.RSUs = [];
+
+    await handleLoad({
+      hasId: true,
+      scenarioIdInput: 'rsu-update',
+      setNotice: vi.fn(),
+      updateSceneGraph: vi.fn(),
+      loadFile: vi.fn(),
+    });
+
+    expect(storeState.updateRSU).toHaveBeenCalledWith(
+      'rsu-new',
+      expect.objectContaining({
+        tx_power: 30,
+        range: 300,
+        scenario: 'my-scenario',
+      }),
+    );
+  });
+
+  it('skips updateRSU when RSUs is empty after addRSU', async () => {
+    fetchQueryMock.mockResolvedValue({
+      scenario: {
+        scenario_id: 'rsu-skip',
+        file_: VALID_XODR,
+        scenario_text: [
+          {
+            vehicle: 'RSU',
+            path: [
+              {
+                x: 0,
+                y: 0,
+                z: 0,
+                tx_power: 23,
+                frequency: 5.9e9,
+                range: 500,
+                protocol: 'ITS-G5',
+                scenario: '',
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    storeState.RSUs = [];
+    storeState.addRSU.mockImplementationOnce(() => undefined);
+
+    await handleLoad({
+      hasId: true,
+      scenarioIdInput: 'rsu-skip',
+      setNotice: vi.fn(),
+      updateSceneGraph: vi.fn(),
+      loadFile: vi.fn(),
+    });
+
+    expect(storeState.updateRSU).not.toHaveBeenCalled();
+  });
+
+  it('skips updateRSU when added RSU is not found', async () => {
+    fetchQueryMock.mockResolvedValue({
+      scenario: {
+        scenario_id: 'rsu-skip',
+        file_: VALID_XODR,
+        scenario_text: [
+          {
+            vehicle: 'RSU',
+            path: [
+              {
+                x: 0,
+                y: 0,
+                z: 0,
+                tx_power: 23,
+                frequency: 5.9e9,
+                range: 500,
+                protocol: 'ITS-G5',
+                scenario: '',
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    storeState.RSUs = [];
+    storeState.addRSU.mockImplementationOnce(() => undefined);
+
+    await handleLoad({
+      hasId: true,
+      scenarioIdInput: 'rsu-skip',
+      setNotice: vi.fn(),
+      updateSceneGraph: vi.fn(),
+      loadFile: vi.fn(),
+    });
+
+    expect(storeState.updateRSU).not.toHaveBeenCalled();
+  });
+
+  it('sets error notice when mutateAsync throws', async () => {
+    const setNotice = vi.fn();
+    const patchMutation = {
+      mutateAsync: vi.fn().mockRejectedValue(new Error('fail')),
+    } as unknown as ReturnType<typeof useScenarioPatchMutation>;
+
+    await handlePatch(setNotice, 'sc-1', true, patchMutation);
+
+    expect(setNotice).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to update the scenario.'),
+    );
+  });
+});
+
+describe('handleDelete', () => {
+  it('returns early when hasId is false', async () => {
+    const setNotice = vi.fn();
+    const deleteMutation = {
+      mutateAsync: vi.fn(),
+    } as unknown as ReturnType<typeof useScenarioDeleteMutation>;
+
+    await handleDelete(setNotice, 'sc-1', false, deleteMutation);
+
+    expect(deleteMutation.mutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('calls mutateAsync with trimmed id and sets success notice', async () => {
+    const setNotice = vi.fn();
+    const deleteMutation = {
+      mutateAsync: vi.fn(),
+    } as unknown as ReturnType<typeof useScenarioDeleteMutation>;
+
+    await handleDelete(setNotice, '  sc-1  ', true, deleteMutation);
+
+    expect(deleteMutation.mutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'sc-1' }),
+    );
+    expect(setNotice).toHaveBeenCalledWith('The scenario has been deleted.');
+  });
+
+  it('sets error notice when mutateAsync throws', async () => {
+    const setNotice = vi.fn();
+    const deleteMutation = {
+      mutateAsync: vi.fn().mockRejectedValue(new Error('fail')),
+    } as unknown as ReturnType<typeof useScenarioDeleteMutation>;
+
+    await handleDelete(setNotice, 'sc-1', true, deleteMutation);
+
+    expect(setNotice).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to delete scenario.'),
+    );
+  });
+});
+
+describe('handleRunSimulation', () => {
+  it('calls mutate with correct payload and triggers onSuccess', async () => {
+    storeState.Scenario = {
+      id: 'sc-1',
+      name: 'Test',
+      weather: 'Rain',
+    } as unknown as Scenario;
+    storeState.cars = [
+      {
+        id: 'car-1',
+        x: 0,
+        y: 0,
+        z: 0,
+        model: 'car',
+        color: '00ff00',
+        scale: 1,
+        rotation: 0,
+      } as Car,
+    ];
+    storeState.points = [
+      { id: 'p-1', carId: 'car-1', x: 1, y: 0, z: 0 } as Point,
+    ];
+    const setNotice = vi.fn();
+    const startMutation = {
+      mutate: vi.fn((_, { onSuccess }) => onSuccess()),
+    } as unknown as ReturnType<typeof useStartSimulationMutation>;
+
+    await handleRunSimulation(setNotice, 'sc-1', startMutation);
+
+    expect(startMutation.mutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        scenario_id: 'sc-1',
+        scenario_name: 'Test',
         weather: 'Rain',
-      } as unknown as Scenario;
-      storeState.cars = [
-        {
-          id: 'car-1',
-          x: 0,
-          y: 0,
-          z: 0,
-          model: 'car',
-          color: '00ff00',
-          scale: 1,
-          rotation: 0,
-        } as Car,
-      ];
-      storeState.points = [
-        { id: 'p-1', carId: 'car-1', x: 1, y: 0, z: 0 } as Point,
-      ];
-      const setNotice = vi.fn();
-      const startMutation = {
-        mutate: vi.fn((_, { onSuccess }) => onSuccess()),
-      } as unknown as ReturnType<typeof useStartSimulationMutation>;
+        map: 'Town10HD',
+      }),
+      expect.any(Object),
+    );
+    expect(setNotice).toHaveBeenCalledWith('The simulation has started.');
+  });
 
-      await handleRunSimulation(setNotice, 'sc-1', startMutation);
+  it('falls back to scenarioIdInput when store id is empty', async () => {
+    storeState.Scenario = {
+      id: '',
+      name: 'Test',
+      weather: '',
+    } as unknown as Scenario;
+    storeState.cars = [
+      {
+        id: 'car-1',
+        x: 0,
+        y: 0,
+        z: 0,
+        model: 'car',
+        color: '00ff00',
+        scale: 1,
+        rotation: 0,
+      } as Car,
+    ];
+    storeState.points = [
+      { id: 'p-1', carId: 'car-1', x: 1, y: 0, z: 0 } as Point,
+    ];
+    const setNotice = vi.fn();
+    const startMutation = {
+      mutate: vi.fn((_, { onSuccess }) => onSuccess()),
+    } as unknown as ReturnType<typeof useStartSimulationMutation>;
 
-      expect(startMutation.mutate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          scenario_id: 'sc-1',
-          scenario_name: 'Test',
-          weather: 'Rain',
-          map: 'Town10HD',
-        }),
-        expect.any(Object),
+    await handleRunSimulation(setNotice, '  sc-fallback  ', startMutation);
+
+    expect(startMutation.mutate).toHaveBeenCalledWith(
+      expect.objectContaining({ scenario_id: 'sc-fallback' }),
+      expect.any(Object),
+    );
+  });
+
+  it('sets error notice when mutate triggers onError', async () => {
+    storeState.Scenario = {
+      id: 'sc-1',
+      name: 'Test',
+      weather: 'Rain',
+    } as unknown as Scenario;
+    storeState.cars = [
+      {
+        id: 'car-1',
+        x: 0,
+        y: 0,
+        z: 0,
+        model: 'car',
+        color: '00ff00',
+        scale: 1,
+        rotation: 0,
+      } as Car,
+    ];
+    storeState.points = [
+      { id: 'p-1', carId: 'car-1', x: 1, y: 0, z: 0 } as Point,
+    ];
+    const setNotice = vi.fn();
+    const startMutation = {
+      mutate: vi.fn((_, { onError }) => onError(new Error('sim error'))),
+    } as unknown as ReturnType<typeof useStartSimulationMutation>;
+
+    await handleRunSimulation(setNotice, 'sc-1', startMutation);
+
+    await vi.waitFor(() => {
+      expect(setNotice).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to start simulation.'),
       );
-      expect(setNotice).toHaveBeenCalledWith('The simulation has started.');
-    });
-
-    it('falls back to scenarioIdInput when store id is empty', async () => {
-      storeState.Scenario = {
-        id: '',
-        name: 'Test',
-        weather: '',
-      } as unknown as Scenario;
-      storeState.cars = [
-        {
-          id: 'car-1',
-          x: 0,
-          y: 0,
-          z: 0,
-          model: 'car',
-          color: '00ff00',
-          scale: 1,
-          rotation: 0,
-        } as Car,
-      ];
-      storeState.points = [
-        { id: 'p-1', carId: 'car-1', x: 1, y: 0, z: 0 } as Point,
-      ];
-      const setNotice = vi.fn();
-      const startMutation = {
-        mutate: vi.fn((_, { onSuccess }) => onSuccess()),
-      } as unknown as ReturnType<typeof useStartSimulationMutation>;
-
-      await handleRunSimulation(setNotice, '  sc-fallback  ', startMutation);
-
-      expect(startMutation.mutate).toHaveBeenCalledWith(
-        expect.objectContaining({ scenario_id: 'sc-fallback' }),
-        expect.any(Object),
-      );
-    });
-
-    it('sets error notice when mutate triggers onError', async () => {
-      storeState.Scenario = {
-        id: 'sc-1',
-        name: 'Test',
-        weather: 'Rain',
-      } as unknown as Scenario;
-      storeState.cars = [
-        {
-          id: 'car-1',
-          x: 0,
-          y: 0,
-          z: 0,
-          model: 'car',
-          color: '00ff00',
-          scale: 1,
-          rotation: 0,
-        } as Car,
-      ];
-      storeState.points = [
-        { id: 'p-1', carId: 'car-1', x: 1, y: 0, z: 0 } as Point,
-      ];
-      const setNotice = vi.fn();
-      const startMutation = {
-        mutate: vi.fn((_, { onError }) => onError(new Error('sim error'))),
-      } as unknown as ReturnType<typeof useStartSimulationMutation>;
-
-      await handleRunSimulation(setNotice, 'sc-1', startMutation);
-
-      await vi.waitFor(() => {
-        expect(setNotice).toHaveBeenCalledWith(
-          expect.stringContaining('Failed to start simulation.'),
-        );
-      });
     });
   });
-  it('clones building model and adds to scene when scene and model are ready', async () => {
+});
+
+describe('handleLoad - building handling', () => {
+  it('adds building to store when scene and model are not needed', async () => {
     fetchQueryMock.mockResolvedValue({
       scenario: {
         scenario_id: 'b-scene-1',
         name_of_scenario: 'Building Scene',
+        file_: VALID_XODR,
         scenario_text: [
           {
             vehicle: 'building',
@@ -1120,57 +1046,40 @@ describe('buildScenarioPayload', () => {
       },
     });
 
-    storeState.buildings = [
-      { id: 'b-1', x: 1, y: 2, z: 3, rotation: 0.5, scale: 1 },
-    ] as Building[];
-
-    const clonedMesh = {
-      userData: {},
-      position: { set: vi.fn() },
-      rotation: { y: 0 },
-      scale: { setScalar: vi.fn() },
-    };
-
-    const mockModel = { clone: vi.fn().mockReturnValue(clonedMesh) };
-    const mockScene = { children: [], add: vi.fn() };
-    const loadRSU = vi.fn();
-    const updateSceneGraph = vi.fn();
     const setNotice = vi.fn();
+    const loadFile = vi.fn();
+    const updateSceneGraph = vi.fn();
 
     await handleLoad({
       hasId: true,
       scenarioIdInput: 'b-scene-1',
-      sceneRef: { current: mockScene } as unknown as React.RefObject<
-        THREE.Scene | undefined
-      >,
       setNotice,
-      loadRSURef: { current: loadRSU } as unknown as React.RefObject<
-        () => void
-      >,
-      buildingModelRef: {
-        current: mockModel,
-      } as unknown as React.RefObject<THREE.Object3D | null>,
       updateSceneGraph,
-      loadFile: vi.fn(),
+      loadFile,
     });
 
-    expect(mockModel.clone).toHaveBeenCalledWith(true);
-    expect(clonedMesh.position.set).toHaveBeenCalledWith(1, 2, 3);
-    expect(clonedMesh.scale.setScalar).toHaveBeenCalledWith(1);
-    expect(mockScene.add).toHaveBeenCalledWith(clonedMesh);
-    expect(loadRSU).toHaveBeenCalled();
+    expect(storeState.addBuilding).toHaveBeenCalledWith(1, 2, 3);
+    expect(storeState.updateBuilding).toHaveBeenCalledWith(
+      'b-1',
+      expect.objectContaining({
+        height: 5,
+        material: 'brick',
+      }),
+    );
     expect(updateSceneGraph).toHaveBeenCalled();
+    expect(setNotice).toHaveBeenCalledWith('The scenario has been uploaded.');
+    expect(loadFile).toHaveBeenCalled();
   });
 
-  it('skips building already present in scene', async () => {
+  it('skips building already present in store', async () => {
     const buildingId = 'b-existing';
 
-    storeState.addBuilding.mockImplementationOnce(() => buildingId);
     storeState.buildings = [{ id: buildingId, x: 1, y: 2, z: 3 }] as Building[];
 
     fetchQueryMock.mockResolvedValue({
       scenario: {
         scenario_id: 'b-skip-1',
+        file_: VALID_XODR,
         scenario_text: [
           {
             vehicle: 'building',
@@ -1180,29 +1089,20 @@ describe('buildScenarioPayload', () => {
       },
     });
 
-    const mockModel = { clone: vi.fn() };
-    const existingChild = { userData: { id: buildingId } };
-    const mockScene = { children: [existingChild], add: vi.fn() };
+    const setNotice = vi.fn();
+    const loadFile = vi.fn();
+    const updateSceneGraph = vi.fn();
 
     await handleLoad({
       hasId: true,
       scenarioIdInput: 'b-skip-1',
-      sceneRef: { current: mockScene } as unknown as React.RefObject<
-        THREE.Scene | undefined
-      >,
-      setNotice: vi.fn(),
-      loadRSURef: { current: vi.fn() } as unknown as React.RefObject<
-        () => void
-      >,
-      buildingModelRef: {
-        current: mockModel,
-      } as unknown as React.RefObject<THREE.Object3D | null>,
-      updateSceneGraph: vi.fn(),
-      loadFile: vi.fn(),
+      setNotice,
+      updateSceneGraph,
+      loadFile,
     });
 
-    expect(mockModel.clone).not.toHaveBeenCalled();
-    expect(mockScene.add).not.toHaveBeenCalled();
+    expect(storeState.addBuilding).toHaveBeenCalledWith(1, 2, 3);
+    expect(loadFile).toHaveBeenCalled();
   });
 
   it('sets error notice when fetchQuery throws', async () => {
@@ -1212,38 +1112,21 @@ describe('buildScenarioPayload', () => {
     await handleLoad({
       hasId: true,
       scenarioIdInput: 'bad-id',
-      sceneRef: {
-        current: { children: [], add: vi.fn() },
-      } as unknown as React.RefObject<THREE.Scene | undefined>,
       setNotice,
-      loadRSURef: { current: vi.fn() } as unknown as React.RefObject<
-        () => void
-      >,
-      buildingModelRef: {
-        current: {},
-      } as unknown as React.RefObject<THREE.Object3D | null>,
       updateSceneGraph: vi.fn(),
       loadFile: vi.fn(),
     });
 
     expect(setNotice).toHaveBeenCalledWith('Failed to load scenario.');
   });
+
   it('returns early when hasId is false', async () => {
     const setNotice = vi.fn();
 
     await handleLoad({
       hasId: false,
       scenarioIdInput: 'sc-1',
-      sceneRef: { current: null } as unknown as React.RefObject<
-        THREE.Scene | undefined
-      >,
       setNotice,
-      loadRSURef: { current: vi.fn() } as unknown as React.RefObject<
-        () => void
-      >,
-      buildingModelRef: {
-        current: null,
-      } as unknown as React.RefObject<THREE.Object3D | null>,
       updateSceneGraph: vi.fn(),
       loadFile: vi.fn(),
     });
@@ -1256,6 +1139,7 @@ describe('buildScenarioPayload', () => {
     fetchQueryMock.mockResolvedValue({
       scenario: {
         scenario_id: 'lidar-test',
+        file_: VALID_XODR,
         scenario_text: [
           {
             vehicle: 'car',
@@ -1285,21 +1169,16 @@ describe('buildScenarioPayload', () => {
       },
     });
 
+    const setNotice = vi.fn();
+    const loadFile = vi.fn();
+    const updateSceneGraph = vi.fn();
+
     await handleLoad({
       hasId: true,
       scenarioIdInput: 'lidar-test',
-      sceneRef: { current: null } as unknown as React.RefObject<
-        THREE.Scene | undefined
-      >,
-      setNotice: vi.fn(),
-      loadRSURef: { current: vi.fn() } as unknown as React.RefObject<
-        () => void
-      >,
-      buildingModelRef: {
-        current: null,
-      } as unknown as React.RefObject<THREE.Object3D | null>,
-      updateSceneGraph: vi.fn(),
-      loadFile: vi.fn(),
+      setNotice,
+      updateSceneGraph,
+      loadFile,
     });
 
     expect(storeState.addLidar).toHaveBeenCalledWith('car-1', 0, 1, 2);
@@ -1309,61 +1188,37 @@ describe('buildScenarioPayload', () => {
       channels: 32,
       rotation_frequency: 20,
     });
+    // loadFile вызывается, так как есть file_ в ответе
+    expect(loadFile).toHaveBeenCalled();
   });
 
-  it('retries building rendering until the scene becomes ready', async () => {
-    vi.useFakeTimers();
-
+  it('handles setStep when provided without xodr (loadFile not called)', async () => {
     fetchQueryMock.mockResolvedValue({
       scenario: {
-        scenario_id: 'retry-test',
-        scenario_text: [
-          {
-            vehicle: 'building',
-            path: [{ x: 1, y: 2, z: 3, height: 5, material: 'brick' }],
-          },
-        ],
+        scenario_id: 'step-test',
+        // file_ отсутствует - xodr будет undefined
+        scenario_text: [],
       },
     });
 
-    storeState.buildings = [{ id: 'b-1', x: 1, y: 2, z: 3 }] as Building[];
+    const setStep = vi.fn();
+    const setNotice = vi.fn();
+    const loadFile = vi.fn();
 
-    const sceneRef = { current: null as THREE.Scene | null };
-    const clonedMesh = {
-      userData: {},
-      position: { set: vi.fn() },
-      rotation: { y: 0 },
-      scale: { setScalar: vi.fn() },
-    };
-    const mockModel = { clone: vi.fn().mockReturnValue(clonedMesh) };
-    const loadRSU = vi.fn();
-
-    const loadPromise = handleLoad({
+    await handleLoad({
       hasId: true,
-      scenarioIdInput: 'retry-test',
-      sceneRef: sceneRef as unknown as React.RefObject<THREE.Scene | undefined>,
-      setNotice: vi.fn(),
-      loadRSURef: { current: loadRSU } as unknown as React.RefObject<
-        () => void
-      >,
-      buildingModelRef: {
-        current: mockModel,
-      } as unknown as React.RefObject<THREE.Object3D | null>,
+      scenarioIdInput: 'step-test',
+      setNotice,
       updateSceneGraph: vi.fn(),
-      loadFile: vi.fn(),
+      loadFile,
+      setStep,
     });
 
-    await Promise.resolve();
-    expect(mockModel.clone).not.toHaveBeenCalled();
-
-    sceneRef.current = { children: [], add: vi.fn() } as unknown as THREE.Scene;
-    await vi.advanceTimersByTimeAsync(300);
-    await loadPromise;
-
-    expect(mockModel.clone).toHaveBeenCalledWith(true);
-    expect(clonedMesh.position.set).toHaveBeenCalledWith(1, 2, 3);
-    expect(loadRSU).toHaveBeenCalled();
-
-    vi.useRealTimers();
+    // setStep вызывается с 'map'
+    expect(setStep).toHaveBeenCalledWith('map');
+    // Так как xodr отсутствует, setStep вызывается с 'done'
+    expect(setStep).toHaveBeenCalledWith('done');
+    // loadFile не вызывается, так как нет xodr
+    expect(loadFile).not.toHaveBeenCalled();
   });
 });

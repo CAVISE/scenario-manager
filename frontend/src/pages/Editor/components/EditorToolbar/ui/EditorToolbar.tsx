@@ -6,6 +6,8 @@ import MenuIcon from '@mui/icons-material/Menu';
 import SettingsIcon from '@mui/icons-material/Settings';
 import DownloadIcon from '@mui/icons-material/Download';
 import SecurityIcon from '@mui/icons-material/Security';
+import UndoIcon from '@mui/icons-material/Undo';
+import RedoIcon from '@mui/icons-material/Redo';
 import FileMenu from '../menus';
 import ExportMenu from '../menus/ExportMenu';
 import {
@@ -18,6 +20,7 @@ import UploadScenariosModal from '../../UploadScenariosModal';
 import SimConfigModal from '../../SimConfigModal';
 import AttackConfigModal from '../../AttackConfigModal';
 import ExportDialog from '../dialogs';
+import { useHistoryActions } from '../../../hooks/createEvents/useHistoryActions';
 
 function sanitizeDownloadFilename(name: string, fallback: string): string {
   const t = name.trim() || fallback;
@@ -43,6 +46,7 @@ export const EditorToolbar = () => {
     null,
   );
   const [exportFilename, setExportFilename] = useState('');
+  const { undo, redo, canUndo, canRedo } = useHistoryActions();
 
   const openExportDialog = useCallback(
     (defaultFilename: string, getContent: (filename: string) => string) => {
@@ -92,6 +96,23 @@ export const EditorToolbar = () => {
           onClose={() => setFileMenuAnchor(null)}
           onUpload={() => setUploadModalOpen(true)}
         />
+      </div>
+
+      <div style={EditorToolbarDivStyles}>
+        <Tooltip title="Undo (Ctrl+Z)">
+          <span>
+            <IconButton size="small" onClick={undo} disabled={!canUndo}>
+              <UndoIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
+        <Tooltip title="Redo (Ctrl+Shift+Z)">
+          <span>
+            <IconButton size="small" onClick={redo} disabled={!canRedo}>
+              <RedoIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
       </div>
 
       <div style={EditorToolbarDivStyles}>

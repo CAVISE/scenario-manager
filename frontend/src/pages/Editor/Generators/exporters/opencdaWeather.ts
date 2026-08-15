@@ -24,7 +24,7 @@ const CLEAR_NOON: OpenCDAWeatherParams = {
   wetness: 0,
 };
 
-const WEATHER_BY_PRESET: Record<CarlaWeather, OpenCDAWeatherParams> = {
+export const WEATHER_BY_PRESET: Record<CarlaWeather, OpenCDAWeatherParams> = {
   ClearNoon: CLEAR_NOON,
   CloudyNoon: { ...CLEAR_NOON, sun_altitude_angle: 60, cloudiness: 70 },
   WetNoon: {

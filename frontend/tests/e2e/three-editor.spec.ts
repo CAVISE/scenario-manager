@@ -95,6 +95,21 @@ const mockScenarioApi = async (page: Page) => {
                 },
               ],
             },
+            {
+              vehicle: 'building',
+              path: [
+                {
+                  id: 'mock-building-1',
+                  x: 30,
+                  y: 10,
+                  z: 0,
+                  height: 20,
+                  material: 'concrete',
+                  scale: 0.5,
+                  rotation: 0,
+                },
+              ],
+            },
           ],
         },
       }),
@@ -187,4 +202,91 @@ test.describe('Three.js editor flows', () => {
     await expect(page.getByTestId('scene-graph-count')).toHaveText('0 objects');
     await expect(page.getByText('scene is empty')).toBeVisible();
   });
+});
+test('loading scenario with a building renders it in scene graph', async ({
+  page,
+}) => {
+  await mockScenarioApi(page);
+  await openEditor(page);
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('menuitem', { name: 'Upload' }).click();
+  await page.getByText('Mock scenario').click();
+  await page.getByRole('button', { name: 'Load onto scene' }).click();
+
+  await expect(page.getByText(/Building/)).toBeVisible();
+});
+test('deleting a building via panel removes its mesh, not just the store entry', async ({
+  page,
+}) => {
+  await mockScenarioApi(page);
+  await openEditor(page);
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('menuitem', { name: 'Upload' }).click();
+  await page.getByText('Mock scenario').click();
+  await page.getByRole('button', { name: 'Load onto scene' }).click();
+  await expect(page.getByText(/Building/)).toBeVisible();
+
+  const countBefore = await page.getByTestId('scene-graph-count').textContent();
+  await page.getByText(/Building/).click();
+  await page.getByRole('button', { name: 'Delete building' }).click();
+  await expect(page.getByTestId('scene-graph-count')).not.toHaveText(
+    countBefore!,
+  );
+  await expect(page.getByText(/Building/)).not.toBeVisible();
+});
+test('reloading a scenario does not accumulate duplicate building meshes', async ({
+  page,
+}) => {
+  await mockScenarioApi(page);
+  await openEditor(page);
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('menuitem', { name: 'Upload' }).click();
+  await page.getByText('Mock scenario').click();
+  await page.getByRole('button', { name: 'Load onto scene' }).click();
+
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('menuitem', { name: 'Upload' }).click();
+  await page.getByText('Mock scenario').click();
+  await page.getByRole('button', { name: 'Load onto scene' }).click();
+  await expect(page.getByTestId('scene-graph-count')).not.toHaveText(
+    '0 objects',
+  );
+});
+
+// test('clear all removes buildings along with other objects', async ({ page }) => {
+//   await page.getByRole('button', { name: 'Clear all' }).click();
+//   await expect(page.getByTestId('scene-graph-count')).toHaveText('0 objects');
+//   await expect(page.getByText(/Building/)).not.toBeVisible();
+// });
+test('adding building via speed dial and double-click creates a mesh', async ({
+  page,
+}) => {
+  await openEditor(page);
+  await openSpeedDial(page);
+  await page.getByRole('menuitem', { name: 'Add building' }).click();
+
+  const canvas = page.getByTestId('editor-canvas');
+  await canvas.click({ position: { x: 50, y: 50 } });
+  await canvas.dblclick({ position: { x: 400, y: 300 } });
+
+  await expect(page.getByText(/Building/)).toBeVisible();
+});
+test('deleting a pedestrian via panel removes its mesh, not just the store entry', async ({
+  page,
+}) => {
+  await mockScenarioApi(page);
+  await openEditor(page);
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('menuitem', { name: 'Upload' }).click();
+  await page.getByText('Mock scenario').click();
+  await page.getByRole('button', { name: 'Load onto scene' }).click();
+
+  const countBefore = await page.getByTestId('scene-graph-count').textContent();
+  await page.getByText(/Pedestrian/).click();
+  await page.getByRole('button', { name: 'Delete pedestrian' }).click();
+
+  await expect(page.getByTestId('scene-graph-count')).not.toHaveText(
+    countBefore!,
+  );
+  await expect(page.getByText(/Pedestrian/)).not.toBeVisible();
 });

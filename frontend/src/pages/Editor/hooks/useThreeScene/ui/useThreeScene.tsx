@@ -16,12 +16,12 @@ import { useEditorRefs } from '../../../context';
 import { createStoreSubscriptions } from '../../createEvents/createStoreSubscriptions';
 import { createEditorActions } from '../../createEvents/createEditorActions';
 import { createTransformListener } from '../../createEvents/createTransformListener';
+import { createHistoryTracker } from '../../createEvents/createHistoryTracker';
 import { createThreeSetup } from '../../useOpenDriveUtils/useThreeSetup';
 
 export function useThreeScene({
   updateSceneGraph,
   setStep,
-  buildingModelRef,
 }: useThreeSceneProps): UseThreeSceneResult {
   const setError = useEditorStore((s) => s.setError);
 
@@ -86,21 +86,17 @@ export function useThreeScene({
     isDraggingRef,
   });
 
-  const { loadRSU, loadPoints, syncRoadMesh, localLineArrRef } =
-    useSceneObjects({
-      updateSceneGraph,
-      buildingModelRef,
-    });
+  const { loadPoints, syncRoadMesh, localLineArrRef } = useSceneObjects({
+    updateSceneGraph,
+  });
 
   const { getOdrMeshes, loadOdrMap, reloadOdrMap, setModuleRef, setMapRef } =
     useOdrMapManager({
       setStep,
       setError,
-      loadRSU,
       loadPoints,
       syncRoadMesh,
       updateSceneGraph,
-      buildingModelRef,
       buildingMeshesRef,
       localLineArrRef,
     });
@@ -129,34 +125,27 @@ export function useThreeScene({
   useEffect(() => {
     if (!threeReady) return;
     return createStoreSubscriptions({
-      sceneRef,
-      buildingModelRef,
-      transformControlsRef,
       getIsDragging,
-      loadRSU,
       loadPoints,
       updateSceneGraph,
     });
-  }, [
-    threeReady,
-    loadRSU,
-    loadPoints,
-    getIsDragging,
-    updateSceneGraph,
-    sceneRef,
-    buildingModelRef,
-    transformControlsRef,
-  ]);
+  }, [threeReady, loadPoints, getIsDragging, updateSceneGraph]);
 
   useEffect(() => {
     if (!threeReady || !threeRef.current) return;
     return createTransformListener({
       transformControls: threeRef.current.transformControls,
+      sceneRef,
       carMeshesRef,
       cubeCirclesRef,
       carQuaternionsRef,
     });
-  }, [threeReady, carMeshesRef, cubeCirclesRef, carQuaternionsRef]);
+  }, [threeReady, sceneRef, carMeshesRef, cubeCirclesRef, carQuaternionsRef]);
+
+  useEffect(() => {
+    if (!threeReady) return;
+    return createHistoryTracker({ getIsDragging });
+  }, [threeReady, getIsDragging]);
 
   useEffect(() => {
     if (!threeReady || !threeRef.current) return;

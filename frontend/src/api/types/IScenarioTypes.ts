@@ -157,7 +157,7 @@ export const ALLOWED_VEHICLES = new Set([
   'pedestrian',
 ]);
 
-type ValidationIssue = {
+export type ValidationIssue = {
   msg?: string;
   loc?: (string | number)[];
 };

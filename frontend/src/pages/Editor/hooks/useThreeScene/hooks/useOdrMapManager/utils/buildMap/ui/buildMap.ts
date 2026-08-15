@@ -1,5 +1,4 @@
 import { useEditorStore } from '../../../../../../../../../store';
-import { restoreObjects } from '../../../../../../../scene/utils/restoreObjects';
 import { OdrMapMeshes } from '../../../../../../useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
 import { buildOdrScene } from '../../../../../../useOpenDriveUtils/useOdrMap';
 import { BuildMapParams } from '../types/buildMapTypes';
@@ -16,11 +15,9 @@ export function buildMap({
   fitView,
   resolution,
   params,
-  loadRSU,
   loadPoints,
   syncRoadMesh,
   updateSceneGraph,
-  buildingModelRef,
 }: BuildMapParams): OdrMapMeshes {
   const { scene, camera, controls, light, transformControls, picking } = three;
 
@@ -47,7 +44,6 @@ export function buildMap({
   odrMeshesRef.current = newMeshes;
   syncRoadMesh(newMeshes.road_network_mesh);
 
-  restoreObjects({ scene, loadRSU, updateSceneGraph, buildingModelRef });
   loadPoints();
 
   const selectedId = useEditorStore.getState().selectedId;

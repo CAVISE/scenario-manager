@@ -70,11 +70,6 @@ export function handleDeleteNode({
       s.removeRSU(rsuIdx);
     }
   } else if (meta.label === 'BLD') {
-    const mesh = sceneRef.current?.children.find((c) => c.userData.id === id);
-    if (mesh) {
-      disposeMesh(mesh);
-      sceneRef.current?.remove(mesh);
-    }
     s.removeBuilding(id);
   } else if (meta.label === 'HMN') {
     s.removePedestrian(id);

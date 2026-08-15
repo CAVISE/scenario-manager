@@ -36,11 +36,9 @@ export const ODR_MAP_OPTIONS = {
 export interface UseOdrMapManagerProps {
   setStep: (step: keyof typeof LOADING_STEPS) => void;
   setError: ((err: Error) => void) | undefined;
-  loadRSU: () => void;
   loadPoints: () => void;
   syncRoadMesh: (mesh: THREE.Mesh | null) => void;
   updateSceneGraph: () => void;
-  buildingModelRef: MutableRefObject<THREE.Object3D | null>;
   buildingMeshesRef: MutableRefObject<THREE.Object3D[]>;
   localLineArrRef: MutableRefObject<THREE.Line[][]>;
 }

@@ -10,8 +10,8 @@ const SCENE_WAIT_INTERVAL_MS = 150;
 export const EditorScenarioBootstrap = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const scenarioId = searchParams.get('scenario');
-  const { sceneRef, loadRSURef } = useEditorRefs();
-  const { buildingModelRef, updateSceneGraph, loadFile, setStep } = useHooks();
+  const { sceneRef } = useEditorRefs();
+  const { updateSceneGraph, loadFile, setStep } = useHooks();
   const loadedIdRef = useRef<string | null>(null);
   const toast = useAppToast();
 
@@ -55,13 +55,9 @@ export const EditorScenarioBootstrap = () => {
       handleLoad({
         hasId: true,
         scenarioIdInput: scenarioId,
-        sceneRef,
-
         setNotice: (message: string) => {
           if (message) toast.error(message);
         },
-        loadRSURef,
-        buildingModelRef,
         updateSceneGraph,
         loadFile,
         setStep,

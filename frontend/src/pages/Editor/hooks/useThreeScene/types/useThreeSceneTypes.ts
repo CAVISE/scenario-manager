@@ -3,7 +3,6 @@ import type * as THREE from 'three';
 import { LOADING_STEPS } from '../../../types/editorTypes';
 export const localLineArr: THREE.Line[][] = [];
 export interface useThreeSceneProps {
-  buildingModelRef: React.RefObject<THREE.Object3D | null>;
   setStep: (step: keyof typeof LOADING_STEPS) => void;
   updateSceneGraph: () => void;
 }
