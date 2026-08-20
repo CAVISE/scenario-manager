@@ -1,11 +1,12 @@
-import type { MutableRefObject } from 'react';
-import { OpenDriveMapInstance } from '../../../../../../../types/editorTypes';
 import {
+  OpenDriveModule,
   OdrMapMaterials,
   OdrMapMeshes,
-  OpenDriveModule,
-} from '../../../../../../useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
-import { ThreeSetup } from '../../../../../../useOpenDriveUtils/useThreeSetup/types/useThreeSetupTypes';
+} from '@editor/hooks/useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
+import { ThreeSetup } from '@editor/hooks/useOpenDriveUtils/useThreeSetup/types/useThreeSetupTypes';
+import { OpenDriveMapInstance } from '@editor/types/editorTypes';
+import type { MutableRefObject } from 'react';
+
 import * as THREE from 'three';
 export interface BuildMapParams {
   three: ThreeSetup;

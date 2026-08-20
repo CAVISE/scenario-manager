@@ -1,8 +1,11 @@
+import { Vec3 } from '@editor/types/editorTypes';
 import * as THREE from 'three';
-import { segments, radius } from '../types/loadPointsTypes';
-import type { LoadPointsContext } from '../types/loadPointsTypes';
-import type { ConnectLinesContext } from '../types/loadPointsTypes';
-import { Vec3 } from '../../../../types/editorTypes';
+import {
+  LoadPointsContext,
+  radius,
+  segments,
+  ConnectLinesContext,
+} from '../types/loadPointsTypes';
 
 export function loadPoints(ctx: LoadPointsContext) {
   const { scene, points } = ctx;

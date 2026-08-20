@@ -1,55 +1,148 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { visualizer } from 'rollup-plugin-visualizer';
+import svgr from 'vite-plugin-svgr';
+import compression from 'vite-plugin-compression';
 
 export default defineConfig(({ mode }) => ({
-  legacy: {
-    inconsistentCjsInterop: true,
+  server: {
+    port: 3000,
+    open: true,
+    strictPort: false,
+    hmr: {
+      overlay: true,
+    },
   },
 
   plugins: [
     react(),
+
+    svgr({
+      svgrOptions: {
+        icon: true,
+      },
+    }),
+
+    compression({
+      algorithm: 'gzip',
+      ext: '.gz',
+    }),
+
+    compression({
+      algorithm: 'brotliCompress',
+      ext: '.br',
+    }),
+
     ...(mode === 'analyze'
       ? [
           visualizer({
-            open: false,
+            open: true,
             gzipSize: true,
             brotliSize: true,
             filename: 'dist/stats.html',
+            template: 'treemap',
           }),
         ]
       : []),
   ],
 
   build: {
-    sourcemap: mode === 'analyze',
-    chunkSizeWarningLimit: 700,
+    // minify: false,
+    // sourcemap: true,
+    sourcemap: mode === 'production' ? 'hidden' : true,
+    chunkSizeWarningLimit: 1000,
+    minify: mode === 'production' ? 'esbuild' : false,
 
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          const normalizedId = id.replace(/\\/g, '/');
-          const isPackage = (name: string) =>
-            normalizedId.includes(`/node_modules/${name}/`);
+        entryFileNames: 'assets/[name].[hash].js',
+        chunkFileNames: 'assets/[name].[hash].js',
+        assetFileNames: 'assets/[name].[hash].[ext]',
 
-          if (isPackage('@mui/icons-material')) return 'icons';
-          if (isPackage('react') || isPackage('react-dom')) {
-            return 'react-vendor';
-          }
-          if (isPackage('react-router-dom')) return 'router';
-          if (
-            isPackage('@mui/material') ||
-            isPackage('@mui/system') ||
-            isPackage('@emotion/react') ||
-            isPackage('@emotion/styled') ||
-            isPackage('@emotion/cache')
-          ) {
-            return 'mui';
-          }
-          if (isPackage('three-stdlib')) return 'three-stdlib';
-          if (isPackage('three')) return 'three';
+        codeSplitting: {
+          groups: [
+            {
+              name: 'vendor-three',
+              test: /\/three\//,
+            },
+            {
+              name: 'vendor-mui',
+              test: /\/@mui\//,
+            },
+            {
+              name: 'vendor-react',
+              test: /\/react(?:-dom)?\//,
+            },
+            {
+              name: 'vendor-router',
+              test: /\/react-router(?:-dom)?\//,
+            },
+            {
+              name: 'vendor-emotion',
+              test: /\/@emotion\//,
+            },
+            {
+              name: 'vendor-zustand',
+              test: /\/zustand\//,
+            },
+            {
+              name: 'vendor-axios',
+              test: /\/axios\//,
+            },
+            {
+              name: 'vendor-common',
+              test: /\/node_modules\//,
+            },
+            {
+              name: 'pages',
+              test: /\/src\/pages\//,
+            },
+
+            {
+              name: 'ui-components',
+              test: /\/src\/components\/ui\//,
+            },
+          ],
         },
       },
+      external: [],
     },
+    target: 'es2020',
+    emptyOutDir: true,
+  },
+
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      '@mui/material',
+      '@mui/icons-material',
+      '@emotion/react',
+      '@emotion/styled',
+      'three',
+      'zustand',
+    ],
+    exclude: ['three-stdlib'],
+  },
+
+  css: {
+    modules: {
+      localsConvention: 'camelCase',
+      generateScopedName:
+        mode === 'production'
+          ? '[hash:base64:8]'
+          : '[name]__[local]__[hash:base64:5]',
+    },
+    preprocessorOptions: {
+      scss: {
+        loadPaths: ['./src'],
+        additionalData: `@use "styles/variables" as *;`,
+      },
+    },
+  },
+
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
   },
 }));

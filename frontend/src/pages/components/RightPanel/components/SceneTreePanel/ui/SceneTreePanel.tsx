@@ -1,9 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { SimpleTreeView } from '@mui/x-tree-view/SimpleTreeView';
 import { TreeItem } from '@mui/x-tree-view/TreeItem';
-import { useEditorStore } from '../../../../../../store';
-import { useAppToast } from '../../../../../../components/AppToast';
-import type { SceneNode } from '../../../types/PanelTypes';
 import { css, extraCss } from '../types/SceneTreePanelTypes';
 import { countNodes, getTypeMeta } from '../types/SceneTreePanelTypes';
 import { syncPointsWithScene } from '../funcs/syncPointsWithScene';
@@ -11,8 +8,10 @@ import { collectExpandedIds } from '../funcs/collectExpandedIds';
 import { handleSelect } from '../funcs/handleSelect';
 import { handleClearScene } from '../funcs/handleClearScene';
 import { handleDeleteNode } from '../funcs/handleDeleteNode';
-import { useHooks } from '../../../../../Editor/context';
-import { useEditorRefs } from '../../../../../Editor/context';
+import { useEditorRefs, useHooks } from '@editor/context';
+import { SceneNode } from '@editor/hooks/useEditorEngine/useSceneGraph/types/useSceneGraphTypes';
+import { useAppToast } from '@/components/AppToast';
+import { useEditorStore } from '@/store';
 
 export default function SceneTreePanel() {
   const { sceneGraph, detachTransformControls } = useHooks();

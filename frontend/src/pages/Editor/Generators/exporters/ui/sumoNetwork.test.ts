@@ -4,10 +4,6 @@ import process from 'process';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type {
-  Car,
-  Point,
-} from '../../../../../store/types/useEditorStoreTypes';
 import {
   buildSumoRoutes,
   clearLoadedSumoNetwork,
@@ -16,6 +12,7 @@ import {
   getSumoCoordinateOffsets,
   isSumoNetXml,
 } from './sumoNetwork';
+import { Car, Point } from '@/store/types/useEditorStoreTypes';
 
 const NET_XML = `<?xml version="1.0" encoding="UTF-8"?>
 <net>

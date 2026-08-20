@@ -1,5 +1,5 @@
 import type { SimulationConfig } from '../types/configGeneratorsTypes';
-import type { Car, Lidar } from '../../../../store/types/useEditorStoreTypes';
+import type { Car, Lidar } from '@/store/types/useEditorStoreTypes';
 
 const OMEGA_DT = '${world.fixed_delta_seconds}';
 

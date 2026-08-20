@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import * as THREE from 'three';
-import { useEditorStore } from '../../../../../../../store';
-import { useHooks, useEditorRefs } from '../../../../../context';
+import { useEditorStore } from '@/store';
 import { ensureRsuModel, rsuModel } from '../utils/RsuUtils';
+import { useEditorRefs, useHooks } from '@editor/context';
 
 export function useRSUMeshSync(): void {
   const RSUs = useEditorStore((s) => s.RSUs);

@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
+import { MutableRefObject, useEffect } from 'react';
 import * as THREE from 'three';
-import { GLTFLoader } from 'three-stdlib';
-import { useEditorStore } from '../../../../../../../store';
-import { useHooks, useEditorRefs } from '../../../../../context';
+import { GLTFLoader, TransformControls } from 'three-stdlib';
+import { useEditorStore } from '@/store';
+import { useHooks, useEditorRefs } from '@editor/context';
 
 const loader = new GLTFLoader();
 let pedestrianModel: THREE.Object3D | null = null;
@@ -26,9 +26,9 @@ let pedestrianSyncQueue: Promise<void> = Promise.resolve();
 
 function syncPedestrians(
   scene: THREE.Scene,
-  pedestrianMeshesRef: React.RefObject<THREE.Mesh[]>,
-  pedestrianObjsRef: React.RefObject<THREE.Mesh[]>,
-  transformControlsRef: React.RefObject<unknown>,
+  pedestrianMeshesRef: MutableRefObject<THREE.Mesh[]>,
+  pedestrianObjsRef: MutableRefObject<THREE.Mesh[]>,
+  transformControlsRef: MutableRefObject<TransformControls | null>,
   updateSceneGraph: () => void,
 ) {
   const pedestrians = useEditorStore.getState().pedestrians;
@@ -88,9 +88,9 @@ function syncPedestrians(
 
 function queuePedestrianSync(
   scene: THREE.Scene,
-  pedestrianMeshesRef: React.RefObject<THREE.Mesh[]>,
-  pedestrianObjsRef: React.RefObject<THREE.Mesh[]>,
-  transformControlsRef: React.RefObject<unknown>,
+  pedestrianMeshesRef: MutableRefObject<THREE.Mesh[]>,
+  pedestrianObjsRef: MutableRefObject<THREE.Mesh[]>,
+  transformControlsRef: MutableRefObject<TransformControls | null>,
   updateSceneGraph: () => void,
 ): Promise<void> {
   pedestrianSyncQueue = pedestrianSyncQueue.then(() =>

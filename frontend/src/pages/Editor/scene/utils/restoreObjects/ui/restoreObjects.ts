@@ -1,4 +1,4 @@
-import { useEditorStore } from '../../../../../../store';
+import { useEditorStore } from '@/store';
 import { RestoreObjectsOptions } from '../types/restoreObjectsTypes';
 
 export function restoreObjects(opts: RestoreObjectsOptions): void {

@@ -5,8 +5,8 @@ import {
   FormControl,
   Typography,
 } from '@mui/material';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import { RSU } from '../../../../../../../store/types/useEditorStoreTypes';
+import { KeyboardArrowDown as KeyboardArrowDownIcon } from '@mui/icons-material';
+import { RSU } from '@/store/types/useEditorStoreTypes';
 import { RsuPropertiesTextareaStyles } from '../../types/RSUPropertiesTypes';
 
 interface ScriptSectionProps {

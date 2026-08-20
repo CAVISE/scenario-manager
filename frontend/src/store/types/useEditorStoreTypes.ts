@@ -245,6 +245,22 @@ export type HistoryEntry = {
   sourceSnapshotId?: string;
 };
 
+export type ErrorLogSource =
+  | 'console'
+  | 'unhandledrejection'
+  | 'window.onerror'
+  | 'react-boundary'
+  | 'manual';
+
+export type ErrorLogEntry = {
+  id: string;
+  timestamp: number;
+  message: string;
+  stack?: string;
+  source: ErrorLogSource;
+  context?: string;
+};
+
 export type EditorState = {
   cars: Car[];
   RSUs: RSU[];
@@ -260,6 +276,9 @@ export type EditorState = {
   pedestrians: Pedestrian[];
   isPanelOpen: boolean;
   setError: (err: Error | null) => void;
+  errorLog: ErrorLogEntry[];
+  logError: (entry: Omit<ErrorLogEntry, 'id' | 'timestamp'>) => void;
+  clearErrorLog: () => void;
   setChangePanelMode: () => void;
   setBuildingMode: (value: boolean) => void;
   removeSelectedId: () => void;

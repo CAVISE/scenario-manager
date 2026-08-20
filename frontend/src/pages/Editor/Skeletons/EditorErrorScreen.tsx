@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { css, failedSubsystems } from './types/EditorErrorScreenTypes';
 import type { CP } from './types/EditorErrorScreenTypes';
-import { useEditorStore } from '../../../store';
+import { useEditorStore } from '@/store';
 const HexErrorLogo: React.FC = () => (
   <svg width="56" height="64" viewBox="0 0 56 64" fill="none">
     <polygon

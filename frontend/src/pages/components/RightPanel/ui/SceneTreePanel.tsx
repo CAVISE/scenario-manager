@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useSelectedObject } from '../../../Editor/hooks/useEditorEngine/useSelectedObject';
 
 import CarProperties from '../components/CarProperties';
 import LidarProperties from '../components/LidarProperties';
@@ -9,9 +8,10 @@ import RoutePointProperties from '../components/RoutePointProperties';
 import type { SectionProps } from '../types/PanelTypes';
 import { css } from '../types/PanelTypes';
 import PedestrianProperties from '../components/PedestrianProperties';
-import ScenarioControlWidget from '../components/ScenarioControlWidget';
-import { useEditorStore } from '../../../../store';
+import { useEditorStore } from '@/store';
 import SceneTreePanel from '../components/SceneTreePanel';
+import { useSelectedObject } from '@editor/hooks/useEditorEngine/useSelectedObject';
+import ScenarioControlWidget from '../components/ScenarioControlWidget';
 
 const Section: React.FC<SectionProps> = ({
   label,

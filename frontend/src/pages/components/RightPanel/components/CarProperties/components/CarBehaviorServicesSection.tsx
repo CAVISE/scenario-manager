@@ -1,9 +1,9 @@
 import { FormControlLabel, Stack, Switch } from '@mui/material';
-import { useEditorStore } from '../../../../../../store';
+import { useEditorStore } from '@/store';
 import type {
   Car,
   CavBehaviorService,
-} from '../../../../../../store/types/useEditorStoreTypes';
+} from '@/store/types/useEditorStoreTypes';
 
 interface CarBehaviorServicesSectionProps {
   car: Car;

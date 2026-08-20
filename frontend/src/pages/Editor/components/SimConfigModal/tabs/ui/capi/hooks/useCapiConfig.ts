@@ -1,9 +1,6 @@
+import { defaultSimConfig } from '@editor/Generators/types/configGeneratorsTypes';
+import { useEditorStore, SimulationConfig } from '@/store';
 import { useMemo } from 'react';
-import {
-  type SimulationConfig,
-  defaultSimConfig,
-} from '../../../../../../Generators/types/configGeneratorsTypes';
-import { useEditorStore } from '../../../../../../../../store';
 
 export type CapiConfig = SimulationConfig['capi'];
 

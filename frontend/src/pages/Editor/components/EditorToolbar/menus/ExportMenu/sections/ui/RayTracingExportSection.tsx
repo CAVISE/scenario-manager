@@ -1,8 +1,8 @@
 import { ListSubheader, MenuItem } from '@mui/material';
-import { useEditorStore } from '../../../../../../../../store';
-import { generateSionnaConfig } from '../../../../../../Generators/exporters';
-import { mergeSimConfigWithDefaults } from '../../../../../../Generators/types/configGeneratorsTypes';
-import DownloadIcon from '@mui/icons-material/Download';
+import { useEditorStore } from '@/store';
+import { generateSionnaConfig } from '@editor/Generators/exporters';
+import { mergeSimConfigWithDefaults } from '@editor/Generators/types/configGeneratorsTypes';
+import { Download as DownloadIcon } from '@mui/icons-material';
 import {
   DownloadIconStyles,
   ListSubheaderStyles,

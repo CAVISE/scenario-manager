@@ -1,6 +1,6 @@
+import { OdrMapMeshes } from '@editor/hooks/useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
+import { ThreeSetup } from '@editor/hooks/useOpenDriveUtils/useThreeSetup/types/useThreeSetupTypes';
 import type { MutableRefObject } from 'react';
-import { OdrMapMeshes } from '../../../../../../useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
-import { ThreeSetup } from '../../../../../../useOpenDriveUtils/useThreeSetup/types/useThreeSetupTypes';
 import * as THREE from 'three';
 export interface ClearSceneParams {
   three: ThreeSetup;

@@ -1,5 +1,5 @@
-import { useEditorStore } from '../../../../../../../../store';
-import type { DeletionSnapshot } from '../../../../../../../../store/types/useEditorStoreTypes';
+import { useEditorStore } from '@/store';
+import { DeletionSnapshot } from '@/store/types/useEditorStoreTypes';
 
 export type PushedSnapshotInfo = {
   snapshotId: string;

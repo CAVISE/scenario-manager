@@ -1,13 +1,12 @@
+import { useEditorRefs } from '@editor/context';
+import {
+  createSpotlightState,
+  startAnimate,
+} from '@editor/hooks/useOpenDriveUtils/useSpotlight';
+import { useEditorStore } from '@/store';
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-
-import {
-  startAnimate,
-  createSpotlightState,
-} from '../../../../useOpenDriveUtils/useSpotlight';
-import { useEditorStore } from '../../../../../../../store/ui/useEditorStore';
 import { UseSceneAnimatorProps } from '../types/useSceneAnimatorTypes';
-import { useEditorRefs } from '../../../../../context';
 
 function createIdIndexCache<T extends THREE.Object3D>() {
   let lastArray: T[] | null = null;

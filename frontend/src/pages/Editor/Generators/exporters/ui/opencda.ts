@@ -22,7 +22,7 @@ import type {
   RSU,
   CavBehaviorService,
   RsuBehaviorService,
-} from '../../../../../store/types/useEditorStoreTypes';
+} from '@/store/types/useEditorStoreTypes';
 
 const YAML_RESERVED_STRINGS = new Set([
   'true',

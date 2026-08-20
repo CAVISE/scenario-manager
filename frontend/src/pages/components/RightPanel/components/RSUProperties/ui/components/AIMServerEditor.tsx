@@ -8,10 +8,10 @@ import {
   Box,
   Switch,
 } from '@mui/material';
-import { RsuBehaviorService } from '../../../../../../../store/types/useEditorStoreTypes';
-import { parseNumberInputChange } from '../../../../../../Editor/components/SimConfigModal/utils/numberInputUtils';
-import { numInputSlot } from '../../../../types/PanelTypes';
-import { formLabelStyles } from '../../../CarProperties/types/CarPropertiesTypes';
+import { parseNumberInputChange } from '@editor/components/SimConfigModal/utils/numberInputUtils';
+import { numInputSlot } from '@right-panel/types/PanelTypes';
+import { formLabelStyles } from '@/shared/styles/panelStyles';
+import { RsuBehaviorService } from '@/store/types/useEditorStoreTypes';
 
 export function AIMServerEditor({
   service,

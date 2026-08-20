@@ -1,11 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { generateCarlaYaml } from './carla';
+import { Car, RSU, Point } from '@/store/types/useEditorStoreTypes';
 import { defaultSimConfig } from '../../types/configGeneratorsTypes';
-import type {
-  Car,
-  Point,
-  RSU,
-} from '../../../../../store/types/useEditorStoreTypes';
 
 const makeCar = (overrides: Partial<Car> = {}): Car =>
   ({

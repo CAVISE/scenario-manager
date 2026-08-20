@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import { disposeMesh } from '../../sceneUtils';
-import { useEditorStore } from '../../../../../../../../store/ui/useEditorStore';
-import { getTypeMeta } from '../../../types/SceneTreePanelTypes';
-import { pushSingleDeletionSnapshot } from '../../deletionSnapshots';
+import { useEditorStore } from '@/store';
 import { handleDeleteNodeProps } from '../types/handleDeleteNodeTypes';
+import { disposeMesh } from '@editor/scene/utils/disposeMesh';
+import { pushSingleDeletionSnapshot } from '../../deletionSnapshots';
+import { getTypeMeta } from '../../../types/SceneTreePanelTypes';
 
 export function handleDeleteNode({
   id,

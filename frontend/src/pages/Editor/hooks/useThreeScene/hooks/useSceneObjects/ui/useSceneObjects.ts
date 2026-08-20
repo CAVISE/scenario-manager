@@ -1,14 +1,15 @@
 import { useRef, useCallback } from 'react';
 import * as THREE from 'three';
 
-import { loadRSU as _loadRSU } from '../../../../../scene/loaders/loadRSU';
-import { loadPoints as _loadPoints } from '../../../../../scene/loaders/loadPoints';
-import { useEditorRefs } from '../../../../../context';
-import { useEditorStore } from '../../../../../../../store';
+import { loadRSU as _loadRSU } from '@editor/scene/loaders/loadRSU';
+import { loadPoints as _loadPoints } from '@editor/scene/loaders/loadPoints';
+
 import {
   UseSceneObjectsProps,
   UseSceneObjectsResult,
 } from '../types/useSceneObjectsTypes';
+import { useEditorStore } from '@/store';
+import { useEditorRefs } from '@editor/context';
 
 export function useSceneObjects({
   updateSceneGraph,

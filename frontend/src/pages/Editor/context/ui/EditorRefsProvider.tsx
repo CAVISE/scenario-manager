@@ -1,11 +1,11 @@
 import React, { useRef } from 'react';
 import * as THREE from 'three';
 import { TransformControls } from 'three-stdlib';
-import { EditorRefsContext } from '../ui/EditorRefsContext';
-import { EditorRefs } from '../types/EditorRefsTypes';
+import { EditorRefsContext } from './EditorRefsContext';
 import { ThreeSetup } from '../../hooks/useOpenDriveUtils/useThreeSetup/types/useThreeSetupTypes';
-import { OpenDriveMapInstance } from '../../types/editorTypes';
 import { DEFAULT_COLOR } from '../../hooks/useThreeScene/hooks/useOdrMapManager/utils/clearScene/types/clearSceneTypes';
+import { OpenDriveMapInstance } from '../../types/editorTypes';
+import { EditorRefs } from '../types/EditorRefsTypes';
 
 export const EditorRefsProvider: React.FC<{ children: React.ReactNode }> = ({
   children,

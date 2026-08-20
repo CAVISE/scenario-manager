@@ -161,6 +161,10 @@ export function setStoredXodrName(mapName: string): string {
   return normalized;
 }
 
+export function clearStoredXodrName(): void {
+  localStorage.removeItem(MAP_NAME_KEY);
+}
+
 export function getStoredXodrName(fallbackMapName?: string): string {
   const storedName = localStorage.getItem(MAP_NAME_KEY);
   if (storedName?.trim()) return withXodrExtension(storedName);

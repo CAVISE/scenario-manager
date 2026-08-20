@@ -7,14 +7,14 @@ import {
   TextField,
   Tooltip,
 } from '@mui/material';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import AddIcon from '@mui/icons-material/Add';
+import { DeleteOutline as DeleteOutlineIcon } from '@mui/icons-material';
+import { Add as AddIcon } from '@mui/icons-material';
 import { JsonField } from './JsonField';
 import { StageEditor } from './StageEditor';
 import type {
   OpenCDAAttackConfig,
   OpenCDAAttackStage,
-} from '../../../Generators/types/configGeneratorsTypes';
+} from '@editor/Generators/types/configGeneratorsTypes';
 
 interface AttackEditorProps {
   attack: OpenCDAAttackConfig;

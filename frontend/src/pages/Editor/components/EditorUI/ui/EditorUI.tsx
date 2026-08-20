@@ -1,8 +1,8 @@
-import SpeedDialTooltipOpen from '../../../../components/SpeedDialTooltipOpen';
+import SpeedDialTooltipOpen from '@/pages/components/SpeedDialTooltipOpen';
 import { CoordinatesWidget } from '../../CoordinateWidget';
-import { EditorToolbar } from '../../EditorToolbar';
 import { EditorTransformControls } from '../../EditorTransformControls';
 import { lazy, Suspense } from 'react';
+import { EditorToolbar } from '../../EditorToolbar';
 
 const RightPanel = lazy(() => import('../../../../components/RightPanel'));
 const EditorModals = lazy(() => import('../../EditorModals'));

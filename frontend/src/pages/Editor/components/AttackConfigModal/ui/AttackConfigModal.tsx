@@ -1,5 +1,5 @@
 import { Box, Button, Divider, Modal, Stack, Typography } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+import { Add as AddIcon } from '@mui/icons-material';
 import { AttackEditor } from '../components/AttackEditor';
 import { AttackList } from '../components/AttackList';
 import { useAttackEditor } from '../hooks/useAttackEditor';

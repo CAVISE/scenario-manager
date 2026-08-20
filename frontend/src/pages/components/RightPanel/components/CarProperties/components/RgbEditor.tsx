@@ -1,7 +1,7 @@
 import { FormControl, FormLabel, Grid, Input } from '@mui/material';
-import { numInputSlot } from '../../../types/PanelTypes';
 import { formLabelStyles } from '../types/CarPropertiesTypes';
 import { parseRgbValueFromEvent } from '../utils/carOpenCDAHelpers';
+import { numInputSlot } from '@right-panel/types/PanelTypes';
 
 export function RgbEditor({
   color,

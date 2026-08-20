@@ -3,7 +3,7 @@ import type {
   Car,
   RSU,
   Building,
-} from '../../../store/types/useEditorStoreTypes';
+} from '@/store/types/useEditorStoreTypes';
 export const LOADING_STEPS = {
   init: { text: 'Initializing editor…', pct: 5 },
   wasm: { text: 'Loading WebAssembly…', pct: 25 },

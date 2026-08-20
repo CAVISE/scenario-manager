@@ -1,11 +1,11 @@
 import { Divider, Menu, MenuItem } from '@mui/material';
-import FolderIcon from '@mui/icons-material/Folder';
-import SaveIcon from '@mui/icons-material/Save';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import AssessmentIcon from '@mui/icons-material/Assessment';
-import UploadIcon from '@mui/icons-material/Upload';
+import { Folder as FolderIcon } from '@mui/icons-material';
+import { Save as SaveIcon } from '@mui/icons-material';
+import { PlayArrow as PlayArrowIcon } from '@mui/icons-material';
+import { Assessment as AssessmentIcon } from '@mui/icons-material';
+import { Upload as UploadIcon } from '@mui/icons-material';
 import { FileMenuProps, FolderIconStyles } from '../types/FileMenuTypes';
-import { useScenarioSave } from '../../../../hooks/useApiHooks/useScenarioSave';
+import { useScenarioSave } from '@editor/hooks/useApiHooks/useScenarioSave';
 
 export default function FileMenu({
   anchorEl,

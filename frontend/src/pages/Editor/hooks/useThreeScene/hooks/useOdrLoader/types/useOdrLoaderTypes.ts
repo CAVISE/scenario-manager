@@ -1,9 +1,6 @@
+import { OpenDriveModule } from '@editor/hooks/useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
+import { LOADING_STEPS, OpenDriveMapInstance } from '@editor/types/editorTypes';
 import type { MutableRefObject } from 'react';
-import {
-  LOADING_STEPS,
-  OpenDriveMapInstance,
-} from '../../../../../types/editorTypes';
-import { OpenDriveModule } from '../../../../useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
 
 export interface UseOdrLoaderProps {
   setStep: (step: keyof typeof LOADING_STEPS) => void;

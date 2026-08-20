@@ -6,7 +6,7 @@ import {
   Grid,
   Button,
 } from '@mui/material';
-import { useEditorStore } from '../../../../../../store';
+import { useEditorStore } from '@/store';
 import NumericInput from '../../NumericInput';
 import { ILidarProps } from '../types/LidarPropertiesTypes';
 

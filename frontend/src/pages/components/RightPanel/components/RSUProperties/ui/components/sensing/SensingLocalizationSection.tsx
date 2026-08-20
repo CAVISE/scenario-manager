@@ -7,10 +7,10 @@ import {
   Switch,
   Typography,
 } from '@mui/material';
-import { RSU } from '../../../../../../../../store/types/useEditorStoreTypes';
-import { parseNumberInputChange } from '../../../../../../../Editor/components/SimConfigModal/utils/numberInputUtils';
-import { numInputSlot } from '../../../../../types/PanelTypes';
-import { formLabelStyles } from '../../../../CarProperties/types/CarPropertiesTypes';
+import { RSU } from '@/store/types/useEditorStoreTypes';
+import { parseNumberInputChange } from '@editor/components/SimConfigModal/utils/numberInputUtils';
+import { formLabelStyles } from '@/shared/styles/panelStyles';
+import { numInputSlot } from '@right-panel/types/PanelTypes';
 
 interface SensingLocalizationSectionProps {
   rsu: RSU;

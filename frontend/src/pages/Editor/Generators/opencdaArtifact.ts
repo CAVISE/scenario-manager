@@ -1,4 +1,4 @@
-import type { EditorState } from '../../../store/types/useEditorStoreTypes';
+import type { EditorState } from '@/store/types/useEditorStoreTypes';
 import { generateOpenCDAConfig } from './exporters';
 import { mergeSimConfigWithDefaults } from './types/configGeneratorsTypes';
 

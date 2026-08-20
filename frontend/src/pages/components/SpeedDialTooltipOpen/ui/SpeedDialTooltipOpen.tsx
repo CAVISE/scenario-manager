@@ -1,16 +1,16 @@
 import * as React from 'react';
 import SpeedDial from '@mui/material/SpeedDial';
+import { Timeline as TimelineIcon } from '@mui/icons-material';
+import { DirectionsCar as CarIcon } from '@mui/icons-material';
+import { AddLocation as AddLocationIcon } from '@mui/icons-material';
+import { Apartment as ApartmentIcon } from '@mui/icons-material';
 import SpeedDialIcon from '@mui/material/SpeedDialIcon';
 import SpeedDialAction from '@mui/material/SpeedDialAction';
-import CarIcon from '@mui/icons-material/DirectionsCar';
-import AddLocationIcon from '@mui/icons-material/AddLocation';
-import TimelineIcon from '@mui/icons-material/Timeline';
-import ApartmentIcon from '@mui/icons-material/Apartment';
-import AccessibilityNewIcon from '@mui/icons-material/AccessibilityNew';
-import { IButtStyles } from '../../../Editor/hooks/useApiHooks/useStatusesQuery/types/IStatusesTypes';
-import { useEditorStore } from '../../../../store';
+import { AccessibilityNew as AccessibilityNewIcon } from '@mui/icons-material';
+import { IButtStyles } from '@editor/hooks/useApiHooks/useStatusesQuery/types/IStatusesTypes';
+import { useEditorStore } from '@/store';
 import { useEffect } from 'react';
-import { useHooks } from '../../../Editor/context';
+import { useHooks } from '@editor/context';
 
 export default function SpeedDialTooltipOpen() {
   const {

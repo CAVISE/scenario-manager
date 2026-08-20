@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useEditorStore } from '../../../../../../store';
+import { useEditorStore } from '@/store';
 import { UseEditorHandlersProps } from '../types/useEditorHandlersTypes';
 
 export const useEditorHandlers = ({

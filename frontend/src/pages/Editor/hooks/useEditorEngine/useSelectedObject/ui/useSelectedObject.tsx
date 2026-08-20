@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useEditorStore } from '../../../../../../store';
+import { useEditorStore } from '@/store';
 
 export function useSelectedObject() {
   const selectedId = useEditorStore((s) => s.selectedId);

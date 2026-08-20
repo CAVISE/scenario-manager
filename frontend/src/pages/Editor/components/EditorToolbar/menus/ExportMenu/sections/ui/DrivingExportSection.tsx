@@ -1,14 +1,14 @@
 import { ListSubheader, MenuItem } from '@mui/material';
-import DownloadIcon from '@mui/icons-material/Download';
+import { Download as DownloadIcon } from '@mui/icons-material';
 import {
   DownloadIconStyles,
   ListSubheaderStyles,
   SimulatorProps,
 } from '../types/SimulationTypes';
-import { useEditorStore } from '../../../../../../../../store';
-import { buildOpenCDAArtifact } from '../../../../../../Generators/configGenerators';
-import { generateCarlaYaml } from '../../../../../../Generators/exporters';
-import { mergeSimConfigWithDefaults } from '../../../../../../Generators/types/configGeneratorsTypes';
+import { useEditorStore } from '@/store';
+import { buildOpenCDAArtifact } from '@editor/Generators/configGenerators';
+import { generateCarlaYaml } from '@editor/Generators/exporters';
+import { mergeSimConfigWithDefaults } from '@editor/Generators/types/configGeneratorsTypes';
 
 export default function DrivingExportSection({
   openExportDialog,

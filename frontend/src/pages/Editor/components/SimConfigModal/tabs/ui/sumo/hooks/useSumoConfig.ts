@@ -1,13 +1,13 @@
-import { useMemo, useState } from 'react';
-import { useEditorStore } from '../../../../../../../../store';
 import {
   getLoadedSumoNetwork,
   setLoadedSumoNetwork,
-} from '../../../../../../Generators/exporters';
+} from '@editor/Generators/exporters';
 import {
   mergeSimConfigWithDefaults,
   defaultSimConfig,
-} from '../../../../../../Generators/types/configGeneratorsTypes';
+} from '@editor/Generators/types/configGeneratorsTypes';
+import { useEditorStore } from '@/store';
+import { useMemo, useState } from 'react';
 
 export const useSumoConfig = () => {
   const rawSimConfig = useEditorStore((s) => s.simConfig);

@@ -1,4 +1,4 @@
-import { useEditorStore } from '../../../../../../../../store';
+import { useEditorStore } from '@/store';
 
 export const useMpcConfig = () => {
   const mpc = useEditorStore((s) => s.simConfig.mpc);

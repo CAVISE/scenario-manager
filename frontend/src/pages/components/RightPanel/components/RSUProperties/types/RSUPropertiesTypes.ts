@@ -1,4 +1,4 @@
-import { RSU } from '../../../../../../store/types/useEditorStoreTypes';
+import { RSU } from '@/store/types/useEditorStoreTypes';
 
 export interface RSUPropertiesProps {
   rsu: RSU;

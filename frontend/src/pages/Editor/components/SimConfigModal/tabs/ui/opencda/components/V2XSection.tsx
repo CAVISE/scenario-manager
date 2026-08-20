@@ -14,7 +14,7 @@ import {
   numInputSlot,
   createNumberFieldOnChange,
 } from '../utils/opencdaFieldUtils';
-import { SimulationConfig } from '../../../../../../Generators/types/configGeneratorsTypes';
+import { SimulationConfig } from '@/store';
 
 interface V2XSectionProps {
   enabled: boolean;

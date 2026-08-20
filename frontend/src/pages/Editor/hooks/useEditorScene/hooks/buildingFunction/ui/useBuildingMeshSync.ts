@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import * as THREE from 'three';
-import { useEditorStore } from '../../../../../../../store';
-import { useHooks, useEditorRefs } from '../../../../../context';
-import { disposeMesh } from '../../../../../../components/RightPanel/components/SceneTreePanel/funcs/sceneUtils';
+import { useEditorStore } from '@/store';
+import { useHooks, useEditorRefs } from '@editor/context';
+import { disposeMesh } from '@right-panel/components/SceneTreePanel/funcs/sceneUtils';
 
 export function useBuildingMeshSync(): void {
   const buildings = useEditorStore((s) => s.buildings);

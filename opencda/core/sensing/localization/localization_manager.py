@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Localization module
 """
@@ -17,9 +16,9 @@ from opencda.core.sensing.localization.localization_debug_helper \
     import LocDebugHelper
 from opencda.core.sensing.localization.kalman_filter import KalmanFilter
 from opencda.core.sensing.localization.coordinate_transform \
-    import geo_to_transform
+    import geo_to_transform, geo_noise_to_meters
 from opencda.core.sensing.localization.gnss_spoofer \
-    import GnssDriftSpoofer
+    import GnssDriftSpoofer, GnssStealthSpoofer
 
 
 log = logging.getLogger(__name__)
@@ -47,7 +46,6 @@ class GnssSensor(object):
         world = vehicle.get_world()
         blueprint = world.get_blueprint_library().find('sensor.other.gnss')
 
-        # set the noise for gps
         blueprint.set_attribute(
             'noise_alt_stddev', str(
                 config['noise_alt_stddev']))
@@ -210,28 +208,62 @@ class LocalizationManager(object):
         spoofing_config = config_yaml.get('gnss_spoofing')
         self.gnss_spoofer = None
         self._gnss_spoofer_active = False
+
+        gnss_R = None
         if spoofing_config:
             mode = spoofing_config.get('mode', 'drift')
-            if mode != 'drift':
+            if mode == 'drift':
+                self.gnss_spoofer = GnssDriftSpoofer(
+                    spoofing_config, self.dt)
+                log.info(
+                    '[gnss_spoofer] actor=%s configured start=%.2fs '
+                    'ramp=%.2fs lateral=%.2fm longitudinal=%.2fm '
+                    'rate=%.3fm/s max=%.2fm jitter=%.2fm',
+                    vehicle.id,
+                    self.gnss_spoofer.start_time,
+                    self.gnss_spoofer.ramp_duration,
+                    self.gnss_spoofer.lateral_offset,
+                    self.gnss_spoofer.longitudinal_offset,
+                    self.gnss_spoofer.drift_rate,
+                    self.gnss_spoofer.max_offset,
+                    self.gnss_spoofer.jitter_stddev,
+                )
+            elif mode == 'stealth':
+                gnss_cfg = config_yaml['gnss']
+                x_stddev, y_stddev, _ = geo_noise_to_meters(
+                    gnss_cfg['noise_lat_stddev'],
+                    gnss_cfg['noise_lon_stddev'],
+                    gnss_cfg['noise_alt_stddev'],
+                    self._geo_ref_lat,
+                    self._geo_ref_lon,
+                )
+                self.gnss_spoofer = GnssStealthSpoofer(
+                    spoofing_config, self.dt, (x_stddev, y_stddev))
+                gnss_R = np.diag(
+                    [x_stddev, y_stddev, self.heading_noise_std]) ** 2
+                log.info(
+                    '[gnss_spoofer] actor=%s stealth mode: '
+                    'max_sigma=%.2f (x_stddev=%.3fm y_stddev=%.3fm '
+                    'heading_stddev=%.3f -> max_offset=%.3fm) start=%.2fs '
+                    'ramp=%.2fs lateral=%.2fm longitudinal=%.2fm '
+                    'rate=%.3fm/s jitter=%.2fm',
+                    vehicle.id,
+                    self.gnss_spoofer.max_sigma,
+                    x_stddev, y_stddev, self.heading_noise_std,
+                    self.gnss_spoofer.max_offset,
+                    self.gnss_spoofer.start_time,
+                    self.gnss_spoofer.ramp_duration,
+                    self.gnss_spoofer.lateral_offset,
+                    self.gnss_spoofer.longitudinal_offset,
+                    self.gnss_spoofer.drift_rate,
+                    self.gnss_spoofer.jitter_stddev,
+                )
+            else:
                 raise ValueError(
                     'Unsupported runtime GNSS spoofing mode: %s' % mode)
-            self.gnss_spoofer = GnssDriftSpoofer(
-                spoofing_config, self.dt)
-            log.info(
-                '[gnss_spoofer] actor=%s configured start=%.2fs '
-                'ramp=%.2fs lateral=%.2fm longitudinal=%.2fm '
-                'rate=%.3fm/s max=%.2fm jitter=%.2fm',
-                vehicle.id,
-                self.gnss_spoofer.start_time,
-                self.gnss_spoofer.ramp_duration,
-                self.gnss_spoofer.lateral_offset,
-                self.gnss_spoofer.longitudinal_offset,
-                self.gnss_spoofer.drift_rate,
-                self.gnss_spoofer.max_offset,
-                self.gnss_spoofer.jitter_stddev,
-            )
+
         # Kalman Filter
-        self.kf = KalmanFilter(self.dt)
+        self.kf = KalmanFilter(self.dt, R=gnss_R)
 
         # DebugHelper
         self.debug_helper = LocDebugHelper(

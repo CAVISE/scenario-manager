@@ -9,26 +9,28 @@ import {
   Modal,
   Typography,
 } from '@mui/material';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
-import TelemetryModal from '../../../../../components/TelemetryModal';
-import { useStartSimulationMutation } from '../../../hooks/useApiHooks/useSimulationMutation';
-import { useEditorStore } from '../../../../../store';
-import { getApiErrorMessage } from '../../../../../api/errors';
-import type { StartSimulationPayload } from '../../../hooks/useApiHooks/useSimulationMutation/types/useSimulationMutationTypes';
-import { buildScenarioPayload } from '../../../../components/RightPanel/components/ScenarioControlWidget/Handlers';
-import { validateStartSimulationPayload } from '../../../../../api/scenarioValidation';
+import { CheckCircleOutline as CheckCircleOutlineIcon } from '@mui/icons-material';
+import { MapOutlined as MapOutlinedIcon } from '@mui/icons-material';
+
 import {
+  CARLA_MAPS,
   fetchXodrText,
   getStoredXodrName,
   resolveXodrTextForSimulation,
   setStoredXodrName,
-} from '../../../hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
-import { CARLA_MAPS } from '../../SimConfigModal/types/SimConfigModalTypes';
-import { useEditorRefs, useHooks } from '../../../context';
-import { ScenarioGroup } from '../../../../../api/types/IScenarioTypes';
-import { buildOpenCDAArtifact } from '../../../Generators/configGenerators';
-import { clearLoadedSumoNetwork } from '../../../Generators/exporters/ui/sumoNetwork';
+} from '@editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
+import { useEditorRefs, useHooks } from '@editor/context';
+
+import { getApiErrorMessage } from '@/api/errors';
+import { validateStartSimulationPayload } from '@/api/scenarioValidation';
+import { ScenarioGroup } from '@/api/types/IScenarioTypes';
+import TelemetryModal from '@/components/TelemetryModal';
+import { buildScenarioPayload } from '@right-panel/components/ScenarioControlWidget/Handlers';
+import { clearLoadedSumoNetwork } from '@editor/Generators/exporters/ui/sumoNetwork';
+import { buildOpenCDAArtifact } from '@editor/Generators/opencdaArtifact';
+import { useStartSimulationMutation } from '@editor/hooks/useApiHooks/useSimulationMutation';
+import { StartSimulationPayload } from '@editor/hooks/useApiHooks/useSimulationMutation/types/useSimulationMutationTypes';
+import { useEditorStore } from '@/store';
 import {
   confirmModalStyles,
   confirmIconWrapStyles,

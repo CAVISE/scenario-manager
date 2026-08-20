@@ -1,10 +1,10 @@
 import { IconButton } from '@mui/material';
-import OpenWithIcon from '@mui/icons-material/OpenWith';
-import RotateRightIcon from '@mui/icons-material/RotateRight';
-import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
+import { OpenWith as OpenWithIcon } from '@mui/icons-material';
+import { RotateRight as RotateRightIcon } from '@mui/icons-material';
+import { ZoomOutMap as ZoomOutMapIcon } from '@mui/icons-material';
 import { EditorTransformControlsStyles } from '../types/EditorTransformControlsTypes';
-import { useTransformMode } from '../../../hooks/useEditorEngine/useTransformMode';
-import { useEditorRefs } from '../../../context';
+import { useTransformMode } from '@editor/hooks/useEditorEngine/useTransformMode';
+import { useEditorRefs } from '@editor/context';
 
 export const EditorTransformControls = () => {
   const { transformControlsRef } = useEditorRefs();

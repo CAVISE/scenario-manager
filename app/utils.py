@@ -429,6 +429,42 @@ def _apply_attacks(
                 )
                 continue
 
+            if mode == "stealth":
+                spoofing = {
+                    "mode": "stealth",
+                    "start_time": float(params.get("start_time", 10.0)),
+                    "ramp_duration": float(params.get("ramp_duration", 8.0)),
+                    "lateral_offset": float(params.get("lateral_offset", 1.8)),
+                    "longitudinal_offset": float(
+                        params.get("longitudinal_offset", 0.5)
+                    ),
+                    "drift_rate": float(params.get("drift_rate", 0.08)),
+                    "jitter_stddev": float(params.get("jitter_stddev", 0.0)),
+                    "max_sigma": float(params.get("max_sigma", 2.0)),
+                }
+                for key in (
+                    "start_time", "ramp_duration", "drift_rate",
+                    "jitter_stddev", "max_sigma",
+                ):
+                    if spoofing[key] < 0:
+                        raise ValueError(
+                            "GNSS spoofing %s must be non-negative" % key)
+                loc["gnss_spoofing"] = spoofing
+                log.info(
+                    "ATTACK spoofer -> CAV%d | mode=stealth start=%.2fs "
+                    "ramp=%.2fs lateral=%.2fm longitudinal=%.2fm "
+                    "rate=%.3fm/s max_sigma=%.2f jitter=%.2fm",
+                    idx,
+                    spoofing["start_time"],
+                    spoofing["ramp_duration"],
+                    spoofing["lateral_offset"],
+                    spoofing["longitudinal_offset"],
+                    spoofing["drift_rate"],
+                    spoofing["max_sigma"],
+                    spoofing["jitter_stddev"],
+                )
+                continue
+
             if mode != "noise":
                 raise ValueError("Unsupported GNSS spoofing mode: %s" % mode)
 

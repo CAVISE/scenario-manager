@@ -1,19 +1,20 @@
 import * as THREE from 'three';
-import {
-  get_geometry,
-  fitViewToBbox,
-  getStdMapEntries,
-  getStdVecEntries,
-} from '../../../../scene/utils/sceneHelpers';
-import { encodeUInt32 } from '../../../../../../helpers/editorhelper';
+
 import { COLORS } from '../types/useOdrMapTypes';
-import type { PickingScenes } from '../../useThreeSetup/types/useThreeSetupTypes';
 import type {
   OdrMapMaterials,
   OdrMapMeshes,
   LoadOdrMapParams,
 } from '../types/useOdrMapTypes';
-import { useEditorStore } from '../../../../../../store';
+import { useEditorStore } from '@/store';
+import {
+  fitViewToBbox,
+  get_geometry,
+  getStdMapEntries,
+  getStdVecEntries,
+} from '@editor/scene/utils/sceneHelpers';
+import { encodeUInt32 } from '@/helpers/editorhelper';
+import { PickingScenes } from '../../useThreeSetup/types/useThreeSetupTypes';
 
 export function createOdrMaterials(): OdrMapMaterials {
   return {
@@ -52,7 +53,10 @@ export function clearOdrScene(
     if (o) scene.remove(o);
   });
   Object.values(pickingScenes).forEach((s) => s.remove(...s.children));
-  disposable_objs.forEach((g) => g.dispose());
+  disposable_objs.forEach((g) => {
+    g.disposeBoundsTree();
+    g.dispose();
+  });
   disposable_objs.length = 0;
 }
 
@@ -113,6 +117,7 @@ export function buildOdrScene(p: LoadOdrMapParams): OdrMapMeshes {
     road_network_geom.attributes.id.array.set(arr, vi[0] * 4);
   }
   disposable_objs.push(road_network_geom);
+  road_network_geom.computeBoundsTree();
 
   const road_network_mesh = new THREE.Mesh(
     road_network_geom,

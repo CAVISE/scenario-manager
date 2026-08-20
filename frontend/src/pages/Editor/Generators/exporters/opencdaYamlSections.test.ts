@@ -9,7 +9,7 @@ import {
   pushCavSensingOverride,
 } from './opencdaYamlSections';
 import { defaultSimConfig } from '../types/configGeneratorsTypes';
-import type { Car, Lidar } from '../../../../store/types/useEditorStoreTypes';
+import type { Car, Lidar } from '@/store/types/useEditorStoreTypes';
 
 const makeCar = (overrides: Partial<Car> = {}): Car =>
   ({

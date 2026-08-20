@@ -1,19 +1,21 @@
+import { OpenDriveModule } from '@editor/hooks/useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
+import { libOpenDrive } from '@editor/types/editorTypes';
+import { useEditorStore } from '@/store';
 import { useEffect } from 'react';
-import { libOpenDrive } from '../../../../../types/editorTypes';
-import { useEditorStore } from '../../../../../../../store';
-import type { OpenDriveModule } from '../../../../useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
 import {
+  UseOdrLoaderProps,
   MAP_PATH,
   ODR_MAP_OPTIONS,
-  UseOdrLoaderProps,
 } from '../types/useOdrLoaderTypes';
 import {
+  setCachedCustomXodrContent,
   DEFAULT_XODR,
-  fetchXodrText,
   getCachedXodrContent,
   getStoredXodrName,
+  fetchXodrText,
   initXodrCacheFromIndexedDb,
-  setCachedCustomXodrContent,
+  setStoredXodrName,
+  clearStoredXodrName,
 } from '../utils/xodrRepository';
 
 export function useOdrLoader({
@@ -122,13 +124,19 @@ export function useOdrLoader({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function loadFile(fileText: string, clearMap: boolean) {
+  function loadFile(fileText: string, clearMap: boolean, sourceName?: string) {
     if (!moduleRef.current) {
       setStep('done');
       setError?.(new Error('OpenDRIVE module not initialized'));
       return;
     }
     setCachedCustomXodrContent(fileText);
+
+    if (sourceName) {
+      setStoredXodrName(sourceName);
+    } else {
+      clearStoredXodrName();
+    }
     setStep('map');
     const Module = moduleRef.current;
 

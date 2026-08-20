@@ -8,10 +8,10 @@ import {
   Switch,
   Typography,
 } from '@mui/material';
-import { RSU } from '../../../../../../../store/types/useEditorStoreTypes';
-import { parseNumberInputChange } from '../../../../../../Editor/components/SimConfigModal/utils/numberInputUtils';
-import { AIM_CHECK_RSU_BEHAVIOR_SERVICES } from '../../../../../../Editor/Generators/exporters/aimCheckDefaults';
-import { numInputSlot } from '../../../../types/PanelTypes';
+import { RSU } from '@/store/types/useEditorStoreTypes';
+import { parseNumberInputChange } from '@editor/components/SimConfigModal/utils/numberInputUtils';
+import { numInputSlot } from '@right-panel/types/PanelTypes';
+import { AIM_CHECK_RSU_BEHAVIOR_SERVICES } from '@editor/Generators/exporters/aimCheckDefaults';
 
 interface OpenCDAIdentitySectionProps {
   rsu: RSU;

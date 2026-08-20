@@ -1,5 +1,5 @@
+import { Vec3 } from '@editor/types/editorTypes';
 import React from 'react';
-import { Vec3 } from '../../../Editor/types/editorTypes';
 export const numInputSlot = {
   input: {
     onKeyDown: (e: React.KeyboardEvent) => e.stopPropagation(),

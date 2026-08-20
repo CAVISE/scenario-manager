@@ -3,7 +3,7 @@ import {
   Point,
   RsuBehaviorService,
   SumoStop,
-} from '../../../../../../store/types/useEditorStoreTypes';
+} from '@/store/types/useEditorStoreTypes';
 export interface CarPath {
   x: number;
   y: number;

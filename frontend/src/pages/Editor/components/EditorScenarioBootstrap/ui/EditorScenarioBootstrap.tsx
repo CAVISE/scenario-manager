@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useEditorRefs, useHooks } from '../../../context';
-import { handleLoad } from '../../../../components/RightPanel/components/ScenarioControlWidget/Handlers';
-import { useAppToast } from '../../../../../components/AppToast';
+import { handleLoad } from '@right-panel/components/ScenarioControlWidget/Handlers';
+import { useAppToast } from '@/components/AppToast';
+import { useEditorRefs, useHooks } from '@editor/context';
 
 const MAX_SCENE_WAIT_ATTEMPTS = 20;
 const SCENE_WAIT_INTERVAL_MS = 150;

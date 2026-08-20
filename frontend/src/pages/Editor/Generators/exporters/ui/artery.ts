@@ -1,5 +1,5 @@
-import type { SimulationConfig } from '../../types/configGeneratorsTypes';
-import type { RSU } from '../../../../../store/types/useEditorStoreTypes';
+import { SimulationConfig } from '@/store';
+import { RSU } from '@/store/types/useEditorStoreTypes';
 
 export function generateArteryConfig(
   config: SimulationConfig,

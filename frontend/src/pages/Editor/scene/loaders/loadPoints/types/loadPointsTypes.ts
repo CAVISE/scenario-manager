@@ -1,6 +1,6 @@
+import { Vec3 } from '@editor/types/editorTypes';
+import { Point } from '@/store/types/useEditorStoreTypes';
 import * as THREE from 'three';
-import { Vec3 } from '../../../../types/editorTypes';
-import { Point } from '../../../../../../store/types/useEditorStoreTypes';
 
 export const radius = 2;
 export const segments = 32;

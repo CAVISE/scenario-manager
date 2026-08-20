@@ -1,6 +1,6 @@
 import { FormControl, FormLabel, Grid } from '@mui/material';
-import { RSU } from '../../../../../../../store/types/useEditorStoreTypes';
-import { formLabelStyles } from '../../../CarProperties/types/CarPropertiesTypes';
+import { RSU } from '@/store/types/useEditorStoreTypes';
+import { formLabelStyles } from '@/shared/styles/panelStyles';
 import NumericInput from '../../../NumericInput';
 
 interface PositionSectionProps {

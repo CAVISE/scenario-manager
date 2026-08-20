@@ -1,15 +1,12 @@
-import { useEditorStore } from '../../../../../../store';
+import { OpenDriveModule } from '@editor/hooks/useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
+import { MAP_PATH } from '@editor/hooks/useThreeScene/hooks/useOdrLoader/types/useOdrLoaderTypes';
 import {
-  DEFAULT_XODR,
   setCachedCustomXodrContent,
-} from '../../../../hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
-import { OpenDriveModule } from '../../../../hooks/useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
-import { PARAMS } from '../../../../hooks/useThreeScene/types/useThreeSceneTypes';
-import {
-  LOADING_STEPS,
-  OpenDriveMapInstance,
-} from '../../../../types/editorTypes';
-import { MAP_PATH } from '../../../../hooks/useThreeScene/hooks/useOdrLoader/types/useOdrLoaderTypes';
+  DEFAULT_XODR,
+} from '@editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
+import { PARAMS } from '@editor/hooks/useThreeScene/types/useThreeSceneTypes';
+import { LOADING_STEPS, OpenDriveMapInstance } from '@editor/types/editorTypes';
+import { useEditorStore } from '@/store';
 
 export function reloadOdrMap({
   setStep,

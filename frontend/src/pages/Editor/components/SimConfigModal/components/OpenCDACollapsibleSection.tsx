@@ -5,7 +5,7 @@ import {
   Typography,
 } from '@mui/material';
 import type { Theme } from '@mui/material/styles';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import { KeyboardArrowDown as KeyboardArrowDownIcon } from '@mui/icons-material';
 import type { ReactNode } from 'react';
 
 type Props = {

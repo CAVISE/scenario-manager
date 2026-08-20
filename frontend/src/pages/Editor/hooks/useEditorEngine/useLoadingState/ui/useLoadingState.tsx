@@ -1,5 +1,5 @@
+import { LOADING_STEPS } from '@editor/types/editorTypes';
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { LOADING_STEPS } from '../../../../types/editorTypes';
 
 export function useLoadingState() {
   const isDoneRef = useRef(false);

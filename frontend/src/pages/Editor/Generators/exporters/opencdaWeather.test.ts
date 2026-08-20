@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { CarlaWeather } from '../../../../store/types/useEditorStoreTypes';
+import type { CarlaWeather } from '@/store/types/useEditorStoreTypes';
 import { WEATHER_BY_PRESET, weatherParamsFromPreset } from './opencdaWeather';
 
 describe('weatherParamsFromPreset', () => {

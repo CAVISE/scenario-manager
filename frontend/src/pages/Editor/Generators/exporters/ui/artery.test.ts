@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { generateArteryConfig } from './artery';
 import { defaultSimConfig } from '../../types/configGeneratorsTypes';
-import type { RSU } from '../../../../../store/types/useEditorStoreTypes';
+import { RSU } from '@/store/types/useEditorStoreTypes';
 
 const makeRSU = (overrides: Partial<RSU> = {}): RSU =>
   ({

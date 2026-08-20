@@ -1,8 +1,8 @@
 import { FormControl, FormLabel, Grid, Input, Typography } from '@mui/material';
-import { RSU } from '../../../../../../../../store/types/useEditorStoreTypes';
-import { parseNumberInputChange } from '../../../../../../../Editor/components/SimConfigModal/utils/numberInputUtils';
-import { numInputSlot } from '../../../../../types/PanelTypes';
-import { formLabelStyles } from '../../../../CarProperties/types/CarPropertiesTypes';
+import { RSU } from '@/store/types/useEditorStoreTypes';
+import { parseNumberInputChange } from '@editor/components/SimConfigModal/utils/numberInputUtils';
+import { numInputSlot } from '@right-panel/types/PanelTypes';
+import { formLabelStyles } from '@/shared/styles/panelStyles';
 
 interface SensingCameraSectionProps {
   rsu: RSU;

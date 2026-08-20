@@ -17,7 +17,6 @@ export function useTransformSetup({
       isDraggingLocalRef.current = true;
       if (isDraggingRef) isDraggingRef.current = true;
     }
-
     function onMouseUp() {
       isDraggingLocalRef.current = false;
       if (isDraggingRef) isDraggingRef.current = false;

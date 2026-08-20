@@ -1,4 +1,4 @@
-import { useEditorScene } from '../../../hooks/useEditorScene';
+import { useEditorScene } from '@editor/hooks/useEditorScene';
 
 export const EditorSceneBootstrap = () => {
   useEditorScene();

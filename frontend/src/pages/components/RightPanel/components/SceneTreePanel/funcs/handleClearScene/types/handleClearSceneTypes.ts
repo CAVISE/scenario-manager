@@ -1,7 +1,7 @@
 import type { MutableRefObject } from 'react';
 import { TransformControls } from 'three-stdlib';
 import * as THREE from 'three';
-import { ToastApi } from '../../../../../../../../components/AppToast/types/toastTypes';
+import { ToastApi } from '@/components/AppToast/types/toastTypes';
 export interface handleClearSceneProps {
   carMeshesRef: MutableRefObject<THREE.Mesh[]>;
   sceneRef: MutableRefObject<THREE.Scene | undefined>;

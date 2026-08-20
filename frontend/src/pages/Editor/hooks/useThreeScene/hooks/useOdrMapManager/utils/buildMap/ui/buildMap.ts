@@ -1,6 +1,6 @@
-import { useEditorStore } from '../../../../../../../../../store';
-import { OdrMapMeshes } from '../../../../../../useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
-import { buildOdrScene } from '../../../../../../useOpenDriveUtils/useOdrMap';
+import { buildOdrScene } from '@editor/hooks/useOpenDriveUtils/useOdrMap';
+import { OdrMapMeshes } from '@editor/hooks/useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
+import { useEditorStore } from '@/store';
 import { BuildMapParams } from '../types/buildMapTypes';
 
 export function buildMap({

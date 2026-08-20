@@ -1,14 +1,9 @@
 import { useRef, useCallback } from 'react';
 import * as THREE from 'three';
-import { OpenDriveMapInstance } from '../../../../../types/editorTypes';
-import {
-  OdrMapMeshes,
-  OpenDriveModule,
-} from '../../../../useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
-import { createOdrMaterials } from '../../../../useOpenDriveUtils/useOdrMap';
+
 import { clearScene } from '../utils/clearScene';
 import { buildMap } from '../utils/buildMap';
-import { restoreLidars } from '../../../../../scene/loaders/restoreLidars';
+import { restoreLidars } from '@editor/scene/loaders/restoreLidars';
 import {
   EMPTY_ODR_MESHES,
   ODR_MAP_OPTIONS,
@@ -16,8 +11,14 @@ import {
   UseOdrMapManagerProps,
   UseOdrMapManagerResult,
 } from '../types/useOdrMapManagerTypes';
-import { useEditorRefs } from '../../../../../context';
+import { useEditorRefs } from '@editor/context';
 import { MAP_PATH } from '../../useOdrLoader/types/useOdrLoaderTypes';
+import {
+  OdrMapMeshes,
+  OpenDriveModule,
+} from '@/pages/Editor/hooks/useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
+import { OpenDriveMapInstance } from '@/pages/Editor/types/editorTypes';
+import { createOdrMaterials } from '@editor/hooks/useOpenDriveUtils/useOdrMap';
 
 export function useOdrMapManager({
   setStep,

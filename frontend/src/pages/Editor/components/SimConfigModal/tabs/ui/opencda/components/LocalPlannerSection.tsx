@@ -13,7 +13,7 @@ import {
   parseNumberFromEvent,
   getChipColor,
 } from '../utils/opencdaFieldUtils';
-import { SimulationConfig } from '../../../../../../Generators/types/configGeneratorsTypes';
+import { SimulationConfig } from '@/store';
 
 interface LocalPlannerSectionProps {
   bufferSize: number;

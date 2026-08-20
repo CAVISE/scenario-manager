@@ -1,7 +1,7 @@
 import { useScenarioCreateMutation } from '../../useScenarioQueries';
-import { getApiErrorMessage } from '../../../../../../api/errors';
-import { buildScenarioPayload } from '../../../../../components/RightPanel/components/ScenarioControlWidget/Handlers';
-import { useAppToast } from '../../../../../../components/AppToast';
+import { getApiErrorMessage } from '@/api/errors';
+import { buildScenarioPayload } from '@right-panel/components/ScenarioControlWidget/Handlers';
+import { useAppToast } from '@/components/AppToast';
 
 export function useScenarioSave() {
   const createScenarioMutation = useScenarioCreateMutation();

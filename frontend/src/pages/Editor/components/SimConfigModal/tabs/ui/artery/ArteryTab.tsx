@@ -1,3 +1,4 @@
+import { useEditorStore } from '@/store';
 import {
   Divider,
   FormControlLabel,
@@ -6,8 +7,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useEditorStore } from '../../../../../../../store';
 import { parseNumberInputChange } from '../../../utils/numberInputUtils';
+
 export default function ArteryTab() {
   const simConfig = useEditorStore((s) => s.simConfig);
   const updateSimConfigArtery = useEditorStore((s) => s.updateSimConfigArtery);

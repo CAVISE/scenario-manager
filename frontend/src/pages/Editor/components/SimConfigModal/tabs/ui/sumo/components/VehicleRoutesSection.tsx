@@ -11,9 +11,10 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { Car } from '../../../../../../../../store/types/useEditorStoreTypes';
-import { parseNumberInputChange } from '../../../../utils/numberInputUtils';
+
 import { SumoConfig } from '../utils/sumoUtils';
+import { Car } from '@/store/types/useEditorStoreTypes';
+import { parseNumberInputChange } from '../../../../utils/numberInputUtils';
 
 type Props = {
   cars: Car[];

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, Stack, Typography } from '@mui/material';
-import { useEditorStore } from '../../../../../../store';
+import { useEditorStore } from '@/store';
 import type { RSUPropertiesProps } from '../types/RSUPropertiesTypes';
 import { BehaviorServicesSection } from './components/BehaviorServicesSection';
 import { OpenCDAColorSection } from './components/OpenCDAColorSection';

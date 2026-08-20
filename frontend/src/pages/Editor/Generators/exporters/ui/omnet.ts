@@ -1,5 +1,5 @@
 import type { SimulationConfig } from '../../types/configGeneratorsTypes';
-import type { Car, RSU } from '../../../../../store/types/useEditorStoreTypes';
+import type { Car, RSU } from '@/store/types/useEditorStoreTypes';
 
 export function generateOmnetConfig(
   config: SimulationConfig,

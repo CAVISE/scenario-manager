@@ -8,13 +8,13 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from '@mui/material';
-import { RSU } from '../../../../../../../store/types/useEditorStoreTypes';
-import { parseNumberInputChange } from '../../../../../../Editor/components/SimConfigModal/utils/numberInputUtils';
-import { numInputSlot } from '../../../../types/PanelTypes';
+import { RSU } from '@/store/types/useEditorStoreTypes';
+import { parseNumberInputChange } from '@editor/components/SimConfigModal/utils/numberInputUtils';
+import { numInputSlot } from '@right-panel/types/PanelTypes';
 import {
-  typographyStyles,
   toggleButtonGroupStyles,
-} from '../../../BuildingProperties/types/BuildingPropertiesTypes';
+  typographyStyles,
+} from '@/shared/styles/panelStyles';
 
 interface V2XParametersSectionProps {
   rsu: RSU;

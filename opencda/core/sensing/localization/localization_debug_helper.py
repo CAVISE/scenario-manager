@@ -172,6 +172,65 @@ class LocDebugHelper(object):
             plt.legend()
             plt.pause(0.001)
 
+    def _yaw_errors(self):
+        """
+        Shared by evaluate() and metrics_dict() so the two never
+        compute yaw error differently — this is used both to render the
+        error-curve plot and to summarize into the mean errors that
+        both the text log and metrics_dict() report, and it shouldn't
+        be possible for those to silently drift apart if the formula
+        ever changes.
+        """
+        gnss_yaw_error = angle_difference_degrees(self.gt_yaw, self.gnss_yaw)
+        filter_yaw_error = angle_difference_degrees(
+            self.gt_yaw, self.filter_yaw)
+        return gnss_yaw_error, filter_yaw_error
+
+    def metrics_dict(self):
+        """
+        The same mean-error figures evaluate() writes into perform_txt
+        (GNSS-raw vs ground truth, and post-Kalman-filter vs ground
+        truth, for x/y/yaw), as plain floats instead of a formatted
+        string — for callers that want to persist or compare these
+        numbers programmatically (e.g. a run's metrics.json) rather
+        than parse them back out of text. Safe to call independently of
+        evaluate(): reads the same accumulated lists, doesn't touch
+        matplotlib, and has no side effects.
+
+        Returns
+        -------
+        dict or None
+            None if run_step was never called (nothing accumulated
+            yet) — matches evaluate()'s own implicit assumption that
+            there's at least one sample, without evaluate()'s crash if
+            that assumption is violated.
+        """
+        if not self.gt_x:
+            return None
+
+        gnss_yaw_error, filter_yaw_error = self._yaw_errors()
+
+        return {
+            'actor_id': self.actor_id,
+            'sample_count': len(self.gt_x),
+            'gnss_raw_vs_ground_truth': {
+                'x_mean_abs_error_m': float(np.mean(
+                    np.abs(np.array(self.gt_x) - np.array(self.gnss_x)))),
+                'y_mean_abs_error_m': float(np.mean(
+                    np.abs(np.array(self.gt_y) - np.array(self.gnss_y)))),
+                'yaw_mean_abs_error_deg': float(
+                    np.mean(np.abs(gnss_yaw_error))),
+            },
+            'kalman_filter_vs_ground_truth': {
+                'x_mean_abs_error_m': float(np.mean(
+                    np.abs(np.array(self.gt_x) - np.array(self.filter_x)))),
+                'y_mean_abs_error_m': float(np.mean(
+                    np.abs(np.array(self.gt_y) - np.array(self.filter_y)))),
+                'yaw_mean_abs_error_deg': float(
+                    np.mean(np.abs(filter_yaw_error))),
+            },
+        }
+
     def evaluate(self):
         """
         Plot the localization related data points.
@@ -229,10 +288,7 @@ class LocDebugHelper(object):
         axis[2, 0].set_title("error curve on y coordinates")
 
         # error curve on yaw
-        gnss_yaw_error = angle_difference_degrees(
-            self.gt_yaw, self.gnss_yaw)
-        filter_yaw_error = angle_difference_degrees(
-            self.gt_yaw, self.filter_yaw)
+        gnss_yaw_error, filter_yaw_error = self._yaw_errors()
         axis[2, 1].plot(
             np.arange(len(self.gnss_yaw)),
             gnss_yaw_error,

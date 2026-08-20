@@ -1,6 +1,6 @@
 import { FormControlLabel, Stack, Switch } from '@mui/material';
-import { useEditorStore } from '../../../../../../store';
-import type { Car } from '../../../../../../store/types/useEditorStoreTypes';
+import { useEditorStore } from '@/store';
+import type { Car } from '@/store/types/useEditorStoreTypes';
 
 interface CarBehaviorFlagsSectionProps {
   car: Car;

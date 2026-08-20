@@ -1,5 +1,6 @@
-import { SimulationConfig } from '../../../../../../Generators/types/configGeneratorsTypes';
+import { SimulationConfig } from '@/store';
 import { CARLA_MAPS } from '../../../../types/SimConfigModalTypes';
+
 export type CarlaConfig = SimulationConfig['carla'];
 export function toCarlaMapNameFromXodr(xodrName: string): string | null {
   const base = xodrName.replace(/\.xodr$/i, '');

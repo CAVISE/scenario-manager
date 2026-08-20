@@ -1,5 +1,5 @@
-import { getSumoNetFilename } from '../../../../../../Generators/exporters';
-import type { SimulationConfig } from '../../../../../../Generators/types/configGeneratorsTypes';
+import { getSumoNetFilename } from '@editor/Generators/exporters';
+import { SimulationConfig } from '@/store';
 
 export type SumoConfig = SimulationConfig['sumo'];
 

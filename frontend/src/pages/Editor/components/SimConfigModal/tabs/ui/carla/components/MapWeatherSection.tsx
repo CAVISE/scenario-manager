@@ -5,12 +5,13 @@ import {
   Select,
   Stack,
 } from '@mui/material';
+
+import { CarlaConfig } from '../utils/carlaUtils';
+import { CarlaWeather } from '@/store/types/useEditorStoreTypes';
 import {
   CARLA_MAPS,
   WEATHER_PRESETS,
 } from '../../../../types/SimConfigModalTypes';
-import type { CarlaWeather } from '../../../../../../../../store/types/useEditorStoreTypes';
-import { CarlaConfig } from '../utils/carlaUtils';
 
 type Props = {
   carla: CarlaConfig;

@@ -1,6 +1,6 @@
 import { FormControlLabel, Stack, Switch } from '@mui/material';
 import OpenCDACollapsibleSection from '../../../../components/OpenCDACollapsibleSection';
-import { SimulationConfig } from '../../../../../../Generators/types/configGeneratorsTypes';
+import { SimulationConfig } from '@/store';
 
 type Props = {
   oc: Partial<SimulationConfig['opencda']>;

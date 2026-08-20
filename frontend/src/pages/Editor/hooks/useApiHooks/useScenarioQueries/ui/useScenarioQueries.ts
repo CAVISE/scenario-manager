@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { scenariosApi } from '../../../../../../api/scenarios';
-import { useEditorStore } from '../../../../../../store';
-import { ScenarioPayload } from '../../../../../../api/types/IScenarioTypes';
+import { scenariosApi } from '@/api/scenarios';
+import { useEditorStore } from '@/store';
+import { ScenarioPayload } from '@/api/types/IScenarioTypes';
 
 export const scenarioKeys = {
   all: ['scenarios'] as const,

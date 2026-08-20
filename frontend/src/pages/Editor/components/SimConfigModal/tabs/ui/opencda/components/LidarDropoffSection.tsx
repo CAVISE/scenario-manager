@@ -1,7 +1,7 @@
 import React from 'react';
 import { Stack, TextField, Typography } from '@mui/material';
 import { numInputSlot, parseNumberFromEvent } from '../utils/opencdaFieldUtils';
-import { SimulationConfig } from '../../../../../../Generators/types/configGeneratorsTypes';
+import { SimulationConfig } from '@/store';
 
 interface LidarDropoffSectionProps {
   dropoffGeneralRate: number;

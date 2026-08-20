@@ -1,17 +1,18 @@
 import { ListSubheader, MenuItem } from '@mui/material';
-import DownloadIcon from '@mui/icons-material/Download';
-import { mergeSimConfigWithDefaults } from '../../../../../../Generators/types/configGeneratorsTypes';
-import {
-  generateCAPIServicesXml,
-  generateCAPISensorsXml,
-  generateCAPIomnetIni,
-} from '../../../../../../Generators/exporters';
-import { useEditorStore } from '../../../../../../../../store';
+import { Download as DownloadIcon } from '@mui/icons-material';
+
+import { useEditorStore } from '@/store';
 import {
   DownloadIconStyles,
   ListSubheaderStyles,
   SimulatorProps,
 } from '../types/SimulationTypes';
+import { mergeSimConfigWithDefaults } from '@editor/Generators/types/configGeneratorsTypes';
+import {
+  generateCAPIomnetIni,
+  generateCAPISensorsXml,
+  generateCAPIServicesXml,
+} from '@editor/Generators/exporters';
 export default function CAPIExportSection({
   openExportDialog,
 }: SimulatorProps) {

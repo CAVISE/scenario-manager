@@ -43,7 +43,7 @@ class KalmanFilter(object):
         The estimated P values.
     """
 
-    def __init__(self, dt):
+    def __init__(self, dt, R=None):
         self.Q = np.diag([
             0.2,  # variance of location on x-axis
             0.2,  # variance of location on y-axis
@@ -51,8 +51,7 @@ class KalmanFilter(object):
             0.001  # variance of velocity
         ]) ** 2  # predict state covariance
 
-        # Observation x,y position covariance
-        self.R = np.diag([0.5, 0.5, 0.2]) ** 2
+        self.R = R if R is not None else np.diag([0.5, 0.5, 0.2]) ** 2
 
         self.time_step = dt
 

@@ -1,5 +1,5 @@
 import { TextField } from '@mui/material';
-import { SimulationConfig } from '../../../../../../Generators/types/configGeneratorsTypes';
+import { SimulationConfig } from '@/store';
 
 type Props = {
   oc: Partial<SimulationConfig['opencda']>;

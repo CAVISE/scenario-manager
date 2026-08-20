@@ -1,13 +1,11 @@
+import { Car, Building } from '@/store/types/useEditorStoreTypes';
 import {
   mergeSimConfigWithDefaults,
   type SimulationConfig,
 } from '../../types/configGeneratorsTypes';
-import type {
-  Building,
-  Car,
-} from '../../../../../store/types/useEditorStoreTypes';
+
 import type { GeneratedSumoRoutes } from './sumoNetwork';
-import { MapOffsets } from '../../../../../helpers/types/coordinateTransformTypes';
+import { MapOffsets } from '@/helpers/types/coordinateTransformTypes';
 
 function xmlAttribute(value: string): string {
   return value

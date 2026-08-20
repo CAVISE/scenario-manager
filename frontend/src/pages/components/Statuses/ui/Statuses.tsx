@@ -1,5 +1,5 @@
+import { useStatusesQuery } from '@editor/hooks/useApiHooks/useStatusesQuery';
 import { List, ListItem, ListItemButton, ListItemText } from '@mui/material';
-import { useStatusesQuery } from '../../../Editor/hooks/useApiHooks/useStatusesQuery/ui/useStatusesQuery';
 
 export const Statuses = () => {
   const { data: stats, isLoading, isError } = useStatusesQuery();

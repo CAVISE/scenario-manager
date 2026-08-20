@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
-import { useEditorStore } from '../../../../../../../../store';
-import { getStoredXodrName } from '../../../../../../hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
-import { CARLA_MAPS } from '../../../../types/SimConfigModalTypes';
 import { toCarlaMapNameFromXodr } from '../utils/carlaUtils';
+import { getStoredXodrName } from '@editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
+import { useEditorStore } from '@/store';
+import { CARLA_MAPS } from '../../../../types/SimConfigModalTypes';
 
 export const useCarlaConfig = () => {
   const simConfig = useEditorStore((s) => s.simConfig);

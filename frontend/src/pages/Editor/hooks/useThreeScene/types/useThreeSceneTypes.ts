@@ -1,6 +1,6 @@
+import { LOADING_STEPS } from '@editor/types/editorTypes';
 import type { MutableRefObject } from 'react';
 import type * as THREE from 'three';
-import { LOADING_STEPS } from '../../../types/editorTypes';
 export const localLineArr: THREE.Line[][] = [];
 export interface useThreeSceneProps {
   setStep: (step: keyof typeof LOADING_STEPS) => void;

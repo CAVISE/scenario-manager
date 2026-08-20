@@ -15,7 +15,28 @@
     "strict": true,
     "types": ["node"],
     "target": "ES2020",
-    "useDefineForClassFields": true
+    "useDefineForClassFields": true,
+    "ignoreDeprecations": "6.0",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@components/*": ["./src/components/*"],
+      "@pages/*": ["./src/pages/*"],
+      "@hooks/*": ["./src/hooks/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@store/*": ["./src/store/*"],
+      "@types/*": ["./src/types/*"],
+      "@assets/*": ["./src/assets/*"],
+      "@editor/*": ["./src/pages/Editor/*"],
+      "@editor-components/*": ["./src/pages/Editor/components/*"],
+      "@editor-hooks/*": ["./src/pages/Editor/hooks/*"],
+      "@editor-utils/*": ["./src/pages/Editor/utils/*"],
+      "@sim-config/*": ["./src/pages/Editor/components/SimConfigModal/*"],
+      "@sim-config-utils/*": [
+        "./src/pages/Editor/components/SimConfigModal/utils/*"
+      ],
+      "@right-panel/*": ["./src/pages/components/RightPanel/*"]
+    }
   },
   "include": ["src", "vitest.config.ts"],
   "exclude": ["vitest.config.ts", "node_modules"],

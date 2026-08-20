@@ -1,7 +1,6 @@
 import { Stack, TextField, Typography } from '@mui/material';
-import { numInputSlot } from '../../../../../../../components/RightPanel/types/PanelTypes';
-import { validateNumber } from '../utils/opencdaFieldUtils';
 import { parseNumberInputChange } from '../../../../utils/numberInputUtils';
+import { numInputSlot, validateNumber } from '../utils/opencdaFieldUtils';
 
 type Props = {
   label: string;

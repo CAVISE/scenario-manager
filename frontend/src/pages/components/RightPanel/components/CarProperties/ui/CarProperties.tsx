@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import { Box } from '@mui/material';
 import { HexColorPicker } from 'react-colorful';
-import { useEditorStore } from '../../../../../../store';
+import { useEditorStore } from '@/store';
 import CarLidarList from '../../CarLidarList';
 import NumericInput from '../../NumericInput';
 import CarOpenCDASection from './CarOpenCDASection';
@@ -20,8 +20,8 @@ import { CarPropertiesProps } from '../types/CarPropertiesTypes';
 import {
   formLabelStyles,
   DEFAULT_CAR_COLOR,
-} from '../../../../../../shared/styles/panelStyles';
-import { numInputSlot } from '../../../types/PanelTypes';
+} from '@/shared/styles/panelStyles';
+import { numInputSlot } from '@right-panel/types/PanelTypes';
 
 export default function CarProperties({ car, onDelete }: CarPropertiesProps) {
   const updateCar = useEditorStore((s) => s.updateCar);

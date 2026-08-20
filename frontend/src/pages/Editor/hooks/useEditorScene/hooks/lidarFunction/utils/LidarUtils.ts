@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Lidar } from '../../../../../../../store/types/useEditorStoreTypes';
+import { Lidar } from '@/store/types/useEditorStoreTypes';
 export function createLidarMesh(lidar: Lidar): THREE.Group {
   const group = new THREE.Group();
   group.userData = { type: 'lidar', id: lidar.id, carId: lidar.carId };

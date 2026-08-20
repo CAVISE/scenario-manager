@@ -1,9 +1,6 @@
 import { styled } from '@mui/system';
 import { Box, Card } from '@mui/material';
-import {
-  pressActiveSx,
-  pressTransition,
-} from '../../../../../theme/pressInteraction';
+import { pressActiveSx, pressTransition } from '@/theme/pressInteraction';
 
 export interface MockScenario {
   id: string;

@@ -1,8 +1,5 @@
-import { useEditorStore } from '../../../../../../../store';
-import {
-  ScenarioGroup,
-  ScenarioPayload,
-} from '../../../../../../../api/types/IScenarioTypes';
+import { useEditorStore } from '@/store';
+import { ScenarioGroup, ScenarioPayload } from '@/api/types/IScenarioTypes';
 import {
   Building,
   Car,
@@ -10,11 +7,11 @@ import {
   Pedestrian,
   Point,
   RSU,
-} from '../../../../../../../store/types/useEditorStoreTypes';
+} from '@/store/types/useEditorStoreTypes';
 import {
   DEFAULT_XODR,
   getCachedXodrContent,
-} from '../../../../../../Editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
+} from '@editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
 
 let canvasRef: HTMLCanvasElement | null = null;
 let cachedPreview: string | null = null;
@@ -84,10 +81,32 @@ export function generatePreviewAsync(): Promise<string | null> {
   });
 }
 
+export function generatePreviewSync(): string | null {
+  if (!canvasRef) {
+    console.warn('No canvas reference set, cannot generate preview');
+    return null;
+  }
+
+  if (cachedPreview) {
+    return cachedPreview;
+  }
+
+  try {
+    const preview = capturePreview();
+    if (preview) {
+      cachedPreview = preview;
+      return preview;
+    }
+    return null;
+  } catch (error) {
+    console.warn('Failed to generate preview:', error);
+    return null;
+  }
+}
+
 export function buildScenarioPayload(): ScenarioPayload {
   const s = useEditorStore.getState();
-
-  const preview = cachedPreview;
+  const preview = generatePreviewSync();
 
   return {
     scenario_id: s.Scenario?.id || null,

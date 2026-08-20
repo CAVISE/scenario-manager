@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { MutableRefObject } from 'react';
-import { useEditorStore } from '../../../../../../store';
+import { useEditorStore } from '@/store';
 import { CreateTransformListenerOptions } from '../types/createTransformListenerTypes';
 
 type MoveKind = 'car' | 'rsu' | 'lidar' | 'building' | 'pedestrian' | 'point';
@@ -20,12 +20,6 @@ const MOVE_LABEL: Record<MoveKind, string> = {
   point: 'Moved waypoint',
 };
 
-/**
- * Writes a captured snapshot back to the right store collection. Split
- * from readSnapshot() below so undo()/redo() closures don't need to
- * re-look-up the live object just to get an updater that never
- * actually depended on it — the id alone is enough to build one.
- */
 function updaterFor(kind: MoveKind, id: string): (p: object) => void {
   switch (kind) {
     case 'car':
@@ -43,14 +37,6 @@ function updaterFor(kind: MoveKind, id: string): (p: object) => void {
   }
 }
 
-/**
- * Reads the current stored fields for a move-tracked object. Only the
- * fields TransformControls can actually change are included — e.g.
- * material/height ride along on 'building' because handler() writes
- * them from obj.userData on every move, but nothing outside a drag
- * should be touching them, so including them here keeps before/after
- * comparable to what handler() actually wrote.
- */
 function readSnapshot(
   kind: MoveKind,
   id: string,
@@ -103,13 +89,6 @@ function snapshotsDiffer(
   return Object.keys(a).some((key) => a[key] !== b[key]);
 }
 
-/**
- * Resolves the (kind, id) of the object currently attached to
- * TransformControls, for the pre-drag capture in onDraggingChanged.
- * Mirrors handler()'s type-branch logic (including the inverted
- * 'point'->rsu / 'circle'->point userData naming — see handler()'s
- * comment) but only needs to identify the object, not write to it.
- */
 function resolveAttachedEntity(
   obj: THREE.Object3D,
   carMeshesRef: MutableRefObject<THREE.Mesh[]>,
@@ -140,21 +119,6 @@ function resolveAttachedEntity(
   return null;
 }
 
-/**
- * Finds the current mesh instance for a tracked entity, after any
- * mesh-sync subscriber may have replaced it with a new instance. Used
- * only for the post-sync gizmo re-attach in onDraggingChanged — not
- * for handler(), which always has a live reference already.
- *
- * Every kind except 'point' carries its own id in userData, so a scene
- * traversal is enough. 'point' (a waypoint/circle mesh) doesn't: those
- * meshes are identified positionally — cubeCirclesRef.current[carIndex]
- * is the circle array for the car at carMeshesRef.current[carIndex],
- * and within it, index ci corresponds to
- * points.filter(p => p.carId === carId)[ci] — so re-finding one means
- * re-deriving that same (carIndex, ci) pair from the point's current
- * carId, mirroring resolveAttachedEntity's logic in reverse.
- */
 function findMeshForEntity(
   kind: MoveKind,
   id: string,

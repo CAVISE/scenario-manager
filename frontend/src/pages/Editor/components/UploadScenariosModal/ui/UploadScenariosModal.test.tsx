@@ -15,14 +15,11 @@ vi.mock('../../../hooks/useApiHooks/useScenarioQueries', () => ({
     useScenarioPatchMutationMock(...args),
 }));
 
-vi.mock(
-  '../../../../components/RightPanel/components/ScenarioControlWidget/Handlers',
-  () => ({
-    handleLoad: (...args: unknown[]) => handleLoadMock(...args),
-  }),
-);
+vi.mock('@right-panel/components/ScenarioControlWidget/Handlers', () => ({
+  handleLoad: (...args: unknown[]) => handleLoadMock(...args),
+}));
 
-vi.mock('../../../context', () => ({
+vi.mock('@editor/context', () => ({
   useEditorRefs: () => ({
     sceneRef: { current: { children: [], add: vi.fn() } },
     loadRSURef: { current: vi.fn() },

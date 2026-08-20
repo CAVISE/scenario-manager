@@ -9,8 +9,8 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { Close as CloseIcon } from '@mui/icons-material';
+import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import {
   ModalContainer,
   ModalHeader,
@@ -39,18 +39,18 @@ import {
   scenarioCardStyles,
   titleStyles,
   ModalContainerStyles,
+  UploadScenariosModalProps,
 } from '../types/UploadScenariosModalTypes';
-import type { UploadScenariosModalProps } from '../types/UploadScenariosModalTypes';
-import type { ScenarioListItem } from '../../../../../api/types/IScenarioTypes';
+
+import { useNoticeWithToast } from '@/components/AppToast';
+import { getApiErrorMessageSync } from '@/api/errors';
+import { ScenarioListItem } from '@/api/types/IScenarioTypes';
+import { useHooks } from '@editor/context';
 import {
   useScenariosListQuery,
   useScenarioPatchMutation,
-} from '../../../hooks/useApiHooks/useScenarioQueries';
-import { handleLoad } from '../../../../components/RightPanel/components/ScenarioControlWidget/Handlers';
-import { useHooks } from '../../../context';
-import { getApiErrorMessageSync } from '../../../../../api/errors';
-import { useNoticeWithToast } from '../../../../../components/AppToast';
-
+} from '@editor/hooks/useApiHooks/useScenarioQueries';
+import { handleLoad } from '@right-panel/components/ScenarioControlWidget/Handlers';
 function previewSrc(preview: string | null): string | undefined {
   if (!preview) return undefined;
   if (

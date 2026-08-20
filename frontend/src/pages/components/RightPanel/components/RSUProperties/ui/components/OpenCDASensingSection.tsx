@@ -5,12 +5,12 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import { KeyboardArrowDown as KeyboardArrowDownIcon } from '@mui/icons-material';
 import { SensingPerceptionSection } from './sensing/SensingPerceptionSection';
 import { SensingCameraSection } from './sensing/SensingCameraSection';
 import { SensingLidarSection } from './sensing/SensingLidarSection';
 import { SensingLocalizationSection } from './sensing/SensingLocalizationSection';
-import type { RSU } from '../../../../../../../store/types/useEditorStoreTypes';
+import type { RSU } from '@/store/types/useEditorStoreTypes';
 
 interface OpenCDASensingSectionProps {
   rsu: RSU;

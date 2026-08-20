@@ -1,4 +1,4 @@
-import type { CarlaWeather } from '../../../../store/types/useEditorStoreTypes';
+import type { CarlaWeather } from '@/store/types/useEditorStoreTypes';
 
 export type OpenCDAWeatherParams = {
   sun_altitude_angle: number;

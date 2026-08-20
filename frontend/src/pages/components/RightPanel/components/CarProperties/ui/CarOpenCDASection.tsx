@@ -3,13 +3,13 @@ import { Box, Button, Divider, Stack, Typography } from '@mui/material';
 import {
   opencdaPanelPaperSx,
   opencdaSectionLabelSx,
-} from '../../../../../Editor/components/SimConfigModal/opencdaUiStyles';
+} from '@editor/components/SimConfigModal/opencdaUiStyles';
 import {
   AIM_CHECK_CAV_BEHAVIOR_SERVICES,
   AIM_CHECK_CAV_COLOR,
-} from '../../../../../Editor/Generators/exporters/aimCheckDefaults';
-import { useEditorStore } from '../../../../../../store';
-import type { Car } from '../../../../../../store/types/useEditorStoreTypes';
+} from '@editor/Generators/exporters/aimCheckDefaults';
+import { useEditorStore } from '@/store';
+import type { Car } from '@/store/types/useEditorStoreTypes';
 import { CarBehaviorFlagsSection } from '../components/CarBehaviorFlagsSection';
 import { CarBehaviorServicesSection } from '../components/CarBehaviorServicesSection';
 import { CarColorSection } from '../components/CarColorSection';

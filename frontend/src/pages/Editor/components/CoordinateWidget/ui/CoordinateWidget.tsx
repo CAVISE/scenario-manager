@@ -5,9 +5,9 @@ import {
   CoordinatesWidgetDeactiveStyles,
 } from '../types/CoordinateWidgetTypes';
 import { GROUND_PLANE } from '../types/CoordinateWidgetTypes';
-import { Vec3 } from '../../../types/editorTypes';
-import { useEditorRefs } from '../../../context';
-import { editorToCarla } from '../../../../../helpers/coordinateTransform';
+import { editorToCarla } from '@/helpers/coordinateTransform';
+import { useEditorRefs } from '@editor/context';
+import { Vec3 } from '@editor/types/editorTypes';
 
 export function CoordinatesWidget() {
   const [coords, setCoords] = useState<Vec3 | null>(null);

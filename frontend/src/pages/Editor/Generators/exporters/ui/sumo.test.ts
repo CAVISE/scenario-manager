@@ -1,12 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import type {
-  Building,
-  Car,
-} from '../../../../../store/types/useEditorStoreTypes';
 import { defaultSimConfig } from '../../types/configGeneratorsTypes';
 import { generatePolyXml, useGenerateRouXml, useGenerateSumoCfg } from './sumo';
 import { getSumoCoordinateOffsets } from './sumoNetwork';
+import { Building, Car } from '@/store/types/useEditorStoreTypes';
 
 const NET_XML = `<?xml version="1.0" encoding="UTF-8"?>
 <net>

@@ -5,9 +5,9 @@ import {
   Input,
   Switch,
 } from '@mui/material';
-import { useEditorStore } from '../../../../../../store';
-import type { Car } from '../../../../../../store/types/useEditorStoreTypes';
-import { numInputSlot } from '../../../types/PanelTypes';
+import { useEditorStore } from '@/store';
+import type { Car } from '@/store/types/useEditorStoreTypes';
+import { numInputSlot } from '@right-panel/types/PanelTypes';
 
 interface CarModelSectionProps {
   car: Car;

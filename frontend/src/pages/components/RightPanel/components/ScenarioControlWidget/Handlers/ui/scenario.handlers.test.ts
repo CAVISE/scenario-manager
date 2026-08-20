@@ -9,11 +9,11 @@ const { fetchQueryMock, getScenarioMock, resolveXodrMock } = vi.hoisted(() => ({
 }));
 
 vi.mock(
-  '../../../../../../Editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository',
+  '@editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository',
   async (importOriginal) => {
     const mod =
       await importOriginal<
-        typeof import('../../../../../../Editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository')
+        typeof import('@editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository')
       >();
     return {
       ...mod,
@@ -23,32 +23,26 @@ vi.mock(
   },
 );
 
-vi.mock('../../../../../../../api/queryClient', () => ({
+vi.mock('@/api/queryClient', () => ({
   queryClient: { fetchQuery: fetchQueryMock },
 }));
 
-vi.mock(
-  '../../../../../../Editor/hooks/useApiHooks/useScenarioQueries',
-  () => ({
-    scenarioKeys: { detail: (id: string) => ['scenario', id] },
-    useScenarioCreateMutation: () => ({}),
-    useScenarioPatchMutation: () => ({}),
-    useScenarioDeleteMutation: () => ({}),
-  }),
-);
-vi.mock('../../../../../../../api/scenarios', () => ({
+vi.mock('@editor/hooks/useApiHooks/useScenarioQueries', () => ({
+  scenarioKeys: { detail: (id: string) => ['scenario', id] },
+  useScenarioCreateMutation: () => ({}),
+  useScenarioPatchMutation: () => ({}),
+  useScenarioDeleteMutation: () => ({}),
+}));
+vi.mock('@/api/scenarios', () => ({
   scenariosApi: {
     get: getScenarioMock,
     delete: vi.fn().mockResolvedValue({ scenario_id: 'sc-1' }),
   },
 }));
-vi.mock(
-  '../../../../../../Editor/hooks/useApiHooks/useSimulationMutation',
-  () => ({
-    useStartSimulationMutation: () => ({}),
-  }),
-);
-vi.mock('../../../../../../../api/errors', () => ({
+vi.mock('@editor/hooks/useApiHooks/useSimulationMutation', () => ({
+  useStartSimulationMutation: () => ({}),
+}));
+vi.mock('@/api/errors', () => ({
   getApiErrorMessage: vi.fn((_err, fallback) => Promise.resolve(fallback)),
 }));
 
@@ -195,7 +189,7 @@ const resetStore = () => {
   ].forEach((mock) => mock.mockClear());
 };
 
-vi.mock('../../../../../../../store', () => ({
+vi.mock('@/store', () => ({
   useEditorStore: {
     getState: () => storeState,
     setState: vi.fn((patch: unknown) => {
@@ -218,25 +212,25 @@ import {
   handlePatch,
   handleRunSimulation,
 } from './scenario.handlers';
-import { scenarioGroupsFromPayload } from '../../../../../../../api/scenarioRequest';
-import { buildScenarioPayload } from './scenario.load.handler';
-import {
-  Building,
-  Car,
-  Lidar,
-  Pedestrian,
-  Point,
-  RSU,
-  Scenario,
-} from '../../../../../../../store/types/useEditorStoreTypes';
+import { scenarioGroupsFromPayload } from '@/api/scenarioRequest';
+import { ScenarioGroup } from '@/api/types/IScenarioTypes';
 import {
   useScenarioCreateMutation,
   useScenarioPatchMutation,
   useScenarioDeleteMutation,
-} from '../../../../../../Editor/hooks/useApiHooks/useScenarioQueries';
-import { useEditorStore } from '../../../../../../../store';
-import { useStartSimulationMutation } from '../../../../../../Editor/hooks/useApiHooks/useSimulationMutation';
-import { ScenarioGroup } from '../../../../../../../api/types/IScenarioTypes';
+} from '@editor/hooks/useApiHooks/useScenarioQueries';
+import { useStartSimulationMutation } from '@editor/hooks/useApiHooks/useSimulationMutation';
+import { useEditorStore } from '@/store';
+import {
+  Car,
+  Point,
+  Lidar,
+  RSU,
+  Building,
+  Pedestrian,
+  Scenario,
+} from '@/store/types/useEditorStoreTypes';
+import { buildScenarioPayload } from './scenario.load.handler';
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -1188,7 +1182,6 @@ describe('handleLoad - building handling', () => {
       channels: 32,
       rotation_frequency: 20,
     });
-    // loadFile вызывается, так как есть file_ в ответе
     expect(loadFile).toHaveBeenCalled();
   });
 
@@ -1196,7 +1189,6 @@ describe('handleLoad - building handling', () => {
     fetchQueryMock.mockResolvedValue({
       scenario: {
         scenario_id: 'step-test',
-        // file_ отсутствует - xodr будет undefined
         scenario_text: [],
       },
     });
@@ -1214,11 +1206,8 @@ describe('handleLoad - building handling', () => {
       setStep,
     });
 
-    // setStep вызывается с 'map'
     expect(setStep).toHaveBeenCalledWith('map');
-    // Так как xodr отсутствует, setStep вызывается с 'done'
     expect(setStep).toHaveBeenCalledWith('done');
-    // loadFile не вызывается, так как нет xodr
     expect(loadFile).not.toHaveBeenCalled();
   });
 });

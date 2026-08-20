@@ -1,6 +1,6 @@
 import { Button } from '@mui/material';
 import { Stack, FormControl, FormLabel, Grid, Typography } from '@mui/material';
-import { useEditorStore } from '../../../../../../store';
+import { useEditorStore } from '@/store';
 import NumericInput from '../../NumericInput';
 import { RoutePointPropertiesProps } from '../types/RoutePointPropertiesTypes';
 

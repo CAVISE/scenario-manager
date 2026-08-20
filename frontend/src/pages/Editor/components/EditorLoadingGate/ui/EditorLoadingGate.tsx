@@ -1,7 +1,7 @@
-import { useEditorStore } from '../../../../../store';
-import { useHooks } from '../../../context';
-import { EditorErrorScreen } from '../../../Skeletons/EditorErrorScreen';
-import { EditorLoadingScreen } from '../../../Skeletons/EditorLoadingScreen';
+import { useHooks } from '@editor/context';
+import { EditorErrorScreen } from '@editor/Skeletons/EditorErrorScreen';
+import { EditorLoadingScreen } from '@editor/Skeletons/EditorLoadingScreen';
+import { useEditorStore } from '@/store';
 
 export default function EditorLoadingGate() {
   const { loadingText } = useHooks();

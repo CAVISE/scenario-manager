@@ -6,7 +6,7 @@ import {
   Typography,
 } from '@mui/material';
 import { numInputSlot, parseNumberFromEvent } from '../utils/opencdaFieldUtils';
-import { SimulationConfig } from '../../../../../../Generators/types/configGeneratorsTypes';
+import { SimulationConfig } from '@/store';
 
 interface GNSSNoiseSectionProps {
   altStddev: number;

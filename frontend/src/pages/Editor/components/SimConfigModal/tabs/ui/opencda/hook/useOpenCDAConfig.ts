@@ -1,10 +1,10 @@
-import { useMemo } from 'react';
-import { useEditorStore } from '../../../../../../../../store';
+import { AIM_CHECK_SIM_OVERRIDES } from '@editor/Generators/exporters/aimCheckDefaults';
 import {
-  defaultSimConfig,
   mergeSimConfigWithDefaults,
-} from '../../../../../../Generators/types/configGeneratorsTypes';
-import { AIM_CHECK_SIM_OVERRIDES } from '../../../../../../Generators/exporters/aimCheckDefaults';
+  defaultSimConfig,
+} from '@editor/Generators/types/configGeneratorsTypes';
+import { useEditorStore } from '@/store';
+import { useMemo } from 'react';
 
 export const useOpenCDAConfig = () => {
   const rawSimConfig = useEditorStore((s) => s.simConfig);

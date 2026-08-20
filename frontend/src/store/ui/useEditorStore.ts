@@ -4,7 +4,7 @@ import { nanoid } from 'nanoid';
 import {
   defaultSimConfig,
   mergeSimConfigWithDefaults,
-} from '../../pages/Editor/Generators/types/configGeneratorsTypes';
+} from '@editor/Generators/types/configGeneratorsTypes';
 import type {
   EditorState,
   Car,
@@ -17,18 +17,21 @@ import type {
   DeletedEntity,
   DeletionSnapshot,
   HistoryEntry,
+  ErrorLogEntry,
 } from '../types/useEditorStoreTypes';
 
 export type { EditorState, Car, RSU, Lidar, Building, Point, Scenario };
-export type { DeletedEntity, DeletionSnapshot, HistoryEntry };
+export type { DeletedEntity, DeletionSnapshot, HistoryEntry, ErrorLogEntry };
 export type {
   V2XProtocol,
   BuildingMaterial,
   CarlaWeather,
 } from '../types/useEditorStoreTypes';
-export type { SimulationConfig } from '../../pages/Editor/Generators/types/configGeneratorsTypes';
+export type { SimulationConfig } from '@editor/Generators/types/configGeneratorsTypes';
 
 const MAX_HISTORY_SIZE = 100;
+
+const MAX_ERROR_LOG_SIZE = 300;
 export type EditorPersist = Pick<
   EditorState,
   | 'cars'
@@ -112,6 +115,7 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
   historyStack: [],
   historyCursor: 0,
   isApplyingHistory: false,
+  errorLog: [],
   Scenario: {
     id: Date.now().toString(),
     name: 'Default Scenario',
@@ -121,8 +125,12 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
   },
 
   removeSelectedId: () => set({ selectedId: null, selectedObject: null }),
-  setBuildingMode: (value) =>
-    set({ isBuildingMode: value, ...(value && { selectedId: null }) }),
+  setBuildingMode: (value) => {
+    if (!value) {
+      console.trace('[building-mode] setBuildingMode(false) called');
+    }
+    set({ isBuildingMode: value, ...(value && { selectedId: null }) });
+  },
   updateScenario: (props) =>
     set((s) => ({ Scenario: { ...s.Scenario, ...props } })),
 
@@ -130,7 +138,36 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
     set((s) => ({
       simConfig: { ...mergeSimConfigWithDefaults(s.simConfig), ...props },
     })),
-  setError: (props) => set({ error: props }),
+  setError: (props) => {
+    set({ error: props });
+    if (props) {
+      get().logError({
+        message: props.message,
+        stack: props.stack,
+        source: 'react-boundary',
+      });
+    }
+  },
+
+  logError: (entry) => {
+    set((s) => {
+      const now = Date.now();
+      const last = s.errorLog[s.errorLog.length - 1];
+      if (
+        last &&
+        last.message === entry.message &&
+        last.source === entry.source &&
+        now - last.timestamp < 100
+      ) {
+        return {};
+      }
+      const next = [...s.errorLog, { ...entry, id: nanoid(), timestamp: now }];
+      const overflow = next.length - MAX_ERROR_LOG_SIZE;
+      return { errorLog: overflow > 0 ? next.slice(overflow) : next };
+    });
+  },
+
+  clearErrorLog: () => set({ errorLog: [] }),
   updateSimConfigOmnet: (props) =>
     set((s) => {
       const simConfig = mergeSimConfigWithDefaults(s.simConfig);

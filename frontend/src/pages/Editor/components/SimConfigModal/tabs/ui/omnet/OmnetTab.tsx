@@ -6,7 +6,7 @@ import {
   Stack,
   TextField,
 } from '@mui/material';
-import { useEditorStore } from '../../../../../../../store';
+import { useEditorStore } from '@/store';
 import { parseNumberInputChange } from '../../../utils/numberInputUtils';
 
 export default function OmnetTab() {

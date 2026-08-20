@@ -1,5 +1,3 @@
-// shared/styles/panelStyles.ts
-
 export const formLabelStyles = { fontSize: 'xs', mb: 0.5 } as const;
 export const typographyStyles = { color: 'text.secondary' } as const;
 export const toggleButtonStyles = {

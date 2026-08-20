@@ -1,3 +1,5 @@
+import { CAPIExtraConfig } from '@editor/Generators/types/configGeneratorsTypes';
+import { SimulationConfig } from '@/store/ui/useEditorStore';
 import {
   Box,
   Button,
@@ -8,10 +10,6 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import type {
-  SimulationConfig,
-  CAPIExtraConfig,
-} from '../../../../../../Generators/types/configGeneratorsTypes';
 
 type CapiConfig = SimulationConfig['capi'];
 

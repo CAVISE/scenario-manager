@@ -1,4 +1,4 @@
-import { Lidar, SumoStop } from '../../store/types/useEditorStoreTypes';
+import { Lidar, SumoStop } from '@/store/types/useEditorStoreTypes';
 
 export interface CarScenarioPath {
   x: number;

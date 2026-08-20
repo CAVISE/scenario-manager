@@ -2,10 +2,10 @@ import { useBuildingLoader } from '../../hooks/useEditorScene/hooks/buildingFunc
 import { useEditorHandlers } from '../../hooks/useEditorEngine/useEditorHandlers';
 import { useLoadingState } from '../../hooks/useEditorEngine/useLoadingState';
 import { useSceneGraph } from '../../hooks/useEditorEngine/useSceneGraph';
-import { useThreeScene } from '../../hooks/useThreeScene';
 import { useEditorRefs } from './EditorRefsContext';
 import { HooksContext } from './hooksContext';
 import { useEffect } from 'react';
+import { useThreeScene } from '../../hooks/useThreeScene';
 
 export const HooksProvider: React.FC<{ children: React.ReactNode }> = ({
   children,

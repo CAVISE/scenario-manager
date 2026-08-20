@@ -1,7 +1,8 @@
+import { SceneNode } from '@/pages/components/RightPanel/types/PanelTypes';
 import type { MutableRefObject } from 'react';
 import * as THREE from 'three';
 import { LOADING_STEPS } from '../../types/editorTypes';
-import { SceneNode } from '../../hooks/useEditorEngine/useSceneGraph/types/useSceneGraphTypes';
+
 export interface hooksContextTypes {
   buildingModelRef: React.RefObject<THREE.Object3D | null>;
   updateSceneGraph: () => void;

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { generateOmnetConfig } from './omnet';
 import { defaultSimConfig } from '../../types/configGeneratorsTypes';
-import type { Car, RSU } from '../../../../../store/types/useEditorStoreTypes';
+import { RSU, Car } from '@/store/types/useEditorStoreTypes';
 
 const makeRSU = (overrides: Partial<RSU> = {}): RSU =>
   ({

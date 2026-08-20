@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import * as THREE from 'three';
-import { useEditorStore } from '../../../../../../../store';
+import { useEditorStore } from '@/store';
 import { useCarModel } from './useCarModel';
-import { useHooks, useEditorRefs } from '../../../../../context';
+import { useHooks, useEditorRefs } from '@editor/context';
 import { applyColor, cloneMaterials } from '../utils/CarUtils';
 
 export function useCarMeshSync() {

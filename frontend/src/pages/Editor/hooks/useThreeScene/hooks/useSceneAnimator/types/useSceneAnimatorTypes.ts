@@ -1,5 +1,5 @@
-import { OpenDriveMapInstance } from '../../../../../types/editorTypes';
-import { OdrMapMeshes } from '../../../../useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
+import { OdrMapMeshes } from '@editor/hooks/useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
+import { OpenDriveMapInstance } from '@editor/types/editorTypes';
 
 export interface UseSceneAnimatorProps {
   getIsDragging: () => boolean;

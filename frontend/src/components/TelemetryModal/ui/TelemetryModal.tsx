@@ -1,6 +1,4 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { api } from '../../../api/client';
-import { API_URL } from '../../../VARS';
 import {
   Modal,
   Tabs,
@@ -11,8 +9,7 @@ import {
   Tooltip,
   CircularProgress,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import ImageViewerModal from '../../ImageViewerModal';
+import { Close as CloseIcon } from '@mui/icons-material';
 import type {
   TelemetryModalProps,
   TabCategories,
@@ -33,6 +30,9 @@ import {
   ImagePreviewImg,
   ImageCaption,
 } from '../types/TelemetryModalTypes';
+import ImageViewerModal from '@/components/ImageViewerModal';
+import { api } from '@/api/client';
+import { API_URL } from '@/VARS';
 
 const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
   const [activeTab, setActiveTab] = useState<TabCategories>('routes');

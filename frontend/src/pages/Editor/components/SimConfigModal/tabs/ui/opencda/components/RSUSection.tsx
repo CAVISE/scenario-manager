@@ -10,7 +10,7 @@ import {
   createNumberFieldOnChange,
   createFieldUpdater,
 } from '../utils/opencdaFieldUtils';
-import { SimulationConfig } from '../../../../../../Generators/types/configGeneratorsTypes';
+import { SimulationConfig } from '@/store';
 
 export type RSUFields = Pick<
   SimulationConfig['opencda'],

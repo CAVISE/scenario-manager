@@ -7,6 +7,14 @@ export const opencdaPanelPaperSx = {
     theme.palette.mode === 'dark'
       ? 'rgba(255, 255, 255, 0.03)'
       : 'rgba(15, 23, 42, 0.04)',
+  maxHeight: '400px',
+  overflowY: 'auto',
+  scrollbarWidth: 'none',
+  msOverflowStyle: 'none',
+  '&::-webkit-scrollbar': {
+    display: 'none',
+    overflow: 'hidden',
+  },
 } as const;
 
 export const opencdaSectionLabelSx = {

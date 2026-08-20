@@ -1,12 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { useGenerateOpenCDAConfig } from './opencda';
 import { defaultSimConfig } from '../../types/configGeneratorsTypes';
-import type {
-  Car,
-  RSU,
-  Lidar,
-  Point,
-} from '../../../../../store/types/useEditorStoreTypes';
+import { Car, RSU, Lidar, Point } from '@/store/types/useEditorStoreTypes';
 
 const makeCar = (overrides: Partial<Car> = {}): Car =>
   ({

@@ -1,7 +1,7 @@
-import { useEditorStore } from '../../../../../../../../store';
-import { DeletionSnapshot } from '../../../../../../../../store/types/useEditorStoreTypes';
+import { useEditorStore } from '@/store';
 import {
   buildSingleNodeSnapshot,
+  DeletionSnapshot,
   type BuildSingleNodeSnapshotProps,
   type PushedSnapshotInfo,
 } from '../types/deletionSnapshotsTypes';

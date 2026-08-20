@@ -7,12 +7,12 @@ import {
   AccordionDetails,
 } from '@mui/material';
 
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import { KeyboardArrowDown as KeyboardArrowDownIcon } from '@mui/icons-material';
 
 import { CarListProps } from '../types/CarListTypes';
 import LidarProperties from '../../LidarProperties';
-import { useEditorStore } from '../../../../../../store';
-import { useHooks } from '../../../../../Editor/context';
+import { useEditorStore } from '@/store';
+import { useHooks } from '@editor/context';
 
 export default function CarLidarList({ carId, lidars }: CarListProps) {
   const addLidar = useEditorStore((s) => s.addLidar);

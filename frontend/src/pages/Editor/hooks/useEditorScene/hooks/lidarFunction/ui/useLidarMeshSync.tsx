@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import * as THREE from 'three';
-import { useEditorStore } from '../../../../../../../store';
-import { useEditorRefs, useHooks } from '../../../../../context';
+import { useEditorStore } from '@/store';
+import { useEditorRefs, useHooks } from '@editor/context';
 import { createLidarMesh, disposeLidarGroup } from '../utils/LidarUtils';
 
 export function useLidarMeshSync() {

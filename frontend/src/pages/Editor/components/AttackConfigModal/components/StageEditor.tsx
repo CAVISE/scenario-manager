@@ -7,9 +7,9 @@ import {
   TextField,
   Tooltip,
 } from '@mui/material';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import { DeleteOutline as DeleteOutlineIcon } from '@mui/icons-material';
 import { GnssSpooferForm } from './GnssSpooferForm';
-import type { OpenCDAAttackStage } from '../../../Generators/types/configGeneratorsTypes';
+import { OpenCDAAttackStage } from '@editor/Generators/types/configGeneratorsTypes';
 
 interface StageEditorProps {
   stage: OpenCDAAttackStage | undefined;

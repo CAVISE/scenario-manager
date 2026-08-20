@@ -4,6 +4,7 @@ Evaluation manager.
 """
 import matplotlib
 matplotlib.use('Agg')  # headless backend — no display required
+import json
 import math
 # Author: Runsheng Xu <rxx3386@ucla.edu>
 # License: TDG-Attribution-NonCommercial-NoDistrib
@@ -101,14 +102,15 @@ class EvaluationManager(object):
     def evaluate(self):
         """
         Evaluate performance of all modules by plotting and writing the
-        statistics into the log file.
+        statistics into the log file, and structured numbers into
+        metrics.json alongside it.
         """
         log_file = os.path.join(self.eval_save_path, 'log.txt')
 
         self.planning_eval(log_file)
         print('Planning Evaluation Done.')
 
-        self.localization_eval(log_file)
+        localization_metrics = self.localization_eval(log_file)
         print('Localization Evaluation Done.')
 
         self.kinematics_eval(log_file)
@@ -116,6 +118,25 @@ class EvaluationManager(object):
 
         self.platooning_eval(log_file)
         print('Platooning Evaluation Done.')
+
+        # Only localization feeds structured metrics in so far — the
+        # other three eval methods (planning/kinematics/platooning)
+        # still only write perform_txt into log.txt. Kept under an
+        # explicit "localization" key rather than flattening it,
+        # precisely so adding those later is additive (new top-level
+        # keys) instead of a format change existing readers of this
+        # file would need to handle.
+        metrics = {'localization': localization_metrics}
+        metrics_path = os.path.join(self.eval_save_path, 'metrics.json')
+        try:
+            with open(metrics_path, 'w', encoding='utf-8') as f:
+                json.dump(metrics, f, indent=2)
+        except OSError as e:
+            # A metrics.json write failure shouldn't take down a run
+            # that otherwise completed and already has log.txt/PNGs —
+            # log it and move on rather than raising out of evaluate(),
+            # which runner.py calls from inside its own finally block.
+            print(f'Failed to write metrics.json: {e}')
 
     def calculate_route_dist(self, route):
         route_dist = 0.0
@@ -407,8 +428,17 @@ class EvaluationManager(object):
 
         Args:
             -log_file (File): The log file to write the data.
+
+        Returns:
+            -metrics (list of dict): Structured per-actor metrics from
+            each LocDebugHelper.metrics_dict(), for callers that want
+            to persist these numbers (e.g. evaluate()'s metrics.json)
+            rather than re-parse them out of perform_txt. Entries where
+            metrics_dict() returned None (no samples accumulated) are
+            skipped.
         """
         lprint(log_file, "***********Localization Module***********")
+        metrics = []
         for vid, vm in self.cav_world.get_vehicle_managers().items():
             actor_id = vm.vehicle.id
             lprint(log_file, 'Actor ID: %d' % actor_id)
@@ -425,6 +455,12 @@ class EvaluationManager(object):
 
             # save log txt
             lprint(log_file, perform_txt)
+
+            actor_metrics = loc_debug_helper.metrics_dict()
+            if actor_metrics is not None:
+                metrics.append(actor_metrics)
+
+        return metrics
 
     def platooning_eval(self, log_file):
         """

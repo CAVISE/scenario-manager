@@ -8,13 +8,13 @@ import {
   Switch,
   Typography,
 } from '@mui/material';
-import { useEditorStore } from '../../../../../../store';
-import type { Car } from '../../../../../../store/types/useEditorStoreTypes';
-import { numInputSlot } from '../../../types/PanelTypes';
-import { formLabelStyles } from '../types/CarPropertiesTypes';
-import OpenCDACollapsibleSection from '../../../../../Editor/components/SimConfigModal/components/OpenCDACollapsibleSection';
-import { parseNumberInputChange } from '../../../../../Editor/components/SimConfigModal/utils/numberInputUtils';
 
+import type { Car } from '@/store/types/useEditorStoreTypes';
+import { formLabelStyles } from '../types/CarPropertiesTypes';
+import { useEditorStore } from '@/store';
+import OpenCDACollapsibleSection from '@editor/components/SimConfigModal/components/OpenCDACollapsibleSection';
+import { parseNumberInputChange } from '@editor/components/SimConfigModal/utils/numberInputUtils';
+import { numInputSlot } from '@right-panel/types/PanelTypes';
 export default function CarOpenCDARareSection({ car }: { car: Car }) {
   const updateCar = useEditorStore((s) => s.updateCar);
   const [enabled, setEnabled] = useState(

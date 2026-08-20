@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import { useEditorStore } from '@/store';
 
 export interface Props {
   children: ReactNode;
@@ -10,7 +11,5 @@ export interface State {
 }
 
 export function setStoreError(error: Error | null) {
-  import('../../../../../store').then(({ useEditorStore }) => {
-    useEditorStore.getState().setError(error);
-  });
+  useEditorStore.getState().setError(error);
 }

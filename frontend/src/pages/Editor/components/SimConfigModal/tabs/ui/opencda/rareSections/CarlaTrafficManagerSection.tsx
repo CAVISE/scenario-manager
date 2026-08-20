@@ -1,7 +1,7 @@
 import { Stack } from '@mui/material';
 import { NumField } from '../rareComponents/NumField';
+import { SimulationConfig } from '@/store';
 import OpenCDACollapsibleSection from '../../../../components/OpenCDACollapsibleSection';
-import { SimulationConfig } from '../../../../../../Generators/types/configGeneratorsTypes';
 
 type Props = {
   oc: Partial<SimulationConfig['opencda']>;

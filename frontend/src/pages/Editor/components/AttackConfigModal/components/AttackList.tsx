@@ -1,5 +1,5 @@
+import { OpenCDAAttackConfig } from '@editor/Generators/types/configGeneratorsTypes';
 import { Button, Chip, Stack } from '@mui/material';
-import type { OpenCDAAttackConfig } from '../../../Generators/types/configGeneratorsTypes';
 
 interface AttackListProps {
   attacks: OpenCDAAttackConfig[];

@@ -1,11 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { generateSionnaConfig } from './sionna';
 import { defaultSimConfig } from '../../types/configGeneratorsTypes';
-import type {
-  Building,
-  Car,
-  RSU,
-} from '../../../../../store/types/useEditorStoreTypes';
+import { RSU, Car, Building } from '@/store/types/useEditorStoreTypes';
 
 type SionnaOutput = {
   scene: { carrier_frequency: number; synthetic_array: boolean };

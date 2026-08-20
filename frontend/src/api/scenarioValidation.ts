@@ -9,7 +9,7 @@ import {
   type ScenarioGroup,
   type ScenarioPayload,
 } from './types/IScenarioTypes';
-import type { StartSimulationPayload } from '../pages/Editor/hooks/useApiHooks/useSimulationMutation/types/useSimulationMutationTypes';
+import type { StartSimulationPayload } from '@editor/hooks/useApiHooks/useSimulationMutation/types/useSimulationMutationTypes';
 import { scenarioGroupsFromPayload } from './scenarioRequest';
 
 export function validateScenarioId(

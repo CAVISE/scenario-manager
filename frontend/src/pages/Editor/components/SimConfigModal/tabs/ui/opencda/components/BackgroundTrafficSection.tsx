@@ -15,7 +15,7 @@ import {
   createNumberFieldOnChange,
   parseNumberFromEvent,
 } from '../utils/opencdaFieldUtils';
-import { SimulationConfig } from '../../../../../../Generators/types/configGeneratorsTypes';
+import { SimulationConfig } from '@/store';
 
 interface BackgroundTrafficSectionProps {
   enabled: boolean;

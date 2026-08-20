@@ -1,9 +1,5 @@
 import type { SimulationConfig } from '../../types/configGeneratorsTypes';
-import type {
-  Building,
-  Car,
-  RSU,
-} from '../../../../../store/types/useEditorStoreTypes';
+import type { Building, Car, RSU } from '@/store/types/useEditorStoreTypes';
 
 export function generateSionnaConfig(
   config: SimulationConfig,

@@ -1,9 +1,9 @@
 import { useCallback } from 'react';
 import * as THREE from 'three';
-import { useEditorStore } from '../../../../../store';
-import { useHooks, useEditorRefs } from '../../../context';
-import { ToastApi } from '../../../../../components/AppToast/types/toastTypes';
-import { pushSingleDeletionSnapshot } from '../../../../components/RightPanel/components/SceneTreePanel/funcs/deletionSnapshots';
+import { useEditorStore } from '@/store';
+import { useHooks, useEditorRefs } from '@editor/context';
+import { ToastApi } from '@components/AppToast/types/toastTypes';
+import { pushSingleDeletionSnapshot } from '@right-panel/components/SceneTreePanel/funcs/deletionSnapshots';
 import { useHistoryActions } from '../../createEvents/useHistoryActions';
 
 function disposeObject3D(obj: THREE.Object3D): void {

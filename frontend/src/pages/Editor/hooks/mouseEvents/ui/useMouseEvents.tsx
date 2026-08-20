@@ -4,9 +4,8 @@ import type { SharedMouseContext } from '../types/IMouseEventsTypes';
 import { useMouseMoveHandler } from '../handlers/useMouseMoveHandler';
 import { useClickHandler } from '../handlers/useClickHandler';
 import { useDblClickHandler } from '../handlers/useDblClickHandler';
-import { useContextMenuHandler } from '../handlers/useContextMenuHandler';
 import { useKeyDownHandler } from '../handlers/useKeyDownHandler';
-import { useAppToast } from '../../../../../components/AppToast';
+import { useAppToast } from '@/components/AppToast';
 
 export function useMouseEvents() {
   const toast = useAppToast();
@@ -28,22 +27,19 @@ export function useMouseEvents() {
   const onMouseMove = useMouseMoveHandler(ctx);
   const onClick = useClickHandler(ctx);
   const onDblClick = useDblClickHandler(ctx);
-  const onContextMenu = useContextMenuHandler(ctx);
   const onKeyDown = useKeyDownHandler({ toast });
 
   useEffect(() => {
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('click', onClick);
     window.addEventListener('dblclick', onDblClick);
-    window.addEventListener('contextmenu', onContextMenu);
     window.addEventListener('keydown', onKeyDown);
 
     return () => {
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('click', onClick);
       window.removeEventListener('dblclick', onDblClick);
-      window.removeEventListener('contextmenu', onContextMenu);
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, [onMouseMove, onClick, onDblClick, onContextMenu, onKeyDown]);
+  }, [onMouseMove, onClick, onDblClick, onKeyDown]);
 }

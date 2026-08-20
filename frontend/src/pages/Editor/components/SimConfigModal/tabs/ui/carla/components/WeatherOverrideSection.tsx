@@ -6,7 +6,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { weatherParamsFromPreset } from '../../../../../../Generators/exporters/opencdaWeather';
+import { weatherParamsFromPreset } from '@editor/Generators/exporters/opencdaWeather';
 import {
   CarlaConfig,
   WEATHER_KEYS,

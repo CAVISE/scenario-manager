@@ -1,13 +1,13 @@
 import { ListSubheader, MenuItem } from '@mui/material';
-import DownloadIcon from '@mui/icons-material/Download';
+import { Download as DownloadIcon } from '@mui/icons-material';
 import {
   DownloadIconStyles,
   ListSubheaderStyles,
   SimulatorProps,
 } from '../types/SimulationTypes';
-import { mergeSimConfigWithDefaults } from '../../../../../../Generators/types/configGeneratorsTypes';
-import { generateMPCConfig } from '../../../../../../Generators/exporters';
-import { useEditorStore } from '../../../../../../../../store';
+import { mergeSimConfigWithDefaults } from '@editor/Generators/types/configGeneratorsTypes';
+import { generateMPCConfig } from '@editor/Generators/exporters';
+import { useEditorStore } from '@/store';
 
 export default function MPCExportSection({ openExportDialog }: SimulatorProps) {
   const handleExportMPC = () => {

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { ClearSceneParams, DEFAULT_COLOR } from '../types/clearSceneTypes';
-import { clearOdrScene } from '../../../../../../useOpenDriveUtils/useOdrMap';
-import { useEditorStore } from '../../../../../../../../../store';
+import { clearOdrScene } from '@editor/hooks/useOpenDriveUtils/useOdrMap';
+import { useEditorStore } from '@/store';
 
 function disposeMesh(obj: THREE.Mesh) {
   obj.parent?.remove(obj);

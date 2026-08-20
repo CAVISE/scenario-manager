@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
-import { useEditorStore } from '../../../../../../store';
-import { useHooks, useEditorRefs } from '../../../../context';
+import { useEditorStore } from '@/store';
+import { useHooks, useEditorRefs } from '@editor/context';
 
 export function useHistoryActions() {
   const { updateSceneGraph } = useHooks();

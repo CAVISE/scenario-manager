@@ -1,3 +1,6 @@
+import { parseNumberInputChange } from '@editor/components/SimConfigModal/utils/numberInputUtils';
+import { useEditorStore } from '@/store';
+import { Building } from '@/store/types/useEditorStoreTypes';
 import { Button, ToggleButtonGroup, ToggleButton } from '@mui/material';
 import {
   Stack,
@@ -8,17 +11,14 @@ import {
   Divider,
   Typography,
 } from '@mui/material';
-import { numInputSlot } from '../../../types/PanelTypes';
-import { parseNumberInputChange } from '../../../../../Editor/components/SimConfigModal/utils/numberInputUtils';
+import { numInputSlot } from '@right-panel/types/PanelTypes';
 import {
+  BuildingPropertiesProps,
   formLabelStyles,
+  typographyStyles,
   toggleButtonGroupStyles,
   toggleButtonStyles,
-  typographyStyles,
-} from '../../../../../../shared/styles/panelStyles';
-import { BuildingPropertiesProps } from '../types/BuildingPropertiesTypes';
-import { useEditorStore } from '../../../../../../store';
-import { Building } from '../../../../../../store/types/useEditorStoreTypes';
+} from '../types/BuildingPropertiesTypes';
 
 export default function BuildingProperties({
   building,

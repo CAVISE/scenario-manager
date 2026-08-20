@@ -5,7 +5,7 @@ import {
   PickingScenes,
   PickingTextures,
 } from '../../useThreeSetup/types/useThreeSetupTypes';
-import { OpenDriveMapInstance } from '../../../../types/editorTypes';
+import { OpenDriveMapInstance } from '@editor/types/editorTypes';
 
 export interface SpotlightState {
   paused: boolean;

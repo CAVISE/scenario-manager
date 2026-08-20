@@ -1,9 +1,5 @@
 import type { SimulationConfig } from '../../types/configGeneratorsTypes';
-import type {
-  Car,
-  Point,
-  RSU,
-} from '../../../../../store/types/useEditorStoreTypes';
+import type { Car, Point, RSU } from '@/store/types/useEditorStoreTypes';
 
 export function generateCarlaYaml(
   config: SimulationConfig,

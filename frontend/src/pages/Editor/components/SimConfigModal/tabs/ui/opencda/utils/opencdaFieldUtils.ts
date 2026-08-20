@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { MenuItem } from '@mui/material';
-import { numInputSlot } from '../../../../../../../components/RightPanel/types/PanelTypes';
+import { numInputSlot } from '@right-panel/types/PanelTypes';
 
 export const createFieldUpdater =
   <T extends Record<string, unknown>>(onUpdate: (update: Partial<T>) => void) =>

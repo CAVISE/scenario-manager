@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 
-import { useEditorStore } from '../../../../../store';
+import { useEditorStore } from '@/store';
 
 import { useTransformSetup } from '../hooks/useTransformSetup';
 import { useSceneObjects } from '../hooks/useSceneObjects';
@@ -12,12 +12,12 @@ import type {
 } from '../types/useThreeSceneTypes';
 import { useOdrLoader } from '../hooks/useOdrLoader';
 import { useOdrMapManager } from '../hooks/useOdrMapManager';
-import { useEditorRefs } from '../../../context';
 import { createStoreSubscriptions } from '../../createEvents/createStoreSubscriptions';
 import { createEditorActions } from '../../createEvents/createEditorActions';
 import { createTransformListener } from '../../createEvents/createTransformListener';
 import { createHistoryTracker } from '../../createEvents/createHistoryTracker';
 import { createThreeSetup } from '../../useOpenDriveUtils/useThreeSetup';
+import { useEditorRefs } from '@editor/context';
 
 export function useThreeScene({
   updateSceneGraph,

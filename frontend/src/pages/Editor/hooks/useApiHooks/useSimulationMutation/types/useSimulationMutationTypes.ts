@@ -1,5 +1,5 @@
-import { ScenarioGroup } from '../../../../../../api/types/IScenarioTypes';
-import { OpenCDAAttackConfig } from '../../../../Generators/types/configGeneratorsTypes';
+import { ScenarioGroup } from '@/api/types/IScenarioTypes';
+import { OpenCDAAttackConfig } from '@editor/Generators/types/configGeneratorsTypes';
 
 export interface StartSimulationPayload {
   scenario_id: string;

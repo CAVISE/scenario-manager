@@ -1,7 +1,7 @@
 import { FormControlLabel, Stack, Switch } from '@mui/material';
 import { NumField } from '../rareComponents/NumField';
 import OpenCDACollapsibleSection from '../../../../components/OpenCDACollapsibleSection';
-import { SimulationConfig } from '../../../../../../Generators/types/configGeneratorsTypes';
+import { SimulationConfig } from '@/store';
 type Oc = SimulationConfig['opencda'];
 type Props = {
   mapManager: Oc['map_manager'];

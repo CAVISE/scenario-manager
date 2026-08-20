@@ -12,12 +12,12 @@ import {
   useScenarioCreateMutation,
   useScenarioPatchMutation,
   useScenarioDeleteMutation,
-} from '../../../../../Editor/hooks/useApiHooks/useScenarioQueries';
-import { useEditorStore } from '../../../../../../store';
-import { useStartSimulationMutation } from '../../../../../Editor/hooks/useApiHooks/useSimulationMutation';
-import { useEditorRefs, useHooks } from '../../../../../Editor/context';
-import { useStatusesQuery } from '../../../../../Editor/hooks/useApiHooks/useStatusesQuery';
-import { useNoticeWithToast } from '../../../../../../components/AppToast';
+} from '@editor/hooks/useApiHooks/useScenarioQueries';
+import { useEditorStore } from '@/store';
+import { useStartSimulationMutation } from '@editor/hooks/useApiHooks/useSimulationMutation';
+import { useEditorRefs, useHooks } from '@editor/context';
+import { useStatusesQuery } from '@editor/hooks/useApiHooks/useStatusesQuery';
+import { useNoticeWithToast } from '@/components/AppToast';
 
 export default function ScenarioControlWidget() {
   const scenario = useEditorStore((s) => s.Scenario);

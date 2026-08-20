@@ -8,16 +8,16 @@ import {
   Divider,
   Typography,
 } from '@mui/material';
-import { useEditorStore } from '../../../../../../store';
-import { numInputSlot } from '../../../types/PanelTypes';
+import { useEditorStore } from '@/store';
+import { numInputSlot } from '@right-panel/types/PanelTypes';
 import NumericInput from '../../NumericInput';
 import { IPedestrianProps } from '../types/PedestrianPropertiesTypes';
 import {
   formLabelStyles,
   toggleButtonStyles,
   typographyStyles,
-} from '../../../../../../shared/styles/panelStyles';
-import { parseNumberInputChange } from '../../../../../Editor/components/SimConfigModal/utils/numberInputUtils';
+} from '@/shared/styles/panelStyles';
+import { parseNumberInputChange } from '@editor/components/SimConfigModal/utils/numberInputUtils';
 
 function clampCrossFactor(value: number): number {
   return Math.max(0, Math.min(1, value));

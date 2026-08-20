@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
 import * as THREE from 'three';
-import { useEditorStore } from '../../../../../store';
+import { useEditorStore } from '@/store';
 import type { SharedMouseContext } from '../types/IMouseEventsTypes';
-import { useEditorRefs } from '../../../context';
+import { useEditorRefs } from '@editor/context';
 
 export function useClickHandler(ctx: SharedMouseContext) {
   const {

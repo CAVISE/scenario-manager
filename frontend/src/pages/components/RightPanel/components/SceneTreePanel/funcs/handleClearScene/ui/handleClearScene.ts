@@ -1,6 +1,6 @@
 import { disposeMesh } from '../../sceneUtils';
 import * as THREE from 'three';
-import { useEditorStore } from '../../../../../../../../store';
+import { useEditorStore } from '@/store';
 import { pushClearSceneSnapshot } from '../../deletionSnapshots';
 import { handleClearSceneProps } from '../types/handleClearSceneTypes';
 export function handleClearScene({

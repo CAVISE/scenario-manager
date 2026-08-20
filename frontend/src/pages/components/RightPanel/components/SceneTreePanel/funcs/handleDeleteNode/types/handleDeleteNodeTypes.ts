@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { TransformControls } from 'three-stdlib';
-import { ToastApi } from '../../../../../../../../components/AppToast/types/toastTypes';
+import { ToastApi } from '@/components/AppToast/types/toastTypes';
 
 import type { MutableRefObject } from 'react';
 

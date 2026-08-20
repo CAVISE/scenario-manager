@@ -1,8 +1,9 @@
+import { MutableRefObject } from 'react';
 import { TransformControls } from 'three-stdlib';
 
 export interface UseTransformSetupProps {
   transformControls: TransformControls | undefined;
-  isDraggingRef?: React.RefObject<boolean>;
+  isDraggingRef: MutableRefObject<boolean>;
 }
 
 export interface UseTransformSetupResult {

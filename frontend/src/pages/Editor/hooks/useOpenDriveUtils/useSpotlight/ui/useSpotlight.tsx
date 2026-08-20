@@ -1,15 +1,16 @@
 import * as THREE from 'three';
-import { decodeUInt32, isValid } from '../../../../../../helpers/editorhelper';
-import { applyVertexColors } from '../../../../scene/utils/sceneHelpers';
+import { decodeUInt32, isValid } from '@/helpers/editorhelper';
+import { applyVertexColors } from '@editor/scene/utils/sceneHelpers';
 import { COLORS } from '../../useOdrMap/types/useOdrMapTypes';
 import type {
   OdrLanesMesh,
   OdrRoadmarksMesh,
-} from '../../../../scene/utils/sceneHelpers/types/sceneHelpersTypes';
+} from '@editor/scene/utils/sceneHelpers/types/sceneHelpersTypes';
 import type {
   StartAnimateParams,
   SpotlightState,
 } from '../types/useSpotlightTypes';
+import { setCanvasReference } from '@right-panel/components/ScenarioControlWidget/Handlers/ui/scenario.load.handler';
 
 export function startAnimate(p: StartAnimateParams): {
   running: boolean;
@@ -17,6 +18,7 @@ export function startAnimate(p: StartAnimateParams): {
 } {
   let mouseMoved = false;
   const canvas = p.renderer.domElement;
+  setCanvasReference(canvas);
   const onMouseMove = () => {
     mouseMoved = true;
   };

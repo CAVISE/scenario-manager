@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { TransformControls } from 'three-stdlib';
-import { RSU } from '../../../../../../store/types/useEditorStoreTypes';
+import { RSU } from '@/store/types/useEditorStoreTypes';
 export interface LoadRSUContext {
   scene: THREE.Scene;
   RSUs: RSU[];

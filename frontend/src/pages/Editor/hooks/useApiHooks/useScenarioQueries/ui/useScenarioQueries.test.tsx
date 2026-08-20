@@ -18,7 +18,7 @@ const updateMock = vi.fn();
 const removeMock = vi.fn();
 const updateScenarioMock = vi.fn();
 
-vi.mock('../../../../../../api/scenarios', () => ({
+vi.mock('@/api/scenarios', () => ({
   scenariosApi: {
     listAll: (...args: unknown[]) => listAllMock(...args),
     get: (...args: unknown[]) => getMock(...args),
@@ -28,7 +28,7 @@ vi.mock('../../../../../../api/scenarios', () => ({
   },
 }));
 
-vi.mock('../../../../../../store', () => ({
+vi.mock('@/store', () => ({
   useEditorStore: (
     selector: (s: { updateScenario: typeof updateScenarioMock }) => unknown,
   ) => selector({ updateScenario: updateScenarioMock }),

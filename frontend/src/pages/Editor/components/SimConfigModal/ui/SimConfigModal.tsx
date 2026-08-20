@@ -11,9 +11,6 @@ import {
   Stack,
 } from '@mui/material';
 
-import { useEditorStore } from '../../../../../store';
-import { mergeSimConfigWithDefaults } from '../../../Generators/types/configGeneratorsTypes';
-import { muiPressableRootStyle } from '../../../../../theme/pressInteraction';
 import {
   modalBoxSx,
   type SimConfigModalProps,
@@ -29,6 +26,9 @@ import {
   OmnetTab,
 } from '../tabs';
 import { parseNumberInputChange } from '../utils/numberInputUtils';
+import { mergeSimConfigWithDefaults } from '@editor/Generators/types/configGeneratorsTypes';
+import { useEditorStore } from '@/store';
+import { muiPressableRootStyle } from '@/theme/pressInteraction';
 
 export default function SimConfigModal({ open, onClose }: SimConfigModalProps) {
   const [tab, setTab] = useState(0);

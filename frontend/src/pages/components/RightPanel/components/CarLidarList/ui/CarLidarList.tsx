@@ -6,8 +6,8 @@ import {
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import { useEditorStore } from '../../../../../../store';
+import { KeyboardArrowDown as KeyboardArrowDownIcon } from '@mui/icons-material';
+import { useEditorStore } from '@/store';
 import LidarProperties from '../../LidarProperties';
 import { CarLidarListProps } from '../types/CarLidarListTypes';
 

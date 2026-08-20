@@ -38,6 +38,6 @@ RUN mkdir -p evaluation_outputs logs assets/xodrs \
     && chown -R appuser:appuser evaluation_outputs logs assets
 
 EXPOSE 8000
-USER appuser
+# USER appuser
 ENTRYPOINT ["./entrypoint.sh"]
 CMD ["python", "main.py"]

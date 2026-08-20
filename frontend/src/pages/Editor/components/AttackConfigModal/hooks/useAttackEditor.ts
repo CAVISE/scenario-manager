@@ -1,16 +1,16 @@
 import { useMemo, useState } from 'react';
 import { nanoid } from 'nanoid';
 import {
-  mergeSimConfigWithDefaults,
-  normalizeAttackStages,
-  type OpenCDAAttackConfig,
-  type OpenCDAAttackStage,
-} from '../../../Generators/types/configGeneratorsTypes';
-import {
   GNSS_DRIFT_PARAMS,
   GNSS_SPOOFER_PRESET,
 } from '../types/AttackConfigModalTypes';
-import { useEditorStore } from '../../../../../store';
+import { useEditorStore } from '@/store';
+import {
+  mergeSimConfigWithDefaults,
+  OpenCDAAttackConfig,
+  normalizeAttackStages,
+  OpenCDAAttackStage,
+} from '@editor/Generators/types/configGeneratorsTypes';
 
 export function useAttackEditor() {
   const rawSimConfig = useEditorStore((s) => s.simConfig);

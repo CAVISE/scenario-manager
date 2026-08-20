@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { findObjectInScene } from '../../sceneUtils';
-import { useEditorStore } from '../../../../../../../../store';
+import { useEditorStore } from '@/store';
 import { handleSelectProps } from '../types/handleSelectTypes';
+import { findObjectInScene } from '../../sceneUtils';
 
 export function handleSelect({
   sceneRef,

@@ -1,8 +1,7 @@
 import * as THREE from 'three';
-
 import { CreateEditorActionsOptions } from '../types/createEditorActionsTypes';
-import { fitViewToObj } from '../../../../scene/utils/sceneHelpers';
-import { useEditorStore } from '../../../../../../store';
+import { fitViewToObj } from '@editor/scene/utils/sceneHelpers';
+import { useEditorStore } from '@/store';
 
 export function createEditorActions(opts: CreateEditorActionsOptions) {
   const {
@@ -29,7 +28,7 @@ export function createEditorActions(opts: CreateEditorActionsOptions) {
         const reader = new FileReader();
         reader.onload = (e) => {
           if (typeof e.target?.result === 'string')
-            loadFile(e.target.result, true);
+            loadFile(e.target.result, true, file.name);
         };
         reader.readAsText(file);
       });

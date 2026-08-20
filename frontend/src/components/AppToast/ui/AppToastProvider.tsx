@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import { Alert, Button, IconButton, Snackbar } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import { Close as CloseIcon } from '@mui/icons-material';
 import { ToastAction, ToastApi, ToastLevel } from '../types/toastTypes';
 
 const noop = () => {};

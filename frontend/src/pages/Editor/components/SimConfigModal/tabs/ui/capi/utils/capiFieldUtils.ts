@@ -1,6 +1,5 @@
-// utils/capiFieldUtils.ts
+import { SimulationConfig } from '@/store';
 import { parseNumberInputChange } from '../../../../utils/numberInputUtils';
-import type { SimulationConfig } from '../../../../../../Generators/types/configGeneratorsTypes';
 
 type CapiConfig = SimulationConfig['capi'];
 

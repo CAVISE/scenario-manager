@@ -6,9 +6,9 @@ import {
   Input,
   Switch,
 } from '@mui/material';
-import { RSU } from '../../../../../../../store/types/useEditorStoreTypes';
-import { numInputSlot } from '../../../../types/PanelTypes';
-import { formLabelStyles } from '../../../CarProperties/types/CarPropertiesTypes';
+import { RSU } from '@/store/types/useEditorStoreTypes';
+import { numInputSlot } from '@right-panel/types/PanelTypes';
+import { formLabelStyles } from '@/shared/styles/panelStyles';
 
 interface OpenCDAColorSectionProps {
   rsu: RSU;

@@ -3,7 +3,7 @@ import { AIMServerEditor } from './AIMServerEditor';
 import type {
   RSU,
   RsuBehaviorService,
-} from '../../../../../../../store/types/useEditorStoreTypes';
+} from '@/store/types/useEditorStoreTypes';
 
 interface BehaviorServicesSectionProps {
   rsu: RSU;

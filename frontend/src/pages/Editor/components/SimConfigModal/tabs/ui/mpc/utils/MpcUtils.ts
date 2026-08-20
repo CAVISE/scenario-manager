@@ -1,3 +1,3 @@
-import { SimulationConfig } from '../../../../../../Generators/types/configGeneratorsTypes';
+import { SimulationConfig } from '@/store';
 
 export type MPCConfig = SimulationConfig['mpc'];

@@ -1,15 +1,15 @@
 import { ListSubheader, MenuItem } from '@mui/material';
-import DownloadIcon from '@mui/icons-material/Download';
-import { mergeSimConfigWithDefaults } from '../../../../../../Generators/types/configGeneratorsTypes';
+import { Download as DownloadIcon } from '@mui/icons-material';
 import {
-  generateArteryConfig,
   generateOmnetConfig,
-} from '../../../../../../Generators/exporters';
-import { useEditorStore } from '../../../../../../../../store';
+  generateArteryConfig,
+} from '@editor/Generators/exporters';
+import { mergeSimConfigWithDefaults } from '@editor/Generators/types/configGeneratorsTypes';
+import { useEditorStore } from '@/store';
 import {
-  DownloadIconStyles,
-  ListSubheaderStyles,
   SimulatorProps,
+  ListSubheaderStyles,
+  DownloadIconStyles,
 } from '../types/SimulationTypes';
 
 export default function V2XExportSection({ openExportDialog }: SimulatorProps) {

@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type {
-  Car,
-  Lidar,
-  Point,
-  RSU,
-} from '../../../store/types/useEditorStoreTypes';
+import type { Car, Lidar, Point, RSU } from '@/store/types/useEditorStoreTypes';
 import { buildOpenCDAArtifact } from './opencdaArtifact';
 import { defaultSimConfig } from './types/configGeneratorsTypes';
 

@@ -1,30 +1,30 @@
 import { ListSubheader, MenuItem } from '@mui/material';
 
-import DownloadIcon from '@mui/icons-material/Download';
+import { Download as DownloadIcon } from '@mui/icons-material';
 import {
   DownloadIconStyles,
   ListSubheaderStyles,
   SimulatorProps,
 } from '../types/SimulationTypes';
-import { mergeSimConfigWithDefaults } from '../../../../../../Generators/types/configGeneratorsTypes';
-import { useEditorStore } from '../../../../../../../../store';
+import { mergeSimConfigWithDefaults } from '@editor/Generators/types/configGeneratorsTypes';
+import { useEditorStore } from '@/store';
 import {
   generatePolyXml,
   generateRouXml,
   generateSumoCfg,
-} from '../../../../../../Generators/exporters';
+  getSumoNetFilename,
+} from '@editor/Generators/exporters';
+import { useAppToast } from '@/components/AppToast';
+import { useEditorRefs } from '@editor/context';
 import {
-  getStoredXodrName,
-  resolveXodrTextForSimulation,
-} from '../../../../../../hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
-import { useEditorRefs } from '../../../../../../context';
-import {
+  resolveSumoNetwork,
   buildSumoRoutes,
   getSumoCoordinateOffsets,
-  resolveSumoNetwork,
-} from '../../../../../../Generators/exporters/ui/sumoNetwork';
-import { getSumoNetFilename } from '../../../../../../Generators/exporters';
-import { useAppToast } from '../../../../../../../../components/AppToast';
+} from '@editor/Generators/exporters/ui/sumoNetwork';
+import {
+  resolveXodrTextForSimulation,
+  getStoredXodrName,
+} from '@editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
 
 function exportErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);

@@ -1,5 +1,5 @@
+import { useEditorRefs } from '@editor/context';
 import { styles } from '../types/EditorCanvasTypes';
-import { useEditorRefs } from '../../../context';
 export const EditorCanvas = () => {
   const { mountRef } = useEditorRefs();
   return (

@@ -8,4 +8,5 @@ export interface UseSceneObjectsResult {
   loadPoints: () => void;
   syncRoadMesh: (roadMesh: THREE.Mesh | null) => void;
   localLineArrRef: MutableRefObject<THREE.Line[][]>;
+  loadRSU: () => void;
 }

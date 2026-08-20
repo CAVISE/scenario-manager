@@ -1,4 +1,4 @@
-import { useEditorStore } from '../../../../../../store';
+import { useEditorStore } from '@/store';
 import { CreateStoreSubscriptionsOptions } from '../types/createStoreSubscriptionsTypes';
 
 export function createStoreSubscriptions(

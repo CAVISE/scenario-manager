@@ -20,6 +20,6 @@ export interface CreateEditorActionsOptions {
   getOdrMeshes: () => OdrMapMeshes;
 
   loadPoints: () => void;
-  loadFile: (text: string, clearMap: boolean) => void;
+  loadFile: (text: string, clearMap: boolean, sourceName?: string) => void;
   reloadOdrMap: () => void;
 }

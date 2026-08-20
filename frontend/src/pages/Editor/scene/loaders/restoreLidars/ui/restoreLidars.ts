@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { useEditorStore } from '../../../../../../store';
+import { useEditorStore } from '@/store';
 import { RestoreLidarsOptions } from '../types/restoreLidarsTypes';
 
 export function restoreLidars(opts: RestoreLidarsOptions): void {

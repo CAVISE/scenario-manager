@@ -3,7 +3,7 @@ import {
   validateDeletePayload,
   validateStartSimulationPayload,
   validateUpdatePayload,
-} from '../../../../../../../api/scenarioValidation';
+} from '@/api/scenarioValidation';
 import {
   BuildingPath,
   CarPath,
@@ -11,34 +11,28 @@ import {
   RSUPath,
 } from '../../types/ScenarioControlWidgetTypes';
 import type { ScenarioGroup } from '../../types/ScenarioControlWidgetTypes';
-import type { ScenarioGroup as ApiScenarioGroup } from '../../../../../../../api/types/IScenarioTypes';
-
-import { queryClient } from '../../../../../../../api/queryClient';
+import type { ScenarioGroup as ApiScenarioGroup } from '@/api/types/IScenarioTypes';
+import { getApiErrorMessage } from '@/api/errors';
+import { queryClient } from '@/api/queryClient';
+import { scenariosApi } from '@/api/scenarios';
+import { buildOpenCDAArtifact } from '@editor/Generators/opencdaArtifact';
+import { defaultSimConfig } from '@editor/Generators/types/configGeneratorsTypes';
 import {
   scenarioKeys,
   useScenarioCreateMutation,
   useScenarioPatchMutation,
   useScenarioDeleteMutation,
-} from '../../../../../../Editor/hooks/useApiHooks/useScenarioQueries';
-import { scenariosApi } from '../../../../../../../api/scenarios';
-import { useEditorStore } from '../../../../../../../store';
-import { useStartSimulationMutation } from '../../../../../../Editor/hooks/useApiHooks/useSimulationMutation';
+} from '@editor/hooks/useApiHooks/useScenarioQueries';
+import { useStartSimulationMutation } from '@editor/hooks/useApiHooks/useSimulationMutation';
+import { StartSimulationPayload } from '@editor/hooks/useApiHooks/useSimulationMutation/types/useSimulationMutationTypes';
 import {
-  Building,
-  RSU,
-  Scenario,
-} from '../../../../../../../store/types/useEditorStoreTypes';
-import { StartSimulationPayload } from '../../../../../../Editor/hooks/useApiHooks/useSimulationMutation/types/useSimulationMutationTypes';
-import { getApiErrorMessage } from '../../../../../../../api/errors';
-import { LoadScenarioOptions } from '../types/scenario.load.handlerTypes';
-import {
-  fetchXodrText,
   isOpenDrive,
+  fetchXodrText,
   resolveXodrTextForSimulation,
-  setStoredXodrName,
-} from '../../../../../../Editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
-import { buildOpenCDAArtifact } from '../../../../../../Editor/Generators/configGenerators';
-import { defaultSimConfig } from '../../../../../../Editor/Generators/types/configGeneratorsTypes';
+} from '@editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
+import { useEditorStore } from '@/store';
+import { Scenario, RSU, Building } from '@/store/types/useEditorStoreTypes';
+import { LoadScenarioOptions } from '../types/scenario.load.handlerTypes';
 
 export const handleLoad = async ({
   hasId,
@@ -68,8 +62,8 @@ export const handleLoad = async ({
     const xodr = data.file_ ?? (data.scenario as unknown as Scenario)?.file_;
     if (xodr) {
       const xodrText = isOpenDrive(xodr) ? xodr : await fetchXodrText(xodr);
-      if (!isOpenDrive(xodr)) setStoredXodrName(xodr);
-      loadFile(xodrText, true);
+
+      loadFile(xodrText, true, isOpenDrive(xodr) ? undefined : xodr);
     }
     const rawScenario = data.scenario as unknown as {
       scenario_text: ScenarioGroup<

@@ -5,10 +5,10 @@ import {
   Input,
   Switch,
 } from '@mui/material';
-import { useEditorStore } from '../../../../../../store';
-import type { Car } from '../../../../../../store/types/useEditorStoreTypes';
-import { numInputSlot } from '../../../types/PanelTypes';
+import { useEditorStore } from '@/store';
+import type { Car } from '@/store/types/useEditorStoreTypes';
 import { parseNumberFromEvent } from '../utils/carOpenCDAHelpers';
+import { numInputSlot } from '@editor/components/SimConfigModal/tabs/ui/opencda/utils/opencdaFieldUtils';
 
 interface CarIdentitySectionProps {
   car: Car;

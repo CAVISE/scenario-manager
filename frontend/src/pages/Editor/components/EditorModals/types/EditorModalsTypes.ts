@@ -1,7 +1,4 @@
-import {
-  pressActiveSx,
-  pressTransition,
-} from '../../../../../theme/pressInteraction';
+import { pressActiveSx, pressTransition } from '@/theme/pressInteraction';
 
 export interface EditorModalsProps {
   telemetryModalOpen: boolean;

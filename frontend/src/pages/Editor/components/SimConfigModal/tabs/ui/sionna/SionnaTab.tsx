@@ -1,5 +1,5 @@
+import { useEditorStore } from '@/store';
 import { FormControlLabel, Stack, Switch, TextField } from '@mui/material';
-import { useEditorStore } from '../../../../../../../store';
 import { parseNumberInputChange } from '../../../utils/numberInputUtils';
 
 export default function SionnaTab() {

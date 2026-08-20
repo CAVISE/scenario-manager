@@ -1,4 +1,4 @@
-import { API_URL } from '../../../../../../VARS';
+import { API_URL } from '@/VARS';
 
 export interface SimulationStatus {
   running: boolean;

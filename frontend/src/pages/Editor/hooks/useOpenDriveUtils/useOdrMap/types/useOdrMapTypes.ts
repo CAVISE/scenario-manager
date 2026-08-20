@@ -1,8 +1,8 @@
-import type {
-  OpenDriveMapInstance,
+import {
   OdrMapConfig,
   OdrRoadNetworkMesh,
-} from '../../../../types/editorTypes';
+  OpenDriveMapInstance,
+} from '@editor/types/editorTypes';
 import type {
   PickingScenes,
   PickingMaterials,

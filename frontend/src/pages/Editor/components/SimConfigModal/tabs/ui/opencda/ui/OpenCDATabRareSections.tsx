@@ -1,9 +1,6 @@
 import { Box, Divider, Stack, Typography } from '@mui/material';
-import {
-  opencdaPanelPaperSx,
-  opencdaSectionLabelSx,
-} from '../../../../opencdaUiStyles';
-import type { SimulationConfig } from '../../../../../../Generators/types/configGeneratorsTypes';
+
+import { SimulationConfig } from '@/store';
 
 import {
   ExportTogglesSection,
@@ -18,6 +15,10 @@ import {
   BehaviorServicesSection,
   WorldClientHostField,
 } from '../rareSections';
+import {
+  opencdaPanelPaperSx,
+  opencdaSectionLabelSx,
+} from '../../../../opencdaUiStyles';
 
 type Oc = SimulationConfig['opencda'];
 type Props = { oc: Oc; update: (patch: Partial<Oc>) => void };

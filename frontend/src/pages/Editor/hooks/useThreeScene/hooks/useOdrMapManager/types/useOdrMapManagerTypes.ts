@@ -1,13 +1,11 @@
 import type { MutableRefObject } from 'react';
-import {
-  LOADING_STEPS,
-  OpenDriveMapInstance,
-} from '../../../../../types/editorTypes';
+
+import * as THREE from 'three';
+import { LOADING_STEPS, OpenDriveMapInstance } from '@editor/types/editorTypes';
 import {
   OdrMapMeshes,
   OpenDriveModule,
-} from '../../../../useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
-import * as THREE from 'three';
+} from '@editor/hooks/useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
 
 export const EMPTY_ODR_MESHES: OdrMapMeshes = {
   refline_lines: null,

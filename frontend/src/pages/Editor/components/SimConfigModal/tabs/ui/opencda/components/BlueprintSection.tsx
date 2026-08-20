@@ -10,7 +10,7 @@ import {
   parseNumberFromEvent,
   createFieldUpdater,
 } from '../utils/opencdaFieldUtils';
-import { SimulationConfig } from '../../../../../../Generators/types/configGeneratorsTypes';
+import { SimulationConfig } from '@/store';
 
 interface BlueprintSectionProps {
   useMultiClass: boolean;

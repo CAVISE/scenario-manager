@@ -1,4 +1,4 @@
-import { CarlaWeather } from '../../../../store/types/useEditorStoreTypes';
+import { CarlaWeather } from '@/store/types/useEditorStoreTypes';
 import {
   defaultOpenCDACoopPerceptionViz,
   defaultOpenCDAController,

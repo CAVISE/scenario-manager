@@ -213,7 +213,9 @@ test('loading scenario with a building renders it in scene graph', async ({
   await page.getByText('Mock scenario').click();
   await page.getByRole('button', { name: 'Load onto scene' }).click();
 
-  await expect(page.getByText(/Building/)).toBeVisible();
+  await expect(
+    page.locator('.stp-node-name', { hasText: 'Building' }),
+  ).toBeVisible();
 });
 test('deleting a building via panel removes its mesh, not just the store entry', async ({
   page,
@@ -224,7 +226,9 @@ test('deleting a building via panel removes its mesh, not just the store entry',
   await page.getByRole('menuitem', { name: 'Upload' }).click();
   await page.getByText('Mock scenario').click();
   await page.getByRole('button', { name: 'Load onto scene' }).click();
-  await expect(page.getByText(/Building/)).toBeVisible();
+  await expect(
+    page.locator('.stp-node-name', { hasText: 'Building' }),
+  ).toBeVisible();
 
   const countBefore = await page.getByTestId('scene-graph-count').textContent();
   await page.getByText(/Building/).click();
@@ -269,7 +273,9 @@ test('adding building via speed dial and double-click creates a mesh', async ({
   await canvas.click({ position: { x: 50, y: 50 } });
   await canvas.dblclick({ position: { x: 400, y: 300 } });
 
-  await expect(page.getByText(/Building/)).toBeVisible();
+  await expect(
+    page.locator('.stp-node-name', { hasText: 'Building' }),
+  ).toBeVisible();
 });
 test('deleting a pedestrian via panel removes its mesh, not just the store entry', async ({
   page,
@@ -289,4 +295,32 @@ test('deleting a pedestrian via panel removes its mesh, not just the store entry
     countBefore!,
   );
   await expect(page.getByText(/Pedestrian/)).not.toBeVisible();
+});
+test('adding pedestrian via speed dial and double-click creates a mesh', async ({
+  page,
+}) => {
+  await openEditor(page);
+  await openSpeedDial(page);
+  await page.getByRole('menuitem', { name: 'Add a pedestrian' }).click();
+
+  const canvas = page.getByTestId('editor-canvas');
+  await canvas.click({ position: { x: 50, y: 50 } }); // холостой клик против autoRotate
+  await canvas.dblclick({ position: { x: 400, y: 300 } });
+
+  await expect(page.getByText(/Pedestrian/)).toBeVisible();
+});
+test('adding RSU via speed dial and double-click creates a mesh', async ({
+  page,
+}) => {
+  await openEditor(page);
+  await openSpeedDial(page);
+  await page.getByRole('menuitem', { name: 'Add RSU' }).click();
+
+  const canvas = page.getByTestId('editor-canvas');
+  await canvas.click({ position: { x: 50, y: 50 } });
+  await canvas.dblclick({ position: { x: 400, y: 300 } });
+
+  await expect(
+    page.locator('.stp-node-name', { hasText: 'RSU' }),
+  ).toBeVisible();
 });

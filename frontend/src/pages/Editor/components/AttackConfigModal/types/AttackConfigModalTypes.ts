@@ -1,7 +1,7 @@
 import type {
   OpenCDAAttackConfig,
   OpenCDAAttackStage,
-} from '../../../Generators/types/configGeneratorsTypes';
+} from '@editor/Generators/types/configGeneratorsTypes';
 
 export interface AttackConfigModalProps {
   open: boolean;
