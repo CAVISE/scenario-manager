@@ -38,7 +38,7 @@ var libOpenDrive = (() => {
       } else {
         scriptDirectory = scriptDirectory.substr(
           0,
-          scriptDirectory.replace(/[?#].*/, '').lastIndexOf('/') + 1,
+          scriptDirectory.replace(/[?#].*/, '').lastIndexOf('/') + 1
         );
       }
       {
@@ -202,7 +202,7 @@ var libOpenDrive = (() => {
           var response = fetch(binaryFile, { credentials: 'same-origin' });
           var instantiationResult = await WebAssembly.instantiateStreaming(
             response,
-            imports,
+            imports
           );
           return instantiationResult;
         } catch (reason) {
@@ -312,7 +312,7 @@ var libOpenDrive = (() => {
             filename ? UTF8ToString(filename) : 'unknown filename',
             line,
             func ? UTF8ToString(func) : 'unknown function',
-          ],
+          ]
       );
     class ExceptionInfo {
       constructor(excPtr) {
@@ -405,7 +405,7 @@ var libOpenDrive = (() => {
           trailingSlash = path.substr(-1) === '/';
         path = PATH.normalizeArray(
           path.split('/').filter((p) => !!p),
-          !isAbsolute,
+          !isAbsolute
         ).join('/');
         if (!path && !isAbsolute) {
           path = '.';
@@ -451,7 +451,7 @@ var libOpenDrive = (() => {
         }
         resolvedPath = PATH.normalizeArray(
           resolvedPath.split('/').filter((p) => !!p),
-          !resolvedAbsolute,
+          !resolvedAbsolute
         ).join('/');
         return (resolvedAbsolute ? '/' : '') + resolvedPath || '.';
       },
@@ -546,7 +546,7 @@ var libOpenDrive = (() => {
         stringy,
         u8array,
         0,
-        u8array.length,
+        u8array.length
       );
       if (dontAddNull) u8array.length = numBytesWritten;
       return u8array;
@@ -786,7 +786,7 @@ var libOpenDrive = (() => {
           newCapacity,
           (prevCapacity *
             (prevCapacity < CAPACITY_DOUBLING_MAX ? 2 : 1.125)) >>>
-            0,
+            0
         );
         if (prevCapacity != 0) newCapacity = Math.max(newCapacity, 256);
         var oldContents = node.contents;
@@ -804,7 +804,7 @@ var libOpenDrive = (() => {
           node.contents = new Uint8Array(newSize);
           if (oldContents) {
             node.contents.set(
-              oldContents.subarray(0, Math.min(newSize, node.usedBytes)),
+              oldContents.subarray(0, Math.min(newSize, node.usedBytes))
             );
           }
           node.usedBytes = newSize;
@@ -933,7 +933,7 @@ var libOpenDrive = (() => {
             } else if (position + length <= node.usedBytes) {
               node.contents.set(
                 buffer.subarray(offset, offset + length),
-                position,
+                position
               );
               return length;
             }
@@ -942,7 +942,7 @@ var libOpenDrive = (() => {
           if (node.contents.subarray && buffer.subarray) {
             node.contents.set(
               buffer.subarray(offset, offset + length),
-              position,
+              position
             );
           } else {
             for (var i = 0; i < length; i++) {
@@ -970,7 +970,7 @@ var libOpenDrive = (() => {
           MEMFS.expandFileStorage(stream.node, offset + length);
           stream.node.usedBytes = Math.max(
             stream.node.usedBytes,
-            offset + length,
+            offset + length
           );
         },
         mmap(stream, length, position, prot, flags) {
@@ -997,7 +997,7 @@ var libOpenDrive = (() => {
                   contents = Array.prototype.slice.call(
                     contents,
                     position,
-                    position + length,
+                    position + length
                   );
                 }
               }
@@ -1022,7 +1022,7 @@ var libOpenDrive = (() => {
       fileData,
       canRead,
       canWrite,
-      canOwn,
+      canOwn
     ) => {
       FS.createDataFile(parent, name, fileData, canRead, canWrite, canOwn);
     };
@@ -1049,7 +1049,7 @@ var libOpenDrive = (() => {
       onerror,
       dontCreateFile,
       canOwn,
-      preFinish,
+      preFinish
     ) => {
       var fullname = name ? PATH_FS.resolve(PATH.join2(parent, name)) : parent;
       var dep = getUniqueRunDependency(`cp ${fullname}`);
@@ -1063,7 +1063,7 @@ var libOpenDrive = (() => {
               byteArray,
               canRead,
               canWrite,
-              canOwn,
+              canOwn
             );
           }
           onload?.();
@@ -1486,7 +1486,7 @@ var libOpenDrive = (() => {
         FS.syncFSRequests++;
         if (FS.syncFSRequests > 1) {
           err(
-            `warning: ${FS.syncFSRequests} FS.syncfs operations in flight at once, probably just doing extra work`,
+            `warning: ${FS.syncFSRequests} FS.syncfs operations in flight at once, probably just doing extra work`
           );
         }
         var mounts = FS.getMounts(FS.root.mount);
@@ -2009,7 +2009,7 @@ var libOpenDrive = (() => {
           buffer,
           offset,
           length,
-          position,
+          position
         );
         if (!seeking) stream.position += bytesRead;
         return bytesRead;
@@ -2045,7 +2045,7 @@ var libOpenDrive = (() => {
           offset,
           length,
           position,
-          canOwn,
+          canOwn
         );
         if (!seeking) stream.position += bytesWritten;
         return bytesWritten;
@@ -2096,7 +2096,7 @@ var libOpenDrive = (() => {
           buffer,
           offset,
           length,
-          mmapFlags,
+          mmapFlags
         );
       },
       ioctl(stream, cmd, arg) {
@@ -2217,7 +2217,7 @@ var libOpenDrive = (() => {
             },
           },
           {},
-          '/proc/self/fd',
+          '/proc/self/fd'
         );
       },
       createStandardStreams(input, output, error) {
@@ -2322,7 +2322,7 @@ var libOpenDrive = (() => {
       createFile(parent, name, properties, canRead, canWrite) {
         var path = PATH.join2(
           typeof parent == 'string' ? parent : FS.getPath(parent),
-          name,
+          name
         );
         var mode = FS_getMode(canRead, canWrite);
         return FS.create(path, mode);
@@ -2352,7 +2352,7 @@ var libOpenDrive = (() => {
       createDevice(parent, name, input, output) {
         var path = PATH.join2(
           typeof parent == 'string' ? parent : FS.getPath(parent),
-          name,
+          name
         );
         var mode = FS_getMode(!!input, !!output);
         FS.createDevice.major ??= 64;
@@ -2408,7 +2408,7 @@ var libOpenDrive = (() => {
           return true;
         if (typeof XMLHttpRequest != 'undefined') {
           throw new Error(
-            'Lazy loading should have been performed (contents set) in createLazyFile, but it was not. Lazy loading only works in web workers. Use --embed-file or --preload-file in emcc on the main thread.',
+            'Lazy loading should have been performed (contents set) in createLazyFile, but it was not. Lazy loading only works in web workers. Use --embed-file or --preload-file in emcc on the main thread.'
           );
         } else {
           try {
@@ -2443,7 +2443,7 @@ var libOpenDrive = (() => {
               xhr.status === 304
             ))
               throw new Error(
-                "Couldn't load " + url + '. Status: ' + xhr.status,
+                "Couldn't load " + url + '. Status: ' + xhr.status
               );
             var datalength = Number(xhr.getResponseHeader('Content-length'));
             var header;
@@ -2462,11 +2462,11 @@ var libOpenDrive = (() => {
                     from +
                     ', ' +
                     to +
-                    ') or no bytes requested!',
+                    ') or no bytes requested!'
                 );
               if (to > datalength - 1)
                 throw new Error(
-                  'only ' + datalength + ' bytes available! programmer error!',
+                  'only ' + datalength + ' bytes available! programmer error!'
                 );
               var xhr = new XMLHttpRequest();
               xhr.open('GET', url, false);
@@ -2482,7 +2482,7 @@ var libOpenDrive = (() => {
                 xhr.status === 304
               ))
                 throw new Error(
-                  "Couldn't load " + url + '. Status: ' + xhr.status,
+                  "Couldn't load " + url + '. Status: ' + xhr.status
                 );
               if (xhr.response !== undefined) {
                 return new Uint8Array(xhr.response || []);
@@ -2506,7 +2506,7 @@ var libOpenDrive = (() => {
               datalength = this.getter(0).length;
               chunkSize = datalength;
               out(
-                'LazyFiles on gzip forces download of the whole file when length is accessed',
+                'LazyFiles on gzip forces download of the whole file when length is accessed'
               );
             }
             this._length = datalength;
@@ -2836,7 +2836,7 @@ var libOpenDrive = (() => {
     var whenDependentTypesAreResolved = (
       myTypes,
       dependentTypes,
-      getTypeConverters,
+      getTypeConverters
     ) => {
       myTypes.forEach((type) => (typeDependencies[type] = dependentTypes));
       function onComplete(typeConverters) {
@@ -2900,7 +2900,7 @@ var libOpenDrive = (() => {
               setter(
                 setterContext,
                 ptr,
-                setterArgumentType['toWireType'](destructors, o),
+                setterArgumentType['toWireType'](destructors, o)
               );
               runDestructors(destructors);
             };
@@ -2919,7 +2919,7 @@ var libOpenDrive = (() => {
               toWireType: (destructors, o) => {
                 if (elementsLength !== o.length) {
                   throw new TypeError(
-                    `Incorrect number of tuple elements for ${reg.name}: expected=${elementsLength}, actual=${o.length}`,
+                    `Incorrect number of tuple elements for ${reg.name}: expected=${elementsLength}, actual=${o.length}`
                   );
                 }
                 var ptr = rawConstructor();
@@ -2936,7 +2936,7 @@ var libOpenDrive = (() => {
               destructorFunction: rawDestructor,
             },
           ];
-        },
+        }
       );
     };
     var structRegistrations = {};
@@ -2967,7 +2967,7 @@ var libOpenDrive = (() => {
               setter(
                 setterContext,
                 ptr,
-                setterArgumentType['toWireType'](destructors, o),
+                setterArgumentType['toWireType'](destructors, o)
               );
               runDestructors(destructors);
             },
@@ -3041,7 +3041,7 @@ var libOpenDrive = (() => {
       var name = registeredInstance.name;
       if (!rawType) {
         throwBindingError(
-          `type "${name}" must have a positive integer typeid pointer`,
+          `type "${name}" must have a positive integer typeid pointer`
         );
       }
       if (registeredTypes.hasOwnProperty(rawType)) {
@@ -3089,7 +3089,7 @@ var libOpenDrive = (() => {
       name,
       size,
       minRange,
-      maxRange,
+      maxRange
     ) => {
       name = readLatin1String(name);
       var isUnsignedType = name.indexOf('u') != -1;
@@ -3102,7 +3102,7 @@ var libOpenDrive = (() => {
         toWireType: function (destructors, value) {
           if (typeof value != 'bigint' && typeof value != 'number') {
             throw new TypeError(
-              `Cannot convert "${embindRepr(value)}" to ${this.name}`,
+              `Cannot convert "${embindRepr(value)}" to ${this.name}`
             );
           }
           if (typeof value == 'number') {
@@ -3114,7 +3114,7 @@ var libOpenDrive = (() => {
         readValueFromPointer: integerReadValueFromPointer(
           name,
           size,
-          !isUnsignedType,
+          !isUnsignedType
         ),
         destructorFunction: null,
       });
@@ -3208,7 +3208,7 @@ var libOpenDrive = (() => {
       }
       record.count = { value: 1 };
       return attachFinalizer(
-        Object.create(prototype, { $$: { value: record, writable: true } }),
+        Object.create(prototype, { $$: { value: record, writable: true } })
       );
     };
     function RegisteredPointer_fromWireType(ptr) {
@@ -3219,7 +3219,7 @@ var libOpenDrive = (() => {
       }
       var registeredInstance = getInheritedInstance(
         this.registeredClass,
-        rawPointer,
+        rawPointer
       );
       if (undefined !== registeredInstance) {
         if (0 === registeredInstance.$$.count.value) {
@@ -3261,7 +3261,7 @@ var libOpenDrive = (() => {
       var dp = downcastPointer(
         rawPointer,
         this.registeredClass,
-        toType.registeredClass,
+        toType.registeredClass
       );
       if (dp === null) {
         return makeDefaultHandle.call(this);
@@ -3344,7 +3344,7 @@ var libOpenDrive = (() => {
             var clone = attachFinalizer(
               Object.create(Object.getPrototypeOf(this), {
                 $$: { value: shallowCopyInternalPointer(this.$$) },
-              }),
+              })
             );
             clone.$$.count.value += 1;
             clone.$$.deleteScheduled = false;
@@ -3393,7 +3393,7 @@ var libOpenDrive = (() => {
         proto[methodName] = function (...args) {
           if (!proto[methodName].overloadTable.hasOwnProperty(args.length)) {
             throwBindingError(
-              `Function '${humanName}' called with an invalid number of arguments (${args.length}) - expects one of (${proto[methodName].overloadTable})!`,
+              `Function '${humanName}' called with an invalid number of arguments (${args.length}) - expects one of (${proto[methodName].overloadTable})!`
             );
           }
           return proto[methodName].overloadTable[args.length].apply(this, args);
@@ -3414,7 +3414,7 @@ var libOpenDrive = (() => {
         ensureOverloadTable(Module, name, name);
         if (Module[name].overloadTable.hasOwnProperty(numArguments)) {
           throwBindingError(
-            `Cannot register multiple overloads of a function with the same number of arguments (${numArguments})!`,
+            `Cannot register multiple overloads of a function with the same number of arguments (${numArguments})!`
           );
         }
         Module[name].overloadTable[numArguments] = value;
@@ -3441,7 +3441,7 @@ var libOpenDrive = (() => {
       baseClass,
       getActualType,
       upcast,
-      downcast,
+      downcast
     ) {
       this.name = name;
       this.constructor = constructor;
@@ -3457,7 +3457,7 @@ var libOpenDrive = (() => {
       while (ptrClass !== desiredClass) {
         if (!ptrClass.upcast) {
           throwBindingError(
-            `Expected null or instance of ${desiredClass.name}, got an instance of ${ptrClass.name}`,
+            `Expected null or instance of ${desiredClass.name}, got an instance of ${ptrClass.name}`
           );
         }
         ptr = ptrClass.upcast(ptr);
@@ -3474,12 +3474,12 @@ var libOpenDrive = (() => {
       }
       if (!handle.$$) {
         throwBindingError(
-          `Cannot pass "${embindRepr(handle)}" as a ${this.name}`,
+          `Cannot pass "${embindRepr(handle)}" as a ${this.name}`
         );
       }
       if (!handle.$$.ptr) {
         throwBindingError(
-          `Cannot pass deleted object as a pointer of type ${this.name}`,
+          `Cannot pass deleted object as a pointer of type ${this.name}`
         );
       }
       var handleClass = handle.$$.ptrType.registeredClass;
@@ -3504,17 +3504,17 @@ var libOpenDrive = (() => {
       }
       if (!handle || !handle.$$) {
         throwBindingError(
-          `Cannot pass "${embindRepr(handle)}" as a ${this.name}`,
+          `Cannot pass "${embindRepr(handle)}" as a ${this.name}`
         );
       }
       if (!handle.$$.ptr) {
         throwBindingError(
-          `Cannot pass deleted object as a pointer of type ${this.name}`,
+          `Cannot pass deleted object as a pointer of type ${this.name}`
         );
       }
       if (!this.isConst && handle.$$.ptrType.isConst) {
         throwBindingError(
-          `Cannot convert argument of type ${handle.$$.smartPtrType ? handle.$$.smartPtrType.name : handle.$$.ptrType.name} to parameter type ${this.name}`,
+          `Cannot convert argument of type ${handle.$$.smartPtrType ? handle.$$.smartPtrType.name : handle.$$.ptrType.name} to parameter type ${this.name}`
         );
       }
       var handleClass = handle.$$.ptrType.registeredClass;
@@ -3529,7 +3529,7 @@ var libOpenDrive = (() => {
               ptr = handle.$$.smartPtr;
             } else {
               throwBindingError(
-                `Cannot convert argument of type ${handle.$$.smartPtrType ? handle.$$.smartPtrType.name : handle.$$.ptrType.name} to parameter type ${this.name}`,
+                `Cannot convert argument of type ${handle.$$.smartPtrType ? handle.$$.smartPtrType.name : handle.$$.ptrType.name} to parameter type ${this.name}`
               );
             }
             break;
@@ -3543,7 +3543,7 @@ var libOpenDrive = (() => {
               var clonedHandle = handle['clone']();
               ptr = this.rawShare(
                 ptr,
-                Emval.toHandle(() => clonedHandle['delete']()),
+                Emval.toHandle(() => clonedHandle['delete']())
               );
               if (destructors !== null) {
                 destructors.push(this.rawDestructor, ptr);
@@ -3565,17 +3565,17 @@ var libOpenDrive = (() => {
       }
       if (!handle.$$) {
         throwBindingError(
-          `Cannot pass "${embindRepr(handle)}" as a ${this.name}`,
+          `Cannot pass "${embindRepr(handle)}" as a ${this.name}`
         );
       }
       if (!handle.$$.ptr) {
         throwBindingError(
-          `Cannot pass deleted object as a pointer of type ${this.name}`,
+          `Cannot pass deleted object as a pointer of type ${this.name}`
         );
       }
       if (handle.$$.ptrType.isConst) {
         throwBindingError(
-          `Cannot convert argument of type ${handle.$$.ptrType.name} to parameter type ${this.name}`,
+          `Cannot convert argument of type ${handle.$$.ptrType.name} to parameter type ${this.name}`
         );
       }
       var handleClass = handle.$$.ptrType.registeredClass;
@@ -3609,7 +3609,7 @@ var libOpenDrive = (() => {
       rawGetPointee,
       rawConstructor,
       rawShare,
-      rawDestructor,
+      rawDestructor
     ) {
       this.name = name;
       this.registeredClass = registeredClass;
@@ -3667,7 +3667,7 @@ var libOpenDrive = (() => {
       var fp = makeDynCaller();
       if (typeof fp != 'function') {
         throwBindingError(
-          `unknown function pointer with signature ${signature}: ${rawFunction}`,
+          `unknown function pointer with signature ${signature}: ${rawFunction}`
         );
       }
       return fp;
@@ -3719,7 +3719,7 @@ var libOpenDrive = (() => {
       }
       types.forEach(visit);
       throw new UnboundTypeError(
-        `${message}: ` + unboundTypes.map(getTypeName).join([', ']),
+        `${message}: ` + unboundTypes.map(getTypeName).join([', '])
       );
     };
     var __embind_register_class = (
@@ -3735,18 +3735,18 @@ var libOpenDrive = (() => {
       downcast,
       name,
       destructorSignature,
-      rawDestructor,
+      rawDestructor
     ) => {
       name = readLatin1String(name);
       getActualType = embind__requireFunction(
         getActualTypeSignature,
-        getActualType,
+        getActualType
       );
       upcast &&= embind__requireFunction(upcastSignature, upcast);
       downcast &&= embind__requireFunction(downcastSignature, downcast);
       rawDestructor = embind__requireFunction(
         destructorSignature,
-        rawDestructor,
+        rawDestructor
       );
       var legalFunctionName = makeLegalFunctionName(name);
       exposePublicSymbol(legalFunctionName, function () {
@@ -3777,7 +3777,7 @@ var libOpenDrive = (() => {
             var body = registeredClass.constructor_body[args.length];
             if (undefined === body) {
               throw new BindingError(
-                `Tried to invoke ctor of ${name} with invalid number of parameters (${args.length}) - expected (${Object.keys(registeredClass.constructor_body).toString()}) parameters instead!`,
+                `Tried to invoke ctor of ${name} with invalid number of parameters (${args.length}) - expected (${Object.keys(registeredClass.constructor_body).toString()}) parameters instead!`
               );
             }
             return body.apply(this, args);
@@ -3794,7 +3794,7 @@ var libOpenDrive = (() => {
             baseClass,
             getActualType,
             upcast,
-            downcast,
+            downcast
           );
           if (registeredClass.baseClass) {
             registeredClass.baseClass.__derivedClasses ??= [];
@@ -3805,21 +3805,21 @@ var libOpenDrive = (() => {
             registeredClass,
             true,
             false,
-            false,
+            false
           );
           var pointerConverter = new RegisteredPointer(
             name + '*',
             registeredClass,
             false,
             false,
-            false,
+            false
           );
           var constPointerConverter = new RegisteredPointer(
             name + ' const*',
             registeredClass,
             false,
             true,
-            false,
+            false
           );
           registeredPointers[rawType] = {
             pointerType: pointerConverter,
@@ -3827,7 +3827,7 @@ var libOpenDrive = (() => {
           };
           replacePublicSymbol(legalFunctionName, constructor);
           return [referenceConverter, pointerConverter, constPointerConverter];
-        },
+        }
       );
     };
     var heap32VectorToArray = (count, firstElement) => {
@@ -3851,12 +3851,12 @@ var libOpenDrive = (() => {
     function newFunc(constructor, argumentList) {
       if (!(constructor instanceof Function)) {
         throw new TypeError(
-          `new_ called with constructor type ${typeof constructor} which is not a function`,
+          `new_ called with constructor type ${typeof constructor} which is not a function`
         );
       }
       var dummy = createNamedFunction(
         constructor.name || 'unknownFunctionName',
-        function () {},
+        function () {}
       );
       dummy.prototype = constructor.prototype;
       var obj = new dummy();
@@ -3926,12 +3926,12 @@ var libOpenDrive = (() => {
       classType,
       cppInvokerFunc,
       cppTargetFunc,
-      isAsync,
+      isAsync
     ) {
       var argCount = argTypes.length;
       if (argCount < 2) {
         throwBindingError(
-          "argTypes array size mismatch! Must at least get return value and 'this' types!",
+          "argTypes array size mismatch! Must at least get return value and 'this' types!"
         );
       }
       var isClassMethodFunc = argTypes[1] !== null && classType !== null;
@@ -3960,7 +3960,7 @@ var libOpenDrive = (() => {
         argTypes,
         isClassMethodFunc,
         returns,
-        isAsync,
+        isAsync
       );
       args.push(invokerFnBody);
       var invokerFn = newFunc(Function, args)(...closureArgs);
@@ -3972,7 +3972,7 @@ var libOpenDrive = (() => {
       rawArgTypesAddr,
       invokerSignature,
       invoker,
-      rawConstructor,
+      rawConstructor
     ) => {
       var rawArgTypes = heap32VectorToArray(argCount, rawArgTypesAddr);
       invoker = embind__requireFunction(invokerSignature, invoker);
@@ -3986,13 +3986,13 @@ var libOpenDrive = (() => {
           undefined !== classType.registeredClass.constructor_body[argCount - 1]
         ) {
           throw new BindingError(
-            `Cannot register multiple constructors with identical number of parameters (${argCount - 1}) for class '${classType.name}'! Overload resolution is currently only performed using the parameter count, not actual type info!`,
+            `Cannot register multiple constructors with identical number of parameters (${argCount - 1}) for class '${classType.name}'! Overload resolution is currently only performed using the parameter count, not actual type info!`
           );
         }
         classType.registeredClass.constructor_body[argCount - 1] = () => {
           throwUnboundTypeError(
             `Cannot construct ${classType.name} due to unbound types`,
-            rawArgTypes,
+            rawArgTypes
           );
         };
         whenDependentTypesAreResolved([], rawArgTypes, (argTypes) => {
@@ -4003,7 +4003,7 @@ var libOpenDrive = (() => {
               argTypes,
               null,
               invoker,
-              rawConstructor,
+              rawConstructor
             );
           return [];
         });
@@ -4029,7 +4029,7 @@ var libOpenDrive = (() => {
       context,
       isPureVirtual,
       isAsync,
-      isNonnullReturn,
+      isNonnullReturn
     ) => {
       var rawArgTypes = heap32VectorToArray(argCount, rawArgTypesAddr);
       methodName = readLatin1String(methodName);
@@ -4047,7 +4047,7 @@ var libOpenDrive = (() => {
         function unboundTypesHandler() {
           throwUnboundTypeError(
             `Cannot call ${humanName} due to unbound types`,
-            rawArgTypes,
+            rawArgTypes
           );
         }
         var proto = classType.registeredClass.instancePrototype;
@@ -4072,7 +4072,7 @@ var libOpenDrive = (() => {
             classType,
             rawInvoker,
             context,
-            isAsync,
+            isAsync
           );
           if (undefined === proto[methodName].overloadTable) {
             memberFunction.argCount = argCount - 2;
@@ -4091,18 +4091,18 @@ var libOpenDrive = (() => {
       }
       if (!(this_ instanceof classType.registeredClass.constructor)) {
         throwBindingError(
-          `${humanName} incompatible with "this" of type ${this_.constructor.name}`,
+          `${humanName} incompatible with "this" of type ${this_.constructor.name}`
         );
       }
       if (!this_.$$.ptr) {
         throwBindingError(
-          `cannot call emscripten binding method ${humanName} on deleted object`,
+          `cannot call emscripten binding method ${humanName} on deleted object`
         );
       }
       return upcastPointer(
         this_.$$.ptr,
         this_.$$.ptrType.registeredClass,
-        classType.registeredClass,
+        classType.registeredClass
       );
     };
     var __embind_register_class_property = (
@@ -4115,7 +4115,7 @@ var libOpenDrive = (() => {
       setterArgumentType,
       setterSignature,
       setter,
-      setterContext,
+      setterContext
     ) => {
       fieldName = readLatin1String(fieldName);
       getter = embind__requireFunction(getterSignature, getter);
@@ -4126,7 +4126,7 @@ var libOpenDrive = (() => {
           get() {
             throwUnboundTypeError(
               `Cannot access ${humanName} due to unbound types`,
-              [getterReturnType, setterArgumentType],
+              [getterReturnType, setterArgumentType]
             );
           },
           enumerable: true,
@@ -4136,7 +4136,7 @@ var libOpenDrive = (() => {
           desc.set = () =>
             throwUnboundTypeError(
               `Cannot access ${humanName} due to unbound types`,
-              [getterReturnType, setterArgumentType],
+              [getterReturnType, setterArgumentType]
             );
         } else {
           desc.set = (v) =>
@@ -4145,7 +4145,7 @@ var libOpenDrive = (() => {
         Object.defineProperty(
           classType.registeredClass.instancePrototype,
           fieldName,
-          desc,
+          desc
         );
         whenDependentTypesAreResolved(
           [],
@@ -4156,7 +4156,7 @@ var libOpenDrive = (() => {
               get() {
                 var ptr = validateThis(this, classType, humanName + ' getter');
                 return getterReturnType['fromWireType'](
-                  getter(getterContext, ptr),
+                  getter(getterContext, ptr)
                 );
               },
               enumerable: true,
@@ -4170,7 +4170,7 @@ var libOpenDrive = (() => {
                 setter(
                   setterContext,
                   ptr,
-                  setterArgumentType['toWireType'](destructors, v),
+                  setterArgumentType['toWireType'](destructors, v)
                 );
                 runDestructors(destructors);
               };
@@ -4178,10 +4178,10 @@ var libOpenDrive = (() => {
             Object.defineProperty(
               classType.registeredClass.instancePrototype,
               fieldName,
-              desc,
+              desc
             );
             return [];
-          },
+          }
         );
         return [];
       });
@@ -4272,7 +4272,7 @@ var libOpenDrive = (() => {
       rawInvoker,
       fn,
       isAsync,
-      isNonnullReturn,
+      isNonnullReturn
     ) => {
       var argTypes = heap32VectorToArray(argCount, rawArgTypesAddr);
       name = readLatin1String(name);
@@ -4283,10 +4283,10 @@ var libOpenDrive = (() => {
         function () {
           throwUnboundTypeError(
             `Cannot call ${name} due to unbound types`,
-            argTypes,
+            argTypes
           );
         },
-        argCount - 1,
+        argCount - 1
       );
       whenDependentTypesAreResolved([], argTypes, (argTypes) => {
         var invokerArgsArray = [argTypes[0], null].concat(argTypes.slice(1));
@@ -4298,9 +4298,9 @@ var libOpenDrive = (() => {
             null,
             rawInvoker,
             fn,
-            isAsync,
+            isAsync
           ),
-          argCount - 1,
+          argCount - 1
         );
         return [];
       });
@@ -4310,7 +4310,7 @@ var libOpenDrive = (() => {
       name,
       size,
       minRange,
-      maxRange,
+      maxRange
     ) => {
       name = readLatin1String(name);
       if (maxRange === -1) {
@@ -4343,7 +4343,7 @@ var libOpenDrive = (() => {
         readValueFromPointer: integerReadValueFromPointer(
           name,
           size,
-          minRange !== 0,
+          minRange !== 0
         ),
         destructorFunction: null,
       });
@@ -4376,7 +4376,7 @@ var libOpenDrive = (() => {
           argPackAdvance: GenericWireTypeSize,
           readValueFromPointer: decodeMemoryView,
         },
-        { ignoreDuplicateRegistrations: true },
+        { ignoreDuplicateRegistrations: true }
       );
     };
     var stringToUTF8 = (str, outPtr, maxBytesToWrite) =>
@@ -4447,7 +4447,7 @@ var libOpenDrive = (() => {
                 if (charCode > 255) {
                   _free(base);
                   throwBindingError(
-                    'String has UTF-16 code units that do not fit in 8 bits',
+                    'String has UTF-16 code units that do not fit in 8 bits'
                   );
                 }
                 HEAPU8[ptr + i] = charCode;
@@ -4590,7 +4590,7 @@ var libOpenDrive = (() => {
         toWireType: (destructors, value) => {
           if (!(typeof value == 'string')) {
             throwBindingError(
-              `Cannot pass non-string to C++ string type ${name}`,
+              `Cannot pass non-string to C++ string type ${name}`
             );
           }
           var length = lengthBytesUTF(value);
@@ -4615,17 +4615,17 @@ var libOpenDrive = (() => {
       constructorSignature,
       rawConstructor,
       destructorSignature,
-      rawDestructor,
+      rawDestructor
     ) => {
       tupleRegistrations[rawType] = {
         name: readLatin1String(name),
         rawConstructor: embind__requireFunction(
           constructorSignature,
-          rawConstructor,
+          rawConstructor
         ),
         rawDestructor: embind__requireFunction(
           destructorSignature,
-          rawDestructor,
+          rawDestructor
         ),
         elements: [],
       };
@@ -4639,7 +4639,7 @@ var libOpenDrive = (() => {
       setterArgumentType,
       setterSignature,
       setter,
-      setterContext,
+      setterContext
     ) => {
       tupleRegistrations[rawTupleType].elements.push({
         getterReturnType,
@@ -4656,17 +4656,17 @@ var libOpenDrive = (() => {
       constructorSignature,
       rawConstructor,
       destructorSignature,
-      rawDestructor,
+      rawDestructor
     ) => {
       structRegistrations[rawType] = {
         name: readLatin1String(name),
         rawConstructor: embind__requireFunction(
           constructorSignature,
-          rawConstructor,
+          rawConstructor
         ),
         rawDestructor: embind__requireFunction(
           destructorSignature,
-          rawDestructor,
+          rawDestructor
         ),
         fields: [],
       };
@@ -4681,7 +4681,7 @@ var libOpenDrive = (() => {
       setterArgumentType,
       setterSignature,
       setter,
-      setterContext,
+      setterContext
     ) => {
       structRegistrations[structType].fields.push({
         fieldName: readLatin1String(fieldName),
@@ -4707,7 +4707,7 @@ var libOpenDrive = (() => {
       var impl = registeredTypes[rawType];
       if (undefined === impl) {
         throwBindingError(
-          `${humanName} has unknown type ${getTypeName(rawType)}`,
+          `${humanName} has unknown type ${getTypeName(rawType)}`
         );
       }
       return impl;
@@ -4764,11 +4764,11 @@ var libOpenDrive = (() => {
         var overGrownHeapSize = oldSize * (1 + 0.2 / cutDown);
         overGrownHeapSize = Math.min(
           overGrownHeapSize,
-          requestedSize + 100663296,
+          requestedSize + 100663296
         );
         var newSize = Math.min(
           maxHeapSize,
-          alignMemory(Math.max(requestedSize, overGrownHeapSize), 65536),
+          alignMemory(Math.max(requestedSize, overGrownHeapSize), 65536)
         );
         var replacement = growMemory(newSize);
         if (replacement) {
@@ -5019,7 +5019,7 @@ var libOpenDrive = (() => {
     init_RegisteredPointer();
     UnboundTypeError = Module['UnboundTypeError'] = extendError(
       Error,
-      'UnboundTypeError',
+      'UnboundTypeError'
     );
     init_emval();
     var wasmImports = {

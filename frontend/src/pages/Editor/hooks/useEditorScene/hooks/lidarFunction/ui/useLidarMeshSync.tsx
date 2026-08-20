@@ -55,7 +55,7 @@ export function useLidarMeshSync() {
           const cone = existing.children.find(
             (c) =>
               (c as THREE.Mesh).isMesh &&
-              (c as THREE.Mesh).geometry instanceof THREE.ConeGeometry,
+              (c as THREE.Mesh).geometry instanceof THREE.ConeGeometry
           ) as THREE.Mesh | undefined;
           if (cone) {
             cone.geometry.dispose();
@@ -64,7 +64,7 @@ export function useLidarMeshSync() {
               lidar.range * 0.3,
               32,
               1,
-              true,
+              true
             );
           }
         } else {

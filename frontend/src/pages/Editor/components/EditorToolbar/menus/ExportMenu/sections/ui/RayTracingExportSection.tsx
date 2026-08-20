@@ -23,7 +23,7 @@ export default function RayTracingExportSection({
       return JSON.stringify(
         generateSionnaConfig(simConfig, RSUs, buildings, cars),
         null,
-        2,
+        2
       );
     });
   };

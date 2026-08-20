@@ -48,7 +48,7 @@ export function useSimulationSocket() {
           reconnectTimer.current = setTimeout(() => {
             reconnectDelay.current = Math.min(
               reconnectDelay.current * 2,
-              MAX_RECONNECT_DELAY_MS,
+              MAX_RECONNECT_DELAY_MS
             );
             connect();
           }, reconnectDelay.current);
@@ -68,7 +68,7 @@ export function useSimulationSocket() {
       };
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    []
   );
 
   return { state, connected };

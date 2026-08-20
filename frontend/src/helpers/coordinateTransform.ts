@@ -5,7 +5,7 @@ export function editorToCarla(
   y: number,
   z: number,
   offsets: MapOffsets,
-  isSpawn = true,
+  isSpawn = true
 ): { x: number; y: number; z: number } {
   return {
     x: x + offsets.x,
@@ -18,7 +18,7 @@ export function carlaToEditor(
   x: number,
   y: number,
   z: number,
-  offsets: MapOffsets,
+  offsets: MapOffsets
 ): { x: number; y: number; z: number } {
   return {
     x: x - offsets.x,

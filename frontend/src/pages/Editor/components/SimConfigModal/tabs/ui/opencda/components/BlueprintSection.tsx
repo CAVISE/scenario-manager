@@ -90,7 +90,7 @@ export const BlueprintSection = ({
               }}
               sx={{ width: 90 }}
             />
-          ),
+          )
         )}
       </Stack>
     </Stack>

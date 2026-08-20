@@ -30,7 +30,7 @@ export function AppToastProvider({ children }: { children: ReactNode }) {
     (
       nextLevel: ToastLevel,
       nextMessage: string,
-      nextAction: ToastAction | null = null,
+      nextAction: ToastAction | null = null
     ) => {
       if (!nextMessage.trim()) return;
       setLevel(nextLevel);
@@ -39,7 +39,7 @@ export function AppToastProvider({ children }: { children: ReactNode }) {
       actionRef.current = nextAction;
       setOpen(true);
     },
-    [],
+    []
   );
 
   const handleClose = useCallback(() => {
@@ -59,7 +59,7 @@ export function AppToastProvider({ children }: { children: ReactNode }) {
       undo: (msg, onAction, actionLabel = 'Undo') =>
         show('info', msg, { label: actionLabel, onClick: onAction }),
     }),
-    [show],
+    [show]
   );
 
   return (

@@ -5,7 +5,7 @@ export function generateCarlaYaml(
   config: SimulationConfig,
   cars: Car[],
   rsus: RSU[],
-  points: Point[],
+  points: Point[]
 ): string {
   const lines: string[] = [];
 
@@ -37,19 +37,19 @@ export function generateCarlaYaml(
       lines.push(`      color: "${colorHex}"`);
       lines.push('      spawn_position:');
       lines.push(
-        `        - [${car.x.toFixed(2)}, ${car.y.toFixed(2)}, ${car.z.toFixed(2)}, 0.0, ${yaw}, 0.0]`,
+        `        - [${car.x.toFixed(2)}, ${car.y.toFixed(2)}, ${car.z.toFixed(2)}, 0.0, ${yaw}, 0.0]`
       );
       if (carPoints.length > 0) {
         lines.push('      destination:');
         carPoints.forEach((pt) =>
           lines.push(
-            `        - [${pt.x.toFixed(2)}, ${pt.y.toFixed(2)}, ${pt.z.toFixed(2)}]`,
-          ),
+            `        - [${pt.x.toFixed(2)}, ${pt.y.toFixed(2)}, ${pt.z.toFixed(2)}]`
+          )
         );
       }
       lines.push('      v2x:');
       lines.push(
-        `        communication_range: ${config.omnet.max_interf_dist}`,
+        `        communication_range: ${config.omnet.max_interf_dist}`
       );
       lines.push('');
     });
@@ -61,7 +61,7 @@ export function generateCarlaYaml(
       if (rsu.name) lines.push(`      name: "${rsu.name}"`);
       lines.push('      spawn_position:');
       lines.push(
-        `        - [${rsu.x.toFixed(2)}, ${rsu.y.toFixed(2)}, ${rsu.z.toFixed(2)}, 0.0, ${(rsu.azimuth ?? 0).toFixed(1)}, 0.0]`,
+        `        - [${rsu.x.toFixed(2)}, ${rsu.y.toFixed(2)}, ${rsu.z.toFixed(2)}, 0.0, ${(rsu.azimuth ?? 0).toFixed(1)}, 0.0]`
       );
       lines.push('      v2x:');
       lines.push(`        communication_range: ${rsu.range}`);
@@ -69,7 +69,7 @@ export function generateCarlaYaml(
       lines.push(`        frequency: ${rsu.frequency}`);
       lines.push(`        protocol: ${rsu.protocol}`);
       lines.push(
-        `        network_protocol: ${rsu.network_protocol ?? 'GeoNetworking'}`,
+        `        network_protocol: ${rsu.network_protocol ?? 'GeoNetworking'}`
       );
       lines.push(`        cam_interval: ${rsu.cam_interval ?? 100}`);
       lines.push('      antenna:');

@@ -62,7 +62,7 @@ export function OpenCDAColorSection({
                       onChange={(e) => {
                         const val = Math.max(
                           0,
-                          Math.min(255, parseInt(e.target.value) || 0),
+                          Math.min(255, parseInt(e.target.value) || 0)
                         );
                         const next = [...opencda_color] as [
                           number,

@@ -30,7 +30,7 @@ export const SUMOSection = ({
 }: SUMOSectionProps) => {
   const updateField = (
     field: keyof SimulationConfig['opencda'],
-    value: SimulationConfig['opencda'][keyof SimulationConfig['opencda']],
+    value: SimulationConfig['opencda'][keyof SimulationConfig['opencda']]
   ) => {
     onUpdate({ [field]: value } as Partial<SimulationConfig['opencda']>);
   };
@@ -38,11 +38,11 @@ export const SUMOSection = ({
   const numberField = (
     field: keyof SimulationConfig['opencda'],
     min?: number,
-    max?: number,
+    max?: number
   ) => createNumberFieldOnChange((val) => updateField(field, val), min, max);
 
   const handleHostChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const value = e.target.value;
     updateField('sumo_host', value.replace(/\s/g, ''));

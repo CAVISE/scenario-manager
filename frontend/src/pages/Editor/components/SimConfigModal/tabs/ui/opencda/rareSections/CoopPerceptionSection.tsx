@@ -15,7 +15,7 @@ type Props = {
       background: [number, number, number];
       bbox_line_thickness: number;
       image_dpi: number;
-    }>,
+    }>
   ) => void;
 };
 

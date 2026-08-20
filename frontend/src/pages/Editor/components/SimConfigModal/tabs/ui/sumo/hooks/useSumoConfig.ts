@@ -13,7 +13,7 @@ export const useSumoConfig = () => {
   const rawSimConfig = useEditorStore((s) => s.simConfig);
   const simConfig = useMemo(
     () => mergeSimConfigWithDefaults(rawSimConfig),
-    [rawSimConfig],
+    [rawSimConfig]
   );
 
   const sumo = simConfig.sumo ?? defaultSimConfig.sumo;
@@ -23,7 +23,7 @@ export const useSumoConfig = () => {
   const updateCar = useEditorStore((s) => s.updateCar);
 
   const [loadedNetFilename, setLoadedNetFilename] = useState(
-    getLoadedSumoNetwork()?.filename ?? '',
+    getLoadedSumoNetwork()?.filename ?? ''
   );
 
   const handleLoadNetwork = async (file: File) => {

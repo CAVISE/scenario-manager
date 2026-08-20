@@ -9,7 +9,7 @@ export function fmtRgb(rgb: [number, number, number]): string {
 
 export function pushMapManager(
   lines: string[],
-  mm: SimulationConfig['opencda']['map_manager'],
+  mm: SimulationConfig['opencda']['map_manager']
 ): void {
   lines.push('  map_manager:');
   lines.push(`    pixels_per_meter: ${mm.pixels_per_meter}`);
@@ -21,7 +21,7 @@ export function pushMapManager(
 
 export function pushSafetyManager(
   lines: string[],
-  sm: SimulationConfig['opencda']['safety_manager'],
+  sm: SimulationConfig['opencda']['safety_manager']
 ): void {
   lines.push('  safety_manager:');
   lines.push(`    print_message: ${sm.print_message}`);
@@ -38,7 +38,7 @@ export function pushSafetyManager(
 
 export function pushController(
   lines: string[],
-  c: SimulationConfig['opencda']['controller_pid'],
+  c: SimulationConfig['opencda']['controller_pid']
 ): void {
   lines.push('  controller:');
   lines.push(`    type: ${c.type}`);
@@ -63,7 +63,7 @@ export function pushV2xBlock(
   enabled: boolean,
   range: number,
   positionSource: 'estimated' | 'ground_truth',
-  indent = '  ',
+  indent = '  '
 ): void {
   lines.push(`${indent}v2x:`);
   lines.push(`${indent}  enabled: ${enabled}`);
@@ -73,7 +73,7 @@ export function pushV2xBlock(
 
 export function pushVehicleBehaviorServices(
   lines: string[],
-  s: SimulationConfig['opencda']['vehicle_behavior_services'],
+  s: SimulationConfig['opencda']['vehicle_behavior_services']
 ): void {
   lines.push('  behavior_services:');
   if (s.self_informer) lines.push('    - type: self_informer');
@@ -83,7 +83,7 @@ export function pushVehicleBehaviorServices(
 export function pushLocalizationMetrics(
   lines: string[],
   warmup: number,
-  indent: string,
+  indent: string
 ): void {
   lines.push(`${indent}metrics:`);
   lines.push(`${indent}  metric_configs:`);
@@ -93,7 +93,7 @@ export function pushLocalizationMetrics(
 
 export function pushBehaviorMetrics(
   lines: string[],
-  m: SimulationConfig['opencda']['metrics'],
+  m: SimulationConfig['opencda']['metrics']
 ): void {
   lines.push('    metrics:');
   lines.push('      metric_configs:');
@@ -112,7 +112,7 @@ export function pushBehaviorMetrics(
 export function pushPlatoonBase(
   lines: string[],
   p: SimulationConfig['opencda']['platoon_base'],
-  includeMetrics: boolean,
+  includeMetrics: boolean
 ): void {
   lines.push('platoon_base:');
   lines.push(`  max_capacity: ${p.max_capacity}`);
@@ -121,7 +121,7 @@ export function pushPlatoonBase(
   lines.push(`  warm_up_speed: ${p.warm_up_speed}`);
   lines.push(`  change_leader_speed: ${p.change_leader_speed}`);
   lines.push(
-    `  leader_speeds_profile: [ ${p.leader_speeds_profile[0]}, ${p.leader_speeds_profile[1]} ]`,
+    `  leader_speeds_profile: [ ${p.leader_speeds_profile[0]}, ${p.leader_speeds_profile[1]} ]`
   );
   lines.push(`  stage_duration: ${p.stage_duration}`);
   if (includeMetrics) {
@@ -137,7 +137,7 @@ export function pushPlatoonBase(
 
 export function pushCoopPerception(
   lines: string[],
-  c: SimulationConfig['opencda']['coop_perception'],
+  c: SimulationConfig['opencda']['coop_perception']
 ): void {
   lines.push('cooperative_perception_visualization:');
   lines.push(`  background: ${fmtRgb(c.background)}`);
@@ -155,7 +155,7 @@ export function pushCavSensingOverride(
   lines: string[],
   car: Car,
   indent: string,
-  lidar?: Lidar,
+  lidar?: Lidar
 ): void {
   const s = car.opencda_sensing;
   if (!s && !lidar) return;
@@ -195,7 +195,7 @@ export function pushCavSensingOverride(
     }
     if (lidar?.rotation_frequency != null) {
       lines.push(
-        `${indent}      rotation_frequency: ${lidar.rotation_frequency}`,
+        `${indent}      rotation_frequency: ${lidar.rotation_frequency}`
       );
     }
   }

@@ -61,24 +61,24 @@ describe('generateCarlaYaml', () => {
     expect(yaml).toContain(`town: ${defaultSimConfig.carla.map}`);
     expect(yaml).toContain(`weather: ${defaultSimConfig.carla.weather_preset}`);
     expect(yaml).toContain(
-      `sync_mode: ${defaultSimConfig.carla.synchronous_mode}`,
+      `sync_mode: ${defaultSimConfig.carla.synchronous_mode}`
     );
     expect(yaml).toContain(
-      `fixed_delta_seconds: ${defaultSimConfig.carla.fixed_delta_seconds}`,
+      `fixed_delta_seconds: ${defaultSimConfig.carla.fixed_delta_seconds}`
     );
     expect(yaml).toContain(
-      `client_port: ${defaultSimConfig.carla.client_port}`,
+      `client_port: ${defaultSimConfig.carla.client_port}`
     );
     expect(yaml).toContain(`seed: ${defaultSimConfig.carla.seed}`);
     expect(yaml).toContain(`simulation_time: ${defaultSimConfig.sim_duration}`);
     expect(yaml).toContain(
-      `port: ${defaultSimConfig.carla.traffic_manager_port}`,
+      `port: ${defaultSimConfig.carla.traffic_manager_port}`
     );
     expect(yaml).toContain(
-      `num_vehicles: ${defaultSimConfig.carla.num_vehicles}`,
+      `num_vehicles: ${defaultSimConfig.carla.num_vehicles}`
     );
     expect(yaml).toContain(
-      `num_pedestrians: ${defaultSimConfig.carla.num_pedestrians}`,
+      `num_pedestrians: ${defaultSimConfig.carla.num_pedestrians}`
     );
   });
 
@@ -95,7 +95,7 @@ describe('generateCarlaYaml', () => {
         defaultSimConfig,
         [makeCar({ model: 'vehicle.audi.a2', color: '00ff00' })],
         [],
-        [],
+        []
       );
 
       expect(yaml).toContain('single_cav_list:');
@@ -109,7 +109,7 @@ describe('generateCarlaYaml', () => {
         defaultSimConfig,
         [makeCar({ model: '' })],
         [],
-        [],
+        []
       );
 
       expect(yaml).toContain('model: vehicle.tesla.model3');
@@ -120,7 +120,7 @@ describe('generateCarlaYaml', () => {
         defaultSimConfig,
         [makeCar({ color: '' })],
         [],
-        [],
+        []
       );
 
       expect(yaml).toContain('color: "0x00ff00"');
@@ -131,7 +131,7 @@ describe('generateCarlaYaml', () => {
         defaultSimConfig,
         [makeCar({ color: 'f0' })],
         [],
-        [],
+        []
       );
 
       expect(yaml).toContain('color: "0x0000f0"');
@@ -142,7 +142,7 @@ describe('generateCarlaYaml', () => {
         defaultSimConfig,
         [makeCar({ x: 1.005, y: 2.004, z: 0, rotation: 0 })],
         [],
-        [],
+        []
       );
 
       expect(yaml).toContain('[1.00, 2.00, 0.00, 0.0, 0.0, 0.0]');
@@ -153,7 +153,7 @@ describe('generateCarlaYaml', () => {
         defaultSimConfig,
         [makeCar({ rotation: Math.PI / 2 })],
         [],
-        [],
+        []
       );
 
       expect(yaml).toContain(', 90.0, 0.0]');
@@ -168,7 +168,7 @@ describe('generateCarlaYaml', () => {
           makePoint({ carId: 'car-1', x: 5, y: 6, z: 0 }),
           makePoint({ carId: 'car-1', x: 7, y: 8, z: 0 }),
           makePoint({ carId: 'other-car', x: 99, y: 99, z: 0 }),
-        ],
+        ]
       );
 
       expect(yaml).toContain('destination:');
@@ -182,7 +182,7 @@ describe('generateCarlaYaml', () => {
         defaultSimConfig,
         [makeCar({ id: 'car-1' })],
         [],
-        [],
+        []
       );
 
       expect(yaml).not.toContain('destination:');
@@ -193,7 +193,7 @@ describe('generateCarlaYaml', () => {
         defaultSimConfig,
         [makeCar({ id: '' })],
         [],
-        [makePoint({ carId: '' })],
+        [makePoint({ carId: '' })]
       );
 
       expect(yaml).not.toContain('destination:');
@@ -215,7 +215,7 @@ describe('generateCarlaYaml', () => {
         defaultSimConfig,
         [makeCar({ id: 'car-1' }), makeCar({ id: 'car-2' })],
         [],
-        [],
+        []
       );
 
       expect(yaml).toContain('- id: 0');
@@ -236,7 +236,7 @@ describe('generateCarlaYaml', () => {
             protocol: 'C-V2X',
           }),
         ],
-        [],
+        []
       );
 
       expect(yaml).toContain('rsu_list:');
@@ -252,13 +252,13 @@ describe('generateCarlaYaml', () => {
         defaultSimConfig,
         [],
         [makeRSU({ name: 'Junction RSU' })],
-        [],
+        []
       );
       const withoutName = generateCarlaYaml(
         defaultSimConfig,
         [],
         [makeRSU({ name: '' })],
-        [],
+        []
       );
 
       expect(withName).toContain('name: "Junction RSU"');
@@ -299,7 +299,7 @@ describe('generateCarlaYaml', () => {
             cam_interval: 500,
           }),
         ],
-        [],
+        []
       );
 
       expect(yaml).toContain('network_protocol: BTP');
@@ -329,7 +329,7 @@ describe('generateCarlaYaml', () => {
 
   describe('sensors', () => {
     const sensorConfig = (
-      overrides: Partial<typeof defaultSimConfig.carla.sensors>,
+      overrides: Partial<typeof defaultSimConfig.carla.sensors>
     ) => ({
       ...defaultSimConfig,
       carla: {

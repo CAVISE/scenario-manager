@@ -30,7 +30,7 @@ export const VTypesSection = ({ sumo, onUpdate }: Props) => {
   const handleVTypeChange = <K extends keyof SumoConfig['vtypes'][number]>(
     index: number,
     field: K,
-    value: SumoConfig['vtypes'][number][K],
+    value: SumoConfig['vtypes'][number][K]
   ) => {
     const vtypes = [...sumo.vtypes];
     vtypes[index] = { ...vtypes[index], [field]: value };
@@ -88,7 +88,7 @@ export const VTypesSection = ({ sumo, onUpdate }: Props) => {
                   handleVTypeChange(
                     i,
                     'minGap',
-                    parseNumberInputChange(e.target) || 0,
+                    parseNumberInputChange(e.target) || 0
                   )
                 }
               />
@@ -103,7 +103,7 @@ export const VTypesSection = ({ sumo, onUpdate }: Props) => {
                   handleVTypeChange(
                     i,
                     'tau',
-                    parseNumberInputChange(e.target) || 0,
+                    parseNumberInputChange(e.target) || 0
                   )
                 }
               />

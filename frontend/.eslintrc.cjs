@@ -27,5 +27,7 @@ module.exports = {
     'react-hooks/set-state-in-effect': 'off',
     'react-hooks/immutability': 'off',
     'react-hooks/refs': 'off',
+    'prettier/prettier': 'error',
+    'react/no-unescaped-entities': 'off',
   },
 };

@@ -37,7 +37,7 @@ export function useCarMeshSync() {
 
     cars.forEach((car) => {
       const already = carMeshesRef.current.find(
-        (m) => m.userData.id === car.id,
+        (m) => m.userData.id === car.id
       );
       if (already) {
         const isAttached =
@@ -91,7 +91,7 @@ export function useCarMeshSync() {
 
     if (selectedId) {
       const selectedMesh = carMeshesRef.current.find(
-        (m) => m.userData.id === selectedId,
+        (m) => m.userData.id === selectedId
       );
       if (selectedMesh) {
         setTimeout(() => {

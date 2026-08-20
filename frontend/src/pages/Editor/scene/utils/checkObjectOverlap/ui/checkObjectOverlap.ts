@@ -34,7 +34,7 @@ function getAxes(rotation: number): Vec2[] {
 
 function projectOntoAxis(
   corners: Vec2[],
-  axis: Vec2,
+  axis: Vec2
 ): { min: number; max: number } {
   let min = Infinity;
   let max = -Infinity;
@@ -48,7 +48,7 @@ function projectOntoAxis(
 
 export function checkObjectOverlap(
   a: Footprint2D,
-  b: Footprint2D,
+  b: Footprint2D
 ): OverlapCheckResult {
   const cornersA = getCorners(a);
   const cornersB = getCorners(b);

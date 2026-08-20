@@ -4,7 +4,7 @@ import { picking, ThreeSetup } from '../types/useThreeSetupTypes';
 
 export function createThreeSetup(
   containerId: string,
-  onSpotlightPause: (v: boolean) => void,
+  onSpotlightPause: (v: boolean) => void
 ): {
   setup: ThreeSetup;
   dispose: () => void;
@@ -22,7 +22,7 @@ export function createThreeSetup(
     75,
     window.innerWidth / window.innerHeight,
     0.1,
-    100_000,
+    100_000
   );
   camera.up.set(0, 0, 1);
 
@@ -41,7 +41,7 @@ export function createThreeSetup(
     'dragging-changed' as never,
     (e: Event & { value: boolean }) => {
       controls.enabled = !e.value;
-    },
+    }
   );
   scene.add(transformControls);
 

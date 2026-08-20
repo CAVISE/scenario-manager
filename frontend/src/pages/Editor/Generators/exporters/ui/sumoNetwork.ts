@@ -78,7 +78,7 @@ export function isSumoNetXml(content: string): boolean {
 
 export function setLoadedSumoNetwork(
   filename: string,
-  content: string,
+  content: string
 ): LoadedSumoNetwork {
   if (!isSumoNetXml(content)) {
     throw new Error('Selected file is not a valid SUMO .net.xml network');
@@ -97,14 +97,14 @@ export function clearLoadedSumoNetwork(): void {
 
 export function getSumoCoordinateOffsets(
   netXml: string,
-  mapOffsets: MapOffsets = { x: 0, y: 0 },
+  mapOffsets: MapOffsets = { x: 0, y: 0 }
 ): MapOffsets {
   const document = new DOMParser().parseFromString(netXml, 'application/xml');
   if (document.querySelector('parsererror')) {
     throw new Error('SUMO network contains invalid XML');
   }
   const [netOffsetX, netOffsetY] = parsePair(
-    document.querySelector('location')?.getAttribute('netOffset') ?? '0,0',
+    document.querySelector('location')?.getAttribute('netOffset') ?? '0,0'
   );
   return {
     x: mapOffsets.x + netOffsetX,
@@ -113,14 +113,14 @@ export function getSumoCoordinateOffsets(
 }
 
 export async function resolveSumoNetwork(
-  filename: string,
+  filename: string
 ): Promise<LoadedSumoNetwork> {
   if (loadedNetwork) return { filename, content: loadedNetwork.content };
 
   const response = await fetch(`./${filename}`);
   if (!response.ok) {
     throw new Error(
-      `SUMO network ${filename} is unavailable; load it in SUMO settings`,
+      `SUMO network ${filename} is unavailable; load it in SUMO settings`
     );
   }
   return setLoadedSumoNetwork(filename, await response.text());
@@ -130,7 +130,7 @@ export function buildSumoRoutes(
   netXml: string,
   cars: Car[],
   points: Point[],
-  mapOffsets: MapOffsets = { x: 0, y: 0 },
+  mapOffsets: MapOffsets = { x: 0, y: 0 }
 ): GeneratedSumoRoutes {
   const network = parseNetwork(netXml);
   const result: GeneratedSumoRoutes = {};
@@ -141,7 +141,7 @@ export function buildSumoRoutes(
     const sumoStart = toSumoCoordinate(
       { x: car.x, y: car.y },
       network,
-      mapOffsets,
+      mapOffsets
     );
     if (routePoints.length === 0) {
       if (manualEdges.length > 0) {
@@ -151,7 +151,7 @@ export function buildSumoRoutes(
           sumoStart,
           null,
           manualEdges,
-          'depart',
+          'depart'
         );
         assertManualDepartureMatches(car, manualEdges, depart);
         result[car.id] = {
@@ -162,14 +162,14 @@ export function buildSumoRoutes(
         return;
       }
       throw new Error(
-        `Vehicle ${car.opencda_name || car.id} has no route points`,
+        `Vehicle ${car.opencda_name || car.id} has no route points`
       );
     }
 
     const sumoPoints = [
       sumoStart,
       ...routePoints.map((point) =>
-        toSumoCoordinate(point, network, mapOffsets),
+        toSumoCoordinate(point, network, mapOffsets)
       ),
     ];
 
@@ -184,14 +184,14 @@ export function buildSumoRoutes(
       sumoPoints[0],
       null,
       edges,
-      'depart',
+      'depart'
     );
     let arrival = preciseEndpointAnchor(
       network,
       sumoPoints[sumoPoints.length - 1],
       null,
       edges,
-      'arrival',
+      'arrival'
     );
 
     if (!depart) {
@@ -213,7 +213,7 @@ export function buildSumoRoutes(
       depart = undefined;
       arrival = undefined;
       warnings.push(
-        'arrival is not ahead of departure on the single-edge route',
+        'arrival is not ahead of departure on the single-edge route'
       );
     }
 
@@ -235,7 +235,7 @@ function parseEdgeList(value: string | undefined): string[] {
 function toSumoCoordinate(
   point: Coordinate,
   network: SumoNetwork,
-  mapOffsets: MapOffsets,
+  mapOffsets: MapOffsets
 ): Coordinate {
   return {
     x: point.x + mapOffsets.x + network.offsetX,
@@ -246,25 +246,25 @@ function toSumoCoordinate(
 function assertManualDepartureMatches(
   car: Car,
   edges: string[],
-  depart: SumoRouteAnchor | undefined,
+  depart: SumoRouteAnchor | undefined
 ): void {
   if (depart || (car.sumo_depart_lane?.trim() && car.sumo_depart_pos != null)) {
     return;
   }
   throw new Error(
-    `Vehicle ${car.opencda_name || car.id}: its scene spawn is not on the first manual SUMO edge ${edges[0]}. Clear "Route edges" to build the route from scene points, or select a matching first edge and set Depart lane/Depart pos.`,
+    `Vehicle ${car.opencda_name || car.id}: its scene spawn is not on the first manual SUMO edge ${edges[0]}. Clear "Route edges" to build the route from scene points, or select a matching first edge and set Depart lane/Depart pos.`
   );
 }
 
 function buildEdgeRoute(
   network: SumoNetwork,
   sumoPoints: Coordinate[],
-  car: Car,
+  car: Car
 ): string[] {
   const snappedEdges = sumoPoints.map(
     (point, index) =>
       nearestLane(network.lanes, point, routeDirection(sumoPoints, index))
-        .edgeId,
+        .edgeId
   );
   const edgeRoute: string[] = [];
   for (let index = 0; index < snappedEdges.length - 1; index += 1) {
@@ -275,13 +275,13 @@ function buildEdgeRoute(
       throw new Error(
         `No connected SUMO route for vehicle ${
           car.opencda_name || car.id
-        } between edges ${start} and ${destination}`,
+        } between edges ${start} and ${destination}`
       );
     }
     edgeRoute.push(
       ...(edgeRoute[edgeRoute.length - 1] === segment[0]
         ? segment.slice(1)
-        : segment),
+        : segment)
     );
   }
   return deduplicateAdjacent(edgeRoute);
@@ -290,7 +290,7 @@ function buildEdgeRoute(
 function validateVehicleNetworkSettings(
   network: SumoNetwork,
   car: Car,
-  edges: string[],
+  edges: string[]
 ): void {
   if (edges.length === 0) return;
   const label = car.opencda_name || car.id;
@@ -302,16 +302,16 @@ function validateVehicleNetworkSettings(
     if (/^\d+$/.test(departLaneValue)) {
       const laneIndex = Number(departLaneValue);
       departLane = network.lanes.find(
-        (lane) => lane.edgeId === firstEdge && lane.index === laneIndex,
+        (lane) => lane.edgeId === firstEdge && lane.index === laneIndex
       );
       if (!departLane || !isDrivingLane(departLane)) {
         throw new Error(
-          `Vehicle ${label}: departLane ${departLaneValue} is not a passenger driving lane on edge ${firstEdge}`,
+          `Vehicle ${label}: departLane ${departLaneValue} is not a passenger driving lane on edge ${firstEdge}`
         );
       }
     } else if (!DEPART_LANE_KEYWORDS.has(departLaneValue)) {
       throw new Error(
-        `Vehicle ${label}: unsupported SUMO departLane "${departLaneValue}"`,
+        `Vehicle ${label}: unsupported SUMO departLane "${departLaneValue}"`
       );
     }
   }
@@ -320,13 +320,13 @@ function validateVehicleNetworkSettings(
     const position = car.sumo_depart_pos;
     if (!Number.isFinite(position) || position < 0) {
       throw new Error(
-        `Vehicle ${label}: departPos must be a non-negative number`,
+        `Vehicle ${label}: departPos must be a non-negative number`
       );
     }
     const laneLength = departLane?.length ?? network.edgeLengths.get(firstEdge);
     if (laneLength != null && position >= laneLength) {
       throw new Error(
-        `Vehicle ${label}: departPos ${position} is outside edge ${firstEdge} (length ${laneLength.toFixed(2)})`,
+        `Vehicle ${label}: departPos ${position} is outside edge ${firstEdge} (length ${laneLength.toFixed(2)})`
       );
     }
   }
@@ -336,18 +336,18 @@ function validateVehicleNetworkSettings(
   const stopLaneId = stop.lane.trim();
   if (!stopLaneId) {
     throw new Error(
-      `Vehicle ${label}: Static stop is enabled but its Lane field is empty`,
+      `Vehicle ${label}: Static stop is enabled but its Lane field is empty`
     );
   }
   const stopLane = network.lanes.find((lane) => lane.id === stopLaneId);
   if (!stopLane || !isDrivingLane(stopLane)) {
     throw new Error(
-      `Vehicle ${label}: stop lane "${stopLaneId}" is not a passenger driving lane`,
+      `Vehicle ${label}: stop lane "${stopLaneId}" is not a passenger driving lane`
     );
   }
   if (!edges.includes(stopLane.edgeId)) {
     throw new Error(
-      `Vehicle ${label}: stop lane "${stopLaneId}" is not part of its route`,
+      `Vehicle ${label}: stop lane "${stopLaneId}" is not part of its route`
     );
   }
   if (
@@ -358,12 +358,12 @@ function validateVehicleNetworkSettings(
     stop.endPos > stopLane.length
   ) {
     throw new Error(
-      `Vehicle ${label}: stop positions must satisfy 0 <= startPos < endPos <= ${stopLane.length.toFixed(2)}`,
+      `Vehicle ${label}: stop positions must satisfy 0 <= startPos < endPos <= ${stopLane.length.toFixed(2)}`
     );
   }
   if (!Number.isFinite(stop.duration) || stop.duration < 0) {
     throw new Error(
-      `Vehicle ${label}: stop duration must be a non-negative number`,
+      `Vehicle ${label}: stop duration must be a non-negative number`
     );
   }
   if (
@@ -373,7 +373,7 @@ function validateVehicleNetworkSettings(
     stop.endPos <= car.sumo_depart_pos
   ) {
     throw new Error(
-      `Vehicle ${label}: stop on ${stopLaneId} is behind departPos ${car.sumo_depart_pos}`,
+      `Vehicle ${label}: stop on ${stopLaneId} is behind departPos ${car.sumo_depart_pos}`
     );
   }
 }
@@ -385,7 +385,7 @@ function parseNetwork(netXml: string): SumoNetwork {
   }
 
   const [offsetX, offsetY] = parsePair(
-    document.querySelector('location')?.getAttribute('netOffset') ?? '0,0',
+    document.querySelector('location')?.getAttribute('netOffset') ?? '0,0'
   );
   const lanes: LaneGeometry[] = [];
   const edgeLengths = new Map<string, number>();
@@ -467,7 +467,7 @@ function parseNetwork(netXml: string): SumoNetwork {
           });
         }
       }
-    },
+    }
   );
 
   return {
@@ -484,7 +484,7 @@ function allowsPassenger(lane: Element): boolean {
   const allowedValue = (lane.getAttribute('allow') ?? '').trim();
   const allowed = new Set(allowedValue.split(/\s+/));
   const disallowed = new Set(
-    (lane.getAttribute('disallow') ?? '').split(/\s+/),
+    (lane.getAttribute('disallow') ?? '').split(/\s+/)
   );
   if (allowedValue && !allowed.has('passenger')) return false;
   return !disallowed.has('all') && !disallowed.has('passenger');
@@ -505,7 +505,7 @@ function parseShape(value: string): Coordinate[] {
     .filter(
       (coordinates) =>
         coordinates.length === 2 &&
-        coordinates.every((item) => Number.isFinite(item)),
+        coordinates.every((item) => Number.isFinite(item))
     )
     .map(([x, y]) => ({ x, y }));
 }
@@ -515,7 +515,7 @@ function polylineLength(shape: Coordinate[]): number {
   for (let index = 0; index < shape.length - 1; index += 1) {
     result += Math.hypot(
       shape[index + 1].x - shape[index].x,
-      shape[index + 1].y - shape[index].y,
+      shape[index + 1].y - shape[index].y
     );
   }
   return result;
@@ -523,7 +523,7 @@ function polylineLength(shape: Coordinate[]): number {
 
 function routeDirection(
   points: Coordinate[],
-  index: number,
+  index: number
 ): Coordinate | null {
   const start = index + 1 < points.length ? points[index] : points[index - 1];
   const end = index + 1 < points.length ? points[index + 1] : points[index];
@@ -537,7 +537,7 @@ function routeDirection(
 function nearestLane(
   lanes: LaneGeometry[],
   point: Coordinate,
-  direction: Coordinate | null,
+  direction: Coordinate | null
 ): SumoRouteAnchor {
   let best: SumoRouteAnchor | null = null;
   let bestScore = Number.POSITIVE_INFINITY;
@@ -548,12 +548,12 @@ function nearestLane(
     nearest: distanceToShape(point, lane.shape),
   }));
   const nearestDistance = Math.min(
-    ...projected.map(({ nearest }) => Math.sqrt(nearest.distanceSquared)),
+    ...projected.map(({ nearest }) => Math.sqrt(nearest.distanceSquared))
   );
   const local = projected.filter(
     ({ nearest }) =>
       Math.sqrt(nearest.distanceSquared) <=
-      nearestDistance + MAX_DIRECTIONAL_SNAP_DISTANCE_DELTA,
+      nearestDistance + MAX_DIRECTIONAL_SNAP_DISTANCE_DELTA
   );
   const aligned = direction
     ? local.filter(({ nearest }) => {
@@ -591,7 +591,7 @@ function preciseEndpointAnchor(
   point: Coordinate,
   direction: Coordinate | null,
   edges: string[],
-  endpoint: 'depart' | 'arrival',
+  endpoint: 'depart' | 'arrival'
 ): SumoRouteAnchor | undefined {
   if (edges.length === 0) return undefined;
   const edgeId = endpoint === 'depart' ? edges[0] : edges[edges.length - 1];
@@ -599,7 +599,7 @@ function preciseEndpointAnchor(
     (lane) =>
       lane.edgeId === edgeId &&
       isDrivingLane(lane) &&
-      endpointConnectionMatches(network, lane, edges, endpoint),
+      endpointConnectionMatches(network, lane, edges, endpoint)
   );
 
   let best: SumoRouteAnchor | undefined;
@@ -626,7 +626,7 @@ function endpointConnectionMatches(
   network: SumoNetwork,
   lane: LaneGeometry,
   edges: string[],
-  endpoint: 'depart' | 'arrival',
+  endpoint: 'depart' | 'arrival'
 ): boolean {
   if (edges.length < 2) return true;
   if (endpoint === 'depart') {
@@ -634,14 +634,14 @@ function endpointConnectionMatches(
       (connection) =>
         connection.fromEdge === edges[0] &&
         connection.fromLane === lane.index &&
-        connection.toEdge === edges[1],
+        connection.toEdge === edges[1]
     );
   }
   return network.connections.some(
     (connection) =>
       connection.fromEdge === edges[edges.length - 2] &&
       connection.toEdge === edges[edges.length - 1] &&
-      connection.toLane === lane.index,
+      connection.toLane === lane.index
   );
 }
 
@@ -651,7 +651,7 @@ function isDrivingLane(lane: LaneGeometry): boolean {
 
 function laneAnchor(
   lane: LaneGeometry,
-  nearest: ShapeProjection,
+  nearest: ShapeProjection
 ): SumoRouteAnchor {
   const geometricLength = polylineLength(lane.shape);
   const scaledPosition =
@@ -673,7 +673,7 @@ function clampLanePosition(position: number, laneLength: number): number {
   }
   return Math.max(
     MIN_LANE_POSITION_MARGIN,
-    Math.min(laneLength - MIN_LANE_POSITION_MARGIN, position),
+    Math.min(laneLength - MIN_LANE_POSITION_MARGIN, position)
   );
 }
 
@@ -685,7 +685,7 @@ type ShapeProjection = {
 
 function distanceToShape(
   point: Coordinate,
-  shape: Coordinate[],
+  shape: Coordinate[]
 ): ShapeProjection {
   let bestDistance = Number.POSITIVE_INFINITY;
   let bestDirection: Coordinate | null = null;
@@ -703,8 +703,8 @@ function distanceToShape(
       0,
       Math.min(
         1,
-        ((point.x - start.x) * dx + (point.y - start.y) * dy) / lengthSquared,
-      ),
+        ((point.x - start.x) * dx + (point.y - start.y) * dy) / lengthSquared
+      )
     );
     const nearestX = start.x + projection * dx;
     const nearestY = start.y + projection * dy;
@@ -729,7 +729,7 @@ function distanceToShape(
 function shortestPath(
   network: SumoNetwork,
   start: string,
-  destination: string,
+  destination: string
 ): string[] {
   if (start === destination) return [start];
 
@@ -768,7 +768,7 @@ function shortestPath(
 
 function deduplicateAdjacent(values: string[]): string[] {
   return values.filter(
-    (value, index) => index === 0 || values[index - 1] !== value,
+    (value, index) => index === 0 || values[index - 1] !== value
   );
 }
 

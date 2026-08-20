@@ -38,12 +38,12 @@ export const RSUSection = ({
   const numberField = <K extends keyof RSUFields & string>(
     field: K,
     min?: number,
-    max?: number,
+    max?: number
   ) =>
     createNumberFieldOnChange(
       (val) => updateField(field, val as SimulationConfig['opencda'][K]),
       min,
-      max,
+      max
     );
 
   return (

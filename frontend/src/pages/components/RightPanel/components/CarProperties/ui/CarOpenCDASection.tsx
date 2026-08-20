@@ -24,27 +24,27 @@ export default function CarOpenCDASection({ car }: { car: Car }) {
 
   const [showColor, setShowColor] = useState(car.opencda_color != null);
   const [showMaxSpeed, setShowMaxSpeed] = useState(
-    car.opencda_max_speed != null,
+    car.opencda_max_speed != null
   );
   const [showV2x, setShowV2x] = useState(car.opencda_v2x != null);
   const [showId, setShowId] = useState(car.opencda_id != null);
   const [showModel, setShowModel] = useState(
-    Boolean(car.opencda_carla_model?.trim()),
+    Boolean(car.opencda_carla_model?.trim())
   );
   const [showBehaviorFlags, setShowBehaviorFlags] = useState(
     car.opencda_ignore_traffic_light != null ||
-      car.opencda_overtake_allowed != null,
+      car.opencda_overtake_allowed != null
   );
   const [showBehaviorServices, setShowBehaviorServices] = useState(
-    (car.opencda_behavior_services?.length ?? 0) > 0,
+    (car.opencda_behavior_services?.length ?? 0) > 0
   );
   const [showName, setShowName] = useState(Boolean(car.opencda_name?.trim()));
   const [showCollisionAhead, setShowCollisionAhead] = useState(
-    car.opencda_collision_time_ahead != null,
+    car.opencda_collision_time_ahead != null
   );
   const [showLocalPlanner, setShowLocalPlanner] = useState(
     car.opencda_local_planner_debug != null ||
-      car.opencda_local_planner_debug_trajectory != null,
+      car.opencda_local_planner_debug_trajectory != null
   );
 
   return (

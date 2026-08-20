@@ -33,7 +33,7 @@ describe('SUMO exporters', () => {
     const xml = generatePolyXml([building], offsets);
 
     expect(xml).toContain(
-      'shape="105.000000,185.000000 125.000000,185.000000 125.000000,195.000000 105.000000,195.000000 105.000000,185.000000"',
+      'shape="105.000000,185.000000 125.000000,185.000000 125.000000,195.000000 105.000000,195.000000 105.000000,185.000000"'
     );
   });
 
@@ -52,7 +52,7 @@ describe('SUMO exporters', () => {
     expect(xml).toContain('<net-file value="./Town01.net.xml"/>');
     expect(xml).toContain('<route-files value="./sm_poc_town01.rou.xml"/>');
     expect(xml).toContain(
-      '<additional-files value="./sm_poc_town01.poly.xml"/>',
+      '<additional-files value="./sm_poc_town01.poly.xml"/>'
     );
     expect(xml).not.toContain('hardcoded-name.rou.xml');
   });
@@ -261,7 +261,7 @@ describe('SUMO exporters', () => {
     } satisfies Car;
 
     expect(() => useGenerateRouXml(defaultSimConfig, [car])).toThrow(
-      'Static stop is enabled but its Lane field is empty',
+      'Static stop is enabled but its Lane field is empty'
     );
   });
 
@@ -279,7 +279,7 @@ describe('SUMO exporters', () => {
     } satisfies Car;
 
     expect(() => useGenerateRouXml(defaultSimConfig, [car])).toThrow(
-      'has no SUMO route',
+      'has no SUMO route'
     );
   });
 });

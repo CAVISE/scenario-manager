@@ -112,7 +112,7 @@ describe('toUpdateScenarioBody', () => {
         scenario_id: 'sc-1',
         file_: file,
         scenario: [],
-      }),
+      })
     ).toEqual({
       scenario_id: 'sc-1',
       scenario_name: undefined,
@@ -125,7 +125,7 @@ describe('toUpdateScenarioBody', () => {
 
   it('throws with the validation message when scenario_id is empty', () => {
     expect(() =>
-      toUpdateScenarioBody({ scenario_id: '', file_: null, scenario: [] }),
+      toUpdateScenarioBody({ scenario_id: '', file_: null, scenario: [] })
     ).toThrow('Scenario ID is required.');
   });
 
@@ -173,7 +173,7 @@ describe('scenarioGroupsFromPayload', () => {
 
   it('returns an empty array when scenario_text is present but not an array', () => {
     expect(
-      scenarioGroupsFromPayload({ scenario_text: 'not an array' } as never),
+      scenarioGroupsFromPayload({ scenario_text: 'not an array' } as never)
     ).toEqual([]);
   });
 });

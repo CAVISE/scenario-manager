@@ -48,7 +48,7 @@ export const useEditorHandlers = ({
       }
       setBuildingMode(value);
     },
-    [modeRef, setBuildingMode, transformControlsRef],
+    [modeRef, setBuildingMode, transformControlsRef]
   );
 
   return {

@@ -18,7 +18,7 @@ describe('AppToastProvider', () => {
     render(
       <AppToastProvider>
         <TestComponent message="Operation successful" level="success" />
-      </AppToastProvider>,
+      </AppToastProvider>
     );
 
     const button = screen.getByText('Show success');
@@ -34,7 +34,7 @@ describe('AppToastProvider', () => {
     const { rerender } = render(
       <AppToastProvider>
         <TestComponent message="Error occurred" level="error" />
-      </AppToastProvider>,
+      </AppToastProvider>
     );
 
     fireEvent.click(screen.getByText('Show error'));
@@ -43,7 +43,7 @@ describe('AppToastProvider', () => {
     rerender(
       <AppToastProvider>
         <TestComponent message="Info message" level="info" />
-      </AppToastProvider>,
+      </AppToastProvider>
     );
     fireEvent.click(screen.getByText('Show info'));
     expect(screen.getByText('Info message')).toBeDefined();
@@ -53,7 +53,7 @@ describe('AppToastProvider', () => {
     render(
       <AppToastProvider>
         <TestComponent message="   " level="success" />
-      </AppToastProvider>,
+      </AppToastProvider>
     );
 
     fireEvent.click(screen.getByText('Show success'));
@@ -66,7 +66,7 @@ describe('AppToastProvider', () => {
     render(
       <AppToastProvider>
         <TestComponent message="Temporary message" level="info" />
-      </AppToastProvider>,
+      </AppToastProvider>
     );
 
     fireEvent.click(screen.getByText('Show info'));
@@ -80,7 +80,7 @@ describe('AppToastProvider', () => {
     render(
       <AppToastProvider>
         <TestComponent message="Close test" level="success" />
-      </AppToastProvider>,
+      </AppToastProvider>
     );
 
     fireEvent.click(screen.getByText('Show success'));
@@ -95,7 +95,7 @@ describe('AppToastProvider', () => {
     render(
       <AppToastProvider>
         <TestComponent message="Snackbar close" level="info" />
-      </AppToastProvider>,
+      </AppToastProvider>
     );
 
     fireEvent.click(screen.getByText('Show info'));
@@ -123,7 +123,7 @@ describe('AppToastProvider', () => {
     render(
       <AppToastProvider>
         <TestUndoComponent />
-      </AppToastProvider>,
+      </AppToastProvider>
     );
 
     fireEvent.click(screen.getByText('Show undo'));
@@ -151,7 +151,7 @@ describe('AppToastProvider', () => {
     render(
       <AppToastProvider>
         <TestUndoComponent />
-      </AppToastProvider>,
+      </AppToastProvider>
     );
 
     fireEvent.click(screen.getByText('Show undo with custom label'));
@@ -173,7 +173,7 @@ describe('AppToastProvider', () => {
     render(
       <AppToastProvider>
         <TestUndoComponent />
-      </AppToastProvider>,
+      </AppToastProvider>
     );
 
     fireEvent.click(screen.getByText('Show undo with action'));
@@ -195,7 +195,7 @@ describe('AppToastProvider', () => {
     render(
       <AppToastProvider>
         <TestDefaultUndoComponent />
-      </AppToastProvider>,
+      </AppToastProvider>
     );
 
     fireEvent.click(screen.getByText('Show default undo'));
@@ -217,7 +217,7 @@ describe('AppToastProvider', () => {
     render(
       <AppToastProvider>
         <TestUndoComponent />
-      </AppToastProvider>,
+      </AppToastProvider>
     );
 
     fireEvent.click(screen.getByText('Show undo'));
@@ -241,7 +241,7 @@ describe('AppToastProvider', () => {
     render(
       <AppToastProvider>
         <TestUndoComponent />
-      </AppToastProvider>,
+      </AppToastProvider>
     );
 
     fireEvent.click(screen.getByText('Show undo'));

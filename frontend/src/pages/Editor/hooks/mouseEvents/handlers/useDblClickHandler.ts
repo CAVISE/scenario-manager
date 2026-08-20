@@ -53,17 +53,17 @@ function getRoadWorldBox(road: THREE.Object3D): THREE.Box3 {
 
 function footprintIntersectsRoad(
   fp: Footprint2D,
-  road: THREE.Object3D,
+  road: THREE.Object3D
 ): boolean {
   const roadBox = getRoadWorldBox(road);
   const footprintBox = new THREE.Box2(
     new THREE.Vector2(fp.centerX - fp.halfExtentX, fp.centerY - fp.halfExtentY),
-    new THREE.Vector2(fp.centerX + fp.halfExtentX, fp.centerY + fp.halfExtentY),
+    new THREE.Vector2(fp.centerX + fp.halfExtentX, fp.centerY + fp.halfExtentY)
   );
 
   const roadBoxXY = new THREE.Box2(
     new THREE.Vector2(roadBox.min.x, roadBox.min.y),
-    new THREE.Vector2(roadBox.max.x, roadBox.max.y),
+    new THREE.Vector2(roadBox.max.x, roadBox.max.y)
   );
   if (!footprintBox.intersectsBox(roadBoxXY)) {
     return false;
@@ -76,7 +76,7 @@ function footprintIntersectsRoad(
   return samplePoints.some((pt) => {
     verticalRaycaster.set(
       new THREE.Vector3(pt.x, pt.y, RAY_ORIGIN_HEIGHT),
-      new THREE.Vector3(0, 0, -1),
+      new THREE.Vector3(0, 0, -1)
     );
     return verticalRaycaster.intersectObject(road, true).length > 0;
   });
@@ -109,7 +109,7 @@ function getBuildingFootprint(
   worldX: number,
   worldY: number,
   scale: number,
-  rotation: number,
+  rotation: number
 ): Footprint2D {
   const size = getLocalFootprintSize(templateModel);
 
@@ -143,7 +143,7 @@ export function useDblClickHandler(ctx: SharedMouseContext) {
   } = useEditorRefs();
 
   const rsuInactivityTimerRef = useRef<InactivityModeTimeoutHandle | null>(
-    null,
+    null
   );
   if (!rsuInactivityTimerRef.current) {
     rsuInactivityTimerRef.current = createInactivityModeTimeout({
@@ -168,7 +168,7 @@ export function useDblClickHandler(ctx: SharedMouseContext) {
   }
 
   const buildingInactivityTimerRef = useRef<InactivityModeTimeoutHandle | null>(
-    null,
+    null
   );
   if (!buildingInactivityTimerRef.current) {
     buildingInactivityTimerRef.current = createInactivityModeTimeout({
@@ -181,7 +181,7 @@ export function useDblClickHandler(ctx: SharedMouseContext) {
   }
 
   const waypointInactivityTimerRef = useRef<InactivityModeTimeoutHandle | null>(
-    null,
+    null
   );
   if (!waypointInactivityTimerRef.current) {
     waypointInactivityTimerRef.current = createInactivityModeTimeout({
@@ -259,13 +259,13 @@ export function useDblClickHandler(ctx: SharedMouseContext) {
 
       const currentSelectedId = useEditorStore.getState().selectedId;
       const selectedIdx = carMeshes.findIndex(
-        (m) => m.userData.id === currentSelectedId,
+        (m) => m.userData.id === currentSelectedId
       );
       if (selectedIdx >= 0 && mode.isAddedPoints) {
         e.preventDefault();
         const roadHits = ctx.raycaster.intersectObjects(
           [...carMeshes, ...cubeCircles.flat(), ...pointsArr, road],
-          true,
+          true
         );
         if (roadHits.length > 0 && roadHits[0].object === road) {
           if (cubeCircles[selectedIdx]) {
@@ -302,7 +302,7 @@ export function useDblClickHandler(ctx: SharedMouseContext) {
             ...rsuMeshesRef.current,
             ...pedestrianMeshesRef.current,
           ],
-          true,
+          true
         );
         if (otherObjectHits.length > 0) return;
 
@@ -315,7 +315,7 @@ export function useDblClickHandler(ctx: SharedMouseContext) {
 
         if (footprintIntersectsRoad(newFootprint, road)) {
           toast.info(
-            "Can't place building: it would overlap the road. Try a spot further from the road.",
+            "Can't place building: it would overlap the road. Try a spot further from the road."
           );
           return;
         }
@@ -327,13 +327,13 @@ export function useDblClickHandler(ctx: SharedMouseContext) {
             building.x,
             building.y,
             building.scale ?? 0.5,
-            building.rotation ?? 0,
+            building.rotation ?? 0
           );
           return checkObjectOverlap(newFootprint, existingFootprint).overlaps;
         });
         if (overlapsExisting) {
           toast.info(
-            "Can't place building: it would overlap another building. Try a spot further away.",
+            "Can't place building: it would overlap another building. Try a spot further away."
           );
           return;
         }
@@ -343,6 +343,6 @@ export function useDblClickHandler(ctx: SharedMouseContext) {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [ctx, updateSceneGraph, buildingModelRef, toast],
+    [ctx, updateSceneGraph, buildingModelRef, toast]
   );
 }

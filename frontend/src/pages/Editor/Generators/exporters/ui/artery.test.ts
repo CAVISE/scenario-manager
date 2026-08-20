@@ -36,19 +36,19 @@ describe('generateArteryConfig', () => {
 
     expect(ini).toContain(`sim-time-limit = ${defaultSimConfig.sim_duration}s`);
     expect(ini).toContain(
-      `*.traci.launcher.sumocfg = "${defaultSimConfig.artery.sumo_config}"`,
+      `*.traci.launcher.sumocfg = "${defaultSimConfig.artery.sumo_config}"`
     );
     expect(ini).toContain(
-      `*.traci.launcher.stepLength = ${defaultSimConfig.artery.sumo_step_length}s`,
+      `*.traci.launcher.stepLength = ${defaultSimConfig.artery.sumo_step_length}s`
     );
     expect(ini).toContain(
-      `*.traci.launcher.seed = ${defaultSimConfig.artery.sumo_seed}`,
+      `*.traci.launcher.seed = ${defaultSimConfig.artery.sumo_seed}`
     );
     expect(ini).toContain(
-      `*.node[*].vanetza[0].cam.minInterval = ${defaultSimConfig.artery.cam_interval_min}ms`,
+      `*.node[*].vanetza[0].cam.minInterval = ${defaultSimConfig.artery.cam_interval_min}ms`
     );
     expect(ini).toContain(
-      `*.node[*].vanetza[0].cam.maxInterval = ${defaultSimConfig.artery.cam_interval_max}ms`,
+      `*.node[*].vanetza[0].cam.maxInterval = ${defaultSimConfig.artery.cam_interval_max}ms`
     );
   });
 
@@ -190,7 +190,7 @@ describe('generateArteryConfig', () => {
       expect(ini).toContain('*.rsu[0].vanetza[0].access.protocol = "C-V2X"');
       expect(ini).toContain('*.rsu[0].wlan[0].radio.transmitter.power = 30dBm');
       expect(ini).toContain(
-        '*.rsu[0].wlan[0].radio.centerFrequency = 5900000000Hz',
+        '*.rsu[0].wlan[0].radio.centerFrequency = 5900000000Hz'
       );
       expect(ini).toContain('*.rsu[0].appl.communicationRange = 500m');
     });
@@ -209,7 +209,7 @@ describe('generateArteryConfig', () => {
       const ini = generateArteryConfig(defaultSimConfig, [rsu]);
 
       expect(ini).toContain(
-        '*.rsu[0].vanetza[0].network.protocol = "GeoNetworking"',
+        '*.rsu[0].vanetza[0].network.protocol = "GeoNetworking"'
       );
       expect(ini).toContain('*.rsu[0].antenna.type = "isotropic"');
       expect(ini).toContain('*.rsu[0].antenna.height = 5m');

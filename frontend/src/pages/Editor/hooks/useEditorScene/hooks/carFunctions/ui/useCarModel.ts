@@ -16,7 +16,7 @@ export function useCarModel() {
         setModelLoaded(true);
       },
       undefined,
-      (err) => console.error('OBJ load error:', err),
+      (err) => console.error('OBJ load error:', err)
     );
   }, []);
 

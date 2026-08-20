@@ -20,7 +20,7 @@ vi.mock(
       resolveXodrTextForSimulation: resolveXodrMock,
       getStoredXodrName: vi.fn(() => 'Town10HD.xodr'),
     };
-  },
+  }
 );
 
 vi.mock('@/api/queryClient', () => ({
@@ -90,27 +90,27 @@ const createStoreState = () => {
     (id: string, patch: Record<string, unknown>) => {
       const target = state.cars.find((item) => item.id === id);
       if (target) Object.assign(target, patch);
-    },
+    }
   );
   state.addPoint.mockImplementation(
     (carId: string, x: number, y: number, z: number) => {
       const id = `point-${state.points.length + 1}`;
       state.points.push({ id, carId, x, y, z });
       return id;
-    },
+    }
   );
   state.addLidar.mockImplementation(
     (carId: string, x: number, y: number, z: number) => {
       const id = `lidar-${state.lidars.length + 1}`;
       state.lidars.push({ id, carId, x, y, z });
       return id;
-    },
+    }
   );
   state.updateLidar.mockImplementation(
     (id: string, patch: Record<string, unknown>) => {
       const target = state.lidars.find((item) => item.id === id);
       if (target) Object.assign(target, patch);
-    },
+    }
   );
   state.addRSU.mockImplementation((x: number, y: number, z: number) => {
     const id = `rsu-${state.RSUs.length + 1}`;
@@ -121,7 +121,7 @@ const createStoreState = () => {
     (id: string, patch: Record<string, unknown>) => {
       const target = state.RSUs.find((item) => item.id === id);
       if (target) Object.assign(target, patch);
-    },
+    }
   );
   state.addPedestrian.mockImplementation((x: number, y: number, z: number) => {
     const id = `ped-${state.pedestrians.length + 1}`;
@@ -132,7 +132,7 @@ const createStoreState = () => {
     (id: string, patch: Record<string, unknown>) => {
       const target = state.pedestrians.find((item) => item.id === id);
       if (target) Object.assign(target, patch);
-    },
+    }
   );
   state.addBuilding.mockImplementation((x: number, y: number, z: number) => {
     const id = `b-${state.buildings.length + 1}`;
@@ -143,7 +143,7 @@ const createStoreState = () => {
     (id: string, patch: Record<string, unknown>) => {
       const target = state.buildings.find((item) => item.id === id);
       if (target) Object.assign(target, patch);
-    },
+    }
   );
   state.removeAllRSUs.mockImplementation(() => {
     state.RSUs = [];
@@ -196,7 +196,7 @@ vi.mock('@/store', () => ({
       const nextState =
         typeof patch === 'function'
           ? (patch as (state: typeof storeState) => Partial<typeof storeState>)(
-              storeState,
+              storeState
             )
           : patch;
 
@@ -283,7 +283,7 @@ describe('handleLoad regression', () => {
     expect(storeState.addCar).toHaveBeenCalled();
     expect(storeState.updateCar).toHaveBeenCalledWith(
       'car-1',
-      expect.objectContaining({ sumo_edges: '27 26' }),
+      expect.objectContaining({ sumo_edges: '27 26' })
     );
     expect(storeState.addPedestrian).toHaveBeenCalled();
     expect(storeState.addRSU).toHaveBeenCalled();
@@ -324,7 +324,7 @@ describe('handleLoad regression', () => {
       expect.objectContaining({
         height: 10,
         material: 'concrete',
-      }),
+      })
     );
     expect(setNotice).toHaveBeenCalledWith('The scenario has been uploaded.');
     expect(loadFile).toHaveBeenCalled();
@@ -552,7 +552,7 @@ describe('buildScenarioPayload', () => {
 
   it('returns empty path arrays when store collections are empty', () => {
     expect(
-      scenarioGroupsFromPayload(buildScenarioPayload().scenario),
+      scenarioGroupsFromPayload(buildScenarioPayload().scenario)
     ).toHaveLength(0);
   });
 
@@ -562,7 +562,7 @@ describe('buildScenarioPayload', () => {
     });
 
     fetchQueryMock.mockImplementation(
-      ({ queryFn }: { queryFn: () => unknown }) => queryFn(),
+      ({ queryFn }: { queryFn: () => unknown }) => queryFn()
     );
 
     await handleLoad({
@@ -615,7 +615,7 @@ describe('handleCreate', () => {
           scenario_id: 'sc-new',
           name_of_scenario: 'Saved scenario',
         }),
-      }),
+      })
     );
     expect(storeState.updateScenario).toHaveBeenCalledWith({
       id: 'sc-new',
@@ -663,7 +663,7 @@ describe('handleCreate', () => {
     await handleCreate(setNotice, createMutation);
 
     expect(setNotice).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to save scenario.'),
+      expect.stringContaining('Failed to save scenario.')
     );
   });
 });
@@ -727,7 +727,7 @@ describe('handlePatch', () => {
     await handlePatch(setNotice, '  sc-1  ', true, patchMutation);
 
     expect(patchMutation.mutateAsync).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'sc-1' }),
+      expect.objectContaining({ id: 'sc-1' })
     );
     expect(setNotice).toHaveBeenCalledWith('The scenario has been updated.');
   });
@@ -777,7 +777,7 @@ describe('handlePatch', () => {
         tx_power: 30,
         range: 300,
         scenario: 'my-scenario',
-      }),
+      })
     );
   });
 
@@ -868,7 +868,7 @@ describe('handlePatch', () => {
     await handlePatch(setNotice, 'sc-1', true, patchMutation);
 
     expect(setNotice).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to update the scenario.'),
+      expect.stringContaining('Failed to update the scenario.')
     );
   });
 });
@@ -894,7 +894,7 @@ describe('handleDelete', () => {
     await handleDelete(setNotice, '  sc-1  ', true, deleteMutation);
 
     expect(deleteMutation.mutateAsync).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'sc-1' }),
+      expect.objectContaining({ id: 'sc-1' })
     );
     expect(setNotice).toHaveBeenCalledWith('The scenario has been deleted.');
   });
@@ -908,7 +908,7 @@ describe('handleDelete', () => {
     await handleDelete(setNotice, 'sc-1', true, deleteMutation);
 
     expect(setNotice).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to delete scenario.'),
+      expect.stringContaining('Failed to delete scenario.')
     );
   });
 });
@@ -949,7 +949,7 @@ describe('handleRunSimulation', () => {
         weather: 'Rain',
         map: 'Town10HD',
       }),
-      expect.any(Object),
+      expect.any(Object)
     );
     expect(setNotice).toHaveBeenCalledWith('The simulation has started.');
   });
@@ -984,7 +984,7 @@ describe('handleRunSimulation', () => {
 
     expect(startMutation.mutate).toHaveBeenCalledWith(
       expect.objectContaining({ scenario_id: 'sc-fallback' }),
-      expect.any(Object),
+      expect.any(Object)
     );
   });
 
@@ -1018,7 +1018,7 @@ describe('handleRunSimulation', () => {
 
     await vi.waitFor(() => {
       expect(setNotice).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to start simulation.'),
+        expect.stringContaining('Failed to start simulation.')
       );
     });
   });
@@ -1058,7 +1058,7 @@ describe('handleLoad - building handling', () => {
       expect.objectContaining({
         height: 5,
         material: 'brick',
-      }),
+      })
     );
     expect(updateSceneGraph).toHaveBeenCalled();
     expect(setNotice).toHaveBeenCalledWith('The scenario has been uploaded.');

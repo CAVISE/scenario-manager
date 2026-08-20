@@ -299,14 +299,14 @@ export type EditorState = {
     z: number,
     model: string,
     color: string,
-    speed?: number,
+    speed?: number
   ) => string;
   updateCar: (id: string, props: Partial<Omit<Car, 'id'>>) => void;
   removeCar: (id: string) => void;
   addPedestrian: (x: number, y: number, z: number) => string;
   updatePedestrian: (
     id: string,
-    props: Partial<Omit<Pedestrian, 'id'>>,
+    props: Partial<Omit<Pedestrian, 'id'>>
   ) => void;
   removePedestrian: (id: string) => void;
   addRSU: (x: number, y: number, z: number) => string;
@@ -317,7 +317,7 @@ export type EditorState = {
   addLidar: (carId: string, x: number, y: number, z: number) => string;
   updateLidar: (
     id: string,
-    props: Partial<Omit<Lidar, 'id' | 'carId'>>,
+    props: Partial<Omit<Lidar, 'id' | 'carId'>>
   ) => void;
   removeLidar: (id: string) => void;
   removeLidarsByCarId: (carId: string) => void;
@@ -328,7 +328,7 @@ export type EditorState = {
   removePointsByCarId: (carId: string) => void;
   updatePoint: (
     id: string,
-    props: Partial<Omit<Point, 'id' | 'carId'>>,
+    props: Partial<Omit<Point, 'id' | 'carId'>>
   ) => void;
 
   selectObject: (obj: SelectedObject | null) => void;
@@ -338,7 +338,7 @@ export type EditorState = {
 
   deletionHistory: DeletionSnapshot[];
   pushDeletionSnapshot: (
-    snapshot: Omit<DeletionSnapshot, 'snapshotId' | 'deletedAt'>,
+    snapshot: Omit<DeletionSnapshot, 'snapshotId' | 'deletedAt'>
   ) => string;
   restoreLastDeletion: (snapshotId?: string) => boolean;
   clearDeletionHistory: () => void;

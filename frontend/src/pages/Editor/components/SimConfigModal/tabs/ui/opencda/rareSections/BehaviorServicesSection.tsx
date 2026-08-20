@@ -10,7 +10,7 @@ type Props = {
 export const BehaviorServicesSection = ({ oc, update }: Props) => {
   const patchBehaviorServices = (
     field: keyof SimulationConfig['opencda']['vehicle_behavior_services'],
-    value: boolean,
+    value: boolean
   ) => {
     update({
       vehicle_behavior_services: {

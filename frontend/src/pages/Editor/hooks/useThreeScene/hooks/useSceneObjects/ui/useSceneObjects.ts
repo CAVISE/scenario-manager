@@ -90,7 +90,7 @@ export function useSceneObjects({
     (roadMesh: THREE.Mesh | null) => {
       roadMeshRef.current = roadMesh;
     },
-    [roadMeshRef],
+    [roadMeshRef]
   );
 
   return { loadRSU, loadPoints, syncRoadMesh, localLineArrRef };

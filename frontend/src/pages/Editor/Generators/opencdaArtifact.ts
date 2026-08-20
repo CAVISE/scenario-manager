@@ -13,6 +13,6 @@ export function buildOpenCDAArtifact(state: OpenCDAArtifactState): string {
     state.cars,
     state.RSUs,
     state.points,
-    state.lidars,
+    state.lidars
   );
 }

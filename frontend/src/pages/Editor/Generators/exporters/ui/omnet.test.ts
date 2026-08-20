@@ -50,16 +50,16 @@ describe('generateOmnetConfig', () => {
 
     expect(ini).toContain(`sim-time-limit = ${defaultSimConfig.sim_duration}s`);
     expect(ini).toContain(
-      `*.connectionManager.maxInterfDist = ${defaultSimConfig.omnet.max_interf_dist}m`,
+      `*.connectionManager.maxInterfDist = ${defaultSimConfig.omnet.max_interf_dist}m`
     );
     expect(ini).toContain(
-      `*.node[*].nic.mac1609_4.txPower = ${defaultSimConfig.omnet.tx_power}dBm`,
+      `*.node[*].nic.mac1609_4.txPower = ${defaultSimConfig.omnet.tx_power}dBm`
     );
     expect(ini).toContain(
-      `*.node[*].nic.mac1609_4.bitrate = ${defaultSimConfig.omnet.bitrate}Mbps`,
+      `*.node[*].nic.mac1609_4.bitrate = ${defaultSimConfig.omnet.bitrate}Mbps`
     );
     expect(ini).toContain(
-      `*.node[*].appl.beaconInterval = ${defaultSimConfig.omnet.beaconing_interval}ms`,
+      `*.node[*].appl.beaconInterval = ${defaultSimConfig.omnet.beaconing_interval}ms`
     );
   });
 
@@ -67,7 +67,7 @@ describe('generateOmnetConfig', () => {
     const ini = generateOmnetConfig(
       defaultSimConfig,
       [makeRSU(), makeRSU()],
-      [makeCar()],
+      [makeCar()]
     );
 
     expect(ini).toContain('**.numVehicles = 1');
@@ -89,7 +89,7 @@ describe('generateOmnetConfig', () => {
         makeRSU({ x: 1.005, y: 2.049, z: 3, tx_power: 20, range: 250 }),
         makeRSU({ x: 9, y: 8, z: 7, tx_power: 15, range: 100 }),
       ],
-      [],
+      []
     );
 
     expect(ini).toContain('*.rsu[0].mobility.x = 1.0');
@@ -125,10 +125,10 @@ describe('generateOmnetConfig', () => {
     };
 
     expect(generateOmnetConfig(cVehicleToVehicle, [], [])).toContain(
-      '*.node[*].nic.mac1609_4.useServiceChannel = true',
+      '*.node[*].nic.mac1609_4.useServiceChannel = true'
     );
     expect(generateOmnetConfig(dsrc, [], [])).toContain(
-      '*.node[*].nic.mac1609_4.useServiceChannel = true',
+      '*.node[*].nic.mac1609_4.useServiceChannel = true'
     );
   });
 });

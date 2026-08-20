@@ -11,7 +11,7 @@ export const createFieldUpdater =
 export const validateNumber = (
   value: number,
   min?: number,
-  max?: number,
+  max?: number
 ): number => {
   let result = value;
   if (min !== undefined) result = Math.max(min, result);
@@ -22,7 +22,7 @@ export const validateNumber = (
 export const parseNumberFromEvent = (
   e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   min?: number,
-  max?: number,
+  max?: number
 ): number | undefined => {
   if (e.target.value === '') return undefined;
   const val = parseFloat(e.target.value);
@@ -39,7 +39,7 @@ export const createNumberFieldOnChange =
 
 export const formatValue = (
   value: number,
-  type: 'percent' | 'speed' | 'distance' | 'default',
+  type: 'percent' | 'speed' | 'distance' | 'default'
 ): string => {
   switch (type) {
     case 'percent':
@@ -57,7 +57,7 @@ export const getChipColor = (
   value: number,
   min?: number,
   max?: number,
-  warningThreshold?: number,
+  warningThreshold?: number
 ):
   | 'default'
   | 'primary'
@@ -76,7 +76,7 @@ export const getChipColor = (
 export const createSelectProps = <T extends string>(
   value: T,
   onChange: (value: T) => void,
-  options: { value: T; label: string }[],
+  options: { value: T; label: string }[]
 ) => ({
   value,
   onChange: (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) =>
@@ -85,8 +85,8 @@ export const createSelectProps = <T extends string>(
     React.createElement(
       MenuItem,
       { key: opt.value, value: opt.value },
-      opt.label,
-    ),
+      opt.label
+    )
   ),
 });
 
@@ -120,7 +120,7 @@ export const clamp = (value: number, min: number, max: number): number => {
 export const createNestedUpdate = <T extends Record<string, string>>(
   parentField: string,
   currentObject: T,
-  updates: Partial<T>,
+  updates: Partial<T>
 ) => ({
   [parentField]: {
     ...currentObject,

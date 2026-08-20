@@ -5,7 +5,7 @@ export function generateSionnaConfig(
   config: SimulationConfig,
   RSUs: RSU[],
   buildings: Building[],
-  cars: Car[],
+  cars: Car[]
 ): object {
   return {
     scene: {

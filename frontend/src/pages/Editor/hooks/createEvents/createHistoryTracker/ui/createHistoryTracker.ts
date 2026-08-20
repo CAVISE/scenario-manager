@@ -37,7 +37,7 @@ type PendingEdit<T> = {
 function createCollectionTracker<T extends WithId>(
   label: string,
   getList: () => T[],
-  updateFn: (id: string, patch: Partial<T>) => void,
+  updateFn: (id: string, patch: Partial<T>) => void
 ) {
   const pending = new Map<string, PendingEdit<T>>();
 
@@ -90,7 +90,7 @@ function createCollectionTracker<T extends WithId>(
 }
 
 export function createHistoryTracker(
-  opts: CreateHistoryTrackerOptions,
+  opts: CreateHistoryTrackerOptions
 ): () => void {
   const { getIsDragging } = opts;
   const s = useEditorStore.getState();
@@ -98,32 +98,32 @@ export function createHistoryTracker(
   const carsTracker = createCollectionTracker<Car>(
     'cars',
     () => useEditorStore.getState().cars,
-    (id, patch) => useEditorStore.getState().updateCar(id, patch),
+    (id, patch) => useEditorStore.getState().updateCar(id, patch)
   );
   const rsusTracker = createCollectionTracker<RSU>(
     'RSUs',
     () => useEditorStore.getState().RSUs,
-    (id, patch) => useEditorStore.getState().updateRSU(id, patch),
+    (id, patch) => useEditorStore.getState().updateRSU(id, patch)
   );
   const buildingsTracker = createCollectionTracker<Building>(
     'buildings',
     () => useEditorStore.getState().buildings,
-    (id, patch) => useEditorStore.getState().updateBuilding(id, patch),
+    (id, patch) => useEditorStore.getState().updateBuilding(id, patch)
   );
   const pedestriansTracker = createCollectionTracker<Pedestrian>(
     'pedestrians',
     () => useEditorStore.getState().pedestrians,
-    (id, patch) => useEditorStore.getState().updatePedestrian(id, patch),
+    (id, patch) => useEditorStore.getState().updatePedestrian(id, patch)
   );
   const lidarsTracker = createCollectionTracker<Lidar>(
     'lidars',
     () => useEditorStore.getState().lidars,
-    (id, patch) => useEditorStore.getState().updateLidar(id, patch),
+    (id, patch) => useEditorStore.getState().updateLidar(id, patch)
   );
   const pointsTracker = createCollectionTracker<Point>(
     'points',
     () => useEditorStore.getState().points,
-    (id, patch) => useEditorStore.getState().updatePoint(id, patch),
+    (id, patch) => useEditorStore.getState().updatePoint(id, patch)
   );
 
   let prev = {

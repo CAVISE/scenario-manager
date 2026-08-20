@@ -30,7 +30,7 @@ vi.mock('@/api/scenarios', () => ({
 
 vi.mock('@/store', () => ({
   useEditorStore: (
-    selector: (s: { updateScenario: typeof updateScenarioMock }) => unknown,
+    selector: (s: { updateScenario: typeof updateScenarioMock }) => unknown
   ) => selector({ updateScenario: updateScenarioMock }),
 }));
 
@@ -234,7 +234,7 @@ describe('useScenarioQueries', () => {
           if (!id) throw new Error('scenario id is required');
           return null;
         },
-      }),
+      })
     ).rejects.toThrow('scenario id is required');
   });
   it('useScenariosListQuery fetches when enabled', async () => {

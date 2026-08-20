@@ -22,13 +22,13 @@ describe('getApiErrorMessage', () => {
 
   it('returns Error.message for plain Error', async () => {
     expect(await getApiErrorMessage(new Error('boom'), 'fallback')).toBe(
-      'boom',
+      'boom'
     );
   });
 
   it('returns fallback for Error with blank message', async () => {
     expect(await getApiErrorMessage(new Error('   '), 'fallback')).toBe(
-      'fallback',
+      'fallback'
     );
   });
 
@@ -70,7 +70,7 @@ describe('getApiErrorMessage', () => {
   it('falls back to payload.message', async () => {
     const err = makeHttpError({ message: 'Something went wrong' });
     expect(await getApiErrorMessage(err, 'fallback')).toBe(
-      'Something went wrong',
+      'Something went wrong'
     );
   });
 
@@ -93,7 +93,7 @@ describe('getApiErrorMessage', () => {
 describe('getApiErrorMessageSync', () => {
   it('returns Error.message', () => {
     expect(getApiErrorMessageSync(new Error('sync error'), 'fb')).toBe(
-      'sync error',
+      'sync error'
     );
   });
 

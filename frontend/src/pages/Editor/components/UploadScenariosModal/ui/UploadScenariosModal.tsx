@@ -116,13 +116,13 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
         payload: { description: editedDescription },
       });
       setSelectedScenario((prev) =>
-        prev ? { ...prev, annotation: editedDescription } : prev,
+        prev ? { ...prev, annotation: editedDescription } : prev
       );
       setNoticeWithToast('Description saved');
       refetch();
     } catch (err) {
       setNoticeWithToast(
-        getApiErrorMessageSync(err, 'Failed to save description'),
+        getApiErrorMessageSync(err, 'Failed to save description')
       );
     }
   }, [

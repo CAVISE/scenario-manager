@@ -31,7 +31,7 @@ export const V2XSection = ({
 }: V2XSectionProps) => {
   const updateField = (
     field: keyof SimulationConfig['opencda'],
-    value: SimulationConfig['opencda'][keyof SimulationConfig['opencda']],
+    value: SimulationConfig['opencda'][keyof SimulationConfig['opencda']]
   ) => {
     onUpdate({ [field]: value } as Partial<SimulationConfig['opencda']>);
   };
@@ -39,7 +39,7 @@ export const V2XSection = ({
   const handleRangeChange = createNumberFieldOnChange(
     (val) => updateField('v2x_communication_range', val),
     0,
-    1000,
+    1000
   );
 
   const isRangeLarge = range > 500;
@@ -96,7 +96,7 @@ export const V2XSection = ({
             onChange={(e) =>
               updateField(
                 'v2x_position_source',
-                e.target.value as 'estimated' | 'ground_truth',
+                e.target.value as 'estimated' | 'ground_truth'
               )
             }
           >

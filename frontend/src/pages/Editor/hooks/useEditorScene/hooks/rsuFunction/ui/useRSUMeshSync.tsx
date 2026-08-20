@@ -40,7 +40,7 @@ export function useRSUMeshSync(): void {
             if (m.isMesh) {
               m.geometry?.dispose();
               (Array.isArray(m.material) ? m.material : [m.material]).forEach(
-                (mt) => mt?.dispose(),
+                (mt) => mt?.dispose()
               );
             }
           });
@@ -53,7 +53,7 @@ export function useRSUMeshSync(): void {
 
         currentRSUs.forEach((rsu) => {
           const existing = pointsArrRef.current.find(
-            (p) => p.userData.id === rsu.id,
+            (p) => p.userData.id === rsu.id
           );
 
           if (existing) {
@@ -77,7 +77,7 @@ export function useRSUMeshSync(): void {
               scene.remove(existing);
 
               const oldIdx = pointsArrRef.current.findIndex(
-                (p) => p.userData.id === rsu.id,
+                (p) => p.userData.id === rsu.id
               );
               if (oldIdx !== -1) {
                 pointsArrRef.current.splice(oldIdx, 1);

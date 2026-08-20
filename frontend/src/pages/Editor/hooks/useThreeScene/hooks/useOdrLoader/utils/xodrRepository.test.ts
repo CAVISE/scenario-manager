@@ -90,7 +90,7 @@ function createIndexedDbMock() {
           error?: Error;
         } = {
           objectStore: vi.fn(
-            () => fakeStore,
+            () => fakeStore
           ) as unknown as IDBTransaction['objectStore'],
         };
         const fakeDb: Partial<IDBDatabase> = {
@@ -172,7 +172,7 @@ describe('setStoredXodrName', () => {
     expect(result).toBe('Town10HD.xodr');
     expect(localStorageMock.setItem).toHaveBeenCalledWith(
       'cached_xodr_name',
-      'Town10HD.xodr',
+      'Town10HD.xodr'
     );
   });
 
@@ -181,7 +181,7 @@ describe('setStoredXodrName', () => {
     expect(result).toBe('Town03.xodr');
     expect(localStorageMock.setItem).toHaveBeenCalledWith(
       'cached_xodr_name',
-      'Town03.xodr',
+      'Town03.xodr'
     );
   });
 
@@ -274,7 +274,7 @@ describe('fetchXodrText', () => {
   it('throws when no candidate returns valid OpenDRIVE', async () => {
     fetchMock.mockResolvedValue(notFound() as never);
     await expect(fetchXodrText('NoMap')).rejects.toThrow(
-      'Failed to load valid OpenDRIVE map for: NoMap',
+      'Failed to load valid OpenDRIVE map for: NoMap'
     );
   });
 

@@ -116,8 +116,8 @@ export function libOpenDrive(): Promise<unknown> {
         clearInterval(interval);
         reject(
           new Error(
-            'libOpenDrive not available. Make sure ModuleOpenDrive.js is loaded via <script> in index.html',
-          ),
+            'libOpenDrive not available. Make sure ModuleOpenDrive.js is loaded via <script> in index.html'
+          )
         );
       }
     }, 50);

@@ -29,7 +29,7 @@ export const LidarDropoffSection = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     field: keyof SimulationConfig['opencda']['lidar_sim'],
     min?: number,
-    max?: number,
+    max?: number
   ) => {
     const val = parseNumberFromEvent(e, min, max);
     if (val === undefined) return;

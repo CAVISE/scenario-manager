@@ -91,13 +91,13 @@ export default function EditorModals() {
       } catch (err) {
         console.error(err);
         setMapPickerError(
-          await getApiErrorMessage(err, `Failed to load map ${mapName}.`),
+          await getApiErrorMessage(err, `Failed to load map ${mapName}.`)
         );
       } finally {
         setLoadingMap(null);
       }
     },
-    [loadFile, updateSimConfigCarla],
+    [loadFile, updateSimConfigCarla]
   );
 
   const handleStart = useCallback(async () => {
@@ -137,7 +137,7 @@ export default function EditorModals() {
       onError: async (err) => {
         console.error(err);
         setSimulationError(
-          await getApiErrorMessage(err, 'Failed to start simulation.'),
+          await getApiErrorMessage(err, 'Failed to start simulation.')
         );
       },
     });

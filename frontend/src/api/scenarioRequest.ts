@@ -9,7 +9,7 @@ import {
 } from './scenarioValidation';
 
 export function scenarioGroupsFromPayload(
-  scenario: ScenarioPayload['scenario'] | undefined,
+  scenario: ScenarioPayload['scenario'] | undefined
 ): ScenarioGroup[] {
   if (!scenario) return [];
   if (Array.isArray(scenario)) return scenario;
@@ -20,14 +20,14 @@ export function scenarioGroupsFromPayload(
 }
 
 export function scenarioToStoredJson(
-  scenario: ScenarioPayload['scenario'] | undefined,
+  scenario: ScenarioPayload['scenario'] | undefined
 ): Record<string, unknown> {
   return { scenario_text: scenarioGroupsFromPayload(scenario) };
 }
 
 export function toUploadScenarioBody(
   payload: ScenarioPayload,
-  scenarioIdInput = '',
+  scenarioIdInput = ''
 ) {
   const validation = validateUploadPayload(payload, scenarioIdInput);
   if (!validation.ok) {
@@ -47,7 +47,7 @@ export function toUploadScenarioBody(
 }
 
 export function toUpdateScenarioBody(
-  payload: Partial<ScenarioPayload> & { scenario_id: string },
+  payload: Partial<ScenarioPayload> & { scenario_id: string }
 ) {
   const validation = validateUpdatePayload(payload.scenario_id, payload);
   if (!validation.ok) {
@@ -68,7 +68,7 @@ export function toUpdateScenarioBody(
 }
 
 export function normalizeLoadedScenario(
-  row: LoadScenarioApiResponse['scenario'],
+  row: LoadScenarioApiResponse['scenario']
 ) {
   const scenarioText = row.scenario_text;
   const groups = Array.isArray(scenarioText)
@@ -77,7 +77,7 @@ export function normalizeLoadedScenario(
         typeof scenarioText === 'object' &&
         'scenario_text' in scenarioText &&
         Array.isArray(
-          (scenarioText as { scenario_text: ScenarioGroup[] }).scenario_text,
+          (scenarioText as { scenario_text: ScenarioGroup[] }).scenario_text
         )
       ? (scenarioText as { scenario_text: ScenarioGroup[] }).scenario_text
       : [];

@@ -24,7 +24,7 @@ export default function NumericInput({
 }: NumericInputProps) {
   const isFocused = useRef(false);
   const [inputValue, setInputValue] = useState(() =>
-    formatValue(value, precision),
+    formatValue(value, precision)
   );
 
   useEffect(() => {

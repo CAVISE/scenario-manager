@@ -173,7 +173,7 @@ export type ApiErrorPayload =
   | undefined;
 
 export function formatApiDetail(
-  detail: string | ValidationIssue[] | undefined,
+  detail: string | ValidationIssue[] | undefined
 ): string | null {
   if (!detail) return null;
   if (typeof detail === 'string' && detail.trim()) return detail;

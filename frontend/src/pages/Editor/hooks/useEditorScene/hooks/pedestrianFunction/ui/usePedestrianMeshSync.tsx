@@ -17,7 +17,7 @@ const ensurePedestrianModel = (): Promise<boolean> => {
         resolve(true);
       },
       undefined,
-      () => resolve(false),
+      () => resolve(false)
     );
   });
 };
@@ -29,7 +29,7 @@ function syncPedestrians(
   pedestrianMeshesRef: MutableRefObject<THREE.Mesh[]>,
   pedestrianObjsRef: MutableRefObject<THREE.Mesh[]>,
   transformControlsRef: MutableRefObject<TransformControls | null>,
-  updateSceneGraph: () => void,
+  updateSceneGraph: () => void
 ) {
   const pedestrians = useEditorStore.getState().pedestrians;
   const tc = transformControlsRef.current;
@@ -45,7 +45,7 @@ function syncPedestrians(
       if (m.isMesh) {
         m.geometry?.dispose();
         (Array.isArray(m.material) ? m.material : [m.material]).forEach((mt) =>
-          mt?.dispose(),
+          mt?.dispose()
         );
       }
     });
@@ -91,7 +91,7 @@ function queuePedestrianSync(
   pedestrianMeshesRef: MutableRefObject<THREE.Mesh[]>,
   pedestrianObjsRef: MutableRefObject<THREE.Mesh[]>,
   transformControlsRef: MutableRefObject<TransformControls | null>,
-  updateSceneGraph: () => void,
+  updateSceneGraph: () => void
 ): Promise<void> {
   pedestrianSyncQueue = pedestrianSyncQueue.then(() =>
     ensurePedestrianModel().then(() => {
@@ -100,9 +100,9 @@ function queuePedestrianSync(
         pedestrianMeshesRef,
         pedestrianObjsRef,
         transformControlsRef,
-        updateSceneGraph,
+        updateSceneGraph
       );
-    }),
+    })
   );
   return pedestrianSyncQueue;
 }
@@ -128,7 +128,7 @@ export function usePedestrianMeshSync() {
         pedestrianMeshesRef,
         pedestrianObjsRef,
         transformControlsRef,
-        updateSceneGraph,
+        updateSceneGraph
       );
     };
     trySync();
@@ -144,7 +144,7 @@ export function usePedestrianMeshSync() {
         pedestrianMeshesRef,
         pedestrianObjsRef,
         transformControlsRef,
-        updateSceneGraph,
+        updateSceneGraph
       );
     });
     return unsubscribe;

@@ -18,7 +18,7 @@ import { numInputSlot } from '@right-panel/types/PanelTypes';
 export default function CarOpenCDARareSection({ car }: { car: Car }) {
   const updateCar = useEditorStore((s) => s.updateCar);
   const [enabled, setEnabled] = useState(
-    car.opencda_spawn_special != null || car.opencda_sensing != null,
+    car.opencda_spawn_special != null || car.opencda_sensing != null
   );
   const sensing = car.opencda_sensing ?? {};
 
@@ -79,7 +79,7 @@ export default function CarOpenCDARareSection({ car }: { car: Car }) {
                     updateCar(car.id, {
                       opencda_spawn_special: Math.max(
                         0,
-                        Math.min(1, parseNumberInputChange(e.target) || 0),
+                        Math.min(1, parseNumberInputChange(e.target) || 0)
                       ),
                     })
                   }

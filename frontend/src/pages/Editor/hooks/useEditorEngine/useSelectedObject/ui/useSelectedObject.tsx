@@ -13,17 +13,17 @@ export function useSelectedObject() {
 
   const car = useMemo(
     () => cars.find((c) => c.id === selectedId) ?? null,
-    [cars, selectedId],
+    [cars, selectedId]
   );
 
   const lidar = useMemo(
     () => lidars.find((l) => l.id === selectedId) ?? null,
-    [lidars, selectedId],
+    [lidars, selectedId]
   );
 
   const rsu = useMemo(
     () => RSUs.find((r) => r.id === selectedId) ?? null,
-    [RSUs, selectedId],
+    [RSUs, selectedId]
   );
   const point = useMemo(() => {
     return selectedObject?.type === 'point'
@@ -33,7 +33,7 @@ export function useSelectedObject() {
 
   const pedestrian = useMemo(
     () => pedestrians.find((p) => p.id === selectedId) ?? null,
-    [pedestrians, selectedId],
+    [pedestrians, selectedId]
   );
 
   const building = useMemo(() => {
@@ -53,7 +53,7 @@ export function useSelectedObject() {
 
   const carLidars = useMemo(
     () => (car ? lidars.filter((l) => l.carId === car.id) : []),
-    [lidars, car],
+    [lidars, car]
   );
 
   const isCar = !!car;

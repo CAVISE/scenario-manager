@@ -101,7 +101,7 @@ describe('deletion history (undo-restore)', () => {
       useEditorStore.getState().removeRSU(1);
       expect(useEditorStore.getState().RSUs).toHaveLength(2);
       expect(
-        useEditorStore.getState().RSUs.some((r) => r.id === middleId),
+        useEditorStore.getState().RSUs.some((r) => r.id === middleId)
       ).toBe(false);
 
       const restored = useEditorStore
@@ -196,16 +196,16 @@ describe('deletion history (undo-restore)', () => {
       });
 
       [...useEditorStore.getState().cars].forEach((c) =>
-        useEditorStore.getState().removeCar(c.id),
+        useEditorStore.getState().removeCar(c.id)
       );
       [...useEditorStore.getState().RSUs].forEach(() =>
-        useEditorStore.getState().removeRSU(0),
+        useEditorStore.getState().removeRSU(0)
       );
       [...useEditorStore.getState().buildings].forEach((b) =>
-        useEditorStore.getState().removeBuilding(b.id),
+        useEditorStore.getState().removeBuilding(b.id)
       );
       [...useEditorStore.getState().pedestrians].forEach((p) =>
-        useEditorStore.getState().removePedestrian(p.id),
+        useEditorStore.getState().removePedestrian(p.id)
       );
 
       expect(useEditorStore.getState().cars).toHaveLength(0);
@@ -342,7 +342,7 @@ describe('deletion history (undo-restore)', () => {
       state.removeBuilding(building.id);
 
       expect(() =>
-        useEditorStore.getState().restoreLastDeletion(snapshotId),
+        useEditorStore.getState().restoreLastDeletion(snapshotId)
       ).not.toThrow();
       expect(useEditorStore.getState().buildings).toHaveLength(1);
       expect(useEditorStore.getState().buildings[0].id).toBe(building.id);
@@ -442,7 +442,7 @@ describe('useEditorStore - History', () => {
       expect(state.historyStack).toHaveLength(5);
       expect(state.historyCursor).toBe(5);
       expect(state.historyStack[state.historyStack.length - 1].label).toBe(
-        'New entry',
+        'New entry'
       );
       expect(state.historyStack.some((e) => e.label === 'Entry 4')).toBe(false);
     });
@@ -722,7 +722,7 @@ describe('deletion history - restore lidar and point', () => {
 
       expect(useEditorStore.getState().lidars).toHaveLength(2);
       expect(
-        useEditorStore.getState().lidars.some((l) => l.id === lidarId1),
+        useEditorStore.getState().lidars.some((l) => l.id === lidarId1)
       ).toBe(false);
 
       const restored = useEditorStore
@@ -809,7 +809,7 @@ describe('deletion history - restore lidar and point', () => {
 
       expect(useEditorStore.getState().points).toHaveLength(2);
       expect(
-        useEditorStore.getState().points.some((p) => p.id === pointId1),
+        useEditorStore.getState().points.some((p) => p.id === pointId1)
       ).toBe(false);
 
       const restored = useEditorStore
@@ -1079,7 +1079,7 @@ describe('useEditorStore - additional coverage', () => {
 
       expect(useEditorStore.getState().historyStack).toHaveLength(1);
       expect(useEditorStore.getState().historyStack[0].sourceSnapshotId).toBe(
-        snapshotId,
+        snapshotId
       );
 
       state.removeBuilding(building.id);
@@ -1138,7 +1138,7 @@ describe('useEditorStore - additional coverage', () => {
 
       expect(useEditorStore.getState().historyStack).toHaveLength(1);
       expect(useEditorStore.getState().historyStack[0].sourceSnapshotId).toBe(
-        snapshotId2,
+        snapshotId2
       );
     });
 
@@ -1179,10 +1179,10 @@ describe('useEditorStore - additional coverage', () => {
 
       expect(useEditorStore.getState().historyStack).toHaveLength(1);
       expect(
-        useEditorStore.getState().historyStack[0].sourceSnapshotId,
+        useEditorStore.getState().historyStack[0].sourceSnapshotId
       ).toBeUndefined();
       expect(useEditorStore.getState().historyStack[0].label).toBe(
-        'Some other action',
+        'Some other action'
       );
     });
 

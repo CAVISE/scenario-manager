@@ -3,7 +3,7 @@ import { ApiErrorPayload, formatApiDetail } from './types/IScenarioTypes';
 
 export async function getApiErrorMessage(
   err: unknown,
-  fallback: string,
+  fallback: string
 ): Promise<string> {
   if (err instanceof HTTPError) {
     try {

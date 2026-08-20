@@ -15,7 +15,7 @@ import type {
 const OPENDRIVE = '<?xml version="1.0"?>\n<OpenDRIVE></OpenDRIVE>';
 
 const createCarScenario = (
-  overrides?: Partial<ScenarioGroup & { vehicle: 'car' }>,
+  overrides?: Partial<ScenarioGroup & { vehicle: 'car' }>
 ): ScenarioGroup => ({
   vehicle: 'car',
   path: [
@@ -128,7 +128,7 @@ describe('scenarioValidation', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.message).toContain(
-        'Add route points to at least one vehicle',
+        'Add route points to at least one vehicle'
       );
     }
   });
@@ -158,7 +158,7 @@ describe('scenarioValidation', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.message).toContain(
-        'Add route points to at least one vehicle',
+        'Add route points to at least one vehicle'
       );
     }
   });
@@ -421,7 +421,7 @@ describe('scenarioValidation', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.message).toContain(
-        'OpenCDA YAML is required to start simulation',
+        'OpenCDA YAML is required to start simulation'
       );
     }
   });

@@ -36,7 +36,7 @@ vi.mock(
   () => ({
     DEFAULT_XODR: 'data.xodr',
     getCachedXodrContent: vi.fn(() => 'cached-xodr-text'),
-  }),
+  })
 );
 
 const resetStoreState = () => {
@@ -114,7 +114,7 @@ describe('scenario.load.handler (sync preview)', () => {
       expect(result).toBeNull();
       expect(warnSpy).toHaveBeenCalledWith(
         'Failed to capture preview:',
-        expect.any(Error),
+        expect.any(Error)
       );
 
       warnSpy.mockRestore();

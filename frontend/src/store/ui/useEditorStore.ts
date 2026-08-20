@@ -223,7 +223,7 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
   updatePedestrian: (id, props) =>
     set((s) => ({
       pedestrians: s.pedestrians.map((p) =>
-        p.id === id ? { ...p, ...props } : p,
+        p.id === id ? { ...p, ...props } : p
       ),
     })),
 
@@ -481,14 +481,14 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
             buildings.splice(
               insertAt(buildings, entity.index),
               0,
-              entity.building,
+              entity.building
             );
             break;
           case 'pedestrian':
             pedestrians.splice(
               insertAt(pedestrians, entity.index),
               0,
-              entity.pedestrian,
+              entity.pedestrian
             );
             break;
           case 'lidar':
@@ -501,7 +501,7 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
       }
 
       const historyIndex = state.historyStack.findIndex(
-        (h) => h.sourceSnapshotId === snapshot.snapshotId,
+        (h) => h.sourceSnapshotId === snapshot.snapshotId
       );
       const historyStack =
         historyIndex === -1
@@ -525,7 +525,7 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
         lidars,
         points,
         deletionHistory: state.deletionHistory.filter(
-          (h) => h.snapshotId !== snapshot.snapshotId,
+          (h) => h.snapshotId !== snapshot.snapshotId
         ),
         historyStack,
         historyCursor,
@@ -596,7 +596,7 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
 });
 
 export const useEditorStore = create<EditorState>()(
-  persist(storeCreator, persistOptions),
+  persist(storeCreator, persistOptions)
 );
 
 if (import.meta.env.DEV && typeof window !== 'undefined') {

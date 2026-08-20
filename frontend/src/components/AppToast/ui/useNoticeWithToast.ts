@@ -9,7 +9,7 @@ interface UseNoticeWithToastOptions {
 
 export function useNoticeWithToast(
   setNotice: (message: string) => void,
-  options: UseNoticeWithToastOptions = {},
+  options: UseNoticeWithToastOptions = {}
 ) {
   const { defaultLevel = 'success' } = options;
   const toast = useAppToast();
@@ -37,6 +37,6 @@ export function useNoticeWithToast(
           break;
       }
     },
-    [setNotice, toast, defaultLevel],
+    [setNotice, toast, defaultLevel]
   );
 }

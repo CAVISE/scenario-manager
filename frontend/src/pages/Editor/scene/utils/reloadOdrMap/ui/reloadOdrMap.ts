@@ -43,7 +43,7 @@ export function reloadOdrMap({
     console.error(err);
     setStep('done');
     setError?.(
-      err instanceof Error ? err : new Error('Failed to reload the map'),
+      err instanceof Error ? err : new Error('Failed to reload the map')
     );
   }
 }
@@ -85,7 +85,7 @@ export function loadFile({
       console.error(err);
       setStep('done');
       setError?.(
-        err instanceof Error ? err : new Error('Failed to process map file'),
+        err instanceof Error ? err : new Error('Failed to process map file')
       );
     }
   }
@@ -109,7 +109,7 @@ export function loadFile({
     console.error(err);
     setStep('done');
     setError?.(
-      err instanceof Error ? err : new Error('Failed to process map file'),
+      err instanceof Error ? err : new Error('Failed to process map file')
     );
   }
 }

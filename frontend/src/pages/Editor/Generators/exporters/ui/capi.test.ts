@@ -20,31 +20,31 @@ describe('useGenerateCAPIomnetIni', () => {
 
     expect(ini).toContain(`network = ${defaultSimConfig.capi.network}`);
     expect(ini).toContain(
-      `cmdenv-express-mode = ${defaultSimConfig.capi.cmdenv_express_mode}`,
+      `cmdenv-express-mode = ${defaultSimConfig.capi.cmdenv_express_mode}`
     );
     expect(ini).toContain(
-      `cmdenv-output-file = "${defaultSimConfig.capi.cmdenv_output_file}"`,
+      `cmdenv-output-file = "${defaultSimConfig.capi.cmdenv_output_file}"`
     );
     expect(ini).toContain(
-      `*.capi.cmdenv-log-level = ${defaultSimConfig.capi.capi_log_level}`,
+      `*.capi.cmdenv-log-level = ${defaultSimConfig.capi.capi_log_level}`
     );
     expect(ini).toContain(
-      `**.scalar-recording = ${defaultSimConfig.capi.scalar_recording}`,
+      `**.scalar-recording = ${defaultSimConfig.capi.scalar_recording}`
     );
     expect(ini).toContain(
-      `**.vector-recording = ${defaultSimConfig.capi.vector_recording}`,
+      `**.vector-recording = ${defaultSimConfig.capi.vector_recording}`
     );
     expect(ini).toContain(
-      `*.traci.launcher.hostname = "${defaultSimConfig.capi.traci_hostname}"`,
+      `*.traci.launcher.hostname = "${defaultSimConfig.capi.traci_hostname}"`
     );
     expect(ini).toContain(
-      `*.traci.launcher.port = ${defaultSimConfig.capi.traci_port}`,
+      `*.traci.launcher.port = ${defaultSimConfig.capi.traci_port}`
     );
     expect(ini).toContain(
-      `*.traci.launcher.clientId = ${defaultSimConfig.capi.client_id}`,
+      `*.traci.launcher.clientId = ${defaultSimConfig.capi.client_id}`
     );
     expect(ini).toContain(
-      `*.capi.address = "${defaultSimConfig.capi.address}"`,
+      `*.capi.address = "${defaultSimConfig.capi.address}"`
     );
   });
 
@@ -52,19 +52,19 @@ describe('useGenerateCAPIomnetIni', () => {
     const ini = renderOmnetIni(defaultSimConfig);
 
     expect(ini).toContain(
-      `*.node[*].wlan[*].radio.channelNumber = ${defaultSimConfig.capi.channel_number}`,
+      `*.node[*].wlan[*].radio.channelNumber = ${defaultSimConfig.capi.channel_number}`
     );
     expect(ini).toContain(
-      `*.node[*].wlan[*].radio.carrierFrequency = ${defaultSimConfig.capi.carrier_frequency}`,
+      `*.node[*].wlan[*].radio.carrierFrequency = ${defaultSimConfig.capi.carrier_frequency}`
     );
     expect(ini).toContain(
-      `*.node[*].wlan[*].radio.transmitter.power = ${defaultSimConfig.capi.tx_power}`,
+      `*.node[*].wlan[*].radio.transmitter.power = ${defaultSimConfig.capi.tx_power}`
     );
     expect(ini).toContain(
-      `*.node[*].middleware.updateInterval = ${defaultSimConfig.capi.middleware_update_interval}s`,
+      `*.node[*].middleware.updateInterval = ${defaultSimConfig.capi.middleware_update_interval}s`
     );
     expect(ini).toContain(
-      `*.node[*].middleware.datetime = "${defaultSimConfig.capi.datetime}"`,
+      `*.node[*].middleware.datetime = "${defaultSimConfig.capi.datetime}"`
     );
   });
 
@@ -95,14 +95,14 @@ describe('useGenerateCAPIomnetIni', () => {
     expect(ini).toContain('[Config gemv2]');
     expect(ini).toContain('*.radioMedium.pathLossType = "Gemv2"');
     expect(ini).toContain(
-      '*.radioMedium.pathLoss.withSmallScaleVariations = false',
+      '*.radioMedium.pathLoss.withSmallScaleVariations = false'
     );
     expect(ini).toContain('*.radioMedium.pathLoss.withVisualization = true');
 
     expect(ini).toContain('[Config freespace]');
     expect(ini).toContain('*.radioMedium.pathLossType = "FreeSpace"');
     expect(ini).toContain(
-      '*.radioMedium.pathLoss.withSmallScaleVariations = true',
+      '*.radioMedium.pathLoss.withSmallScaleVariations = true'
     );
     expect(ini).toContain('*.radioMedium.pathLoss.withVisualization = false');
   });
@@ -205,7 +205,7 @@ describe('generateCAPISensorsXml', () => {
     const xml = generateCAPISensorsXml();
 
     expect(xml).toBe(
-      '<?xml version="1.0" encoding="UTF-8"?>\n<sensors>\n</sensors>',
+      '<?xml version="1.0" encoding="UTF-8"?>\n<sensors>\n</sensors>'
     );
   });
 });

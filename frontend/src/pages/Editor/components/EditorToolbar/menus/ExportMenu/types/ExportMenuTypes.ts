@@ -3,6 +3,6 @@ export interface ExportMenuProps {
   onClose: () => void;
   openExportDialog: (
     filename: string,
-    getContent: (filename: string) => string,
+    getContent: (filename: string) => string
   ) => void;
 }

@@ -17,7 +17,7 @@ type Props = {
       behavior_acceleration_warmup: number;
       behavior_ttc_warmup: number;
       behavior_hard_brake_warmup: number;
-    }>,
+    }>
   ) => void;
 };
 

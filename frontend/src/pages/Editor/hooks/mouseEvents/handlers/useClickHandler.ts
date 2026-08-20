@@ -46,7 +46,7 @@ export function useClickHandler(ctx: SharedMouseContext) {
     if (mode.isAddCarModeActive) {
       const hits = ctx.raycaster.intersectObjects(
         [...carMeshes, ...pointsArr, road],
-        true,
+        true
       );
       if (hits.length > 0 && hits[0].object === road) {
         const pt = hits[0].point;
@@ -58,7 +58,7 @@ export function useClickHandler(ctx: SharedMouseContext) {
             pt.z,
             currentCarRef.current,
             currentColorRef.current,
-            60,
+            60
           );
         mode.isAddCarModeActive = false;
         loadPointsRef.current();
@@ -183,7 +183,7 @@ export function useClickHandler(ctx: SharedMouseContext) {
     }
 
     const buildings = scene.children.filter(
-      (c) => c.userData.type === 'building',
+      (c) => c.userData.type === 'building'
     );
     const bldHit = ctx.raycaster.intersectObjects(buildings, true);
     if (bldHit.length > 0) {

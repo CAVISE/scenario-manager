@@ -15,7 +15,7 @@ export function createLidarMesh(lidar: Lidar): THREE.Group {
     lidar.range * 0.3,
     32,
     1,
-    true,
+    true
   );
   const coneMat = new THREE.MeshBasicMaterial({
     color: 0x00ffff,
@@ -41,7 +41,7 @@ export function disposeLidarGroup(group: THREE.Group) {
     if (m.isMesh) {
       m.geometry?.dispose();
       (Array.isArray(m.material) ? m.material : [m.material]).forEach((mt) =>
-        mt?.dispose(),
+        mt?.dispose()
       );
     }
   });

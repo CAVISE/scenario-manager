@@ -53,7 +53,7 @@ export function loadPoints(ctx: LoadPointsContext) {
         new THREE.SpriteMaterial({
           map: new THREE.CanvasTexture(canvas),
           transparent: true,
-        }),
+        })
       );
       sprite.scale.set(2, 2, 1);
       sprite.position.set(0, 0, 1);
@@ -73,7 +73,7 @@ export function loadPoints(ctx: LoadPointsContext) {
 }
 
 export function connectCirclesWithLines(
-  ctx: ConnectLinesContext,
+  ctx: ConnectLinesContext
 ): THREE.Line[][] {
   const { scene, cars, points } = ctx;
   let lines = ctx.lines;

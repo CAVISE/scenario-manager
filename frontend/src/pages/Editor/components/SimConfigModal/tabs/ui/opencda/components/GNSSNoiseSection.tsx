@@ -25,7 +25,7 @@ export const GNSSNoiseSection = ({
 }: GNSSNoiseSectionProps) => {
   const updateField = (
     field: keyof SimulationConfig['opencda'],
-    value: SimulationConfig['opencda'][keyof SimulationConfig['opencda']],
+    value: SimulationConfig['opencda'][keyof SimulationConfig['opencda']]
   ) => {
     onUpdate({ [field]: value } as Partial<SimulationConfig['opencda']>);
   };
@@ -42,7 +42,7 @@ export const GNSSNoiseSection = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     field: keyof SimulationConfig['opencda']['gnss_noise'],
     min?: number,
-    max?: number,
+    max?: number
   ) => {
     const val = parseNumberFromEvent(e, min, max);
     if (val === undefined) return;
@@ -105,7 +105,7 @@ export const GNSSNoiseSection = ({
             onChange={(e) =>
               updateField(
                 'vehicle_localization_debug_animation',
-                e.target.checked,
+                e.target.checked
               )
             }
           />

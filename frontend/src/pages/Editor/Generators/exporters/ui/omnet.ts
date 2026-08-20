@@ -4,7 +4,7 @@ import type { Car, RSU } from '@/store/types/useEditorStoreTypes';
 export function generateOmnetConfig(
   config: SimulationConfig,
   RSUs: RSU[],
-  cars: Car[],
+  cars: Car[]
 ): string {
   const rsuLines = RSUs.map(
     (rsu, i) => `
@@ -12,7 +12,7 @@ export function generateOmnetConfig(
 *.rsu[${i}].mobility.y = ${rsu.y.toFixed(1)}
 *.rsu[${i}].mobility.z = ${rsu.z.toFixed(1)}
 *.rsu[${i}].appl.txPower = ${rsu.tx_power}dBm
-*.rsu[${i}].appl.communicationRange = ${rsu.range}m`,
+*.rsu[${i}].appl.communicationRange = ${rsu.range}m`
   ).join('\n');
 
   return `[General]

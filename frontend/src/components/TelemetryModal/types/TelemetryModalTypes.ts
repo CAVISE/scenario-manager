@@ -106,7 +106,7 @@ export const ImageCard = styled(Card)(({ theme }) => ({
       : theme.palette.background.default,
   transition: theme.transitions.create(
     ['border-color', 'box-shadow', 'transform'],
-    { duration: theme.transitions.duration.shortest },
+    { duration: theme.transitions.duration.shortest }
   ),
   '&:hover': {
     borderColor: theme.palette.primary.main,

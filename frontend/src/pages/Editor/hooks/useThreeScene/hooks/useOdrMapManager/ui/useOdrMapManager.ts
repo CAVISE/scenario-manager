@@ -95,7 +95,7 @@ export function useOdrMapManager({
         console.error(err);
         setStep('done');
         setError?.(
-          err instanceof Error ? err : new Error('Failed to build map scene'),
+          err instanceof Error ? err : new Error('Failed to build map scene')
         );
         return;
       }
@@ -132,7 +132,7 @@ export function useOdrMapManager({
       localLineArrRef,
       setStep,
       setError,
-    ],
+    ]
   );
 
   const reloadOdrMap = useCallback(() => {
@@ -153,7 +153,7 @@ export function useOdrMapManager({
       console.error(err);
       setStep('done');
       setError?.(
-        err instanceof Error ? err : new Error('Failed to reload the map'),
+        err instanceof Error ? err : new Error('Failed to reload the map')
       );
     }
   }, [loadOdrMap, setStep, setError, moduleRef, mapRef, odrMapRef]);

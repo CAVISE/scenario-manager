@@ -24,7 +24,7 @@ export function isValid(rgba: Float32Array): boolean {
 
 export function isRoadObject(
   object: THREE.Object3D,
-  road_network_mesh: THREE.Mesh,
+  road_network_mesh: THREE.Mesh
 ): boolean {
   return (
     object === road_network_mesh || road_network_mesh.children.includes(object)

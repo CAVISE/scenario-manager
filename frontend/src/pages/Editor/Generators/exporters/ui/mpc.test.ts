@@ -15,7 +15,7 @@ describe('generateMPCConfig', () => {
     expect(yaml).toContain(`time_max: ${defaultSimConfig.mpc.time_max}`);
     expect(yaml).toContain(`iter_max: ${defaultSimConfig.mpc.iter_max}`);
     expect(yaml).toContain(
-      `target_speed: ${defaultSimConfig.mpc.target_speed}`,
+      `target_speed: ${defaultSimConfig.mpc.target_speed}`
     );
     expect(yaml).toContain(`n_ind: ${defaultSimConfig.mpc.n_ind}`);
     expect(yaml).toContain(`dt: ${defaultSimConfig.mpc.dt}`);
@@ -30,16 +30,16 @@ describe('generateMPCConfig', () => {
     expect(yaml).toContain(`TW: ${defaultSimConfig.mpc.TW}`);
     expect(yaml).toContain(`steer_deg: ${defaultSimConfig.mpc.steer_deg}`);
     expect(yaml).toContain(
-      `steer_change_deg: ${defaultSimConfig.mpc.steer_change_deg}`,
+      `steer_change_deg: ${defaultSimConfig.mpc.steer_change_deg}`
     );
     expect(yaml).toContain(
-      `speed_max_kph: ${defaultSimConfig.mpc.speed_max_kph}`,
+      `speed_max_kph: ${defaultSimConfig.mpc.speed_max_kph}`
     );
     expect(yaml).toContain(
-      `speed_min_kph: ${defaultSimConfig.mpc.speed_min_kph}`,
+      `speed_min_kph: ${defaultSimConfig.mpc.speed_min_kph}`
     );
     expect(yaml).toContain(
-      `acceleration_max: ${defaultSimConfig.mpc.acceleration_max}`,
+      `acceleration_max: ${defaultSimConfig.mpc.acceleration_max}`
     );
   });
 

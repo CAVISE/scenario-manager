@@ -19,7 +19,7 @@ export function ensureRsuModel(): Promise<boolean> {
       () => {
         rsuModel = null;
         resolve(false);
-      },
+      }
     );
   });
   return rsuModelPromise;

@@ -10,7 +10,7 @@ export const useCarlaConfig = () => {
 
   const storedMap = useMemo(
     () => toCarlaMapNameFromXodr(getStoredXodrName(simConfig.carla.map)),
-    [simConfig.carla.map],
+    [simConfig.carla.map]
   );
 
   const selectedMap = CARLA_MAPS.includes(simConfig.carla.map)

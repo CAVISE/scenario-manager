@@ -55,25 +55,25 @@ export const BackgroundTrafficSection = ({
 }: BackgroundTrafficSectionProps) => {
   const updateField = <K extends keyof SimulationConfig['opencda']>(
     field: K,
-    value: Partial<SimulationConfig['opencda'][K]>,
+    value: Partial<SimulationConfig['opencda'][K]>
   ) => {
     onUpdate({ [field]: value } as Partial<SimulationConfig['opencda']>);
   };
 
   const handleSpawnRangeChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-    field: keyof typeof spawnRange,
+    field: keyof typeof spawnRange
   ) => {
     const val = parseNumberFromEvent(e);
     if (val !== undefined) {
       const stringSpawnRange = Object.fromEntries(
-        Object.entries(spawnRange).map(([key, value]) => [key, String(value)]),
+        Object.entries(spawnRange).map(([key, value]) => [key, String(value)])
       ) as Record<string, string>;
 
       onUpdate(
         createNestedUpdate('bg_spawn_range', stringSpawnRange, {
           [field]: String(val),
-        }),
+        })
       );
     }
   };
@@ -90,7 +90,7 @@ export const BackgroundTrafficSection = ({
       chip?: boolean;
       chipFormatter?: (val: number) => string;
       formatType?: 'percent' | 'speed' | 'distance' | 'default';
-    },
+    }
   ) => {
     const formatType = options?.formatType || 'default';
     const formattedValue = options?.chipFormatter
@@ -118,7 +118,7 @@ export const BackgroundTrafficSection = ({
                   SimulationConfig['opencda']
                 >),
               options?.min,
-              options?.max,
+              options?.max
             )}
           />
           {options?.chip && (
@@ -137,7 +137,7 @@ export const BackgroundTrafficSection = ({
   const createSpawnRangeField = (
     label: string,
     field: keyof typeof spawnRange,
-    value: number,
+    value: number
   ) => (
     <TextField
       label={label}
@@ -250,7 +250,7 @@ export const BackgroundTrafficSection = ({
                 tooltip: 'Speed percentage (-100 = 2x speed)',
                 chip: true,
                 formatType: 'speed',
-              },
+              }
             )}
             {createNumberField('Vehicles', 'bg_vehicle_num', vehicleNum, {
               min: 0,
@@ -269,7 +269,7 @@ export const BackgroundTrafficSection = ({
                 tooltip: 'Global distance for traffic flow',
                 chip: true,
                 formatType: 'distance',
-              },
+              }
             )}
             <FormControlLabel
               control={
@@ -308,7 +308,7 @@ export const BackgroundTrafficSection = ({
                 tooltip: 'Percentage of vehicles ignoring traffic lights',
                 chip: true,
                 formatType: 'percent',
-              },
+              }
             )}
             {createNumberField(
               'Ignore signs %',
@@ -320,7 +320,7 @@ export const BackgroundTrafficSection = ({
                 tooltip: 'Percentage of vehicles ignoring traffic signs',
                 chip: true,
                 formatType: 'percent',
-              },
+              }
             )}
           </Stack>
 
@@ -335,7 +335,7 @@ export const BackgroundTrafficSection = ({
                 tooltip: 'Percentage of vehicles ignoring pedestrians',
                 chip: true,
                 formatType: 'percent',
-              },
+              }
             )}
             <FormControlLabel
               control={

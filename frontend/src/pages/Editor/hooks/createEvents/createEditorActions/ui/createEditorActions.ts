@@ -54,7 +54,7 @@ export function createEditorActions(opts: CreateEditorActionsOptions) {
       carMeshesRef.current.forEach((m) =>
         useEditorStore
           .getState()
-          .updateCar(m.userData.id, { rotation: m.rotation.z }),
+          .updateCar(m.userData.id, { rotation: m.rotation.z })
       );
       loadPoints();
     },
@@ -89,7 +89,7 @@ export function createEditorActions(opts: CreateEditorActionsOptions) {
     deleteCube() {
       const selectedCarId = useEditorStore.getState().selectedId;
       const idx = carMeshesRef.current.findIndex(
-        (m) => m.userData.id === selectedCarId,
+        (m) => m.userData.id === selectedCarId
       );
       if (idx < 0) return;
 
@@ -118,7 +118,7 @@ export function createEditorActions(opts: CreateEditorActionsOptions) {
           if (m.isMesh) {
             m.geometry?.dispose();
             (Array.isArray(m.material) ? m.material : [m.material]).forEach(
-              (mt) => mt?.dispose(),
+              (mt) => mt?.dispose()
             );
           }
         });

@@ -9,7 +9,7 @@ export function useHistoryActions() {
 
   const canUndo = useEditorStore((s) => s.historyCursor > 0);
   const canRedo = useEditorStore(
-    (s) => s.historyCursor < s.historyStack.length,
+    (s) => s.historyCursor < s.historyStack.length
   );
 
   const withSceneRefresh = useCallback(
@@ -22,7 +22,7 @@ export function useHistoryActions() {
       loadPointsRef.current();
       return true;
     },
-    [transformControlsRef, onSelectObject, updateSceneGraph, loadPointsRef],
+    [transformControlsRef, onSelectObject, updateSceneGraph, loadPointsRef]
   );
 
   const undo = useCallback(
@@ -30,7 +30,7 @@ export function useHistoryActions() {
       withSceneRefresh(canUndo, () => {
         useEditorStore.getState().undo();
       }),
-    [withSceneRefresh, canUndo],
+    [withSceneRefresh, canUndo]
   );
 
   const redo = useCallback(
@@ -38,7 +38,7 @@ export function useHistoryActions() {
       withSceneRefresh(canRedo, () => {
         useEditorStore.getState().redo();
       }),
-    [withSceneRefresh, canRedo],
+    [withSceneRefresh, canRedo]
   );
 
   return { undo, redo, canUndo, canRedo };

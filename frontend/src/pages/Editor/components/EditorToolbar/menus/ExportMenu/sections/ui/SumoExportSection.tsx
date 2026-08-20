@@ -38,7 +38,7 @@ export default function SumoExportSection({
 
   const handleExportSumoCfg = () => {
     const simConfig = mergeSimConfigWithDefaults(
-      useEditorStore.getState().simConfig,
+      useEditorStore.getState().simConfig
     );
     openExportDialog(`${simConfig.sumo.scenario_name}.sumocfg`, (filename) => {
       const { simConfig: raw } = useEditorStore.getState();
@@ -51,12 +51,12 @@ export default function SumoExportSection({
       const { simConfig: raw, cars, points } = useEditorStore.getState();
       const simConfig = mergeSimConfigWithDefaults(raw);
       const network = await resolveSumoNetwork(
-        getSumoNetFilename(simConfig.carla.map),
+        getSumoNetFilename(simConfig.carla.map)
       );
       const map = odrMapRef.current;
       if (!map) {
         throw new Error(
-          'OpenDRIVE map offsets are unavailable; wait for the map to finish loading',
+          'OpenDRIVE map offsets are unavailable; wait for the map to finish loading'
         );
       }
       const routes = buildSumoRoutes(network.content, cars, points, {
@@ -66,7 +66,7 @@ export default function SumoExportSection({
       const content = generateRouXml(simConfig, cars, routes);
       openExportDialog(
         `${simConfig.sumo.scenario_name}.rou.xml`,
-        () => content,
+        () => content
       );
     } catch (error) {
       toast.error(`Failed to export routes: ${exportErrorMessage(error)}`);
@@ -78,12 +78,12 @@ export default function SumoExportSection({
       const { simConfig: raw, buildings } = useEditorStore.getState();
       const simConfig = mergeSimConfigWithDefaults(raw);
       const network = await resolveSumoNetwork(
-        getSumoNetFilename(simConfig.carla.map),
+        getSumoNetFilename(simConfig.carla.map)
       );
       const map = odrMapRef.current;
       if (!map) {
         throw new Error(
-          'OpenDRIVE map offsets are unavailable; wait for the map to finish loading',
+          'OpenDRIVE map offsets are unavailable; wait for the map to finish loading'
         );
       }
       const offsets = getSumoCoordinateOffsets(network.content, {
@@ -93,7 +93,7 @@ export default function SumoExportSection({
       const content = generatePolyXml(buildings, offsets);
       openExportDialog(
         `${simConfig.sumo.scenario_name}.poly.xml`,
-        () => content,
+        () => content
       );
     } catch (error) {
       toast.error(`Failed to export polygons: ${exportErrorMessage(error)}`);
@@ -105,7 +105,7 @@ export default function SumoExportSection({
       const { simConfig: raw } = useEditorStore.getState();
       const simConfig = mergeSimConfigWithDefaults(raw);
       const network = await resolveSumoNetwork(
-        getSumoNetFilename(simConfig.carla.map),
+        getSumoNetFilename(simConfig.carla.map)
       );
       openExportDialog(network.filename, () => network.content);
     } catch (error) {

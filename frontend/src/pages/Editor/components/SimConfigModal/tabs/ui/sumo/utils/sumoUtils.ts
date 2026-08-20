@@ -4,7 +4,7 @@ import { SimulationConfig } from '@/store';
 export type SumoConfig = SimulationConfig['sumo'];
 
 export const createDefaultVType = (
-  index: number,
+  index: number
 ): SumoConfig['vtypes'][number] => ({
   id: `vType_${index}`,
   minGap: 2.0,

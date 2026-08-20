@@ -37,17 +37,17 @@ function sanitizeDownloadFilename(name: string, fallback: string): string {
 
 export const EditorToolbar = () => {
   const [fileMenuAnchor, setFileMenuAnchor] = useState<null | HTMLElement>(
-    null,
+    null
   );
   const [exportMenuAnchor, setExportMenuAnchor] = useState<null | HTMLElement>(
-    null,
+    null
   );
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [simConfigOpen, setSimConfigOpen] = useState(false);
   const [attackConfigOpen, setAttackConfigOpen] = useState(false);
   const [errorLogOpen, setErrorLogOpen] = useState(false);
   const [pendingExport, setPendingExport] = useState<PendingExport | null>(
-    null,
+    null
   );
   const [exportFilename, setExportFilename] = useState('');
   const { undo, redo, canUndo, canRedo } = useHistoryActions();
@@ -59,7 +59,7 @@ export const EditorToolbar = () => {
       setExportFilename(defaultFilename);
       setPendingExport({ defaultFilename, getContent });
     },
-    [],
+    []
   );
 
   const closeExportDialog = () => {
@@ -71,7 +71,7 @@ export const EditorToolbar = () => {
     if (!pendingExport) return;
     const safe = sanitizeDownloadFilename(
       exportFilename,
-      pendingExport.defaultFilename,
+      pendingExport.defaultFilename
     );
     downloadFile(safe, pendingExport.getContent(safe));
     closeExportDialog();

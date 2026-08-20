@@ -73,7 +73,7 @@ describe('UploadScenariosModal', () => {
       expect.objectContaining({
         hasId: true,
         scenarioIdInput: 'scenario-1',
-      }),
+      })
     );
   });
 
@@ -202,7 +202,7 @@ describe('UploadScenariosModal', () => {
     handleLoadMock.mockImplementation(
       async ({ setNotice }: { setNotice: (v: string) => void }) => {
         setNotice('The scenario has been uploaded.');
-      },
+      }
     );
 
     render(<UploadScenariosModal open onClose={vi.fn()} />);
@@ -586,7 +586,7 @@ describe('UploadScenariosModal', () => {
     fireEvent.click(screen.getByText('Annotated'));
 
     expect(
-      screen.getByDisplayValue('This is a test annotation'),
+      screen.getByDisplayValue('This is a test annotation')
     ).toBeInTheDocument();
   });
 
@@ -692,7 +692,7 @@ describe('UploadScenariosModal', () => {
       refetch: vi.fn(),
     });
     handleLoadMock.mockImplementation(
-      () => new Promise((resolve) => setTimeout(resolve, 100)),
+      () => new Promise((resolve) => setTimeout(resolve, 100))
     );
 
     render(<UploadScenariosModal open onClose={vi.fn()} />);
@@ -706,7 +706,7 @@ describe('UploadScenariosModal', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Load onto scene' }));
 
     expect(
-      screen.getByRole('button', { name: 'Loading…' }),
+      screen.getByRole('button', { name: 'Loading…' })
     ).toBeInTheDocument();
   });
 });

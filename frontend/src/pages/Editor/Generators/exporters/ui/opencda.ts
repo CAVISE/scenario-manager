@@ -83,7 +83,7 @@ function pushYamlNode(lines: string[], indent: string, value: unknown): void {
 function pushYamlObject(
   lines: string[],
   indent: string,
-  obj: Record<string, unknown>,
+  obj: Record<string, unknown>
 ): void {
   for (const [key, value] of Object.entries(obj)) {
     if (value === undefined) continue;
@@ -131,14 +131,14 @@ function pushCameraBlock(
   indent: string,
   visualize: number,
   requestedNum: number,
-  positions?: [number, number, number, number][],
+  positions?: [number, number, number, number][]
 ): void {
   const serializedPositions = positions?.length
     ? positions.map((position) => `[${position.join(', ')}]`)
     : CAM_POSITIONS;
   const num = Math.min(
     effectiveCamNum(requestedNum),
-    serializedPositions.length,
+    serializedPositions.length
   );
   lines.push(`${indent}camera:`);
   lines.push(`${indent}  visualize: ${visualize}`);
@@ -158,14 +158,14 @@ function pushLocalizationBlock(
   activate: boolean,
   debugAnimation: boolean,
   includeMetrics: boolean,
-  includeNavigationSource = true,
+  includeNavigationSource = true
 ): void {
   const gn = oc.gnss_noise;
   lines.push(`${indent}localization:`);
   lines.push(`${indent}  activate: ${activate}`);
   if (includeNavigationSource) {
     lines.push(
-      `${indent}  navigation_source: ${oc.localization_navigation_source}`,
+      `${indent}  navigation_source: ${oc.localization_navigation_source}`
     );
   }
   lines.push(`${indent}  dt: ${OMEGA_DT}`);
@@ -173,7 +173,7 @@ function pushLocalizationBlock(
     pushLocalizationMetrics(
       lines,
       oc.metrics.localization_trace_warmup,
-      `${indent}  `,
+      `${indent}  `
     );
   }
   lines.push(`${indent}  gnss:`);
@@ -181,7 +181,7 @@ function pushLocalizationBlock(
   lines.push(`${indent}    noise_lat_stddev: ${gn.lat_stddev}`);
   lines.push(`${indent}    noise_lon_stddev: ${gn.lon_stddev}`);
   lines.push(
-    `${indent}    heading_direction_stddev: ${gn.heading_direction_stddev}`,
+    `${indent}    heading_direction_stddev: ${gn.heading_direction_stddev}`
   );
   lines.push(`${indent}    speed_stddev: ${gn.speed_stddev}`);
   lines.push(`${indent}  debug_helper:`);
@@ -193,7 +193,7 @@ function pushLocalizationBlock(
 function pushCavBehaviorServices(
   lines: string[],
   indent: string,
-  services: CavBehaviorService[],
+  services: CavBehaviorService[]
 ): void {
   lines.push(`${indent}behavior_services:`);
   for (const svc of services) {
@@ -211,7 +211,7 @@ function pushCavBehaviorServices(
 function pushRsuBehaviorServices(
   lines: string[],
   indent: string,
-  services: RsuBehaviorService[],
+  services: RsuBehaviorService[]
 ): void {
   lines.push(`${indent}behavior_services:`);
   for (const svc of services) {
@@ -231,7 +231,7 @@ function pushRsuBehaviorServices(
       }
       if (svc.underling_model)
         lines.push(
-          `${indent}    underling_model: ${yamlScalar(svc.underling_model)}`,
+          `${indent}    underling_model: ${yamlScalar(svc.underling_model)}`
         );
       if (svc.hidden_channels != null)
         lines.push(`${indent}    hidden_channels: ${svc.hidden_channels}`);
@@ -246,7 +246,7 @@ function pushRsuBehaviorServices(
 
 function pushExtendedVehicleBase(
   lines: string[],
-  oc: SimulationConfig['opencda'],
+  oc: SimulationConfig['opencda']
 ): void {
   pushMapManager(lines, oc.map_manager);
   pushSafetyManager(lines, oc.safety_manager);
@@ -255,7 +255,7 @@ function pushExtendedVehicleBase(
     lines,
     oc.v2x_enabled,
     oc.v2x_communication_range,
-    oc.v2x_position_source,
+    oc.v2x_position_source
   );
   if (oc.export_vehicle_behavior_services) {
     pushVehicleBehaviorServices(lines, oc.vehicle_behavior_services);
@@ -299,7 +299,7 @@ function rsuDisplayName(rsu: RSU, index: number): string {
 
 function pushVehicleBaseBehavior(
   lines: string[],
-  oc: SimulationConfig['opencda'],
+  oc: SimulationConfig['opencda']
 ): void {
   lines.push('  behavior:');
   lines.push(`    max_speed: ${oc.max_speed}`);
@@ -316,10 +316,10 @@ function pushVehicleBaseBehavior(
   lines.push('    local_planner:');
   lines.push(`      buffer_size: ${oc.local_planner.buffer_size}`);
   lines.push(
-    `      trajectory_update_freq: ${oc.local_planner.trajectory_update_freq}`,
+    `      trajectory_update_freq: ${oc.local_planner.trajectory_update_freq}`
   );
   lines.push(
-    `      waypoint_update_freq: ${oc.local_planner.waypoint_update_freq}`,
+    `      waypoint_update_freq: ${oc.local_planner.waypoint_update_freq}`
   );
   lines.push(`      min_dist: ${oc.local_planner.min_dist}`);
   lines.push(`      trajectory_dt: ${oc.local_planner.trajectory_dt}`);
@@ -335,7 +335,7 @@ function pushVehicleBaseBehavior(
 
 function pushVehicleLocalization(
   lines: string[],
-  oc: SimulationConfig['opencda'],
+  oc: SimulationConfig['opencda']
 ): void {
   pushLocalizationBlock(
     lines,
@@ -343,7 +343,7 @@ function pushVehicleLocalization(
     oc,
     oc.localization_activate,
     oc.vehicle_localization_debug_animation,
-    oc.export_metrics,
+    oc.export_metrics
   );
 }
 
@@ -355,7 +355,7 @@ function pushCavBehaviorOverride(lines: string[], car: Car): void {
   }
   if (car.opencda_ignore_traffic_light != null) {
     lines.push(
-      `        ignore_traffic_light: ${car.opencda_ignore_traffic_light}`,
+      `        ignore_traffic_light: ${car.opencda_ignore_traffic_light}`
     );
   }
   if (car.opencda_overtake_allowed != null) {
@@ -363,7 +363,7 @@ function pushCavBehaviorOverride(lines: string[], car: Car): void {
   }
   if (car.opencda_collision_time_ahead != null) {
     lines.push(
-      `        collision_time_ahead: ${car.opencda_collision_time_ahead}`,
+      `        collision_time_ahead: ${car.opencda_collision_time_ahead}`
     );
   }
   if (
@@ -376,7 +376,7 @@ function pushCavBehaviorOverride(lines: string[], car: Car): void {
     }
     if (car.opencda_local_planner_debug_trajectory != null) {
       lines.push(
-        `          debug_trajectory: ${car.opencda_local_planner_debug_trajectory}`,
+        `          debug_trajectory: ${car.opencda_local_planner_debug_trajectory}`
       );
     }
   }
@@ -387,7 +387,7 @@ export function useGenerateOpenCDAConfig(
   cars: Car[],
   rsus: RSU[],
   points: Point[],
-  lidars: Lidar[] = [],
+  lidars: Lidar[] = []
 ): string {
   const useSimConfig = mergeSimConfigWithDefaults(config);
   const oc = useSimConfig.opencda;
@@ -407,7 +407,7 @@ export function useGenerateOpenCDAConfig(
   } else {
     lines.push(`  OpenCDA scenario generated by ScenarioManager`);
     lines.push(
-      `  Town: ${carla.map} | Vehicles: ${cars.length} | RSUs: ${rsus.length}`,
+      `  Town: ${carla.map} | Vehicles: ${cars.length} | RSUs: ${rsus.length}`
     );
   }
   lines.push('');
@@ -476,7 +476,7 @@ export function useGenerateOpenCDAConfig(
     oc.localization_activate,
     false,
     false,
-    false,
+    false
   );
   lines.push('');
 
@@ -488,7 +488,7 @@ export function useGenerateOpenCDAConfig(
     lines,
     '      ',
     oc.vehicle_camera_visualize,
-    oc.vehicle_cam_num,
+    oc.vehicle_cam_num
   );
   lines.push('      lidar:');
   lines.push(`        visualize: ${oc.lidar_visualize}`);
@@ -528,16 +528,16 @@ export function useGenerateOpenCDAConfig(
   lines.push(`  ignore_walkers_percentage: ${oc.bg_ignore_walkers_percentage}`);
   lines.push(`  ignore_vehicles_percentage: ${oc.ignore_vehicles_percentage}`);
   lines.push(
-    `  random_left_lanechange_percentage: ${oc.random_left_lanechange_percentage}`,
+    `  random_left_lanechange_percentage: ${oc.random_left_lanechange_percentage}`
   );
   lines.push(
-    `  random_right_lanechange_percentage: ${oc.random_right_lanechange_percentage}`,
+    `  random_right_lanechange_percentage: ${oc.random_right_lanechange_percentage}`
   );
   if (oc.enable_background_traffic) {
     lines.push('  vehicle_list: ~');
     lines.push('  range:');
     lines.push(
-      `    - [${bgR.x_min}, ${bgR.x_max}, ${bgR.y_min}, ${bgR.y_max}, ${bgR.x_step}, ${bgR.y_step}, ${oc.bg_vehicle_num}]`,
+      `    - [${bgR.x_min}, ${bgR.x_max}, ${bgR.y_min}, ${bgR.y_max}, ${bgR.x_step}, ${bgR.y_step}, ${oc.bg_vehicle_num}]`
     );
   } else {
     lines.push('  vehicle_list: []');
@@ -568,7 +568,7 @@ export function useGenerateOpenCDAConfig(
     rsus.forEach((rsu, i) => {
       lines.push(`    - name: ${yamlScalar(rsuDisplayName(rsu, i))}`);
       lines.push(
-        `      spawn_position: [${rsu.x.toFixed(2)}, ${rsu.y.toFixed(2)}, ${rsu.z.toFixed(2)}, 0, 0, 0]`,
+        `      spawn_position: [${rsu.x.toFixed(2)}, ${rsu.y.toFixed(2)}, ${rsu.z.toFixed(2)}, 0, 0, 0]`
       );
       lines.push(`      id: ${rsuNumericId(rsu, i, aimStyle)}`);
       if (rsu.opencda_color) {
@@ -584,66 +584,66 @@ export function useGenerateOpenCDAConfig(
       lines.push('      sensing:');
       lines.push('        perception:');
       lines.push(
-        `          activate: ${sensing.perception_activate ?? oc.rsu_perception_activate}`,
+        `          activate: ${sensing.perception_activate ?? oc.rsu_perception_activate}`
       );
       lines.push(
-        `          detection_range: ${sensing.detection_range ?? 100}`,
+        `          detection_range: ${sensing.detection_range ?? 100}`
       );
       pushCameraBlock(
         lines,
         '          ',
         sensing.camera_visualize ?? oc.rsu_camera_visualize,
         sensing.camera_num ?? oc.rsu_cam_num,
-        sensing.camera_positions,
+        sensing.camera_positions
       );
       lines.push('          lidar:');
       lines.push(
-        `            visualize: ${sensing.lidar_visualize ?? oc.lidar_visualize}`,
+        `            visualize: ${sensing.lidar_visualize ?? oc.lidar_visualize}`
       );
       lines.push(
-        `            channels: ${sensing.lidar_channels ?? oc.rsu_lidar_channels}`,
+        `            channels: ${sensing.lidar_channels ?? oc.rsu_lidar_channels}`
       );
       lines.push(
-        `            range: ${sensing.lidar_range ?? oc.rsu_lidar_range}`,
+        `            range: ${sensing.lidar_range ?? oc.rsu_lidar_range}`
       );
       lines.push(
-        `            points_per_second: ${sensing.lidar_points_per_second ?? oc.lidar_points_per_second}`,
+        `            points_per_second: ${sensing.lidar_points_per_second ?? oc.lidar_points_per_second}`
       );
       lines.push(
-        `            rotation_frequency: ${sensing.lidar_rotation_frequency ?? oc.lidar_rotation_frequency}`,
+        `            rotation_frequency: ${sensing.lidar_rotation_frequency ?? oc.lidar_rotation_frequency}`
       );
       lines.push(
-        `            upper_fov: ${sensing.lidar_upper_fov ?? oc.lidar_upper_fov}`,
+        `            upper_fov: ${sensing.lidar_upper_fov ?? oc.lidar_upper_fov}`
       );
       lines.push(
-        `            lower_fov: ${sensing.lidar_lower_fov ?? oc.lidar_lower_fov}`,
+        `            lower_fov: ${sensing.lidar_lower_fov ?? oc.lidar_lower_fov}`
       );
       lines.push(
-        `            dropoff_general_rate: ${sensing.lidar_dropoff_general_rate ?? ls.dropoff_general_rate}`,
+        `            dropoff_general_rate: ${sensing.lidar_dropoff_general_rate ?? ls.dropoff_general_rate}`
       );
       lines.push(
-        `            dropoff_intensity_limit: ${sensing.lidar_dropoff_intensity_limit ?? ls.dropoff_intensity_limit}`,
+        `            dropoff_intensity_limit: ${sensing.lidar_dropoff_intensity_limit ?? ls.dropoff_intensity_limit}`
       );
       lines.push(
-        `            dropoff_zero_intensity: ${sensing.lidar_dropoff_zero_intensity ?? ls.dropoff_zero_intensity}`,
+        `            dropoff_zero_intensity: ${sensing.lidar_dropoff_zero_intensity ?? ls.dropoff_zero_intensity}`
       );
       lines.push(
-        `            noise_stddev: ${sensing.lidar_noise_stddev ?? ls.noise_stddev}`,
+        `            noise_stddev: ${sensing.lidar_noise_stddev ?? ls.noise_stddev}`
       );
       lines.push('        localization:');
       lines.push(
-        `          activate: ${sensing.localization_activate ?? true}`,
+        `          activate: ${sensing.localization_activate ?? true}`
       );
       lines.push(`          dt: ${OMEGA_DT}`);
       lines.push('          gnss:');
       lines.push(
-        `            noise_alt_stddev: ${sensing.gnss_noise_alt_stddev ?? oc.gnss_noise.alt_stddev}`,
+        `            noise_alt_stddev: ${sensing.gnss_noise_alt_stddev ?? oc.gnss_noise.alt_stddev}`
       );
       lines.push(
-        `            noise_lat_stddev: ${sensing.gnss_noise_lat_stddev ?? oc.gnss_noise.lat_stddev}`,
+        `            noise_lat_stddev: ${sensing.gnss_noise_lat_stddev ?? oc.gnss_noise.lat_stddev}`
       );
       lines.push(
-        `            noise_lon_stddev: ${sensing.gnss_noise_lon_stddev ?? oc.gnss_noise.lon_stddev}`,
+        `            noise_lon_stddev: ${sensing.gnss_noise_lon_stddev ?? oc.gnss_noise.lon_stddev}`
       );
       if (rsu.opencda_behavior_services?.length) {
         pushRsuBehaviorServices(lines, '      ', rsu.opencda_behavior_services);
@@ -670,17 +670,17 @@ export function useGenerateOpenCDAConfig(
         lines.push(`      spawn_special: [${car.opencda_spawn_special}]`);
       } else {
         lines.push(
-          `      spawn_position: [${car.x.toFixed(2)}, ${car.y.toFixed(2)}, ${car.z.toFixed(2)}, 0, ${yawDeg}, 0]`,
+          `      spawn_position: [${car.x.toFixed(2)}, ${car.y.toFixed(2)}, ${car.z.toFixed(2)}, 0, ${yawDeg}, 0]`
         );
       }
       lines.push(
-        `      destination: [${dest.x.toFixed(2)}, ${dest.y.toFixed(2)}, ${dest.z.toFixed(2)}]`,
+        `      destination: [${dest.x.toFixed(2)}, ${dest.y.toFixed(2)}, ${dest.z.toFixed(2)}]`
       );
       lines.push(`      id: ${cavNumericId(car, i)}`);
 
       if (car.opencda_carla_model?.trim()) {
         lines.push(
-          `      model: ${yamlScalar(car.opencda_carla_model.trim())}`,
+          `      model: ${yamlScalar(car.opencda_carla_model.trim())}`
         );
       }
       if (car.opencda_color) {
@@ -698,7 +698,7 @@ export function useGenerateOpenCDAConfig(
         }
         if (car.opencda_v2x.communication_range != null) {
           lines.push(
-            `        communication_range: ${car.opencda_v2x.communication_range}`,
+            `        communication_range: ${car.opencda_v2x.communication_range}`
           );
         }
       }

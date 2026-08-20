@@ -38,7 +38,7 @@ export function clearOdrScene(
   scene: THREE.Scene,
   meshes: OdrMapMeshes,
   pickingScenes: PickingScenes,
-  disposable_objs: THREE.BufferGeometry[],
+  disposable_objs: THREE.BufferGeometry[]
 ) {
   meshes.road_network_mesh?.userData.odr_road_network_mesh?.delete();
   const toRemove = [
@@ -84,13 +84,13 @@ export function buildOdrScene(p: LoadOdrMapParams): OdrMapMeshes {
     'position',
     new THREE.Float32BufferAttribute(
       getStdVecEntries(odr_segs.vertices).flat(),
-      3,
-    ),
+      3
+    )
   );
   reflines_geom.setIndex(getStdVecEntries(odr_segs.indices, true));
   const refline_lines = new THREE.LineSegments(
     reflines_geom,
-    materials.refline,
+    materials.refline
   );
   refline_lines.renderOrder = 10;
   refline_lines.visible = params.ref_line;
@@ -100,14 +100,14 @@ export function buildOdrScene(p: LoadOdrMapParams): OdrMapMeshes {
 
   const odr_road_network_mesh = Module.get_road_network_mesh(
     OpenDriveMap,
-    resolution,
+    resolution
   );
   const odr_lanes_mesh = odr_road_network_mesh.lanes_mesh;
   const road_network_geom = get_geometry(odr_lanes_mesh);
   road_network_geom.attributes.color.array.fill(COLORS.road);
 
   for (const [vsi] of getStdMapEntries<number, number>(
-    odr_lanes_mesh.lane_start_indices,
+    odr_lanes_mesh.lane_start_indices
   )) {
     const vi = odr_lanes_mesh.get_idx_interval_lane(vsi);
     const vc = vi[1] - vi[0];
@@ -121,7 +121,7 @@ export function buildOdrScene(p: LoadOdrMapParams): OdrMapMeshes {
 
   const road_network_mesh = new THREE.Mesh(
     road_network_geom,
-    materials.road_network,
+    materials.road_network
   );
   road_network_mesh.renderOrder = 0;
   road_network_mesh.userData = { odr_road_network_mesh };
@@ -133,7 +133,7 @@ export function buildOdrScene(p: LoadOdrMapParams): OdrMapMeshes {
     s.add(
       Object.assign(new THREE.Mesh(road_network_geom, mat), {
         matrixAutoUpdate: false,
-      }),
+      })
     );
   addPicking(pickingScenes.lane, pickingMaterials.id);
   addPicking(pickingScenes.xyz, pickingMaterials.xyz);
@@ -144,7 +144,7 @@ export function buildOdrScene(p: LoadOdrMapParams): OdrMapMeshes {
   roadmarks_geom.attributes.color.array.fill(COLORS.roadmark);
 
   for (const [vsi] of getStdMapEntries<number, number>(
-    odr_roadmarks_mesh.roadmark_type_start_indices,
+    odr_roadmarks_mesh.roadmark_type_start_indices
   )) {
     const vi = odr_roadmarks_mesh.get_idx_interval_roadmark(vsi);
     const vc = vi[1] - vi[0];
@@ -162,17 +162,17 @@ export function buildOdrScene(p: LoadOdrMapParams): OdrMapMeshes {
   pickingScenes.roadmark.add(
     Object.assign(new THREE.Mesh(roadmarks_geom, pickingMaterials.id), {
       matrixAutoUpdate: false,
-    }),
+    })
   );
 
   const lo_geom = new THREE.BufferGeometry();
   lo_geom.setAttribute('position', road_network_geom.attributes.position);
   lo_geom.setIndex(
-    getStdVecEntries(odr_lanes_mesh.get_lane_outline_indices(), true),
+    getStdVecEntries(odr_lanes_mesh.get_lane_outline_indices(), true)
   );
   const lane_outline_lines = new THREE.LineSegments(
     lo_geom,
-    materials.lane_outlines,
+    materials.lane_outlines
   );
   lane_outline_lines.renderOrder = 9;
   disposable_objs.push(lo_geom);
@@ -181,11 +181,11 @@ export function buildOdrScene(p: LoadOdrMapParams): OdrMapMeshes {
   const ro_geom = new THREE.BufferGeometry();
   ro_geom.setAttribute('position', roadmarks_geom.attributes.position);
   ro_geom.setIndex(
-    getStdVecEntries(odr_roadmarks_mesh.get_roadmark_outline_indices(), true),
+    getStdVecEntries(odr_roadmarks_mesh.get_roadmark_outline_indices(), true)
   );
   const roadmark_outline_lines = new THREE.LineSegments(
     ro_geom,
-    materials.roadmark_outlines,
+    materials.roadmark_outlines
   );
   roadmark_outline_lines.renderOrder = 8;
   roadmark_outline_lines.matrixAutoUpdate = false;
@@ -221,7 +221,7 @@ export function buildOdrScene(p: LoadOdrMapParams): OdrMapMeshes {
     '[buildOdrScene] geometry added to scene at',
     performance.now().toFixed(0),
     'ms, scene.children.length =',
-    scene.children.length,
+    scene.children.length
   );
 
   if (import.meta.env.DEV) {

@@ -144,12 +144,12 @@ test.describe('Three.js editor flows', () => {
     await openEditor(page);
     await openSpeedDial(page);
     await expect(
-      page.getByRole('menuitem', { name: 'Add waypoint' }),
+      page.getByRole('menuitem', { name: 'Add waypoint' })
     ).toBeVisible();
     await expect(page.getByRole('menuitem', { name: 'Add car' })).toBeVisible();
     await expect(page.getByRole('menuitem', { name: 'Add RSU' })).toBeVisible();
     await expect(
-      page.getByRole('menuitem', { name: 'Add a pedestrian' }),
+      page.getByRole('menuitem', { name: 'Add a pedestrian' })
     ).toBeVisible();
   });
 
@@ -158,11 +158,11 @@ test.describe('Three.js editor flows', () => {
     await page.getByRole('button', { name: 'Menu' }).click();
     await page.getByRole('menuitem', { name: 'Upload' }).click();
     await expect(
-      page.getByRole('heading', { name: 'Load Scenario' }),
+      page.getByRole('heading', { name: 'Load Scenario' })
     ).toBeVisible();
     await page.getByRole('button', { name: 'close' }).click();
     await expect(
-      page.getByRole('heading', { name: 'Load Scenario' }),
+      page.getByRole('heading', { name: 'Load Scenario' })
     ).not.toBeVisible();
   });
 
@@ -178,10 +178,10 @@ test.describe('Three.js editor flows', () => {
     await page.getByRole('button', { name: 'Load onto scene' }).click();
 
     await expect(page.getByTestId('scene-graph-count')).not.toHaveText(
-      '0 objects',
+      '0 objects'
     );
     await expect(
-      page.getByText('The scenario has been uploaded.').first(),
+      page.getByText('The scenario has been uploaded.').first()
     ).toBeVisible();
   });
 
@@ -194,7 +194,7 @@ test.describe('Three.js editor flows', () => {
     await page.getByText('Mock scenario').click();
     await page.getByRole('button', { name: 'Load onto scene' }).click();
     await expect(page.getByTestId('scene-graph-count')).not.toHaveText(
-      '0 objects',
+      '0 objects'
     );
     await page.keyboard.press('Escape');
 
@@ -214,7 +214,7 @@ test('loading scenario with a building renders it in scene graph', async ({
   await page.getByRole('button', { name: 'Load onto scene' }).click();
 
   await expect(
-    page.locator('.stp-node-name', { hasText: 'Building' }),
+    page.locator('.stp-node-name', { hasText: 'Building' })
   ).toBeVisible();
 });
 test('deleting a building via panel removes its mesh, not just the store entry', async ({
@@ -227,14 +227,14 @@ test('deleting a building via panel removes its mesh, not just the store entry',
   await page.getByText('Mock scenario').click();
   await page.getByRole('button', { name: 'Load onto scene' }).click();
   await expect(
-    page.locator('.stp-node-name', { hasText: 'Building' }),
+    page.locator('.stp-node-name', { hasText: 'Building' })
   ).toBeVisible();
 
   const countBefore = await page.getByTestId('scene-graph-count').textContent();
   await page.getByText(/Building/).click();
   await page.getByRole('button', { name: 'Delete building' }).click();
   await expect(page.getByTestId('scene-graph-count')).not.toHaveText(
-    countBefore!,
+    countBefore!
   );
   await expect(page.getByText(/Building/)).not.toBeVisible();
 });
@@ -253,7 +253,7 @@ test('reloading a scenario does not accumulate duplicate building meshes', async
   await page.getByText('Mock scenario').click();
   await page.getByRole('button', { name: 'Load onto scene' }).click();
   await expect(page.getByTestId('scene-graph-count')).not.toHaveText(
-    '0 objects',
+    '0 objects'
   );
 });
 
@@ -274,7 +274,7 @@ test('adding building via speed dial and double-click creates a mesh', async ({
   await canvas.dblclick({ position: { x: 400, y: 300 } });
 
   await expect(
-    page.locator('.stp-node-name', { hasText: 'Building' }),
+    page.locator('.stp-node-name', { hasText: 'Building' })
   ).toBeVisible();
 });
 test('deleting a pedestrian via panel removes its mesh, not just the store entry', async ({
@@ -292,7 +292,7 @@ test('deleting a pedestrian via panel removes its mesh, not just the store entry
   await page.getByRole('button', { name: 'Delete pedestrian' }).click();
 
   await expect(page.getByTestId('scene-graph-count')).not.toHaveText(
-    countBefore!,
+    countBefore!
   );
   await expect(page.getByText(/Pedestrian/)).not.toBeVisible();
 });
@@ -321,6 +321,6 @@ test('adding RSU via speed dial and double-click creates a mesh', async ({
   await canvas.dblclick({ position: { x: 400, y: 300 } });
 
   await expect(
-    page.locator('.stp-node-name', { hasText: 'RSU' }),
+    page.locator('.stp-node-name', { hasText: 'RSU' })
   ).toBeVisible();
 });

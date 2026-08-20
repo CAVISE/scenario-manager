@@ -16,7 +16,7 @@ export function useAttackEditor() {
   const rawSimConfig = useEditorStore((s) => s.simConfig);
   const simConfig = useMemo(
     () => mergeSimConfigWithDefaults(rawSimConfig),
-    [rawSimConfig],
+    [rawSimConfig]
   );
   const updateSimConfig = useEditorStore((s) => s.updateSimConfig);
   const attacks = useMemo(() => simConfig.attacks ?? [], [simConfig.attacks]);
@@ -24,12 +24,12 @@ export function useAttackEditor() {
 
   const currentAttack = useMemo(
     () => attacks[selectedAttack] ?? null,
-    [attacks, selectedAttack],
+    [attacks, selectedAttack]
   );
 
   const updateAttackAt = (
     index: number,
-    patch: Partial<OpenCDAAttackConfig>,
+    patch: Partial<OpenCDAAttackConfig>
   ) => {
     const nextAttacks = [...attacks];
     const existing = nextAttacks[index] ?? {};

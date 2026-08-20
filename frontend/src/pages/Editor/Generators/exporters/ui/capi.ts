@@ -7,7 +7,7 @@ import {
 export function useGenerateCAPIomnetIni(config: SimulationConfig): string {
   const simConfig = useMemo(
     () => mergeSimConfigWithDefaults(config).capi,
-    [config],
+    [config]
   );
 
   const extraConfigSections = simConfig.extra_configs
@@ -16,7 +16,7 @@ export function useGenerateCAPIomnetIni(config: SimulationConfig): string {
 [Config ${ec.name}]
 *.radioMedium.pathLossType = "${ec.path_loss_type}"
 *.radioMedium.pathLoss.withSmallScaleVariations = ${ec.small_scale_variations}
-*.radioMedium.pathLoss.withVisualization = ${ec.visualization}`,
+*.radioMedium.pathLoss.withVisualization = ${ec.visualization}`
     )
     .join('\n');
 
@@ -52,7 +52,7 @@ ${extraConfigSections}`;
 export function useGenerateCAPIServicesXml(config: SimulationConfig): string {
   const simConfig = useMemo(
     () => mergeSimConfigWithDefaults(config).capi,
-    [config],
+    [config]
   );
   const services: string[] = [];
 

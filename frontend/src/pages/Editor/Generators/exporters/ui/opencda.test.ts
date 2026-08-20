@@ -87,7 +87,7 @@ describe('useGenerateOpenCDAConfig: additional coverage', () => {
       [car],
       [],
       [],
-      [lidar],
+      [lidar]
     );
 
     expect(yaml).toContain('lidar:');
@@ -384,7 +384,7 @@ describe('useGenerateOpenCDAConfig: coverage for numeric IDs', () => {
       defaultSimConfig,
       [car1, car2],
       [],
-      [],
+      []
     );
 
     expect(yaml).toContain('id: 100');
@@ -516,7 +516,7 @@ describe('useGenerateOpenCDAConfig: specific line coverage', () => {
       [car],
       [],
       [],
-      [lidar],
+      [lidar]
     );
 
     expect(yaml).toContain('lidar:');

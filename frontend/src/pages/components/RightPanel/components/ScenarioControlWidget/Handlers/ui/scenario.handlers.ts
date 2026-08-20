@@ -88,7 +88,7 @@ export const handleLoad = async ({
           car.z,
           car.model ?? 'car',
           car.color?.toString(16).padStart(6, '0') ?? '00ff00',
-          60,
+          60
         );
         s.updateCar(carId, {
           scale: car.scale ?? 1,
@@ -223,7 +223,7 @@ export const handleCreate = async (
   setNotice: (value: string) => void,
   createMutation: ReturnType<typeof useScenarioCreateMutation>,
   scenarioIdInput = '',
-  onIdResolved?: (id: string) => void,
+  onIdResolved?: (id: string) => void
 ) => {
   try {
     const payload = buildScenarioPayload();
@@ -264,7 +264,7 @@ export const handlePatch = async (
   setNotice: (value: string) => void,
   scenarioIdInput: string,
   hasId: boolean,
-  patchMutation: ReturnType<typeof useScenarioPatchMutation>,
+  patchMutation: ReturnType<typeof useScenarioPatchMutation>
 ) => {
   if (!hasId) return;
   try {
@@ -290,7 +290,7 @@ export const handleDelete = async (
   setNotice: (value: string) => void,
   scenarioIdInput: string,
   hasId: boolean,
-  deleteMutation: ReturnType<typeof useScenarioDeleteMutation>,
+  deleteMutation: ReturnType<typeof useScenarioDeleteMutation>
 ) => {
   if (!hasId) return;
   try {
@@ -315,7 +315,7 @@ export const handleRunSimulation = async (
   setNotice: (value: string) => void,
   scenarioIdInput: string,
   startMutation: ReturnType<typeof useStartSimulationMutation>,
-  mapOffsets?: { x: number; y: number },
+  mapOffsets?: { x: number; y: number }
 ) => {
   const state = useEditorStore.getState();
   const scenario = state.Scenario;

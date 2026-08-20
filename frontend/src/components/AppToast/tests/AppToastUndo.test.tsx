@@ -24,7 +24,7 @@ describe('AppToastProvider undo()', () => {
     render(
       <AppToastProvider>
         <UndoTestComponent message="Car deleted" onUndo={vi.fn()} />
-      </AppToastProvider>,
+      </AppToastProvider>
     );
 
     fireEvent.click(screen.getByText('Trigger undo toast'));
@@ -38,7 +38,7 @@ describe('AppToastProvider undo()', () => {
     render(
       <AppToastProvider>
         <UndoTestComponent message="Car deleted" onUndo={onUndo} />
-      </AppToastProvider>,
+      </AppToastProvider>
     );
 
     fireEvent.click(screen.getByText('Trigger undo toast'));
@@ -55,7 +55,7 @@ describe('AppToastProvider undo()', () => {
           onUndo={vi.fn()}
           actionLabel="Restore"
         />
-      </AppToastProvider>,
+      </AppToastProvider>
     );
 
     fireEvent.click(screen.getByText('Trigger undo toast'));
@@ -68,7 +68,7 @@ describe('AppToastProvider undo()', () => {
     render(
       <AppToastProvider>
         <UndoTestComponent message="Car deleted" onUndo={onUndo} />
-      </AppToastProvider>,
+      </AppToastProvider>
     );
 
     fireEvent.click(screen.getByText('Trigger undo toast'));
@@ -84,7 +84,7 @@ describe('AppToastProvider undo()', () => {
     render(
       <AppToastProvider>
         <UndoTestComponent message="   " onUndo={vi.fn()} />
-      </AppToastProvider>,
+      </AppToastProvider>
     );
 
     fireEvent.click(screen.getByText('Trigger undo toast'));

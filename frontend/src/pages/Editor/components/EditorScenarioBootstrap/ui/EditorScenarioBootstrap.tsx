@@ -27,14 +27,14 @@ export const EditorScenarioBootstrap = () => {
           next.delete('scenario');
           return next;
         },
-        { replace: true },
+        { replace: true }
       );
     };
 
     const giveUp = () => {
       if (cancelled) return;
       toast.error(
-        `Couldn't open scenario "${scenarioId}": the editor scene took too long to load. Try reloading the page.`,
+        `Couldn't open scenario "${scenarioId}": the editor scene took too long to load. Try reloading the page.`
       );
       clearScenarioParam();
     };

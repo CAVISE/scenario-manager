@@ -57,7 +57,7 @@ export const NotFoundPage: React.FC = () => {
 
   useEffect(() => {
     timerRefs.current = LOG_LINES.map((line, i) =>
-      setTimeout(() => setVisibleLogs((prev) => [...prev, i]), line.delay),
+      setTimeout(() => setVisibleLogs((prev) => [...prev, i]), line.delay)
     );
     return () => timerRefs.current.forEach(clearTimeout);
   }, []);
@@ -119,7 +119,7 @@ export const NotFoundPage: React.FC = () => {
                     }}
                   />
                 </div>
-              ),
+              )
             )}
           </div>
 

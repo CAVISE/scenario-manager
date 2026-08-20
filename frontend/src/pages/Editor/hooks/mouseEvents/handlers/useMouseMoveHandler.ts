@@ -8,6 +8,6 @@ export function useMouseMoveHandler(ctx: SharedMouseContext) {
       e.preventDefault();
       ctx.setMouse(e);
     },
-    [ctx],
+    [ctx]
   );
 }

@@ -7,7 +7,7 @@ export function clampRgbValue(value: number): number {
 }
 
 export function parseRgbValueFromEvent(
-  event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
 ): number | undefined {
   const parsed = parseNumberInputChange(event.target);
   if (parsed === undefined || !Number.isFinite(parsed)) {
@@ -17,7 +17,7 @@ export function parseRgbValueFromEvent(
 }
 
 export function parseNumberFromEvent(
-  event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
 ): number | undefined {
   const parsed = parseNumberInputChange(event.target);
   if (parsed === undefined || !Number.isFinite(parsed)) {

@@ -58,7 +58,7 @@ export function handleClearScene({
 
   if (pushed) {
     toast.undo(pushed.label, () =>
-      useEditorStore.getState().restoreLastDeletion(pushed.snapshotId),
+      useEditorStore.getState().restoreLastDeletion(pushed.snapshotId)
     );
   }
 }

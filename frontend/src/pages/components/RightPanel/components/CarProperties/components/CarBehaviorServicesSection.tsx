@@ -23,7 +23,7 @@ export function CarBehaviorServicesSection({
     services.some((s) => s.type === type);
   const aimClient = services.find(
     (s): s is Extract<CavBehaviorService, { type: 'aim_client' }> =>
-      s.type === 'aim_client',
+      s.type === 'aim_client'
   );
 
   const setServices = (next: CavBehaviorService[]) => {
@@ -106,8 +106,8 @@ export function CarBehaviorServicesSection({
                       services.map((s) =>
                         s.type === 'aim_client'
                           ? { ...s, debug: e.target.checked }
-                          : s,
-                      ),
+                          : s
+                      )
                     )
                   }
                 />

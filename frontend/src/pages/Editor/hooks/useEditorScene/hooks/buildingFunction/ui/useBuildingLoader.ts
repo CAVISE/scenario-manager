@@ -23,9 +23,9 @@ export function useBuildingLoader() {
         geo.translate(0, 0, 15);
         buildingModelRef.current = new THREE.Mesh(
           geo,
-          new THREE.MeshBasicMaterial({ color: 0x666666 }),
+          new THREE.MeshBasicMaterial({ color: 0x666666 })
         );
-      },
+      }
     );
   }, []);
 

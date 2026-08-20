@@ -48,7 +48,7 @@ export const VehicleSensingSection = ({
 }: VehicleSensingSectionProps) => {
   const updateField = (
     field: keyof SimulationConfig['opencda'],
-    value: SimulationConfig['opencda'][keyof SimulationConfig['opencda']],
+    value: SimulationConfig['opencda'][keyof SimulationConfig['opencda']]
   ) => {
     onUpdate({ [field]: value } as Partial<SimulationConfig['opencda']>);
   };
@@ -56,7 +56,7 @@ export const VehicleSensingSection = ({
   const numberField = (
     field: keyof SimulationConfig['opencda'],
     min?: number,
-    max?: number,
+    max?: number
   ) => createNumberFieldOnChange((val) => updateField(field, val), min, max);
 
   return (
@@ -180,7 +180,7 @@ export const VehicleSensingSection = ({
             onChange={(e) =>
               updateField(
                 'localization_navigation_source',
-                e.target.value as 'estimated' | 'ground_truth',
+                e.target.value as 'estimated' | 'ground_truth'
               )
             }
           >

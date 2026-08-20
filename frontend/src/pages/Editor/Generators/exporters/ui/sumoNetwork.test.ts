@@ -32,7 +32,7 @@ const NET_XML = `<?xml version="1.0" encoding="UTF-8"?>
 
 const TOWN01_NET_XML = readFileSync(
   resolve(process.cwd(), 'public/Town01.net.xml'),
-  'utf8',
+  'utf8'
 );
 
 const car = {
@@ -130,7 +130,7 @@ describe('SUMO frontend routing', () => {
     const localDestination = { ...destination, x: 18, y: 0 };
 
     expect(
-      buildSumoRoutes(network, [localCar], [localDestination])['car-1'],
+      buildSumoRoutes(network, [localCar], [localDestination])['car-1']
     ).toEqual({
       edges: 'edge-a',
       depart: {
@@ -168,7 +168,7 @@ describe('SUMO frontend routing', () => {
     const localDestination = { ...destination, x: 19, y: 0 };
 
     expect(
-      buildSumoRoutes(network, [localCar], [localDestination])['car-1'],
+      buildSumoRoutes(network, [localCar], [localDestination])['car-1']
     ).toEqual({
       edges: 'edge-a edge-b',
       depart: {
@@ -194,7 +194,7 @@ describe('SUMO frontend routing', () => {
     const localDestination = { ...destination, x: 2, y: 0 };
 
     expect(
-      buildSumoRoutes(NET_XML, [localCar], [localDestination])['car-1'],
+      buildSumoRoutes(NET_XML, [localCar], [localDestination])['car-1']
     ).toEqual({
       edges: 'edge-a',
       depart: undefined,
@@ -205,7 +205,7 @@ describe('SUMO frontend routing', () => {
 
   it('anchors a manually configured route from the vehicle spawn', () => {
     expect(
-      buildSumoRoutes(NET_XML, [{ ...car, sumo_edges: 'edge-a edge-b' }], []),
+      buildSumoRoutes(NET_XML, [{ ...car, sumo_edges: 'edge-a edge-b' }], [])
     ).toEqual({
       'car-1': {
         edges: 'edge-a edge-b',
@@ -226,8 +226,8 @@ describe('SUMO frontend routing', () => {
       buildSumoRoutes(
         NET_XML,
         [{ ...car, sumo_edges: 'edge-c' }],
-        [destination],
-      ),
+        [destination]
+      )
     ).toThrow('scene spawn is not on the first manual SUMO edge edge-c');
   });
 
@@ -236,8 +236,8 @@ describe('SUMO frontend routing', () => {
       buildSumoRoutes(
         NET_XML,
         [{ ...car, sumo_edges: 'edge-a edge-b edge-c' }],
-        [destination],
-      ),
+        [destination]
+      )
     ).toEqual({
       'car-1': {
         edges: 'edge-a edge-b edge-c',
@@ -271,8 +271,8 @@ describe('SUMO frontend routing', () => {
             sumo_depart_lane: '4',
           },
         ],
-        [],
-      ),
+        []
+      )
     ).toThrow('departLane 4 is not a passenger driving lane on edge edge-a');
   });
 
@@ -292,14 +292,14 @@ describe('SUMO frontend routing', () => {
             },
           },
         ],
-        [],
-      ),
+        []
+      )
     ).toThrow('Static stop is enabled but its Lane field is empty');
   });
 
   it('rejects automatic routing when a vehicle has no route points', () => {
     expect(() => buildSumoRoutes(NET_XML, [car], [])).toThrow(
-      'has no route points',
+      'has no route points'
     );
   });
 
@@ -340,8 +340,8 @@ describe('SUMO frontend routing', () => {
             sumo_depart_pos: -1,
           },
         ],
-        [],
-      ),
+        []
+      )
     ).toThrow('departPos must be a non-negative number');
   });
 
@@ -356,8 +356,8 @@ describe('SUMO frontend routing', () => {
             sumo_depart_pos: 100,
           },
         ],
-        [],
-      ),
+        []
+      )
     ).toThrow('departPos 100 is outside edge edge-a (length 10.00)');
   });
 
@@ -377,8 +377,8 @@ describe('SUMO frontend routing', () => {
             },
           },
         ],
-        [],
-      ),
+        []
+      )
     ).toThrow('stop lane "non-existent" is not a passenger driving lane');
   });
 
@@ -398,8 +398,8 @@ describe('SUMO frontend routing', () => {
             },
           },
         ],
-        [],
-      ),
+        []
+      )
     ).toThrow('stop lane "edge-c_0" is not part of its route');
   });
 
@@ -419,8 +419,8 @@ describe('SUMO frontend routing', () => {
             },
           },
         ],
-        [],
-      ),
+        []
+      )
     ).toThrow('stop positions must satisfy 0 <= startPos < endPos <= 10.00');
   });
 
@@ -440,8 +440,8 @@ describe('SUMO frontend routing', () => {
             },
           },
         ],
-        [],
-      ),
+        []
+      )
     ).toThrow('stop duration must be a non-negative number');
   });
 
@@ -462,8 +462,8 @@ describe('SUMO frontend routing', () => {
             },
           },
         ],
-        [],
-      ),
+        []
+      )
     ).toThrow('stop on edge-a_0 is behind departPos 5');
   });
 
@@ -478,8 +478,8 @@ describe('SUMO frontend routing', () => {
             sumo_depart_lane: 'unsupported',
           },
         ],
-        [],
-      ),
+        []
+      )
     ).toThrow('unsupported SUMO departLane "unsupported"');
   });
 
@@ -494,8 +494,8 @@ describe('SUMO frontend routing', () => {
             sumo_depart_pos: Infinity,
           },
         ],
-        [],
-      ),
+        []
+      )
     ).toThrow('departPos must be a non-negative number');
   });
 
@@ -511,7 +511,7 @@ describe('SUMO frontend routing', () => {
     const localDestination = { ...destination, x: 8, y: 0 };
 
     expect(() =>
-      buildSumoRoutes(network, [localCar], [localDestination]),
+      buildSumoRoutes(network, [localCar], [localDestination])
     ).toThrow('SUMO network contains no passenger vehicle edges');
   });
 
@@ -521,7 +521,7 @@ describe('SUMO frontend routing', () => {
     const localDestination = { ...destination, x: 8, y: 0 };
 
     expect(() =>
-      buildSumoRoutes(invalidXml, [localCar], [localDestination]),
+      buildSumoRoutes(invalidXml, [localCar], [localDestination])
     ).toThrow('SUMO network contains invalid XML');
   });
 
@@ -537,7 +537,7 @@ describe('SUMO frontend routing', () => {
     const localDestination = { ...destination, x: 8, y: 0 };
 
     expect(() =>
-      buildSumoRoutes(network, [localCar], [localDestination]),
+      buildSumoRoutes(network, [localCar], [localDestination])
     ).toThrow('Invalid SUMO coordinate pair: invalid,200');
   });
 
@@ -553,7 +553,7 @@ describe('SUMO frontend routing', () => {
     const localDestination = { ...destination, x: 8, y: 0 };
 
     expect(() =>
-      buildSumoRoutes(network, [localCar], [localDestination]),
+      buildSumoRoutes(network, [localCar], [localDestination])
     ).toThrow('SUMO network contains no passenger vehicle edges');
   });
 
@@ -563,7 +563,7 @@ describe('SUMO frontend routing', () => {
 
   it('handles getSumoCoordinateOffsets with invalid XML', () => {
     expect(() => getSumoCoordinateOffsets('not xml')).toThrow(
-      'SUMO network contains invalid XML',
+      'SUMO network contains invalid XML'
     );
   });
 
@@ -585,7 +585,7 @@ describe('SUMO frontend routing', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     await expect(resolveSumoNetwork('Town01.net.xml')).rejects.toThrow(
-      'SUMO network Town01.net.xml is unavailable; load it in SUMO settings',
+      'SUMO network Town01.net.xml is unavailable; load it in SUMO settings'
     );
   });
   it('covers lines 155-170: handles manual edges with no route points and valid depart', () => {
@@ -614,7 +614,7 @@ describe('SUMO frontend routing', () => {
     };
 
     expect(() => buildSumoRoutes(NET_XML, [localCar], [destination])).toThrow(
-      'scene spawn is not on the first manual SUMO edge edge-c',
+      'scene spawn is not on the first manual SUMO edge edge-c'
     );
   });
 
@@ -622,7 +622,7 @@ describe('SUMO frontend routing', () => {
     const localCar = { ...car };
 
     expect(() => buildSumoRoutes(NET_XML, [localCar], [])).toThrow(
-      'has no route points',
+      'has no route points'
     );
   });
 
@@ -708,7 +708,7 @@ describe('SUMO frontend routing', () => {
     };
 
     expect(() => buildSumoRoutes(NET_XML, [localCar], [])).toThrow(
-      'departLane 5 is not a passenger driving lane on edge edge-a',
+      'departLane 5 is not a passenger driving lane on edge edge-a'
     );
   });
 
@@ -728,7 +728,7 @@ describe('SUMO frontend routing', () => {
     };
 
     expect(() => buildSumoRoutes(network, [localCar], [])).toThrow(
-      'its scene spawn is not on the first manual SUMO edge edge-a',
+      'its scene spawn is not on the first manual SUMO edge edge-a'
     );
   });
 

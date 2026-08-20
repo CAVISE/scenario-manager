@@ -9,13 +9,13 @@ import { useMemo } from 'react';
 export const useOpenCDAConfig = () => {
   const rawSimConfig = useEditorStore((s) => s.simConfig);
   const updateSimConfigOpenCDA = useEditorStore(
-    (s) => s.updateSimConfigOpenCDA,
+    (s) => s.updateSimConfigOpenCDA
   );
   const updateSimConfig = useEditorStore((s) => s.updateSimConfig);
 
   const simConfig = useMemo(
     () => mergeSimConfigWithDefaults(rawSimConfig),
-    [rawSimConfig],
+    [rawSimConfig]
   );
 
   const oc = simConfig.opencda ?? defaultSimConfig.opencda;

@@ -46,7 +46,7 @@ describe('pushCavSensingOverride', () => {
     pushCavSensingOverride(
       lines,
       makeCar({ opencda_sensing: undefined }),
-      '  ',
+      '  '
     );
 
     expect(lines).toEqual([]);
@@ -69,7 +69,7 @@ describe('pushCavSensingOverride', () => {
       lines,
       makeCar({ opencda_sensing: undefined }),
       '  ',
-      makeLidar(),
+      makeLidar()
     );
 
     expect(lines).toContain('  sensing:');
@@ -194,7 +194,7 @@ describe('pushCavSensingOverride', () => {
         lines,
         car,
         '  ',
-        makeLidar({ channels: 64, range: 120, rotation_frequency: 10 }),
+        makeLidar({ channels: 64, range: 120, rotation_frequency: 10 })
       );
 
       expect(lines).toContain('      lidar:');
@@ -214,7 +214,7 @@ describe('pushCavSensingOverride', () => {
         lines,
         car,
         '  ',
-        makeLidar({ channels: 64, range: 120 }),
+        makeLidar({ channels: 64, range: 120 })
       );
 
       expect(lines).toContain('        channels: 16');
@@ -231,7 +231,7 @@ describe('pushCavSensingOverride', () => {
         lines,
         car,
         '  ',
-        makeLidar({ channels: 48, range: 90 }),
+        makeLidar({ channels: 48, range: 90 })
       );
 
       expect(lines).toContain('        visualize: true');
@@ -444,11 +444,11 @@ describe('pushPlatoonBase', () => {
     expect(lines).toContain('    metric_configs:');
     expect(lines).toContain('      time_gap:');
     expect(lines).toContain(
-      `        warmup_steps: ${baseParams.metric_time_gap_warmup}`,
+      `        warmup_steps: ${baseParams.metric_time_gap_warmup}`
     );
     expect(lines).toContain('      distance_gap:');
     expect(lines).toContain(
-      `        warmup_steps: ${baseParams.metric_distance_gap_warmup}`,
+      `        warmup_steps: ${baseParams.metric_distance_gap_warmup}`
     );
 
     expect(lines[lines.length - 1]).toBe('');
@@ -460,7 +460,7 @@ describe('pushPlatoonBase', () => {
     pushPlatoonBase(
       lines,
       { ...baseParams, leader_speeds_profile: [70, 100] },
-      false,
+      false
     );
 
     expect(lines).toContain('  leader_speeds_profile: [ 70, 100 ]');

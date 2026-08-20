@@ -601,7 +601,7 @@ export const defaultSimConfig: SimulationConfig = {
 };
 
 export function mergeSimConfigWithDefaults(
-  partial: Partial<SimulationConfig> | undefined | null,
+  partial: Partial<SimulationConfig> | undefined | null
 ): SimulationConfig {
   const p = partial ?? {};
   const omnet = { ...defaultSimConfig.omnet, ...p.omnet };
@@ -629,7 +629,7 @@ export function mergeSimConfigWithDefaults(
       sensors: { ...defaultSimConfig.carla.sensors, ...p.carla?.sensors },
       weather_override: Object.prototype.hasOwnProperty.call(
         p.carla ?? {},
-        'weather_override',
+        'weather_override'
       )
         ? (p.carla?.weather_override ?? {})
         : { ...defaultSimConfig.carla.weather_override },

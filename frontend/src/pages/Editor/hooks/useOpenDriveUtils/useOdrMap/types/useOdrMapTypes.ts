@@ -17,23 +17,23 @@ export interface OpenDriveModule {
     name: string,
     data: string,
     canRead: boolean,
-    canWrite: boolean,
+    canWrite: boolean
   ): void;
   get_refline_segments(
     map: OpenDriveMapInstance,
-    resolution: number,
+    resolution: number
   ): {
     vertices: { size(): number; get(i: number): number; delete(): void };
     indices: { size(): number; get(i: number): number; delete(): void };
   };
   get_road_network_mesh(
     map: OpenDriveMapInstance,
-    resolution: number,
+    resolution: number
   ): OdrRoadNetworkMesh;
   HEAP8: { length: number };
   OpenDriveMap: new (
     path: string,
-    config: OdrMapConfig,
+    config: OdrMapConfig
   ) => OpenDriveMapInstance;
 }
 export const COLORS = {

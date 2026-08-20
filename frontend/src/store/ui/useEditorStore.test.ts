@@ -133,7 +133,7 @@ describe('useEditorStore', () => {
     const { simConfig } = useEditorStore.getState();
 
     expect(
-      (simConfig.sionna as unknown as { resolution: number }).resolution,
+      (simConfig.sionna as unknown as { resolution: number }).resolution
     ).toBe(64);
     expect(simConfig.carla).toBeDefined();
   });
@@ -143,7 +143,7 @@ describe('useEditorStore', () => {
     const { simConfig } = useEditorStore.getState();
 
     expect((simConfig.mpc as unknown as { enabled: boolean }).enabled).toBe(
-      true,
+      true
     );
     expect(simConfig.sumo).toBeDefined();
   });
@@ -210,7 +210,7 @@ describe('useEditorStore', () => {
       .getState()
       .updateSimConfig({ sim_duration: 300 } as unknown as SimulationConfig);
     expect(
-      (useEditorStore.getState().simConfig as SimulationConfig).sim_duration,
+      (useEditorStore.getState().simConfig as SimulationConfig).sim_duration
     ).toBe(300);
     expect(useEditorStore.getState().simConfig.carla).toBeDefined();
   });
@@ -868,7 +868,7 @@ describe('useEditorStore - additional coverage', () => {
   describe('restoreLastDeletion with invalid snapshotId', () => {
     it('returns false when snapshotId is undefined or empty', () => {
       expect(useEditorStore.getState().restoreLastDeletion(undefined)).toBe(
-        false,
+        false
       );
       expect(useEditorStore.getState().restoreLastDeletion('')).toBe(false);
     });

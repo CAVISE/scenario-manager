@@ -101,7 +101,7 @@ describe('generateSionnaConfig', () => {
       defaultSimConfig,
       [],
       [],
-      [],
+      []
     ) as SionnaOutput;
 
     expect(result.scene).toEqual({
@@ -124,7 +124,7 @@ describe('generateSionnaConfig', () => {
       defaultSimConfig,
       [],
       [],
-      [],
+      []
     ) as SionnaOutput;
 
     expect(result.transmitters).toEqual([]);
@@ -138,7 +138,7 @@ describe('generateSionnaConfig', () => {
         defaultSimConfig,
         [makeRSU({ name: 'Custom RSU' })],
         [],
-        [],
+        []
       ) as SionnaOutput;
 
       expect(result.transmitters[0].name).toBe('Custom RSU');
@@ -149,7 +149,7 @@ describe('generateSionnaConfig', () => {
         defaultSimConfig,
         [makeRSU({ name: '' }), makeRSU({ name: '' })],
         [],
-        [],
+        []
       ) as SionnaOutput;
 
       expect(result.transmitters[0].name).toBe('rsu_0');
@@ -161,7 +161,7 @@ describe('generateSionnaConfig', () => {
         defaultSimConfig,
         [makeRSU({ x: 1.005, y: 2.004, z: 3.999 })],
         [],
-        [],
+        []
       ) as SionnaOutput;
 
       const [x, y, z] = result.transmitters[0].position;
@@ -175,7 +175,7 @@ describe('generateSionnaConfig', () => {
         defaultSimConfig,
         [makeRSU({ frequency: 5.9e9 })],
         [],
-        [],
+        []
       ) as SionnaOutput;
 
       expect(result.transmitters[0].frequency).toBe(5.9e9);
@@ -197,7 +197,7 @@ describe('generateSionnaConfig', () => {
         defaultSimConfig,
         [rsu],
         [],
-        [],
+        []
       ) as SionnaOutput;
 
       expect(result.transmitters[0].antenna).toEqual({
@@ -227,7 +227,7 @@ describe('generateSionnaConfig', () => {
           }),
         ],
         [],
-        [],
+        []
       ) as SionnaOutput;
 
       expect(result.transmitters[0].antenna).toEqual({
@@ -247,7 +247,7 @@ describe('generateSionnaConfig', () => {
         defaultSimConfig,
         [],
         [],
-        [makeCar({ x: 1.005, y: -2, z: 0 }), makeCar({ x: 9, y: 9, z: 9 })],
+        [makeCar({ x: 1.005, y: -2, z: 0 }), makeCar({ x: 9, y: 9, z: 9 })]
       ) as SionnaOutput;
 
       expect(result.receivers).toEqual([
@@ -263,7 +263,7 @@ describe('generateSionnaConfig', () => {
         defaultSimConfig,
         [],
         [makeBuilding({ name: 'Warehouse A' })],
-        [],
+        []
       ) as SionnaOutput;
 
       expect(result.buildings[0].name).toBe('Warehouse A');
@@ -274,7 +274,7 @@ describe('generateSionnaConfig', () => {
         defaultSimConfig,
         [],
         [makeBuilding({ name: '' })],
-        [],
+        []
       ) as SionnaOutput;
 
       expect(result.buildings[0].name).toBe('building_0');
@@ -289,7 +289,7 @@ describe('generateSionnaConfig', () => {
         defaultSimConfig,
         [],
         [building],
-        [],
+        []
       ) as SionnaOutput;
 
       expect(result.buildings[0].width).toBe(20);
@@ -303,7 +303,7 @@ describe('generateSionnaConfig', () => {
         defaultSimConfig,
         [],
         [makeBuilding({ width: 40, depth: 30 })],
-        [],
+        []
       ) as SionnaOutput;
 
       expect(result.buildings[0].width).toBe(40);

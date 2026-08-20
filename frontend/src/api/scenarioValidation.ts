@@ -14,7 +14,7 @@ import { scenarioGroupsFromPayload } from './scenarioRequest';
 
 export function validateScenarioId(
   id: string | null | undefined,
-  { required = false }: { required?: boolean } = {},
+  { required = false }: { required?: boolean } = {}
 ): ValidationResult {
   const trimmed = id?.trim() ?? '';
   if (!trimmed) {
@@ -33,7 +33,7 @@ export function validateScenarioId(
 }
 
 export function validateScenarioName(
-  name: string | null | undefined,
+  name: string | null | undefined
 ): ValidationResult {
   const trimmed = name?.trim() ?? '';
   if (!trimmed) {
@@ -49,7 +49,7 @@ export function validateScenarioName(
 }
 
 function validateDescription(
-  text: string | null | undefined,
+  text: string | null | undefined
 ): ValidationResult {
   if (text && text.length > MAX_DESCRIPTION_LEN) {
     return {
@@ -61,7 +61,7 @@ function validateDescription(
 }
 
 function validateOpenDrive(
-  fileContent: string | null | undefined,
+  fileContent: string | null | undefined
 ): ValidationResult {
   if (!fileContent) return { ok: true };
   if (fileContent.length > MAX_OPENDRIVE_LEN) {
@@ -120,7 +120,7 @@ function firstFailure(...checks: ValidationResult[]): ValidationResult {
 
 export function validateUploadPayload(
   payload: ScenarioPayload,
-  scenarioIdInput = '',
+  scenarioIdInput = ''
 ): ValidationResult {
   const scenarioId =
     scenarioIdInput.trim() || payload.scenario_id?.trim() || '';
@@ -130,13 +130,13 @@ export function validateUploadPayload(
     validateDescription(payload.description),
     validateOpenDrive(payload.file_),
     validatePreview(payload.preview),
-    validateScenarioGroups(scenarioGroupsFromPayload(payload.scenario)),
+    validateScenarioGroups(scenarioGroupsFromPayload(payload.scenario))
   );
 }
 
 export function validateUpdatePayload(
   scenarioId: string,
-  payload: Partial<ScenarioPayload>,
+  payload: Partial<ScenarioPayload>
 ): ValidationResult {
   return firstFailure(
     validateScenarioId(scenarioId, { required: true }),
@@ -148,7 +148,7 @@ export function validateUpdatePayload(
     validatePreview(payload.preview),
     payload.scenario != null
       ? validateScenarioGroups(scenarioGroupsFromPayload(payload.scenario))
-      : { ok: true },
+      : { ok: true }
   );
 }
 
@@ -157,7 +157,7 @@ export function validateDeletePayload(scenarioId: string): ValidationResult {
 }
 
 export function validateStartSimulationPayload(
-  payload: StartSimulationPayload,
+  payload: StartSimulationPayload
 ): ValidationResult {
   const map = payload.map?.trim() ?? '';
   if (!map) {
@@ -189,9 +189,7 @@ export function validateStartSimulationPayload(
   }
 
   const hasRoute = cars.some((group) =>
-    group.path.some(
-      (car) => Array.isArray(car.points) && car.points.length > 0,
-    ),
+    group.path.some((car) => Array.isArray(car.points) && car.points.length > 0)
   );
   if (!hasRoute) {
     return {
@@ -204,8 +202,6 @@ export function validateStartSimulationPayload(
     validateDescription(payload.description),
     validateOpenDrive(payload.xodr),
     validateScenarioGroups(groups),
-    payload.scenario_id
-      ? validateScenarioId(payload.scenario_id)
-      : { ok: true },
+    payload.scenario_id ? validateScenarioId(payload.scenario_id) : { ok: true }
   );
 }

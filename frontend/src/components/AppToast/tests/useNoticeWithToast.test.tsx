@@ -32,7 +32,7 @@ describe('useNoticeWithToast', () => {
 
   it('should call toast.info if mode is "info-default"', () => {
     const { result } = renderHook(() =>
-      useNoticeWithToast(setNoticeMock, { defaultLevel: 'info' }),
+      useNoticeWithToast(setNoticeMock, { defaultLevel: 'info' })
     );
 
     result.current('General info');
@@ -114,7 +114,7 @@ describe('useNoticeWithToast', () => {
 
   it('covers default behavior when message contains error but defaultLevel is info', () => {
     const { result } = renderHook(() =>
-      useNoticeWithToast(setNoticeMock, { defaultLevel: 'info' }),
+      useNoticeWithToast(setNoticeMock, { defaultLevel: 'info' })
     );
 
     result.current('This is an error message');
@@ -125,7 +125,7 @@ describe('useNoticeWithToast', () => {
 
   it('covers default behavior when message contains failed but defaultLevel is info', () => {
     const { result } = renderHook(() =>
-      useNoticeWithToast(setNoticeMock, { defaultLevel: 'info' }),
+      useNoticeWithToast(setNoticeMock, { defaultLevel: 'info' })
     );
 
     result.current('Operation failed');
@@ -136,7 +136,7 @@ describe('useNoticeWithToast', () => {
 
   it('covers default behavior when message does not contain error/failed and defaultLevel is info', () => {
     const { result } = renderHook(() =>
-      useNoticeWithToast(setNoticeMock, { defaultLevel: 'info' }),
+      useNoticeWithToast(setNoticeMock, { defaultLevel: 'info' })
     );
 
     result.current('Regular info message');

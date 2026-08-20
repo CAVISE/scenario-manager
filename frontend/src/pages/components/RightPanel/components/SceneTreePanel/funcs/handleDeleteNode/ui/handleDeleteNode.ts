@@ -44,7 +44,7 @@ export function handleDeleteNode({
     const rsuIdx = s.RSUs.findIndex((r) => r.id === id);
     if (rsuIdx !== -1) {
       const meshIdx = pointsArrRef.current.findIndex(
-        (m) => m.userData.id === id,
+        (m) => m.userData.id === id
       );
       if (meshIdx !== -1) {
         const mesh = pointsArrRef.current[meshIdx];
@@ -58,12 +58,12 @@ export function handleDeleteNode({
       }
 
       const objsIdx = pointsObjsRef.current.findIndex(
-        (m) => m.userData.id === id,
+        (m) => m.userData.id === id
       );
       if (objsIdx !== -1) pointsObjsRef.current.splice(objsIdx, 1);
 
       const rsuMeshIdx = rsuMeshesRef.current.findIndex(
-        (m) => m.userData.id === id,
+        (m) => m.userData.id === id
       );
       if (rsuMeshIdx !== -1) rsuMeshesRef.current.splice(rsuMeshIdx, 1);
 
@@ -100,7 +100,7 @@ export function handleDeleteNode({
 
   if (pushed) {
     toast.undo(pushed.label, () =>
-      useEditorStore.getState().restoreLastDeletion(pushed.snapshotId),
+      useEditorStore.getState().restoreLastDeletion(pushed.snapshotId)
     );
   }
 }

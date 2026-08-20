@@ -3,7 +3,7 @@ import { RSU } from '@/store/types/useEditorStoreTypes';
 
 export function generateArteryConfig(
   config: SimulationConfig,
-  RSUs: RSU[],
+  RSUs: RSU[]
 ): string {
   const vehicleServices = [
     '<service type=\\"artery.application.CaService\\"><listener port=\\"2001\\"/></service>',

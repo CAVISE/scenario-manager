@@ -36,7 +36,7 @@ export default function SimConfigModal({ open, onClose }: SimConfigModalProps) {
   const rawSimConfig = useEditorStore((s) => s.simConfig);
   const simConfig = useMemo(
     () => mergeSimConfigWithDefaults(rawSimConfig),
-    [rawSimConfig],
+    [rawSimConfig]
   );
   const updateSimConfig = useEditorStore((s) => s.updateSimConfig);
 
@@ -80,7 +80,7 @@ export default function SimConfigModal({ open, onClose }: SimConfigModalProps) {
 
       const clampedValue = Math.min(
         maximum ?? Number.POSITIVE_INFINITY,
-        Math.max(minimum ?? Number.NEGATIVE_INFINITY, nextValue),
+        Math.max(minimum ?? Number.NEGATIVE_INFINITY, nextValue)
       );
 
       activeInput.value = String(clampedValue);
@@ -94,14 +94,14 @@ export default function SimConfigModal({ open, onClose }: SimConfigModalProps) {
       }
       const currentValue = Number(activeInput.value);
       updateInputValue(
-        (Number.isFinite(currentValue) ? currentValue : 0) + step,
+        (Number.isFinite(currentValue) ? currentValue : 0) + step
       );
     };
 
     const startHolding = (event: Event) => {
       const target = event.target as HTMLElement | null;
       const input = target?.closest(
-        'input[type="number"]',
+        'input[type="number"]'
       ) as HTMLInputElement | null;
 
       if (!input) {
@@ -136,7 +136,7 @@ export default function SimConfigModal({ open, onClose }: SimConfigModalProps) {
       container.removeEventListener('mousedown', startHolding as EventListener);
       container.removeEventListener(
         'touchstart',
-        startHolding as EventListener,
+        startHolding as EventListener
       );
       container.removeEventListener('mouseleave', stopHolding as EventListener);
       window.removeEventListener('mouseup', stopHolding);

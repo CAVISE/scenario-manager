@@ -60,7 +60,7 @@ export default function SionnaTab() {
               }
               label={key.charAt(0).toUpperCase() + key.slice(1)}
             />
-          ),
+          )
         )}
       </Stack>
     </Stack>

@@ -15,7 +15,7 @@ export function restoreLidars(opts: RestoreLidarsOptions): void {
     const bodyGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.3, 16);
     const body = new THREE.Mesh(
       bodyGeo,
-      new THREE.MeshStandardMaterial({ color: 0x222222 }),
+      new THREE.MeshStandardMaterial({ color: 0x222222 })
     );
     body.userData = { type: 'lidar', id: lidar.id, carId: lidar.carId };
 
@@ -24,7 +24,7 @@ export function restoreLidars(opts: RestoreLidarsOptions): void {
       lidar.range * 0.3,
       32,
       1,
-      true,
+      true
     );
     const cone = new THREE.Mesh(
       coneGeo,
@@ -33,7 +33,7 @@ export function restoreLidars(opts: RestoreLidarsOptions): void {
         wireframe: true,
         transparent: true,
         opacity: 0.15,
-      }),
+      })
     );
     cone.rotation.x = Math.PI;
     cone.position.z = lidar.range * 0.15;

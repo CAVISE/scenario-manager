@@ -78,7 +78,7 @@ const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
   }, [open]);
 
   const groupImagesByTab = (
-    modules: Record<string, { default: string }>,
+    modules: Record<string, { default: string }>
   ): ImagesByTabType => {
     const result: ImagesByTabType = {
       routes: [],

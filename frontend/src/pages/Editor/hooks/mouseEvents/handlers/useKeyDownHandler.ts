@@ -50,7 +50,7 @@ export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
         id: string | undefined,
         label: string,
         deleteFn: () => void,
-        attached: THREE.Object3D,
+        attached: THREE.Object3D
       ) => {
         if (!id) return;
 
@@ -68,7 +68,7 @@ export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
 
         if (pushed) {
           toast.undo(`Deleted ${label}`, () =>
-            useEditorStore.getState().restoreLastDeletion(pushed.snapshotId),
+            useEditorStore.getState().restoreLastDeletion(pushed.snapshotId)
           );
         }
       };
@@ -179,7 +179,7 @@ export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
               carMeshesRef.current.splice(carIdx, 1);
             }
           },
-          attached,
+          attached
         );
         return;
       }
@@ -193,7 +193,7 @@ export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
               useEditorStore.getState().removeBuilding(id);
             }
           },
-          attached,
+          attached
         );
         return;
       }
@@ -227,7 +227,7 @@ export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
                 useEditorStore.getState().removePoint(pointId);
               }
             },
-            root,
+            root
           );
         }
         return;
@@ -242,7 +242,7 @@ export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
               useEditorStore.getState().removePedestrian(id);
             }
           },
-          attached,
+          attached
         );
         return;
       }
@@ -256,7 +256,7 @@ export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
               useEditorStore.getState().removeLidar(id);
             }
           },
-          attached,
+          attached
         );
         return;
       }
@@ -292,7 +292,7 @@ export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
                 toast.undo('Deleted WPT', () =>
                   useEditorStore
                     .getState()
-                    .restoreLastDeletion(pushed.snapshotId),
+                    .restoreLastDeletion(pushed.snapshotId)
                 );
               }
             } else {
@@ -317,7 +317,7 @@ export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
 
         if (pushed) {
           toast.undo('Deleted OBJ', () =>
-            useEditorStore.getState().restoreLastDeletion(pushed.snapshotId),
+            useEditorStore.getState().restoreLastDeletion(pushed.snapshotId)
           );
         }
       }
@@ -337,6 +337,6 @@ export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
       redo,
       onSelectObject,
       toast,
-    ],
+    ]
   );
 }

@@ -74,7 +74,7 @@ export function handleSelect({
     const pt = points.find(
       (p) =>
         Math.abs(p.x - obj.position.x) < 0.001 &&
-        Math.abs(p.y - obj.position.y) < 0.001,
+        Math.abs(p.y - obj.position.y) < 0.001
     );
     const pointId = pt?.id;
     if (pointId) selectObject({ type: 'point', id: pointId });

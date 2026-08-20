@@ -59,7 +59,7 @@ export function startAnimate(p: StartAnimateParams): {
           (mouse.x * renderer.getPixelRatio()) | 0,
           (mouse.y * renderer.getPixelRatio()) | 0,
           1,
-          1,
+          1
         );
         renderer.setRenderTarget(picking.textures.lane);
         renderer.render(picking.scenes.lane, camera);
@@ -78,7 +78,7 @@ export function startAnimate(p: StartAnimateParams): {
           0,
           1,
           1,
-          rb,
+          rb
         );
         renderer.readRenderTargetPixels(picking.textures.xyz, 0, 0, 1, 1, xb);
 
@@ -103,7 +103,7 @@ export function startAnimate(p: StartAnimateParams): {
               roadMesh.geometry.attributes.color.array.fill(
                 COLORS.road,
                 prev[0] * 3,
-                prev[1] * 3,
+                prev[1] * 3
               );
             }
             st.INTERSECTED_LANE_ID = lid;
@@ -112,7 +112,7 @@ export function startAnimate(p: StartAnimateParams): {
               roadMesh.geometry.attributes.color,
               new THREE.Color(COLORS.lane_highlight),
               iv[0],
-              iv[1] - iv[0],
+              iv[1] - iv[0]
             );
             roadMesh.geometry.attributes.color.needsUpdate = true;
             if (p.spotlightInfo) p.spotlightInfo.style.display = 'block';
@@ -125,7 +125,7 @@ export function startAnimate(p: StartAnimateParams): {
           roadMesh.geometry.attributes.color.array.fill(
             COLORS.road,
             iv[0] * 3,
-            iv[1] * 3,
+            iv[1] * 3
           );
           roadMesh.geometry.attributes.color.needsUpdate = true;
           lm.delete();
@@ -140,12 +140,12 @@ export function startAnimate(p: StartAnimateParams): {
           if (st.INTERSECTED_ROADMARK_ID !== rid) {
             if (st.INTERSECTED_ROADMARK_ID !== 0xffffffff) {
               const prev = rm.get_idx_interval_roadmark(
-                st.INTERSECTED_ROADMARK_ID,
+                st.INTERSECTED_ROADMARK_ID
               );
               rmMesh.geometry.attributes.color.array.fill(
                 COLORS.roadmark,
                 prev[0] * 3,
-                prev[1] * 3,
+                prev[1] * 3
               );
             }
             st.INTERSECTED_ROADMARK_ID = rid;
@@ -154,7 +154,7 @@ export function startAnimate(p: StartAnimateParams): {
               rmMesh.geometry.attributes.color,
               new THREE.Color(COLORS.roadmark_highlight),
               iv[0],
-              iv[1] - iv[0],
+              iv[1] - iv[0]
             );
             rmMesh.geometry.attributes.color.needsUpdate = true;
           }
@@ -170,7 +170,7 @@ export function startAnimate(p: StartAnimateParams): {
           rmMesh.geometry.attributes.color.array.fill(
             COLORS.roadmark,
             iv[0] * 3,
-            iv[1] * 3,
+            iv[1] * 3
           );
           rmMesh.geometry.attributes.color.needsUpdate = true;
           rm.delete();
@@ -179,7 +179,7 @@ export function startAnimate(p: StartAnimateParams): {
       } catch (err) {
         console.error(
           '[SpotlightAnimate] error in picking/highlight block:',
-          err,
+          err
         );
       }
     }

@@ -58,7 +58,7 @@ export default function SceneTreePanel() {
       selectObject,
       onSelectObject,
       detachTransformControls,
-    ],
+    ]
   );
 
   const handleDelete = useCallback(
@@ -88,7 +88,7 @@ export default function SceneTreePanel() {
       sceneRef,
       detachTransformControls,
       toast,
-    ],
+    ]
   );
 
   const handle_clear_scene = useCallback(() => {
@@ -160,7 +160,7 @@ export default function SceneTreePanel() {
         </TreeItem>
       );
     },
-    [selectedId, handleDelete],
+    [selectedId, handleDelete]
   );
 
   const total = sceneGraph ? countNodes(sceneGraph) - 1 : 0;

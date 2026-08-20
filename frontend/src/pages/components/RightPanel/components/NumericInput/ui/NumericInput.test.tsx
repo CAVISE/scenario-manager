@@ -124,7 +124,7 @@ describe('NumericInput', () => {
         value={1}
         onValueChange={onValueChange}
         variant="outlined"
-      />,
+      />
     );
     const input = screen.getByRole('spinbutton');
     expect(input).toBeInTheDocument();
@@ -138,7 +138,7 @@ describe('NumericInput', () => {
         value={1}
         onValueChange={onValueChange}
         variant="standard"
-      />,
+      />
     );
     const input = screen.getByRole('spinbutton');
     expect(input).toBeInTheDocument();
@@ -152,7 +152,7 @@ describe('NumericInput', () => {
         value={1.23456}
         onValueChange={onValueChange}
         precision={2}
-      />,
+      />
     );
     const input = screen.getByRole('spinbutton');
     expect(input).toHaveValue(1.23);
@@ -186,7 +186,7 @@ describe('NumericInput', () => {
   it('covers useEffect: updates input value when value prop changes and not focused', () => {
     const onValueChange = vi.fn();
     const { rerender } = render(
-      <NumericInput value={1} onValueChange={onValueChange} />,
+      <NumericInput value={1} onValueChange={onValueChange} />
     );
     const input = screen.getByRole('spinbutton');
     expect(input).toHaveValue(1);
@@ -198,7 +198,7 @@ describe('NumericInput', () => {
   it('covers useEffect: does not update input value when focused', () => {
     const onValueChange = vi.fn();
     const { rerender } = render(
-      <NumericInput value={1} onValueChange={onValueChange} />,
+      <NumericInput value={1} onValueChange={onValueChange} />
     );
     const input = screen.getByRole('spinbutton');
 
@@ -227,7 +227,7 @@ describe('NumericInput', () => {
   it('covers stepUp and stepDown with decimal precision', () => {
     const onValueChange = vi.fn();
     render(
-      <NumericInput value={1.5} onValueChange={onValueChange} precision={2} />,
+      <NumericInput value={1.5} onValueChange={onValueChange} precision={2} />
     );
     const input = screen.getByRole('spinbutton') as HTMLInputElement;
 
@@ -240,7 +240,7 @@ describe('NumericInput', () => {
   it('covers handleBlur: does not call onValueChange when value unchanged after blur', () => {
     const onValueChange = vi.fn();
     const { rerender } = render(
-      <NumericInput value={10} onValueChange={onValueChange} />,
+      <NumericInput value={10} onValueChange={onValueChange} />
     );
     const input = screen.getByRole('spinbutton');
 

@@ -1,5 +1,5 @@
 export function parseNumberInputChange(
-  input: HTMLInputElement | HTMLTextAreaElement,
+  input: HTMLInputElement | HTMLTextAreaElement
 ): number | undefined {
   if ('value' in input && input.value === '') {
     return undefined;

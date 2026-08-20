@@ -41,7 +41,7 @@ export const ExtraConfigsSection = ({ capi, update }: Props) => {
   const handleConfigChange = <K extends keyof CAPIExtraConfig>(
     index: number,
     field: K,
-    value: CAPIExtraConfig[K],
+    value: CAPIExtraConfig[K]
   ) => {
     const updated = [...capi.extra_configs];
     updated[index] = { ...updated[index], [field]: value };
@@ -100,7 +100,7 @@ export const ExtraConfigsSection = ({ capi, update }: Props) => {
                       handleConfigChange(
                         i,
                         'small_scale_variations',
-                        e.target.checked,
+                        e.target.checked
                       )
                     }
                   />

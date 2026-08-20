@@ -21,7 +21,7 @@ export function BehaviorServicesSection({
   const services = rsu.opencda_behavior_services ?? [];
   const aimSvc = services.find(
     (s): s is Extract<RsuBehaviorService, { type: 'aim_server' }> =>
-      s.type === 'aim_server',
+      s.type === 'aim_server'
   );
 
   const toggleAimServer = (active: boolean) => {
@@ -47,11 +47,11 @@ export function BehaviorServicesSection({
   };
 
   const updateAimServer = (
-    patch: Partial<Extract<RsuBehaviorService, { type: 'aim_server' }>>,
+    patch: Partial<Extract<RsuBehaviorService, { type: 'aim_server' }>>
   ) => {
     updateRSU(rsu.id, {
       opencda_behavior_services: services.map((s) =>
-        s.type === 'aim_server' ? { ...s, ...patch } : s,
+        s.type === 'aim_server' ? { ...s, ...patch } : s
       ) as RsuBehaviorService[],
     });
   };

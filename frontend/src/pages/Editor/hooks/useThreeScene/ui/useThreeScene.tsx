@@ -58,7 +58,7 @@ export function useThreeScene({
     } catch (err) {
       setStep('done');
       setError?.(
-        err instanceof Error ? err : new Error('WebGL initialization failed'),
+        err instanceof Error ? err : new Error('WebGL initialization failed')
       );
       return;
     }

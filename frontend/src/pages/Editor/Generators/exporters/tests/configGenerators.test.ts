@@ -241,19 +241,19 @@ describe('mergeSimConfigWithDefaults: attacks and legacy bg_spawn_range fields',
     const merged = mergeSimConfigWithDefaults({});
 
     expect(merged.opencda.bg_spawn_range.x_step).toBe(
-      defaultSimConfig.opencda.bg_spawn_range.x_step,
+      defaultSimConfig.opencda.bg_spawn_range.x_step
     );
     expect(merged.opencda.bg_spawn_range.y_step).toBe(
-      defaultSimConfig.opencda.bg_spawn_range.y_step,
+      defaultSimConfig.opencda.bg_spawn_range.y_step
     );
   });
 
   it('treats null/undefined input the same as an empty object', () => {
     expect(mergeSimConfigWithDefaults(null)).toEqual(
-      mergeSimConfigWithDefaults({}),
+      mergeSimConfigWithDefaults({})
     );
     expect(mergeSimConfigWithDefaults(undefined)).toEqual(
-      mergeSimConfigWithDefaults({}),
+      mergeSimConfigWithDefaults({})
     );
   });
 
@@ -317,7 +317,7 @@ describe('mergeSimConfigWithDefaults: attacks and legacy bg_spawn_range fields',
     });
 
     expect(merged.carla.weather_override).toEqual(
-      defaultSimConfig.carla.weather_override,
+      defaultSimConfig.carla.weather_override
     );
   });
 

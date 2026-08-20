@@ -106,7 +106,7 @@ export function useSceneAnimator({
         });
 
         const pedestrianMeshById = pedestrianMeshIndexRef.current(
-          pedestrianMeshesRef.current,
+          pedestrianMeshesRef.current
         );
         pedestrians.forEach((pedestrian) => {
           const mesh = pedestrianMeshById.get(pedestrian.id);

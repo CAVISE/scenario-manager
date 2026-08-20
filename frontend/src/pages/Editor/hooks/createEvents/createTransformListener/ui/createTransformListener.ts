@@ -39,7 +39,7 @@ function updaterFor(kind: MoveKind, id: string): (p: object) => void {
 
 function readSnapshot(
   kind: MoveKind,
-  id: string,
+  id: string
 ): Record<string, unknown> | null {
   const s = useEditorStore.getState();
   switch (kind) {
@@ -84,7 +84,7 @@ function readSnapshot(
 
 function snapshotsDiffer(
   a: Record<string, unknown>,
-  b: Record<string, unknown>,
+  b: Record<string, unknown>
 ): boolean {
   return Object.keys(a).some((key) => a[key] !== b[key]);
 }
@@ -92,7 +92,7 @@ function snapshotsDiffer(
 function resolveAttachedEntity(
   obj: THREE.Object3D,
   carMeshesRef: MutableRefObject<THREE.Mesh[]>,
-  cubeCirclesRef: MutableRefObject<THREE.Mesh[][]>,
+  cubeCirclesRef: MutableRefObject<THREE.Mesh[][]>
 ): { kind: MoveKind; id: string } | null {
   const { type, id } = obj.userData;
 
@@ -124,13 +124,13 @@ function findMeshForEntity(
   id: string,
   scene: THREE.Scene,
   carMeshesRef: MutableRefObject<THREE.Mesh[]>,
-  cubeCirclesRef: MutableRefObject<THREE.Mesh[][]>,
+  cubeCirclesRef: MutableRefObject<THREE.Mesh[][]>
 ): THREE.Object3D | null {
   if (kind === 'point') {
     const pt = useEditorStore.getState().points.find((p) => p.id === id);
     if (!pt) return null;
     const carIndex = carMeshesRef.current.findIndex(
-      (m) => m.userData.id === pt.carId,
+      (m) => m.userData.id === pt.carId
     );
     if (carIndex === -1) return null;
     const ci = useEditorStore
@@ -153,7 +153,7 @@ function findMeshForEntity(
 }
 
 export function createTransformListener(
-  opts: CreateTransformListenerOptions,
+  opts: CreateTransformListenerOptions
 ): () => void {
   const {
     transformControls,
@@ -326,7 +326,7 @@ export function createTransformListener(
             entity.id,
             scene,
             carMeshesRef,
-            cubeCirclesRef,
+            cubeCirclesRef
           );
           if (mesh) transformControls.attach(mesh);
         }, 0);
@@ -337,17 +337,17 @@ export function createTransformListener(
   transformControls.addEventListener('objectChange' as never, scheduleFlush);
   transformControls.addEventListener(
     'dragging-changed' as never,
-    onDraggingChanged as never,
+    onDraggingChanged as never
   );
   return () => {
     cancelScheduledFlush();
     transformControls.removeEventListener(
       'objectChange' as never,
-      scheduleFlush,
+      scheduleFlush
     );
     transformControls.removeEventListener(
       'dragging-changed' as never,
-      onDraggingChanged as never,
+      onDraggingChanged as never
     );
   };
 }

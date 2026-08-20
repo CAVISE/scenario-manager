@@ -2,7 +2,7 @@ import { useEditorStore } from '@/store';
 import { CreateStoreSubscriptionsOptions } from '../types/createStoreSubscriptionsTypes';
 
 export function createStoreSubscriptions(
-  opts: CreateStoreSubscriptionsOptions,
+  opts: CreateStoreSubscriptionsOptions
 ): () => void {
   const { getIsDragging, loadPoints, updateSceneGraph } = opts;
 

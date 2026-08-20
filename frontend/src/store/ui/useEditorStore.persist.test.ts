@@ -43,7 +43,7 @@ describe('updateScenario', () => {
     act(() =>
       useEditorStore
         .getState()
-        .updateScenario({ name: 'My Scenario', weather: 'CloudySunset' }),
+        .updateScenario({ name: 'My Scenario', weather: 'CloudySunset' })
     );
     const { Scenario } = useEditorStore.getState();
     expect(Scenario.name).toBe('My Scenario');
@@ -133,7 +133,7 @@ describe('updateCar', () => {
       id = useEditorStore.getState().addCar(0, 0, 0, 'sedan', 'red');
     });
     act(() =>
-      useEditorStore.getState().updateCar(id!, { speed: 120, color: 'green' }),
+      useEditorStore.getState().updateCar(id!, { speed: 120, color: 'green' })
     );
     const car = useEditorStore.getState().cars.find((c) => c.id === id!);
     expect(car?.speed).toBe(120);
@@ -211,7 +211,7 @@ describe('updateRSU', () => {
     act(() =>
       useEditorStore
         .getState()
-        .updateRSU(RSUs[0].id, { tx_power: 30, range: 1000 }),
+        .updateRSU(RSUs[0].id, { tx_power: 30, range: 1000 })
     );
     expect(useEditorStore.getState().RSUs[0].tx_power).toBe(30);
     expect(useEditorStore.getState().RSUs[0].range).toBe(1000);
@@ -257,7 +257,7 @@ describe('updateLidar', () => {
       id = useEditorStore.getState().addLidar('car-1', 0, 0, 0);
     });
     act(() =>
-      useEditorStore.getState().updateLidar(id!, { range: 100, channels: 64 }),
+      useEditorStore.getState().updateLidar(id!, { range: 100, channels: 64 })
     );
     const lidar = useEditorStore.getState().lidars[0];
     expect(lidar.range).toBe(100);
@@ -329,7 +329,7 @@ describe('removePointsByCarId', () => {
     });
     act(() => useEditorStore.getState().removePointsByCarId('car-1'));
     expect(
-      useEditorStore.getState().points.every((p) => p.carId === 'car-2'),
+      useEditorStore.getState().points.every((p) => p.carId === 'car-2')
     ).toBe(true);
   });
 });
@@ -359,7 +359,7 @@ describe('updateBuilding', () => {
     act(() =>
       useEditorStore
         .getState()
-        .updateBuilding(buildings[0].id, { height: 50, material: 'glass' }),
+        .updateBuilding(buildings[0].id, { height: 50, material: 'glass' })
     );
     expect(useEditorStore.getState().buildings[0].height).toBe(50);
     expect(useEditorStore.getState().buildings[0].material).toBe('glass');
@@ -404,7 +404,7 @@ describe('updatePedestrian', () => {
     act(() =>
       useEditorStore
         .getState()
-        .updatePedestrian(id!, { speed: 2.5, is_invincible: true }),
+        .updatePedestrian(id!, { speed: 2.5, is_invincible: true })
     );
     const ped = useEditorStore.getState().pedestrians[0];
     expect(ped.speed).toBe(2.5);
@@ -470,10 +470,10 @@ describe('updateSimConfig', () => {
     act(() =>
       useEditorStore.getState().updateSimConfig({
         someTopLevelKey: 'value',
-      } as unknown as SimulationConfig),
+      } as unknown as SimulationConfig)
     );
     expect(
-      (useEditorStore.getState().simConfig as SimulationConfig).sim_duration,
+      (useEditorStore.getState().simConfig as SimulationConfig).sim_duration
     ).toBe(100);
   });
 });
@@ -481,14 +481,14 @@ describe('updateSimConfig', () => {
 describe('updateSimConfigOmnet', () => {
   it('merges into simConfig.omnet', () => {
     act(() =>
-      useEditorStore.getState().updateSimConfigOmnet({ someKey: 42 } as object),
+      useEditorStore.getState().updateSimConfigOmnet({ someKey: 42 } as object)
     );
     expect(
       (
         useEditorStore.getState().simConfig.omnet as unknown as {
           someKey: number;
         }
-      ).someKey,
+      ).someKey
     ).toBe(42);
   });
 });
@@ -498,14 +498,14 @@ describe('updateSimConfigArtery', () => {
     act(() =>
       useEditorStore
         .getState()
-        .updateSimConfigArtery({ someKey: 'a' } as object),
+        .updateSimConfigArtery({ someKey: 'a' } as object)
     );
     expect(
       (
         useEditorStore.getState().simConfig.artery as unknown as {
           someKey: string;
         }
-      ).someKey,
+      ).someKey
     ).toBe('a');
   });
 });
@@ -513,14 +513,14 @@ describe('updateSimConfigArtery', () => {
 describe('updateSimConfigSionna', () => {
   it('merges into simConfig.sionna', () => {
     act(() =>
-      useEditorStore.getState().updateSimConfigSionna({ freq: 28e9 } as object),
+      useEditorStore.getState().updateSimConfigSionna({ freq: 28e9 } as object)
     );
     expect(
       (
         useEditorStore.getState().simConfig.sionna as unknown as {
           freq: number;
         }
-      ).freq,
+      ).freq
     ).toBe(28e9);
   });
 });
@@ -528,11 +528,11 @@ describe('updateSimConfigSionna', () => {
 describe('updateSimConfigMPC', () => {
   it('merges into simConfig.mpc', () => {
     act(() =>
-      useEditorStore.getState().updateSimConfigMPC({ order: 4 } as object),
+      useEditorStore.getState().updateSimConfigMPC({ order: 4 } as object)
     );
     expect(
       (useEditorStore.getState().simConfig.mpc as unknown as { order: number })
-        .order,
+        .order
     ).toBe(4);
   });
 });
@@ -540,11 +540,11 @@ describe('updateSimConfigMPC', () => {
 describe('updateSimConfigCarla', () => {
   it('merges into simConfig.carla', () => {
     act(() =>
-      useEditorStore.getState().updateSimConfigCarla({ port: 2000 } as object),
+      useEditorStore.getState().updateSimConfigCarla({ port: 2000 } as object)
     );
     expect(
       (useEditorStore.getState().simConfig.carla as unknown as { port: number })
-        .port,
+        .port
     ).toBe(2000);
   });
 });
@@ -554,14 +554,14 @@ describe('updateSimConfigCAPI', () => {
     act(() =>
       useEditorStore
         .getState()
-        .updateSimConfigCAPI({ endpoint: '/api' } as object),
+        .updateSimConfigCAPI({ endpoint: '/api' } as object)
     );
     expect(
       (
         useEditorStore.getState().simConfig.capi as unknown as {
           endpoint: string;
         }
-      ).endpoint,
+      ).endpoint
     ).toBe('/api');
   });
 });
@@ -571,14 +571,14 @@ describe('updateSimConfigOpenCDA', () => {
     act(() =>
       useEditorStore
         .getState()
-        .updateSimConfigOpenCDA({ scenario: 'highway' } as object),
+        .updateSimConfigOpenCDA({ scenario: 'highway' } as object)
     );
     expect(
       (
         useEditorStore.getState().simConfig.opencda as unknown as {
           scenario: string;
         }
-      ).scenario,
+      ).scenario
     ).toBe('highway');
   });
 });
@@ -588,14 +588,14 @@ describe('updateSimConfigSumo', () => {
     act(() =>
       useEditorStore
         .getState()
-        .updateSimConfigSumo({ step_length: 0.5 } as object),
+        .updateSimConfigSumo({ step_length: 0.5 } as object)
     );
     expect(
       (
         useEditorStore.getState().simConfig.sumo as unknown as {
           step_length: number;
         }
-      ).step_length,
+      ).step_length
     ).toBe(0.5);
   });
 });

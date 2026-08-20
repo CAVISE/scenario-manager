@@ -10,7 +10,7 @@ export const useCapiConfig = () => {
 
   const capi = useMemo(
     () => simConfig.capi ?? defaultSimConfig.capi,
-    [simConfig.capi],
+    [simConfig.capi]
   );
 
   return { capi, updateSimConfigCAPI };

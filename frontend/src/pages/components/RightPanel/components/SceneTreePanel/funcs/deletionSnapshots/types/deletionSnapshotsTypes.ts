@@ -16,7 +16,7 @@ export type { DeletionSnapshot };
 export function buildSingleNodeSnapshot(
   id: string,
   label: string,
-  s: ReturnType<typeof useEditorStore.getState>,
+  s: ReturnType<typeof useEditorStore.getState>
 ): Omit<DeletionSnapshot, 'snapshotId' | 'deletedAt'> | null {
   switch (label) {
     case 'CAR': {

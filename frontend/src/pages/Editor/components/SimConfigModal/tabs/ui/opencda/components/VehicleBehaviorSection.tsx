@@ -42,7 +42,7 @@ export const VehicleBehaviorSection = ({
 }: VehicleBehaviorSectionProps) => {
   const updateField = (
     field: keyof SimulationConfig['opencda'],
-    value: SimulationConfig['opencda'][keyof SimulationConfig['opencda']],
+    value: SimulationConfig['opencda'][keyof SimulationConfig['opencda']]
   ) => {
     onUpdate({ [field]: value } as Partial<SimulationConfig['opencda']>);
   };
@@ -50,7 +50,7 @@ export const VehicleBehaviorSection = ({
   const numberField = (
     field: keyof SimulationConfig['opencda'],
     min?: number,
-    max?: number,
+    max?: number
   ) => createNumberFieldOnChange((val) => updateField(field, val), min, max);
 
   return (

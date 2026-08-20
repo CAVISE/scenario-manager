@@ -186,7 +186,7 @@ describe('useEditorStore — additional branch coverage', () => {
   it('setError sets error state', () => {
     useEditorStore.getState().setError(new Error('something failed'));
     expect(useEditorStore.getState().error).toStrictEqual(
-      new Error('something failed'),
+      new Error('something failed')
     );
     useEditorStore.getState().setError(null);
     expect(useEditorStore.getState().error).toBeNull();
@@ -200,7 +200,7 @@ describe('useEditorStore — additional branch coverage', () => {
   it('updateSimConfigArtery merges artery section', () => {
     useEditorStore.getState().updateSimConfigArtery({ sumo_step_length: 60 });
     expect(useEditorStore.getState().simConfig.artery.sumo_step_length).toBe(
-      60,
+      60
     );
   });
 
@@ -213,7 +213,7 @@ describe('useEditorStore — additional branch coverage', () => {
     useEditorStore.getState().updateSimConfigMPC({ horizon: 10 } as never);
     expect(
       (useEditorStore.getState().simConfig.mpc as Record<string, unknown>)
-        .horizon,
+        .horizon
     ).toBe(10);
   });
   describe('persist merge', () => {
@@ -266,7 +266,7 @@ describe('useEditorStore — additional branch coverage', () => {
 
       localStorage.setItem(
         'editor-scenario-cache',
-        JSON.stringify({ state: persisted, version: 0 }),
+        JSON.stringify({ state: persisted, version: 0 })
       );
 
       const { useEditorStore: freshStore } = await import('./useEditorStore');
@@ -291,17 +291,17 @@ describe('useEditorStore — additional branch coverage', () => {
             },
           },
           version: 0,
-        }),
+        })
       );
 
       const { useEditorStore: freshStore } = await import('./useEditorStore');
       await freshStore.persist.rehydrate();
 
       expect(freshStore.getState().simConfig.opencda.local_planner.debug).toBe(
-        true,
+        true
       );
       expect(
-        freshStore.getState().simConfig.opencda.local_planner.debug_trajectory,
+        freshStore.getState().simConfig.opencda.local_planner.debug_trajectory
       ).toBe(true);
     });
   });
@@ -315,7 +315,7 @@ describe('useEditorStore — additional branch coverage', () => {
     it('updateRSU with wrong id leaves RSUs unchanged', () => {
       act(() => useEditorStore.getState().addRSU(0, 0, 0));
       act(() =>
-        useEditorStore.getState().updateRSU('wrong-id', { tx_power: 99 }),
+        useEditorStore.getState().updateRSU('wrong-id', { tx_power: 99 })
       );
       expect(useEditorStore.getState().RSUs[0].tx_power).toBe(23);
     });
@@ -323,7 +323,7 @@ describe('useEditorStore — additional branch coverage', () => {
     it('updateLidar with wrong id leaves lidars unchanged', () => {
       act(() => useEditorStore.getState().addLidar('car-1', 0, 0, 0));
       act(() =>
-        useEditorStore.getState().updateLidar('wrong-id', { range: 999 }),
+        useEditorStore.getState().updateLidar('wrong-id', { range: 999 })
       );
       expect(useEditorStore.getState().lidars[0].range).toBe(50);
     });
@@ -337,7 +337,7 @@ describe('useEditorStore — additional branch coverage', () => {
     it('updateBuilding with wrong id leaves buildings unchanged', () => {
       act(() => useEditorStore.getState().addBuilding(0, 0, 0));
       act(() =>
-        useEditorStore.getState().updateBuilding('wrong-id', { height: 99 }),
+        useEditorStore.getState().updateBuilding('wrong-id', { height: 99 })
       );
       expect(useEditorStore.getState().buildings[0].height).toBe(20);
     });

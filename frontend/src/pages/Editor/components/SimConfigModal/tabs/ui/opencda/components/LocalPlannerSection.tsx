@@ -50,7 +50,7 @@ export const LocalPlannerSection = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     field: keyof SimulationConfig['opencda']['local_planner'],
     min?: number,
-    max?: number,
+    max?: number
   ) => {
     const val = parseNumberFromEvent(e, min, max);
     if (val === undefined) return;
@@ -73,7 +73,7 @@ export const LocalPlannerSection = ({
       tooltip?: string;
       chip?: boolean;
       chipLabel?: string;
-    },
+    }
   ) => (
     <Tooltip title={options?.tooltip || ''} arrow placement="top">
       <Stack direction="row" spacing={1} alignItems="center" sx={{ flex: 1 }}>
@@ -107,7 +107,7 @@ export const LocalPlannerSection = ({
 
   const handleSwitchChange = (
     field: keyof SimulationConfig['opencda']['local_planner'],
-    checked: boolean,
+    checked: boolean
   ) => {
     onUpdate({
       local_planner: {
@@ -145,7 +145,7 @@ export const LocalPlannerSection = ({
             tooltip: 'Trajectory update frequency in Hz',
             chip: true,
             chipLabel: `${trajectoryUpdateFreq} Hz`,
-          },
+          }
         )}
         {createNumberField(
           'Waypoint update freq',
@@ -158,7 +158,7 @@ export const LocalPlannerSection = ({
             tooltip: 'Waypoint update frequency in Hz',
             chip: true,
             chipLabel: `${waypointUpdateFreq} Hz`,
-          },
+          }
         )}
       </Stack>
 

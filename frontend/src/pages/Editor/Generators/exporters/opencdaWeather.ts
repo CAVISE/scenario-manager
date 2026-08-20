@@ -102,7 +102,7 @@ export const WEATHER_BY_PRESET: Record<CarlaWeather, OpenCDAWeatherParams> = {
 };
 
 export function weatherParamsFromPreset(
-  preset: CarlaWeather | string | undefined,
+  preset: CarlaWeather | string | undefined
 ): OpenCDAWeatherParams {
   if (preset && preset in WEATHER_BY_PRESET) {
     return WEATHER_BY_PRESET[preset as CarlaWeather];

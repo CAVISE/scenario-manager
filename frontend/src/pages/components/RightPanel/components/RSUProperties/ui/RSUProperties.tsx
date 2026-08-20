@@ -14,7 +14,7 @@ export default function RSUProperties({ rsu, onDelete }: RSUPropertiesProps) {
   const updateRSU = useEditorStore((s) => s.updateRSU);
 
   const [showBehaviorServices, setShowBehaviorServices] = useState(
-    (rsu.opencda_behavior_services?.length ?? 0) > 0,
+    (rsu.opencda_behavior_services?.length ?? 0) > 0
   );
   const [showColor, setShowColor] = useState(rsu.opencda_color != null);
   const [showId, setShowId] = useState(rsu.opencda_id != null);

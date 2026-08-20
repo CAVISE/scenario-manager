@@ -68,7 +68,7 @@ describe('IScenarioTypes', () => {
     it('returns detail string for non-empty string detail', () => {
       expect(formatApiDetail('Error message')).toBe('Error message');
       expect(formatApiDetail('  trimmed message  ')).toBe(
-        '  trimmed message  ',
+        '  trimmed message  '
       );
     });
 
@@ -78,7 +78,7 @@ describe('IScenarioTypes', () => {
         { msg: 'Invalid value', loc: ['body', 'age'] },
       ];
       expect(formatApiDetail(issues)).toBe(
-        'name: Required field; age: Invalid value',
+        'name: Required field; age: Invalid value'
       );
     });
 
@@ -103,7 +103,7 @@ describe('IScenarioTypes', () => {
         { loc: ['body', 'another'] },
       ];
       expect(formatApiDetail(issues)).toBe(
-        'field: Validation error; another: Validation error',
+        'field: Validation error; another: Validation error'
       );
     });
 
@@ -114,7 +114,7 @@ describe('IScenarioTypes', () => {
         { msg: 'Error 3', loc: ['body', 'field3'] },
       ];
       expect(formatApiDetail(issues)).toBe(
-        'field1: Error 1; Error 2; field3: Error 3',
+        'field1: Error 1; Error 2; field3: Error 3'
       );
     });
 
@@ -133,7 +133,7 @@ describe('IScenarioTypes', () => {
         { loc: [] },
       ];
       expect(formatApiDetail(issues)).toBe(
-        'field1: ; field2: Valid error; Validation error',
+        'field1: ; field2: Valid error; Validation error'
       );
     });
 
@@ -161,7 +161,7 @@ describe('IScenarioTypes', () => {
         { msg: 'Also valid', loc: ['body', 'field3'] },
       ];
       expect(formatApiDetail(issues)).toBe(
-        'field1: Valid; field2: ; field3: Also valid',
+        'field1: Valid; field2: ; field3: Also valid'
       );
     });
 
@@ -200,7 +200,7 @@ describe('IScenarioTypes', () => {
         { msg: 'Error with special chars: @#$%^&*()', loc: ['body', 'field'] },
       ];
       expect(formatApiDetail(issues)).toBe(
-        'field: Error with special chars: @#$%^&*()',
+        'field: Error with special chars: @#$%^&*()'
       );
     });
 
@@ -222,7 +222,7 @@ describe('IScenarioTypes', () => {
         { msg: 'Deep nested error', loc: longLoc },
       ];
       expect(formatApiDetail(issues)).toBe(
-        'a.b.c.d.e.f.g.h.i.j: Deep nested error',
+        'a.b.c.d.e.f.g.h.i.j: Deep nested error'
       );
     });
 

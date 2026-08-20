@@ -4,10 +4,10 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 export function useLoadingState() {
   const isDoneRef = useRef(false);
   const [loadingText, setLoadingText] = useState<string | null>(
-    LOADING_STEPS.init.text,
+    LOADING_STEPS.init.text
   );
   const [loadingProgress, setLoadingProgress] = useState<number>(
-    LOADING_STEPS.init.pct,
+    LOADING_STEPS.init.pct
   );
 
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -37,7 +37,7 @@ export function useLoadingState() {
       setLoadingText(cfg.text);
       setLoadingProgress(cfg.pct);
     },
-    [clearTimers],
+    [clearTimers]
   );
 
   useEffect(() => {

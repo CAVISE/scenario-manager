@@ -7,7 +7,7 @@ describe('parseNumberInputChange', () => {
       parseNumberInputChange({
         value: '0.15',
         valueAsNumber: 0.15,
-      } as HTMLInputElement),
+      } as HTMLInputElement)
     ).toBe(0.15);
   });
 
@@ -16,7 +16,7 @@ describe('parseNumberInputChange', () => {
       parseNumberInputChange({
         value: '',
         valueAsNumber: NaN,
-      } as HTMLInputElement),
+      } as HTMLInputElement)
     ).toBeUndefined();
   });
 
@@ -25,7 +25,7 @@ describe('parseNumberInputChange', () => {
       parseNumberInputChange({
         value: '',
         valueAsNumber: NaN,
-      } as HTMLInputElement),
+      } as HTMLInputElement)
     ).toBeUndefined();
   });
 

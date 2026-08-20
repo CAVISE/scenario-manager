@@ -7,6 +7,6 @@ export const DownloadIconStyles = { marginRight: 8 } as const;
 export interface SimulatorProps {
   openExportDialog: (
     filename: string,
-    contentGenerator: (filename: string) => string,
+    contentGenerator: (filename: string) => string
   ) => void;
 }

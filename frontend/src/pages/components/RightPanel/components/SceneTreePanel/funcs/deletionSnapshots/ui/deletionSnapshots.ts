@@ -33,20 +33,20 @@ export function pushClearSceneSnapshot(): PushedSnapshotInfo | null {
   });
   s.RSUs.forEach((rsu, index) => entities.push({ kind: 'rsu', index, rsu }));
   s.buildings.forEach((building, index) =>
-    entities.push({ kind: 'building', index, building }),
+    entities.push({ kind: 'building', index, building })
   );
   s.pedestrians.forEach((pedestrian, index) =>
-    entities.push({ kind: 'pedestrian', index, pedestrian }),
+    entities.push({ kind: 'pedestrian', index, pedestrian })
   );
 
   const carIds = new Set(s.cars.map((c) => c.id));
   const orphanedPoints = s.points.filter((p) => !carIds.has(p.carId));
   const orphanedLidars = s.lidars.filter((l) => !carIds.has(l.carId));
   orphanedPoints.forEach((point, index) =>
-    entities.push({ kind: 'point', index, point }),
+    entities.push({ kind: 'point', index, point })
   );
   orphanedLidars.forEach((lidar, index) =>
-    entities.push({ kind: 'lidar', index, lidar }),
+    entities.push({ kind: 'lidar', index, lidar })
   );
 
   if (entities.length === 0) return null;

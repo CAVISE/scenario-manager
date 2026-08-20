@@ -15,7 +15,7 @@ export default function DrivingExportSection({
 }: SimulatorProps) {
   const handleExportOpenCDA = () => {
     openExportDialog('opencda_config.yaml', () =>
-      buildOpenCDAArtifact(useEditorStore.getState()),
+      buildOpenCDAArtifact(useEditorStore.getState())
     );
   };
   const handleExportCarla = () => {

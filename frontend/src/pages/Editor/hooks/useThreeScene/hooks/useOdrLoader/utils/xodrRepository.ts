@@ -213,7 +213,7 @@ export function setCachedCustomXodrContent(content: string): void {
 }
 
 export async function resolveXodrTextForSimulation(
-  fallbackMapName?: string,
+  fallbackMapName?: string
 ): Promise<string | undefined> {
   const cached = getCachedXodrContent();
   if (cached) return cached;

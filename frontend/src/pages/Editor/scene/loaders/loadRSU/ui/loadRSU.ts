@@ -29,7 +29,7 @@ export function loadRSU(ctx: LoadRSUContext): {
       if (m.isMesh) {
         m.geometry?.dispose();
         (Array.isArray(m.material) ? m.material : [m.material]).forEach((mt) =>
-          mt?.dispose(),
+          mt?.dispose()
         );
       }
     });

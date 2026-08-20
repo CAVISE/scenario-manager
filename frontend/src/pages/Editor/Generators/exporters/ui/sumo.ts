@@ -17,7 +17,7 @@ function xmlAttribute(value: string): string {
 
 function sumoArtifactBaseName(
   outputFilename: string | undefined,
-  fallback: string,
+  fallback: string
 ): string {
   const filename = outputFilename?.trim();
   if (!filename) return fallback.trim() || 'scenario';
@@ -41,13 +41,13 @@ export function getSumoNetFilename(map: string): string {
 
 export function useGenerateSumoCfg(
   config: SimulationConfig,
-  outputFilename?: string,
+  outputFilename?: string
 ): string {
   const useSimConfig = mergeSimConfigWithDefaults(config);
 
   const { scenario_name, full_output } = useSimConfig.sumo;
   const artifactName = xmlAttribute(
-    sumoArtifactBaseName(outputFilename, scenario_name),
+    sumoArtifactBaseName(outputFilename, scenario_name)
   );
   const netFile = xmlAttribute(getSumoNetFilename(useSimConfig.carla.map));
   return `<?xml version='1.0' encoding='UTF-8'?>
@@ -74,14 +74,14 @@ export function useGenerateSumoCfg(
 export function useGenerateRouXml(
   config: SimulationConfig,
   cars: Car[],
-  generatedRoutes: GeneratedSumoRoutes = {},
+  generatedRoutes: GeneratedSumoRoutes = {}
 ): string {
   const useSimConfig = mergeSimConfigWithDefaults(config);
 
   const vtypeLines = useSimConfig.sumo.vtypes
     .map(
       (vt) =>
-        `  <vType id="${vt.id}" minGap="${vt.minGap}" tau="${vt.tau}" vClass="${vt.vClass}" carFollowModel="${vt.carFollowModel}" speedFactor="${vt.speedFactor}"/>`,
+        `  <vType id="${vt.id}" minGap="${vt.minGap}" tau="${vt.tau}" vClass="${vt.vClass}" carFollowModel="${vt.carFollowModel}" speedFactor="${vt.speedFactor}"/>`
     )
     .join('\n');
 
@@ -99,7 +99,7 @@ export function useGenerateRouXml(
       const edges = car.sumo_edges?.trim() || generated?.edges.trim() || '';
       if (!edges) {
         throw new Error(
-          `Vehicle ${car.opencda_name || car.id} has no SUMO route`,
+          `Vehicle ${car.opencda_name || car.id} has no SUMO route`
         );
       }
       const generatedAnchors =
@@ -147,7 +147,7 @@ function generateStopXml(car: Car, index: number): string {
   const lane = stop.lane.trim();
   if (!lane) {
     throw new Error(
-      `Vehicle ${label}: Static stop is enabled but its Lane field is empty`,
+      `Vehicle ${label}: Static stop is enabled but its Lane field is empty`
     );
   }
   if (
@@ -157,12 +157,12 @@ function generateStopXml(car: Car, index: number): string {
     stop.endPos <= stop.startPos
   ) {
     throw new Error(
-      `Vehicle ${label}: stop positions must satisfy 0 <= startPos < endPos`,
+      `Vehicle ${label}: stop positions must satisfy 0 <= startPos < endPos`
     );
   }
   if (!Number.isFinite(stop.duration) || stop.duration < 0) {
     throw new Error(
-      `Vehicle ${label}: stop duration must be a non-negative number`,
+      `Vehicle ${label}: stop duration must be a non-negative number`
     );
   }
   return `\n    <stop lane="${xmlAttribute(lane)}" startPos="${stop.startPos}" endPos="${stop.endPos}" duration="${stop.duration}"/>`;
@@ -170,7 +170,7 @@ function generateStopXml(car: Car, index: number): string {
 
 export function generatePolyXml(
   buildings: Building[],
-  offsets: MapOffsets = { x: 0, y: 0 },
+  offsets: MapOffsets = { x: 0, y: 0 }
 ): string {
   const polyLines = buildings
     .map((b, i) => {

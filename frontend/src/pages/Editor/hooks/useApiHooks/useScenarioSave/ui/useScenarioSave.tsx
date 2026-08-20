@@ -16,7 +16,7 @@ export function useScenarioSave() {
       console.error(err);
       const errorMessage = await getApiErrorMessage(
         err,
-        'Failed to save scenario.',
+        'Failed to save scenario.'
       );
       toast.error(errorMessage);
     }

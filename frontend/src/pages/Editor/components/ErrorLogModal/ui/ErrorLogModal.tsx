@@ -43,7 +43,7 @@ function ErrorLogModal({ open, onClose }: ErrorLogModalProps) {
     const text = errorLog.map(formatEntryForCopy).join('\n\n');
     try {
       await navigator.clipboard.writeText(
-        text || 'No errors logged this session.',
+        text || 'No errors logged this session.'
       );
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);

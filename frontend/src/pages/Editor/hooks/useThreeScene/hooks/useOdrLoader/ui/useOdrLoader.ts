@@ -58,7 +58,7 @@ export function useOdrLoader({
         console.error(err);
         setStep('done');
         setError?.(
-          err instanceof Error ? err : new Error('Failed to process map file'),
+          err instanceof Error ? err : new Error('Failed to process map file')
         );
       }
     }
@@ -73,12 +73,12 @@ export function useOdrLoader({
         }
 
         const mapName = getStoredXodrName(
-          useEditorStore.getState().simConfig?.carla?.map,
+          useEditorStore.getState().simConfig?.carla?.map
         );
         const text = await fetchXodrText(mapName);
         if (cancelled) return;
         console.log(
-          `[OdrLoader] map "${mapName}" size: ${(text.length / 1024 / 1024).toFixed(2)} MB`,
+          `[OdrLoader] map "${mapName}" size: ${(text.length / 1024 / 1024).toFixed(2)} MB`
         );
         processFile(text, false);
       } catch (err) {
@@ -86,7 +86,7 @@ export function useOdrLoader({
         console.error(err);
         setStep('done');
         setError?.(
-          err instanceof Error ? err : new Error('Failed to load map'),
+          err instanceof Error ? err : new Error('Failed to load map')
         );
       }
     }
@@ -111,7 +111,7 @@ export function useOdrLoader({
         setError?.(
           err instanceof Error
             ? err
-            : new Error('WebAssembly initialization error'),
+            : new Error('WebAssembly initialization error')
         );
       }
     }
@@ -160,7 +160,7 @@ export function useOdrLoader({
       console.error('FS_createDataFile failed:', err);
       setStep('done');
       setError?.(
-        err instanceof Error ? err : new Error('FS_createDataFile failed'),
+        err instanceof Error ? err : new Error('FS_createDataFile failed')
       );
       return;
     }
@@ -172,7 +172,7 @@ export function useOdrLoader({
       console.error('OpenDriveMap failed:', err);
       setStep('done');
       setError?.(
-        err instanceof Error ? err : new Error('OpenDriveMap parse failed'),
+        err instanceof Error ? err : new Error('OpenDriveMap parse failed')
       );
       return;
     }

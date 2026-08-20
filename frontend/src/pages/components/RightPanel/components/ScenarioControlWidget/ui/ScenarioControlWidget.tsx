@@ -37,7 +37,7 @@ export default function ScenarioControlWidget() {
   const statusesQuery = useStatusesQuery();
   const statusesPreview = useMemo(
     () => (statusesQuery.data ?? []).slice(0, 3),
-    [statusesQuery.data],
+    [statusesQuery.data]
   );
 
   const hasId = scenarioIdInput.trim().length > 0;
@@ -91,7 +91,7 @@ export default function ScenarioControlWidget() {
               setNoticeWithToast,
               createScenarioMutation,
               scenarioIdInput,
-              setScenarioIdInput,
+              setScenarioIdInput
             )
           }
         >
@@ -106,7 +106,7 @@ export default function ScenarioControlWidget() {
               setNoticeWithToast,
               scenarioIdInput,
               hasId,
-              patchScenarioMutation,
+              patchScenarioMutation
             )
           }
         >
@@ -136,7 +136,7 @@ export default function ScenarioControlWidget() {
                   x: odrMapRef.current.x_offs,
                   y: -odrMapRef.current.y_offs,
                 }
-              : undefined,
+              : undefined
           )
         }
       >
@@ -225,7 +225,7 @@ export default function ScenarioControlWidget() {
                     setNoticeWithToast,
                     scenarioIdInput,
                     hasId,
-                    deleteScenarioMutation,
+                    deleteScenarioMutation
                   );
                 }}
               >

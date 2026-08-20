@@ -38,7 +38,7 @@ export function useBuildingMeshSync(): void {
 
       currentBuildings.forEach((building) => {
         const existing = buildingMeshesRef.current.find(
-          (m) => m.userData.id === building.id,
+          (m) => m.userData.id === building.id
         );
 
         if (existing) {

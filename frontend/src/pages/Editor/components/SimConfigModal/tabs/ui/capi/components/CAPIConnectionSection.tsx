@@ -60,7 +60,7 @@ export const CAPIConnectionSection = ({ capi, update }: Props) => (
           updateSelectField(
             e.target.value as CapiConfig['capi_log_level'],
             'capi_log_level',
-            update,
+            update
           )
         }
       >

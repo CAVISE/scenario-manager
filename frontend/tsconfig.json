@@ -16,8 +16,7 @@
     "types": ["node"],
     "target": "ES2020",
     "useDefineForClassFields": true,
-    "ignoreDeprecations": "6.0",
-    "baseUrl": ".",
+    "ignoreDeprecations": "5.0",
     "paths": {
       "@/*": ["./src/*"],
       "@components/*": ["./src/components/*"],

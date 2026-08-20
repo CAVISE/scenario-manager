@@ -19,7 +19,7 @@ interface StageEditorProps {
 
 export function StageEditor({ stage, onUpdate, onDelete }: StageEditorProps) {
   const [useStructuredForm, setUseStructuredForm] = useState(
-    stage?.type === 'spoofer',
+    stage?.type === 'spoofer'
   );
 
   if (!stage) return null;
