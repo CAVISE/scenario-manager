@@ -1,5 +1,6 @@
 import { MapOffsets } from '@/helpers/types/coordinateTransformTypes';
 import type { Car, Point } from '@/store/types/useEditorStoreTypes';
+import { groupByCarId, getGroupedByCarId } from '@/shared/utils/groupByCarId';
 
 type Coordinate = { x: number; y: number };
 type LaneGeometry = {
@@ -134,10 +135,11 @@ export function buildSumoRoutes(
 ): GeneratedSumoRoutes {
   const network = parseNetwork(netXml);
   const result: GeneratedSumoRoutes = {};
+  const pointsByCarId = groupByCarId(points);
 
   cars.forEach((car) => {
     const manualEdges = parseEdgeList(car.sumo_edges);
-    const routePoints = points.filter((point) => point.carId === car.id);
+    const routePoints = getGroupedByCarId(pointsByCarId, car.id);
     const sumoStart = toSumoCoordinate(
       { x: car.x, y: car.y },
       network,

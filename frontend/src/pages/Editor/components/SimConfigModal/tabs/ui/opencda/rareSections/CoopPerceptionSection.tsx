@@ -1,6 +1,6 @@
 import { Stack } from '@mui/material';
 
-import OpenCDACollapsibleSection from '../../../../components/OpenCDACollapsibleSection';
+import OpenCDACollapsibleSection from '@sim-config/components/OpenCDACollapsibleSection';
 import { RgbTriple } from '../rareComponents/RgbTriple';
 import { NumField } from '../rareComponents/NumField';
 

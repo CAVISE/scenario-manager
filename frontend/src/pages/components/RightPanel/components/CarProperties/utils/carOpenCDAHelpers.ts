@@ -1,4 +1,4 @@
-import { parseNumberInputChange } from '@editor/components/SimConfigModal/utils/numberInputUtils';
+import { parseNumberInputChange } from '@/shared/utils/numberInputUtils';
 
 export const DEFAULT_CAV_COLOR: [number, number, number] = [156, 255, 206];
 

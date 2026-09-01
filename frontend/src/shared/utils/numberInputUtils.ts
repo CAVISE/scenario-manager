@@ -13,3 +13,10 @@ export function parseNumberInputChange(
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : undefined;
 }
+
+export const numInputSlot = {
+  input: {
+    onKeyDown: (e: React.KeyboardEvent) => e.stopPropagation(),
+    step: 'any',
+  },
+};

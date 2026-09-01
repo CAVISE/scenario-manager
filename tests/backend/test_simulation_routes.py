@@ -96,6 +96,29 @@ def test_start_returns_started(client, open_cda_yaml):
     assert response.json()["status"] == "started"
     assert response.json()["map"] == "Town01"
 
+@pytest.mark.parametrize("bad_map", [
+    "../escaped_marker",
+    "../../tmp/pwned",
+    "/etc/passwd",
+    "a/../../b",
+    "..\\..\\windows",
+])
+def test_start_rejects_map_path_traversal(client, open_cda_yaml, bad_map):
+    response = client.post("/api/start_opencda", json={
+        "map": bad_map,
+        "max_ticks": 100,
+        "opencda_config_yaml": open_cda_yaml,
+        "scenario": VALID_SIM_SCENARIO,
+    })
+    assert response.status_code == 422
+    assert simulation_state_is_clean(client)
+
+
+def simulation_state_is_clean(client):
+    from app.routers.simulation import simulation_state
+    return simulation_state["running"] is False
+
+
 def test_results_returns_400_on_path_traversal(client):
     response = client.get("/api/results/../etc")
     assert response.status_code in (400, 404)
@@ -158,3 +181,16 @@ def test_health_returns_ok(client):
         response = client.get("/health")
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
+
+
+def test_start_accepts_custom_uploaded_map_name(client, open_cda_yaml):
+    with patch("app.routers.simulation._executor") as mock_executor:
+        mock_executor.submit = MagicMock()
+        response = client.post("/api/start_opencda", json={
+            "map": "my_custom-map_01",
+            "max_ticks": 100,
+            "opencda_config_yaml": open_cda_yaml,
+            "scenario": VALID_SIM_SCENARIO,
+        })
+    assert response.status_code == 200
+    assert response.json()["map"] == "my_custom-map_01"

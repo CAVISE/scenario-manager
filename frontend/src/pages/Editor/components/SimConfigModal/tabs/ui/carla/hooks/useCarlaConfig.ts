@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { toCarlaMapNameFromXodr } from '../utils/carlaUtils';
 import { getStoredXodrName } from '@editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
 import { useEditorStore } from '@/store';
-import { CARLA_MAPS } from '../../../../types/SimConfigModalTypes';
+import { CARLA_MAPS } from '@sim-config/types/SimConfigModalTypes';
 
 export const useCarlaConfig = () => {
   const simConfig = useEditorStore((s) => s.simConfig);

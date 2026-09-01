@@ -275,6 +275,7 @@ export type SimulationConfig = {
     collision_time_ahead: number;
     sample_resolution: number;
     overtake_counter_recover: number;
+    static_obstacle_avoidance_enabled: boolean;
     lidar_channels: number;
     lidar_range: number;
     lidar_points_per_second: number;
@@ -393,17 +394,7 @@ export const defaultSimConfig: SimulationConfig = {
   carla: {
     map: 'Town03',
     weather_preset: 'ClearNoon',
-    weather_override: {
-      cloudiness: 80,
-      precipitation: 70,
-      precipitation_deposits: 80,
-      sun_altitude_angle: 60,
-      wind_intensity: 0,
-      fog_density: 80,
-      fog_distance: 0,
-      fog_falloff: 80,
-      wetness: 0,
-    },
+    weather_override: {},
     client_port: 2000,
     seed: 42,
     num_vehicles: 50,
@@ -441,6 +432,7 @@ export const defaultSimConfig: SimulationConfig = {
     collision_time_ahead: 1.5,
     sample_resolution: 2.0,
     overtake_counter_recover: 35,
+    static_obstacle_avoidance_enabled: false,
     lidar_channels: 32,
     lidar_range: 50,
     lidar_points_per_second: 100_000,

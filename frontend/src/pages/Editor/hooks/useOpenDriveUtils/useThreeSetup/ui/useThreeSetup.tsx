@@ -13,7 +13,7 @@ export function createThreeSetup(
     antialias: true,
     preserveDrawingBuffer: true,
   });
-  renderer.shadowMap.enabled = true;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.getElementById(containerId)?.appendChild(renderer.domElement);
 

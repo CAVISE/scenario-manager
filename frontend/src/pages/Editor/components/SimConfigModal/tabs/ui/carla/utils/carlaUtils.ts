@@ -1,5 +1,5 @@
 import { SimulationConfig } from '@/store';
-import { CARLA_MAPS } from '../../../../types/SimConfigModalTypes';
+import { CARLA_MAPS } from '@sim-config/types/SimConfigModalTypes';
 
 export type CarlaConfig = SimulationConfig['carla'];
 export function toCarlaMapNameFromXodr(xodrName: string): string | null {

@@ -1,6 +1,6 @@
 import { FormControlLabel, Stack, Switch } from '@mui/material';
 import { NumField } from '../rareComponents/NumField';
-import OpenCDACollapsibleSection from '../../../../components/OpenCDACollapsibleSection';
+import OpenCDACollapsibleSection from '@sim-config/components/OpenCDACollapsibleSection';
 import { SimulationConfig } from '@/store';
 type Oc = SimulationConfig['opencda'];
 type Props = {

@@ -1,6 +1,6 @@
 import { SimulationConfig } from '@/store';
 import { FormControlLabel, Stack, Switch } from '@mui/material';
-import OpenCDACollapsibleSection from '../../../../components/OpenCDACollapsibleSection';
+import OpenCDACollapsibleSection from '@sim-config/components/OpenCDACollapsibleSection';
 
 type Props = {
   oc: SimulationConfig['opencda'];

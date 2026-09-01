@@ -10,6 +10,8 @@ from app.opencda_config import (
 from app.scenario_validation import (
     MAX_OPENDRIVE_LEN,
     extract_scenario_groups,
+    validate_attack_numbers,
+    validate_map_name,
     validate_opendrive,
     validate_optional_text,
     validate_preview,
@@ -19,8 +21,8 @@ from app.scenario_validation import (
 
 
 class MapOffsets(BaseModel):
-    x: float = 0.0
-    y: float = 0.0
+    x: float = Field(default=0.0, allow_inf_nan=False)
+    y: float = Field(default=0.0, allow_inf_nan=False)
 
 
 class StartSimulationRequest(BaseModel):
@@ -34,7 +36,6 @@ class StartSimulationRequest(BaseModel):
         min_length=1,
         max_length=MAX_OPEN_CDA_CONFIG_LENGTH,
     )
-    weather: Optional[str] = Field(default=None, max_length=64)
     scenario: list[dict] = Field(default_factory=list)
     attacks: list[dict] = Field(default_factory=list)
     xodr: Optional[str] = Field(default=None, max_length=MAX_OPENDRIVE_LEN)
@@ -46,7 +47,8 @@ class StartSimulationRequest(BaseModel):
         normalized = str(value or "").strip()
         if not normalized:
             raise ValueError("map cannot be empty")
-        return normalized.replace(".xodr", "")
+        normalized = normalized.replace(".xodr", "")
+        return validate_map_name(normalized)
 
     @field_validator("scenario_id", mode="before")
     @classmethod
@@ -78,6 +80,11 @@ class StartSimulationRequest(BaseModel):
         if not has_routable_car:
             raise ValueError("at least one car must have route points")
         return value
+
+    @field_validator("attacks")
+    @classmethod
+    def validate_attacks_list(cls, value: list[dict]) -> list[dict]:
+        return validate_attack_numbers(value)
 
     @model_validator(mode="after")
     def validate_open_cda_config(self):

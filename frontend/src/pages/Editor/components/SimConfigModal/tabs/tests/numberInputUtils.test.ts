@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseNumberInputChange } from '../../utils/numberInputUtils';
+import { parseNumberInputChange } from '@/shared/utils/numberInputUtils';
 
 describe('parseNumberInputChange', () => {
   it('uses valueAsNumber when the browser provides a numeric step value', () => {

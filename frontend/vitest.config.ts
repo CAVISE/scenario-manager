@@ -21,19 +21,6 @@ export default defineConfig({
     },
   },
   resolve: {
-    alias: {
-      '@': '/src',
-      '@components': '/src/components',
-      '@pages': '/src/pages',
-      '@hooks': '/src/hooks',
-      '@utils': '/src/utils',
-      '@store': '/src/store',
-      '@types': '/src/types',
-      '@assets': '/src/assets',
-      '@editor': '/src/pages/Editor',
-      '@editor-components': '/src/pages/Editor/components',
-      '@editor-hooks': '/src/pages/Editor/hooks',
-      '@right-panel': '/src/pages/components/RightPanel',
-    },
+    tsconfigPaths: true,
   },
 });

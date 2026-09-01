@@ -2,6 +2,7 @@ import {
   mergeSimConfigWithDefaults,
   type SimulationConfig,
 } from '../../types/configGeneratorsTypes';
+import { groupByCarId, getGroupedByCarId } from '@/shared/utils/groupByCarId';
 import { weatherParamsFromPreset } from '../opencdaWeather';
 import {
   pushBehaviorMetrics,
@@ -313,6 +314,9 @@ function pushVehicleBaseBehavior(
   lines.push(`    collision_time_ahead: ${oc.collision_time_ahead}`);
   lines.push(`    overtake_counter_recover: ${oc.overtake_counter_recover}`);
   lines.push(`    sample_resolution: ${oc.sample_resolution}`);
+  lines.push(
+    `    static_obstacle_avoidance_enabled: ${oc.static_obstacle_avoidance_enabled}`
+  );
   lines.push('    local_planner:');
   lines.push(`      buffer_size: ${oc.local_planner.buffer_size}`);
   lines.push(
@@ -655,11 +659,13 @@ export function useGenerateOpenCDAConfig(
 
   if (cars.length > 0) {
     lines.push('  single_cav_list:');
+    const pointsByCarId = groupByCarId(points);
+    const lidarsByCarId = groupByCarId(lidars);
     cars.forEach((car, i) => {
       const yawDeg = car.rotation
         ? ((car.rotation * 180) / Math.PI).toFixed(1)
         : '0.0';
-      const carPoints = car.id ? points.filter((p) => p.carId === car.id) : [];
+      const carPoints = car.id ? getGroupedByCarId(pointsByCarId, car.id) : [];
       const dest =
         carPoints.length > 0
           ? carPoints[carPoints.length - 1]
@@ -687,7 +693,7 @@ export function useGenerateOpenCDAConfig(
         lines.push(`      color: ${fmtColor(car.opencda_color)}`);
       }
 
-      const attachedLidar = lidars.find((lidar) => lidar.carId === car.id);
+      const attachedLidar = getGroupedByCarId(lidarsByCarId, car.id)[0];
       pushCavSensingOverride(lines, car, '      ', attachedLidar);
       pushCavBehaviorOverride(lines, car);
 

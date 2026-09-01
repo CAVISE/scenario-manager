@@ -14,21 +14,8 @@ export const CARLA_MAPS = [
   'Town10HD',
   'TownBig',
 ];
-export const WEATHER_PRESETS = [
-  'ClearNoon',
-  'CloudyNoon',
-  'WetNoon',
-  'HardRainNoon',
-  'ClearSunset',
-  'CloudySunset',
-  'WetSunset',
-  'HardRainSunset',
-  'ClearNight',
-  'CloudyNight',
-  'WetNight',
-  'HardRainNight',
-  'SoftRainNight',
-] as const;
+
+export { WEATHER_OPTIONS as WEATHER_PRESETS } from '@/pages/types/StartPageTypes';
 export const modalBoxSx = {
   position: 'absolute' as const,
   top: '50%',

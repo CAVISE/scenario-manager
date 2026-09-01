@@ -21,15 +21,11 @@
       "@/*": ["./src/*"],
       "@components/*": ["./src/components/*"],
       "@pages/*": ["./src/pages/*"],
-      "@hooks/*": ["./src/hooks/*"],
-      "@utils/*": ["./src/utils/*"],
       "@store/*": ["./src/store/*"],
-      "@types/*": ["./src/types/*"],
       "@assets/*": ["./src/assets/*"],
       "@editor/*": ["./src/pages/Editor/*"],
       "@editor-components/*": ["./src/pages/Editor/components/*"],
       "@editor-hooks/*": ["./src/pages/Editor/hooks/*"],
-      "@editor-utils/*": ["./src/pages/Editor/utils/*"],
       "@sim-config/*": ["./src/pages/Editor/components/SimConfigModal/*"],
       "@sim-config-utils/*": [
         "./src/pages/Editor/components/SimConfigModal/utils/*"

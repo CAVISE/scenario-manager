@@ -25,7 +25,7 @@ import {
   SumoTab,
   OmnetTab,
 } from '../tabs';
-import { parseNumberInputChange } from '../utils/numberInputUtils';
+import { parseNumberInputChange } from '@/shared/utils/numberInputUtils';
 import { mergeSimConfigWithDefaults } from '@editor/Generators/types/configGeneratorsTypes';
 import { useEditorStore } from '@/store';
 import { muiPressableRootStyle } from '@/theme/pressInteraction';

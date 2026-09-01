@@ -25,13 +25,13 @@ const ensurePedestrianModel = (): Promise<boolean> => {
 let pedestrianSyncQueue: Promise<void> = Promise.resolve();
 
 function syncPedestrians(
+  pedestrians: ReturnType<typeof useEditorStore.getState>['pedestrians'],
   scene: THREE.Scene,
   pedestrianMeshesRef: MutableRefObject<THREE.Mesh[]>,
   pedestrianObjsRef: MutableRefObject<THREE.Mesh[]>,
   transformControlsRef: MutableRefObject<TransformControls | null>,
   updateSceneGraph: () => void
 ) {
-  const pedestrians = useEditorStore.getState().pedestrians;
   const tc = transformControlsRef.current;
   const attached = (tc as unknown as { object?: THREE.Object3D })?.object;
   const pedestrianMeshes = pedestrianMeshesRef.current;
@@ -87,6 +87,7 @@ function syncPedestrians(
 }
 
 function queuePedestrianSync(
+  pedestrians: ReturnType<typeof useEditorStore.getState>['pedestrians'],
   scene: THREE.Scene,
   pedestrianMeshesRef: MutableRefObject<THREE.Mesh[]>,
   pedestrianObjsRef: MutableRefObject<THREE.Mesh[]>,
@@ -96,6 +97,7 @@ function queuePedestrianSync(
   pedestrianSyncQueue = pedestrianSyncQueue.then(() =>
     ensurePedestrianModel().then(() => {
       syncPedestrians(
+        pedestrians,
         scene,
         pedestrianMeshesRef,
         pedestrianObjsRef,
@@ -108,6 +110,7 @@ function queuePedestrianSync(
 }
 
 export function usePedestrianMeshSync() {
+  const pedestrians = useEditorStore((s) => s.pedestrians);
   const { updateSceneGraph } = useHooks();
   const {
     sceneRef,
@@ -117,13 +120,19 @@ export function usePedestrianMeshSync() {
   } = useEditorRefs();
 
   useEffect(() => {
+    let cancelled = false;
+
     const trySync = (attempts = 0) => {
       const scene = sceneRef.current;
       if (!scene) {
         if (attempts < 10) setTimeout(() => trySync(attempts + 1), 300);
         return;
       }
+      if (cancelled) return;
+
+      const currentPedestrians = useEditorStore.getState().pedestrians;
       queuePedestrianSync(
+        currentPedestrians,
         scene,
         pedestrianMeshesRef,
         pedestrianObjsRef,
@@ -132,28 +141,10 @@ export function usePedestrianMeshSync() {
       );
     };
     trySync();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
-  useEffect(() => {
-    const unsubscribe = useEditorStore.subscribe(() => {
-      const scene = sceneRef.current;
-      if (!scene) return;
-      queuePedestrianSync(
-        scene,
-        pedestrianMeshesRef,
-        pedestrianObjsRef,
-        transformControlsRef,
-        updateSceneGraph
-      );
-    });
-    return unsubscribe;
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    sceneRef,
-    pedestrianMeshesRef,
-    pedestrianObjsRef,
-    transformControlsRef,
-    updateSceneGraph,
-  ]);
+  }, [pedestrians, updateSceneGraph]);
 }

@@ -6,7 +6,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { parseNumberInputChange } from '../../../../utils/numberInputUtils';
+import { parseNumberInputChange } from '@/shared/utils/numberInputUtils';
 import { createDefaultVType, SumoConfig } from '../utils/sumoUtils';
 
 type Props = {

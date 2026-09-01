@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
 from pathlib import Path
 from typing import Any
@@ -16,6 +17,15 @@ from app import utils
 MAX_OPEN_CDA_CONFIG_LENGTH = 2_000_000
 _ALLOWED_INTERPOLATIONS = {"${world.fixed_delta_seconds}"}
 _INTERPOLATION_RE = re.compile(r"\$\{[^{}]+}")
+
+# Weather-driven perception/localization scaling (see
+# _apply_weather_perception_effects). Kept as module constants so the
+# severity->effect mapping is visible in one place rather than buried
+# in the function body.
+_DEFAULT_DETECTION_RANGE_M = 50.0
+_MIN_DETECTION_RANGE_M = 15.0
+_MIN_DETECTION_RANGE_FRACTION = 0.4  # detection_range at severity 1.0, as a fraction of its pre-weather value
+_MAX_GNSS_NOISE_MULTIPLIER = 3.0  # noise_*_stddev multiplier at severity 1.0
 
 
 class OpenCDAConfigError(ValueError):
@@ -67,6 +77,21 @@ def _require_keys(config: dict[str, Any], path: str, keys: set[str]) -> None:
         )
 
 
+def _validate_attack_numbers(value: Any, path: str) -> None:
+    if isinstance(value, bool):
+        return
+    if isinstance(value, (int, float)):
+        if not math.isfinite(value):
+            raise OpenCDAConfigError(f"attacks: {path} must be finite")
+        return
+    if isinstance(value, dict):
+        for key, child in value.items():
+            _validate_attack_numbers(child, f"{path}.{key}" if path else str(key))
+        return
+    if isinstance(value, list):
+        for index, child in enumerate(value):
+            _validate_attack_numbers(child, f"{path}[{index}]")
+
 def _validate_attacks(config: dict[str, Any]) -> None:
     attacks = config.get("attacks")
     if attacks is None:
@@ -81,13 +106,16 @@ def _validate_attacks(config: dict[str, Any]) -> None:
             raise OpenCDAConfigError(
                 f"attacks[{index}] uses the unsupported legacy wrapper"
             )
-
+        _validate_attack_numbers(item, f"attacks[{index}]")
 
 def _validate_coordinates(value: Any, path: str, minimum: int) -> None:
     if not isinstance(value, list) or len(value) < minimum:
-        raise OpenCDAConfigError(
-            f"OpenCDA YAML '{path}' must contain at least {minimum} coordinates"
-        )
+        raise OpenCDAConfigError(f"OpenCDA YAML '{path}' must contain at least {minimum} coordinates")
+    for item in value[:minimum]:
+        if not isinstance(item, (int, float)) or isinstance(item, bool):
+            raise OpenCDAConfigError(f"OpenCDA YAML '{path}' coordinates must be numeric")
+        if not math.isfinite(item):
+            raise OpenCDAConfigError(f"OpenCDA YAML '{path}' coordinates must be finite")
     if any(not isinstance(item, (int, float)) for item in value[:minimum]):
         raise OpenCDAConfigError(f"OpenCDA YAML '{path}' coordinates must be numeric")
 
@@ -228,6 +256,7 @@ def _validate_complete_config(config: dict[str, Any]) -> None:
             "collision_time_ahead",
             "overtake_counter_recover",
             "sample_resolution",
+            "static_obstacle_avoidance_enabled",
             "local_planner",
         },
         "vehicle_base.behavior.local_planner": {
@@ -298,8 +327,32 @@ def _validate_complete_config(config: dict[str, Any]) -> None:
         _require_keys(config, path, keys)
 
     fixed_delta = config["world"]["fixed_delta_seconds"]
-    if not isinstance(fixed_delta, (int, float)) or fixed_delta <= 0:
-        raise OpenCDAConfigError("world.fixed_delta_seconds must be positive")
+    if (
+        not isinstance(fixed_delta, (int, float))
+        or not math.isfinite(fixed_delta)
+        or fixed_delta <= 0
+    ):
+        raise OpenCDAConfigError(
+            "world.fixed_delta_seconds must be a finite, positive number"
+        )
+    gnss_config = _mapping_at(
+        config, "vehicle_base.sensing.localization.gnss"
+    )
+    for stddev_key in (
+        "noise_alt_stddev", "noise_lat_stddev", "noise_lon_stddev",
+        "heading_direction_stddev", "speed_stddev",
+    ):
+        stddev_value = gnss_config[stddev_key]
+        if (
+            not isinstance(stddev_value, (int, float))
+            or isinstance(stddev_value, bool)
+            or not math.isfinite(stddev_value)
+            or stddev_value < 0
+        ):
+            raise OpenCDAConfigError(
+                f"vehicle_base.sensing.localization.gnss.{stddev_key} "
+                "must be a finite, non-negative number"
+            )
 
     navigation_source = config["vehicle_base"]["sensing"]["localization"][
         "navigation_source"
@@ -467,6 +520,106 @@ def _set_override(
     )
 
 
+def _weather_severity(config: DictConfig) -> float:
+    """Combine world.weather into a single 0..1 severity scalar.
+
+    Averages precipitation, wetness, and fog_density (each on their
+    native 0-100 scale) rather than picking one, since a scenario
+    could set any subset of them (weather_override lets a user raise
+    fog_density on its own, independent of the selected preset).
+    Returns 0.0 for a clear/dry world.weather block -- callers use
+    that to skip the override entirely via _set_override's no-op
+    check, keeping config_overrides.json free of a weather section
+    on non-adverse runs.
+    """
+    weather = OmegaConf.select(config, "world.weather", default={})
+    precipitation = float(OmegaConf.select(weather, "precipitation", default=0) or 0)
+    wetness = float(OmegaConf.select(weather, "wetness", default=0) or 0)
+    fog_density = float(OmegaConf.select(weather, "fog_density", default=0) or 0)
+    severity = (precipitation + wetness + fog_density) / 3.0 / 100.0
+    return min(max(severity, 0.0), 1.0)
+
+
+def _apply_weather_perception_effects(
+    config: DictConfig,
+    overrides: list[dict[str, Any]],
+) -> None:
+    """Scale perception/localization noise with the compiled weather.
+
+    world.weather is otherwise cosmetic: with perception.activate and
+    localization.activate both false by default, adverse weather
+    changes only the CARLA render, not what a CAV/RSU detects or how
+    accurately it localizes. This ties two already-configurable,
+    already-noise-shaped knobs to severity so a rainy/foggy preset
+    has a real effect on the run:
+
+      - sensing.perception.detection_range (deactivate_mode's hard
+        radius filter -- vehicles beyond it never enter
+        objects['vehicles'], so this reaches safety_manager and the
+        behavior agent, not just rendering) shrinks linearly with
+        severity, floored at _MIN_DETECTION_RANGE_M so a maximally
+        adverse run degrades perception rather than blinding it
+        entirely.
+      - sensing.localization.gnss's noise_*_stddev (and, for the
+        vehicle, heading_direction_stddev/speed_stddev) scale up
+        linearly with severity, up to _MAX_GNSS_NOISE_MULTIPLIER at
+        severity 1.0. rsu_base's gnss block has no heading/speed
+        keys (an RSU is stationary), so only its three noise_*
+        keys are scaled.
+
+    Both effects are skipped at severity 0.0 (via _set_override's
+    no-op check on an unchanged value), so a clear-weather run's
+    config_overrides.json stays exactly as it was before this
+    function existed.
+
+    A scenario's own explicit detection_range or noise_*_stddev
+    value (set directly in the source YAML, not left at the
+    vehicle_base/rsu_base default) is scaled from that value, not
+    silently replaced -- this only multiplies/shrinks what's
+    already compiled into the config.
+    """
+    severity = _weather_severity(config)
+    if severity <= 0.0:
+        return
+
+    range_scale = 1.0 - severity * (1.0 - _MIN_DETECTION_RANGE_FRACTION)
+    noise_scale = 1.0 + severity * (_MAX_GNSS_NOISE_MULTIPLIER - 1.0)
+
+    for base_path in ("vehicle_base", "rsu_base"):
+        detection_range_path = f"{base_path}.sensing.perception.detection_range"
+        current_range = OmegaConf.select(
+            config, detection_range_path, default=_DEFAULT_DETECTION_RANGE_M
+        )
+        scaled_range = max(
+            current_range * range_scale, _MIN_DETECTION_RANGE_M
+        )
+        _set_override(
+            config,
+            detection_range_path,
+            round(scaled_range, 2),
+            f"scale perception.detection_range for compiled weather "
+            f"severity {severity:.2f}",
+            overrides,
+        )
+
+        gnss_path = f"{base_path}.sensing.localization.gnss"
+        gnss_keys = ["noise_alt_stddev", "noise_lat_stddev", "noise_lon_stddev"]
+        if base_path == "vehicle_base":
+            gnss_keys += ["heading_direction_stddev", "speed_stddev"]
+        for key in gnss_keys:
+            stddev_path = f"{gnss_path}.{key}"
+            current_stddev = OmegaConf.select(config, stddev_path, default=None)
+            if current_stddev is None:
+                continue
+            _set_override(
+                config,
+                stddev_path,
+                current_stddev * noise_scale,
+                f"scale {key} for compiled weather severity {severity:.2f}",
+                overrides,
+            )
+
+
 def apply_environment_overrides(
     config: DictConfig,
     settings: Settings,
@@ -541,6 +694,8 @@ def apply_environment_overrides(
                 "blueprint metadata is missing or outside the allowed asset directory",
                 overrides,
             )
+
+    _apply_weather_perception_effects(config, overrides)
 
     return overrides
 

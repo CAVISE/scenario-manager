@@ -124,6 +124,14 @@ vehicle_base:
     collision_time_ahead: 1.5 # used for collision checking
     overtake_counter_recover: 35 # the vehicle can not do another overtake during next certain steps
     sample_resolution: 4.5 # the unit distance between two adjacent waypoints in meter
+    # Checks the planned path against nearby traffic-light poles using each
+    # pole's actor origin with a fixed collision radius (see
+    # BehaviorAgent.static_obstacle_check / _StaticCollisionProxy) rather
+    # than each pole's real bounding box, so this can flag a hazard from a
+    # pole that isn't actually blocking the path. Opt-in for that reason;
+    # set true to have the CAV brake for planned paths that pass close to
+    # a traffic-light pole.
+    static_obstacle_avoidance_enabled: false
     local_planner:  # trajectory planning related
       buffer_size: 12 # waypoint buffer size
       trajectory_update_freq: 15 # used to control trajectory points updating frequency

@@ -1,16 +1,19 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { useEditorStore } from '@/store';
 import { useCarModel } from './useCarModel';
 import { useHooks, useEditorRefs } from '@editor/context';
 import { applyColor, cloneMaterials } from '../utils/CarUtils';
 
+type Car = ReturnType<typeof useEditorStore.getState>['cars'][number];
+
 export function useCarMeshSync() {
   const cars = useEditorStore((s) => s.cars);
   const selectedId = useEditorStore((s) => s.selectedId);
-  const { carModelRef } = useCarModel();
+  const { carModelRef, modelLoaded } = useCarModel();
   const { sceneRef, carMeshesRef, transformControlsRef } = useEditorRefs();
   const { updateSceneGraph } = useHooks();
+  const lastSyncedCarsRef = useRef<Map<string, Car>>(new Map());
   function syncMeshes() {
     const scene = sceneRef.current;
     if (!scene || !carModelRef.current) return;
@@ -19,6 +22,7 @@ export function useCarMeshSync() {
       const stillExists = cars.find((c) => c.id === wrapper.userData.id);
       if (!stillExists) {
         scene.remove(wrapper);
+        lastSyncedCarsRef.current.delete(wrapper.userData.id);
         wrapper.traverse((child) => {
           if ((child as THREE.Mesh).isMesh) {
             const mesh = child as THREE.Mesh;
@@ -40,6 +44,9 @@ export function useCarMeshSync() {
         (m) => m.userData.id === car.id
       );
       if (already) {
+        if (lastSyncedCarsRef.current.get(car.id) === car) return;
+        lastSyncedCarsRef.current.set(car.id, car);
+
         const isAttached =
           (
             transformControlsRef.current as unknown as {
@@ -87,6 +94,7 @@ export function useCarMeshSync() {
       wrapper.add(modelInstance);
       scene.add(wrapper);
       carMeshesRef.current.push(wrapper as unknown as THREE.Mesh);
+      lastSyncedCarsRef.current.set(car.id, car);
     });
 
     if (selectedId) {
@@ -105,22 +113,5 @@ export function useCarMeshSync() {
   useEffect(() => {
     syncMeshes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cars, selectedId]);
-
-  useEffect(() => {
-    if (carModelRef.current) {
-      syncMeshes();
-      return;
-    }
-
-    const interval = setInterval(() => {
-      if (carModelRef.current) {
-        clearInterval(interval);
-        syncMeshes();
-      }
-    }, 100);
-
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [cars, selectedId, modelLoaded]);
 }

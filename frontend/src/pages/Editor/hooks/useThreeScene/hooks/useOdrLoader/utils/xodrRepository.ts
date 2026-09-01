@@ -13,7 +13,7 @@ const CARLA_MAPS = [
   'Town06',
   'Town07',
   'Town10HD',
-  'Town10HD_Opt',
+  'TownBig',
 ] as const;
 
 function generateMapAliases(): Record<string, string[]> {
@@ -224,6 +224,27 @@ export async function resolveXodrTextForSimulation(
     console.error(e);
     return undefined;
   }
+}
+
+let preloadPromise: Promise<void> | null = null;
+
+export function preloadXodrText(fallbackMapName?: string): Promise<void> {
+  if (preloadPromise) return preloadPromise;
+
+  preloadPromise = (async () => {
+    await initXodrCacheFromIndexedDb();
+    if (getCachedXodrContent()) return;
+
+    try {
+      const mapName = getStoredXodrName(fallbackMapName);
+      const text = await fetchXodrText(mapName);
+      setCachedCustomXodrContent(text);
+    } catch (error) {
+      console.warn('[xodrRepository] map preload failed', error);
+    }
+  })();
+
+  return preloadPromise;
 }
 
 export { CARLA_MAPS, normalizeMapName };

@@ -1,6 +1,6 @@
 import { useEditorStore } from '@/store';
 import { FormControlLabel, Stack, Switch, TextField } from '@mui/material';
-import { parseNumberInputChange } from '../../../utils/numberInputUtils';
+import { parseNumberInputChange } from '@/shared/utils/numberInputUtils';
 
 export default function SionnaTab() {
   const simConfig = useEditorStore((s) => s.simConfig);

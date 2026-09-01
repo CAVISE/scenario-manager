@@ -16,7 +16,6 @@ export function useClickHandler(ctx: SharedMouseContext) {
     modeRef,
     currentCarRef,
     currentColorRef,
-    loadPointsRef,
     rsuMeshesRef,
     pedestrianMeshesRef,
   } = useEditorRefs();
@@ -61,7 +60,6 @@ export function useClickHandler(ctx: SharedMouseContext) {
             60
           );
         mode.isAddCarModeActive = false;
-        loadPointsRef.current();
       }
       return;
     }

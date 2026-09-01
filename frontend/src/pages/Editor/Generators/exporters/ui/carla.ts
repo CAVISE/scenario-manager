@@ -1,5 +1,6 @@
 import type { SimulationConfig } from '../../types/configGeneratorsTypes';
 import type { Car, Point, RSU } from '@/store/types/useEditorStoreTypes';
+import { groupByCarId, getGroupedByCarId } from '@/shared/utils/groupByCarId';
 
 export function generateCarlaYaml(
   config: SimulationConfig,
@@ -26,8 +27,9 @@ export function generateCarlaYaml(
   lines.push('scenario:');
   if (cars.length > 0) {
     lines.push('  single_cav_list:');
+    const pointsByCarId = groupByCarId(points);
     cars.forEach((car, i) => {
-      const carPoints = car.id ? points.filter((p) => p.carId === car.id) : [];
+      const carPoints = car.id ? getGroupedByCarId(pointsByCarId, car.id) : [];
       const colorHex = car.color
         ? `0x${car.color.padStart(6, '0')}`
         : '0x00ff00';

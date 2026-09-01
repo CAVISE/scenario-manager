@@ -102,7 +102,9 @@ const TelemetryModal: React.FC<TelemetryModalProps> = ({ open, onClose }) => {
       } else if (
         /_velocity\.png$/i.test(lower) ||
         /_imu\.png$/i.test(lower) ||
-        /_hazard\.png$/i.test(lower)
+        /_hazard\.png$/i.test(lower) ||
+        /_distance_over_time\.png$/i.test(lower) ||
+        /_rsu_coverage\.png$/i.test(lower)
       ) {
         result.telemetry.push({ url: imageUrl, name: displayName });
       } else if (/(route|planned|actual|fig\d+)/i.test(lower)) {

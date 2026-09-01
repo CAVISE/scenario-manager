@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import { updateStringField, updateSwitchField } from '../utils/capiFieldUtils';
 import { CapiConfig } from '../hooks/useCapiConfig';
-import { parseNumberInputChange } from '../../../../utils/numberInputUtils';
+import { parseNumberInputChange } from '@/shared/utils/numberInputUtils';
 
 type Props = {
   capi: CapiConfig;

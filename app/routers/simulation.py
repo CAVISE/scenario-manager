@@ -6,11 +6,10 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, HTTPException, Request, WebSocket, WebSocketDisconnect
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 
 from app.config import get_settings
 from app.log_config import get_logger
+from app.rate_limit import limiter
 from app.schemas import (
     ResultFile,
     ResultsResponse,
@@ -22,7 +21,6 @@ from app.schemas import (
 
 router = APIRouter(tags=["simulation"])
 log = get_logger(__name__)
-limiter = Limiter(key_func=get_remote_address)
 
 _sim_lock = threading.Lock()
 simulation_state: dict = {
@@ -76,50 +74,60 @@ async def start_opencda(request: Request, body: StartSimulationRequest):
         simulation_state["status"] = "running"
         simulation_state["error"] = None
 
-    raw_map = body.map.replace(".xodr", "")
-    map_name = _normalize_map_name(raw_map)
-
-    log.debug("start_opencda map=%s max_ticks=%d", map_name, body.max_ticks)
-
-    if body.xodr:
-        xodr_dir = settings.xodr_dir
-        xodr_dir.mkdir(parents=True, exist_ok=True)
-        (xodr_dir / f"{map_name}.xodr").write_text(body.xodr)
-
-    current_time = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-    run_id = f"{map_name}_{current_time}"
-
-    with _sim_lock:
-        simulation_state["map"] = map_name
-        simulation_state["run_id"] = run_id
-
-    scenario_raw = body.model_dump()
     try:
-        keys = list(scenario_raw.keys())
-        xodr_info = None
-        if scenario_raw.get("xodr"):
-            try:
-                xodr_len = len(scenario_raw.get("xodr") or "")
-                xodr_info = f"present (length={xodr_len})"
-            except Exception:
-                xodr_info = "present (length=?)"
-        else:
-            xodr_info = "absent"
+        map_name = _normalize_map_name(body.map)
 
-        log.info("Received payload keys: %s | xodr: %s", keys, xodr_info)
-        log.info("Received attacks field from request: %s", scenario_raw.get("attacks"))
+        log.debug("start_opencda map=%s max_ticks=%d", map_name, body.max_ticks)
+
+        if body.xodr:
+            xodr_dir = settings.xodr_dir
+            xodr_dir.mkdir(parents=True, exist_ok=True)
+            (xodr_dir / f"{map_name}.xodr").write_text(body.xodr)
+
+        current_time = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+        run_id = f"{map_name}_{current_time}"
+
+        with _sim_lock:
+            simulation_state["map"] = map_name
+            simulation_state["run_id"] = run_id
+
+        scenario_raw = body.model_dump()
+        try:
+            keys = list(scenario_raw.keys())
+            xodr_info = None
+            if scenario_raw.get("xodr"):
+                try:
+                    xodr_len = len(scenario_raw.get("xodr") or "")
+                    xodr_info = f"present (length={xodr_len})"
+                except Exception:
+                    xodr_info = "present (length=?)"
+            else:
+                xodr_info = "absent"
+
+            log.info("Received payload keys: %s | xodr: %s", keys, xodr_info)
+            log.info("Received attacks field from request: %s", scenario_raw.get("attacks"))
+        except Exception:
+            log.exception("Failed to log request payload for debugging")
+
+        params = {
+            "apply_ml": False,
+            "record": False,
+            "map_name": map_name,
+            "max_ticks": body.max_ticks,
+            "current_time": current_time,
+        }
+
+        _executor.submit(_run_with_state, scenario_raw, params)
     except Exception:
-        log.exception("Failed to log request payload for debugging")
-
-    params = {
-        "apply_ml": False,
-        "record": False,
-        "map_name": map_name,
-        "max_ticks": body.max_ticks,
-        "current_time": current_time,
-    }
-
-    _executor.submit(_run_with_state, scenario_raw, params)
+        with _sim_lock:
+            simulation_state["running"] = False
+            simulation_state["status"] = "idle"
+            simulation_state["error"] = None
+        log.exception("start_opencda failed before the simulation task started")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to start simulation; see server logs for details",
+        )
 
     return StartSimulationResponse(status="started", map=map_name)
 

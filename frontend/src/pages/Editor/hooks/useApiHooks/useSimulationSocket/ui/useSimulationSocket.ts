@@ -15,61 +15,57 @@ export function useSimulationSocket() {
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const unmounted = useRef(false);
 
-  useEffect(
-    () => {
-      unmounted.current = false;
+  useEffect(() => {
+    unmounted.current = false;
 
-      function connect() {
+    function connect() {
+      if (unmounted.current) return;
+
+      const ws = new WebSocket(WS_URL);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
         if (unmounted.current) return;
-
-        const ws = new WebSocket(WS_URL);
-        wsRef.current = ws;
-
-        ws.onopen = () => {
-          if (unmounted.current) return;
-          setConnected(true);
-          reconnectDelay.current = RECONNECT_DELAY_MS;
-        };
-
-        ws.onmessage = (event) => {
-          try {
-            const data: SimulationStatus = JSON.parse(event.data);
-            setState(data);
-          } catch (e) {
-            console.error('Failed to parse simulation status:', e);
-          }
-        };
-
-        ws.onclose = () => {
-          if (unmounted.current) return;
-          setConnected(false);
-          wsRef.current = null;
-
-          reconnectTimer.current = setTimeout(() => {
-            reconnectDelay.current = Math.min(
-              reconnectDelay.current * 2,
-              MAX_RECONNECT_DELAY_MS
-            );
-            connect();
-          }, reconnectDelay.current);
-        };
-
-        ws.onerror = () => {
-          ws.close();
-        };
-      }
-
-      connect();
-
-      return () => {
-        unmounted.current = true;
-        if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
-        wsRef.current?.close();
+        setConnected(true);
+        reconnectDelay.current = RECONNECT_DELAY_MS;
       };
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  );
+
+      ws.onmessage = (event) => {
+        try {
+          const data: SimulationStatus = JSON.parse(event.data);
+          setState(data);
+        } catch (e) {
+          console.error('Failed to parse simulation status:', e);
+        }
+      };
+
+      ws.onclose = () => {
+        if (unmounted.current) return;
+        setConnected(false);
+        wsRef.current = null;
+
+        reconnectTimer.current = setTimeout(() => {
+          reconnectDelay.current = Math.min(
+            reconnectDelay.current * 2,
+            MAX_RECONNECT_DELAY_MS
+          );
+          connect();
+        }, reconnectDelay.current);
+      };
+
+      ws.onerror = () => {
+        ws.close();
+      };
+    }
+
+    connect();
+
+    return () => {
+      unmounted.current = true;
+      if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
+      wsRef.current?.close();
+    };
+  }, []);
 
   return { state, connected };
 }

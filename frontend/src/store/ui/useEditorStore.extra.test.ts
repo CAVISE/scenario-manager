@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useEditorStore } from './useEditorStore';
-import { act } from 'react';
+import { act } from '@testing-library/react';
 import { DEFAULT_COLOR } from '../../pages/Editor/hooks/useThreeScene/hooks/useOdrMapManager/utils/clearScene/types/clearSceneTypes';
 
 describe('useEditorStore — additional branch coverage', () => {

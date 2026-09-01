@@ -1,6 +1,6 @@
 import { FormControlLabel, Stack, Switch, TextField } from '@mui/material';
 import { CarlaConfig } from '../utils/carlaUtils';
-import { parseNumberInputChange } from '../../../../utils/numberInputUtils';
+import { parseNumberInputChange } from '@/shared/utils/numberInputUtils';
 
 type Props = {
   carla: CarlaConfig;

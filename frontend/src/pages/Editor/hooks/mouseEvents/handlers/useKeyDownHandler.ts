@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import * as THREE from 'three';
 import { useEditorStore } from '@/store';
 import { useHooks, useEditorRefs } from '@editor/context';
+import { groupByCarId, getGroupedByCarId } from '@/shared/utils/groupByCarId';
 import { ToastApi } from '@components/AppToast/types/toastTypes';
 import { pushSingleDeletionSnapshot } from '@right-panel/components/SceneTreePanel/funcs/deletionSnapshots';
 import { useHistoryActions } from '../../createEvents/useHistoryActions';
@@ -39,7 +40,6 @@ export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
     pointsObjsRef,
     cubeCirclesRef,
     modeRef,
-    loadPointsRef,
   } = useEditorRefs();
   const onSelectObject = useEditorStore((s) => s.selectObject);
   const { undo, redo } = useHistoryActions();
@@ -117,9 +117,8 @@ export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
         });
         cubeCircles.forEach((arr, ai) => {
           const carId = carMeshes[ai]?.userData.id;
-          const pts = useEditorStore
-            .getState()
-            .points.filter((p) => p.carId === carId);
+          const pointsByCarId = groupByCarId(useEditorStore.getState().points);
+          const pts = carId ? getGroupedByCarId(pointsByCarId, carId) : [];
           arr.forEach((c, pi) => {
             if (pts[pi])
               useEditorStore.getState().updatePoint(pts[pi].id, {
@@ -129,7 +128,6 @@ export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
               });
           });
         });
-        loadPointsRef.current();
         mode.isAddedPoints = false;
         return;
       }
@@ -301,7 +299,6 @@ export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
               cubeCircles[i].splice(idx, 1);
             }
 
-            loadPointsRef.current();
             break;
           }
         }
@@ -331,7 +328,6 @@ export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
       rsuMeshesRef,
       cubeCirclesRef,
       modeRef,
-      loadPointsRef,
       updateSceneGraph,
       undo,
       redo,

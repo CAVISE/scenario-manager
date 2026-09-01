@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { AppToastProvider, useAppToast } from '../ui/AppToastProvider';
 
@@ -106,7 +106,7 @@ describe('AppToastProvider', () => {
       key: 'Escape',
       code: 'Escape',
     });
-    await act(async () => {});
+    await waitFor(() => {});
   });
 
   it('covers line: executes undo action when undo button is clicked', async () => {
@@ -252,7 +252,7 @@ describe('AppToastProvider', () => {
 
     expect(onUndo).toHaveBeenCalledTimes(1);
 
-    await act(async () => {
+    await waitFor(async () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
     });
   });

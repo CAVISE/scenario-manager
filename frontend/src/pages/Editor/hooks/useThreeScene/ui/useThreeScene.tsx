@@ -113,7 +113,6 @@ export function useThreeScene({
   });
 
   useSceneAnimator({
-    getIsDragging,
     getOdrMeshes,
     getOpenDriveMap: () => setMapRef.current,
     spotlightEnabled: () => true,

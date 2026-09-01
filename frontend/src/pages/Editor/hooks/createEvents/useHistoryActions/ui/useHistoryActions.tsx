@@ -4,7 +4,7 @@ import { useHooks, useEditorRefs } from '@editor/context';
 
 export function useHistoryActions() {
   const { updateSceneGraph } = useHooks();
-  const { transformControlsRef, loadPointsRef } = useEditorRefs();
+  const { transformControlsRef } = useEditorRefs();
   const onSelectObject = useEditorStore((s) => s.selectObject);
 
   const canUndo = useEditorStore((s) => s.historyCursor > 0);
@@ -19,10 +19,9 @@ export function useHistoryActions() {
       onSelectObject(null);
       run();
       updateSceneGraph();
-      loadPointsRef.current();
       return true;
     },
-    [transformControlsRef, onSelectObject, updateSceneGraph, loadPointsRef]
+    [transformControlsRef, onSelectObject, updateSceneGraph]
   );
 
   const undo = useCallback(

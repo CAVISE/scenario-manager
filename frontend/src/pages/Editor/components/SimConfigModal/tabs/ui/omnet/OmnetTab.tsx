@@ -7,7 +7,7 @@ import {
   TextField,
 } from '@mui/material';
 import { useEditorStore } from '@/store';
-import { parseNumberInputChange } from '../../../utils/numberInputUtils';
+import { parseNumberInputChange } from '@/shared/utils/numberInputUtils';
 
 export default function OmnetTab() {
   const updateSimConfigOmnet = useEditorStore((s) => s.updateSimConfigOmnet);

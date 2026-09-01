@@ -306,7 +306,7 @@ describe('scenario.load.handler (sync preview)', () => {
       expect(generatePreviewSync()).toBe('data:image/png;base64,OLD');
       setCanvasReference(canvas);
       expect(generatePreviewSync()).toBe('data:image/png;base64,OLD');
-      expect(toDataURL).toHaveBeenCalledTimes(2); // ✅ Теперь 2 вызова
+      expect(toDataURL).toHaveBeenCalledTimes(2);
     });
 
     it('invalidatePreviewCache forces fresh capture', () => {

@@ -1,8 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { useEditorStore } from '@/store';
 import { ensureRsuModel, rsuModel } from '../utils/RsuUtils';
 import { useEditorRefs, useHooks } from '@editor/context';
+
+type RSU = ReturnType<typeof useEditorStore.getState>['RSUs'][number];
 
 export function useRSUMeshSync(): void {
   const RSUs = useEditorStore((s) => s.RSUs);
@@ -14,6 +16,7 @@ export function useRSUMeshSync(): void {
     pointsObjsRef,
     rsuMeshesRef,
   } = useEditorRefs();
+  const lastSyncedRSUsRef = useRef<Map<string, RSU>>(new Map());
   useEffect(() => {
     let cancelled = false;
 
@@ -45,6 +48,7 @@ export function useRSUMeshSync(): void {
             }
           });
           scene.remove(p);
+          lastSyncedRSUsRef.current.delete(p.userData.id);
           return false;
         });
 
@@ -85,6 +89,8 @@ export function useRSUMeshSync(): void {
                 rsuMeshesRef.current.splice(oldIdx, 1);
               }
             } else {
+              if (lastSyncedRSUsRef.current.get(rsu.id) === rsu) return;
+              lastSyncedRSUsRef.current.set(rsu.id, rsu);
               if (attached !== existing)
                 existing.position.set(rsu.x, rsu.y, rsu.z);
               return;
@@ -97,6 +103,7 @@ export function useRSUMeshSync(): void {
             obj.scale.setScalar(0.05);
             obj.rotation.x += Math.PI / 2;
             obj.userData = { type: 'point', id: rsu.id, isFallbackRSU: false };
+            lastSyncedRSUsRef.current.set(rsu.id, rsu);
           } else {
             const geometry = new THREE.BoxGeometry(5, 5, 5);
             const material = new THREE.MeshBasicMaterial({ color: 0x0000ff });

@@ -301,20 +301,26 @@ export type EditorState = {
     color: string,
     speed?: number
   ) => string;
+  addCarsBatch: (cars: Omit<Car, 'id'>[]) => string[];
   updateCar: (id: string, props: Partial<Omit<Car, 'id'>>) => void;
   removeCar: (id: string) => void;
+  removeAllCars: () => void;
   addPedestrian: (x: number, y: number, z: number) => string;
+  addPedestriansBatch: (pedestrians: Omit<Pedestrian, 'id'>[]) => string[];
   updatePedestrian: (
     id: string,
     props: Partial<Omit<Pedestrian, 'id'>>
   ) => void;
   removePedestrian: (id: string) => void;
+  removeAllPedestrians: () => void;
   addRSU: (x: number, y: number, z: number) => string;
+  addRSUsBatch: (rsus: Omit<RSU, 'id'>[]) => string[];
   removeRSU: (index: number) => void;
   removeAllRSUs: () => void;
   updateRSU: (id: string, props: Partial<Omit<RSU, 'id'>>) => void;
 
   addLidar: (carId: string, x: number, y: number, z: number) => string;
+  addLidarsBatch: (lidars: Omit<Lidar, 'id'>[]) => string[];
   updateLidar: (
     id: string,
     props: Partial<Omit<Lidar, 'id' | 'carId'>>
@@ -324,6 +330,7 @@ export type EditorState = {
 
   updateScenario: (props: Partial<Scenario>) => void;
   addPoint: (carId: string, x: number, y: number, z: number) => string;
+  addPointsBatch: (points: Omit<Point, 'id'>[]) => string[];
   removePoint: (id: string) => void;
   removePointsByCarId: (carId: string) => void;
   updatePoint: (
@@ -333,8 +340,10 @@ export type EditorState = {
 
   selectObject: (obj: SelectedObject | null) => void;
   addBuilding: (x: number, y: number, z: number) => string;
+  addBuildingsBatch: (buildings: Omit<Building, 'id'>[]) => string[];
   updateBuilding: (id: string, props: Partial<Omit<Building, 'id'>>) => void;
   removeBuilding: (id: string) => void;
+  removeAllBuildings: () => void;
 
   deletionHistory: DeletionSnapshot[];
   pushDeletionSnapshot: (

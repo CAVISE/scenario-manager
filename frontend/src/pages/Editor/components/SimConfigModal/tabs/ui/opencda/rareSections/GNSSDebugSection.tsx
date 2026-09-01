@@ -1,6 +1,6 @@
 import { SimulationConfig } from '@/store';
 import { Stack } from '@mui/system';
-import OpenCDACollapsibleSection from '../../../../components/OpenCDACollapsibleSection';
+import OpenCDACollapsibleSection from '@sim-config/components/OpenCDACollapsibleSection';
 import { NumField } from '../rareComponents/NumField';
 
 type Props = {

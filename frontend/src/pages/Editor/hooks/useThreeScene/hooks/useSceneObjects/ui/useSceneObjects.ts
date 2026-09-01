@@ -10,74 +10,29 @@ import {
 } from '../types/useSceneObjectsTypes';
 import { useEditorStore } from '@/store';
 import { useEditorRefs } from '@editor/context';
+import { groupByCarId, getGroupedByCarId } from '@/shared/utils/groupByCarId';
 
-export function useSceneObjects({
-  updateSceneGraph,
-}: UseSceneObjectsProps): UseSceneObjectsResult {
+export function useSceneObjects({}: UseSceneObjectsProps): UseSceneObjectsResult {
   const {
     threeRef,
-    modeRef,
-    pointsArrRef,
-    pointsObjsRef,
+
     cubeCirclesRef,
     roadMeshRef,
-    transformControlsRef,
   } = useEditorRefs();
 
   const localLineArrRef = useRef<THREE.Line[][]>([]);
-
-  const loadRSU = useCallback(() => {
-    const scene = threeRef.current?.scene;
-    if (!scene) return;
-
-    const tc = transformControlsRef.current;
-    const attached = (tc as unknown as { object?: THREE.Object3D } | undefined)
-      ?.object;
-
-    pointsObjsRef.current.forEach((obj) => {
-      if (obj.userData.type !== 'point') return;
-      if (attached && (attached === obj || obj.getObjectById(attached.id)))
-        tc?.detach();
-      obj.parent?.remove(obj);
-      obj.geometry?.dispose();
-      const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
-      mats.forEach((m) => m?.dispose());
-    });
-    pointsObjsRef.current.length = 0;
-    pointsArrRef.current.length = 0;
-
-    const result = _loadRSU({
-      scene,
-      RSUs: useEditorStore.getState().RSUs,
-      points_arr: pointsArrRef.current,
-      points_objs: pointsObjsRef.current,
-      isAddPointModeActive: modeRef.current.isAddPointModeActive,
-      updateSceneGraph,
-      transformControlsRef,
-    });
-
-    pointsArrRef.current.push(...result.points_arr);
-    pointsObjsRef.current.push(...result.points_objs);
-    modeRef.current.isAddPointModeActive = result.isAddPointModeActive;
-  }, [
-    updateSceneGraph,
-    modeRef,
-    pointsArrRef,
-    pointsObjsRef,
-    threeRef,
-    transformControlsRef,
-  ]);
 
   const loadPoints = useCallback(() => {
     const scene = threeRef.current?.scene;
     if (!scene) return;
 
     const { cars, points } = useEditorStore.getState();
+    const pointsByCarId = groupByCarId(points);
 
     const result = _loadPoints({
       scene,
       cars,
-      points: cars.map((car) => points.filter((p) => p.carId === car.id)),
+      points: cars.map((car) => getGroupedByCarId(pointsByCarId, car.id)),
       cubeCircles: cubeCirclesRef.current,
       lines: localLineArrRef.current,
     });
@@ -93,5 +48,5 @@ export function useSceneObjects({
     [roadMeshRef]
   );
 
-  return { loadRSU, loadPoints, syncRoadMesh, localLineArrRef };
+  return { loadPoints, syncRoadMesh, localLineArrRef };
 }

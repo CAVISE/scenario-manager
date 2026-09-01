@@ -11,7 +11,7 @@ import { CarlaWeather } from '@/store/types/useEditorStoreTypes';
 import {
   CARLA_MAPS,
   WEATHER_PRESETS,
-} from '../../../../types/SimConfigModalTypes';
+} from '@sim-config/types/SimConfigModalTypes';
 
 type Props = {
   carla: CarlaConfig;

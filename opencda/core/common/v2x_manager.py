@@ -39,6 +39,13 @@ class V2XManager(object):
     cav_nearby : dict
         The dictionary that contains the cavs in the communication range.
 
+    rsu_nearby : dict
+        The dictionary that contains the RSUs in the communication range.
+
+    pedestrian_nearby : dict
+        The dictionary that contains the pedestrians in the
+        communication range.
+
     platooning_plugin : opencda object
         The platooning plugin for communication during platooning.
 
@@ -58,6 +65,7 @@ class V2XManager(object):
         # found CAVs nearby
         self.cav_nearby = {}
         self.rsu_nearby = {}
+        self.pedestrian_nearby = {}
 
         # used for cooperative perception.
         self._recieved_buffer = {}
@@ -167,7 +175,7 @@ class V2XManager(object):
 
     def search(self):
         """
-        Search the CAVs nearby and RSUs in communication range.
+        Search the CAVs nearby and RSUs/pedestrians in communication range.
         """
         vehicle_manager_dict = self.cav_world.get_vehicle_managers()
 
@@ -176,6 +184,7 @@ class V2XManager(object):
 
         self.cav_nearby = {}
         self.rsu_nearby = {}
+        self.pedestrian_nearby = {}
 
         for vid, vm in vehicle_manager_dict.items():
             other_v2x = vm.v2x_manager
@@ -199,6 +208,15 @@ class V2XManager(object):
         # RSU coverage is defined by each RSU's configured range.
         rsu_manager_dict = self.cav_world._rsu_manager_dict
         for rid, rsu in rsu_manager_dict.items():
+            if str(rid) == self.vid:
+                continue  # an RSU is always its own nearest neighbor
+                          # (distance 0 < any positive range) --
+                          # exclude self, matching the CAV block above.
+                          # self.vid is always a string (see
+                          # RSUManager.__init__'s
+                          # V2XManager(..., str(self.rid))) while rid
+                          # here is the dict's int key, so str(rid) is
+                          # needed for this comparison to ever match.
             rsu_pos = rsu.localizer.get_ego_pos()
             if rsu_pos is None:
                 continue
@@ -210,6 +228,31 @@ class V2XManager(object):
                                  self.communication_range)
             if distance < rsu_range:
                 self.rsu_nearby[rid] = rsu
+
+        # Pedestrian coverage, same shape as RSU coverage above.
+        # Pedestrians have no separate LocalizationManager (their
+        # position is read straight from the CARLA walker actor, since
+        # -- like RSUs -- they're never GNSS-spoofed), so this calls
+        # the pedestrian manager's own get_ego_pos() directly rather
+        # than a .localizer sub-object. getattr with a default (unlike
+        # the direct self.cav_world._rsu_manager_dict access above)
+        # since _pedestrian_manager_dict is newer than _rsu_manager_dict
+        # and this keeps search() working against any cav_world-like
+        # object that predates it -- the real CavWorld always has it.
+        pedestrian_manager_dict = getattr(
+            self.cav_world, '_pedestrian_manager_dict', {})
+        for pid, pedestrian in pedestrian_manager_dict.items():
+            pedestrian_pos = pedestrian.get_ego_pos()
+            if pedestrian_pos is None:
+                continue
+            distance = compute_distance(
+                anchor_pos.location,
+                pedestrian_pos.location,
+            )
+            pedestrian_range = getattr(pedestrian, 'communication_range',
+                                       self.communication_range)
+            if distance < pedestrian_range:
+                self.pedestrian_nearby[pid] = pedestrian
     """
     -----------------------------------------------------------
                  Below is platooning related 

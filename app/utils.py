@@ -17,8 +17,8 @@ MAP_OFFSETS = {
 _FALLBACK_SPAWN_Z = 0.5
 _FALLBACK_DEST_Z  = 0.0
 
-_BFS_STEP_M    = 5.0   # metres between waypoints in BFS
-_BFS_MAX_STEPS = 300   # ~1.5 km max route search depth
+_BFS_STEP_M    = 5.0
+_BFS_MAX_STEPS = 300
 
 _NUDGE_DIST_M = 30.0
 
@@ -410,9 +410,15 @@ def _apply_attacks(
                     "start_time", "ramp_duration", "drift_rate",
                     "jitter_stddev", "max_offset",
                 ):
-                    if spoofing[key] < 0:
+                    # math.isfinite() catches NaN/Infinity, which `< 0`
+                    # alone would miss: NaN compares False to every
+                    # comparison, so it would otherwise slip past this
+                    # check and reach numpy.random.normal downstream,
+                    # which returns NaN silently instead of raising.
+                    if not math.isfinite(spoofing[key]) or spoofing[key] < 0:
                         raise ValueError(
-                            "GNSS spoofing %s must be non-negative" % key)
+                            "GNSS spoofing %s must be a finite, "
+                            "non-negative number" % key)
                 loc["gnss_spoofing"] = spoofing
                 log.info(
                     "ATTACK spoofer -> CAV%d | mode=drift start=%.2fs "
@@ -446,9 +452,10 @@ def _apply_attacks(
                     "start_time", "ramp_duration", "drift_rate",
                     "jitter_stddev", "max_sigma",
                 ):
-                    if spoofing[key] < 0:
+                    if not math.isfinite(spoofing[key]) or spoofing[key] < 0:
                         raise ValueError(
-                            "GNSS spoofing %s must be non-negative" % key)
+                            "GNSS spoofing %s must be a finite, "
+                            "non-negative number" % key)
                 loc["gnss_spoofing"] = spoofing
                 log.info(
                     "ATTACK spoofer -> CAV%d | mode=stealth start=%.2fs "
@@ -647,6 +654,12 @@ def yaml_to_runtime_scenario(
             "speed": raw_pedestrian.get("speed", 1.4),
             "cross_factor": raw_pedestrian.get("cross_factor", 0.0),
             "is_invincible": raw_pedestrian.get("is_invincible", True),
+            "v2x": {
+                "tx_power": raw_pedestrian.get("tx_power", 10),
+                "frequency": raw_pedestrian.get("frequency", 5.9e9),
+                "protocol": raw_pedestrian.get("protocol", "DSRC"),
+                "beacon_interval": raw_pedestrian.get("beacon_interval", 1000),
+            },
         })
 
     source_scenario["name"] = json_data.get("scenario_name", "scenario")

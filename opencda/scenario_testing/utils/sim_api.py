@@ -306,135 +306,150 @@ class ScenarioManager:
 
         for i, cav_config in enumerate(
                 self.scenario_params['scenario']['single_cav_list']):
-            # in case the cav wants to join a platoon later
-            # it will be empty dictionary for single cav application
-            platoon_base = OmegaConf.create({'platoon': self.scenario_params.get('platoon_base',{})})
-            cav_config = OmegaConf.merge(self.scenario_params['vehicle_base'],
-                                         platoon_base,
-                                         cav_config)
-            requested_model = cav_config.get('model', default_model)
+            vehicle = None
             try:
-                cav_vehicle_bp = blueprint_library.find(requested_model)
-            except (IndexError, RuntimeError):
-                log.warning(
-                    "CAV model %s is unavailable; using %s",
-                    requested_model,
-                    default_model,
-                )
-                cav_vehicle_bp = blueprint_library.find(default_model)
-            # if the spawn position is a single scalar, we need to use map
-            # helper to transfer to spawn transform
-            if 'spawn_special' not in cav_config:
-                spawn_transform = carla.Transform(
-                    carla.Location(
-                        x=cav_config['spawn_position'][0],
-                        y=cav_config['spawn_position'][1],
-                        z=cav_config['spawn_position'][2]),
-                    carla.Rotation(
-                        pitch=cav_config['spawn_position'][5],
-                        yaw=cav_config['spawn_position'][4],
-                        roll=cav_config['spawn_position'][3]))
-            else:
-                spawn_transform = map_helper(self.carla_version,
-                                             *cav_config['spawn_special'])
+                # in case the cav wants to join a platoon later
+                # it will be empty dictionary for single cav application
+                platoon_base = OmegaConf.create({'platoon': self.scenario_params.get('platoon_base',{})})
+                cav_config = OmegaConf.merge(self.scenario_params['vehicle_base'],
+                                             platoon_base,
+                                             cav_config)
+                requested_model = cav_config.get('model', default_model)
+                try:
+                    cav_vehicle_bp = blueprint_library.find(requested_model)
+                except (IndexError, RuntimeError):
+                    log.warning(
+                        "CAV model %s is unavailable; using %s",
+                        requested_model,
+                        default_model,
+                    )
+                    cav_vehicle_bp = blueprint_library.find(default_model)
+                # if the spawn position is a single scalar, we need to use map
+                # helper to transfer to spawn transform
+                if 'spawn_special' not in cav_config:
+                    spawn_transform = carla.Transform(
+                        carla.Location(
+                            x=cav_config['spawn_position'][0],
+                            y=cav_config['spawn_position'][1],
+                            z=cav_config['spawn_position'][2]),
+                        carla.Rotation(
+                            pitch=cav_config['spawn_position'][5],
+                            yaw=cav_config['spawn_position'][4],
+                            roll=cav_config['spawn_position'][3]))
+                else:
+                    spawn_transform = map_helper(self.carla_version,
+                                                 *cav_config['spawn_special'])
 
-            behavior_config = cav_config.get('behavior', {})
-            color = cav_config.get(
-                'color',
-                behavior_config.get('color', [0, 0, 255]),
-            )
-            if cav_vehicle_bp.has_attribute('color'):
-                cav_vehicle_bp.set_attribute(
+                behavior_config = cav_config.get('behavior', {})
+                color = cav_config.get(
                     'color',
-                    ', '.join(str(int(channel)) for channel in color),
+                    behavior_config.get('color', [0, 0, 255]),
                 )
-            # Snap spawn point to the nearest drivable waypoint.
-            # get_waypoint may return a waypoint on the oncoming lane (positive
-            # lane_id in CARLA = wrong direction). We pick the waypoint whose
-            # forward direction best matches the requested yaw.
-            spawn_yaw = spawn_transform.rotation.yaw
-            wp = self.carla_map.get_waypoint(
-                spawn_transform.location,
-                project_to_road=True,
-                lane_type=carla.LaneType.Driving
-            )
-            def _yaw_diff(a, b):
-                d = abs(a - b) % 360
-                return d if d <= 180 else 360 - d
-
-            candidates = []
-            seen = set()
-            for label, candidate in (
-                    ('nearest', wp),
-                    ('left', wp.get_left_lane() if wp else None),
-                    ('right', wp.get_right_lane() if wp else None)):
-                if candidate is None or candidate.lane_type != carla.LaneType.Driving:
-                    continue
-                key = (
-                    candidate.road_id,
-                    getattr(candidate, 'section_id', None),
-                    candidate.lane_id,
+                if cav_vehicle_bp.has_attribute('color'):
+                    cav_vehicle_bp.set_attribute(
+                        'color',
+                        ', '.join(str(int(channel)) for channel in color),
+                    )
+                # Snap spawn point to the nearest drivable waypoint.
+                # get_waypoint may return a waypoint on the oncoming lane (positive
+                # lane_id in CARLA = wrong direction). We pick the waypoint whose
+                # forward direction best matches the requested yaw.
+                spawn_yaw = spawn_transform.rotation.yaw
+                wp = self.carla_map.get_waypoint(
+                    spawn_transform.location,
+                    project_to_road=True,
+                    lane_type=carla.LaneType.Driving
                 )
-                if key in seen:
-                    continue
-                seen.add(key)
-                candidates.append((label, candidate, _yaw_diff(candidate.transform.rotation.yaw, spawn_yaw)))
+                def _yaw_diff(a, b):
+                    d = abs(a - b) % 360
+                    return d if d <= 180 else 360 - d
 
-            if candidates:
-                label, wp, diff = min(candidates, key=lambda item: item[2])
-                log.info(
-                    "Spawn snap for %s: selected %s road=%s lane=%s yaw=%.1f requested_yaw=%.1f yaw_diff=%.1f",
-                    cav_config.get('name', i),
-                    label,
-                    wp.road_id,
-                    wp.lane_id,
-                    wp.transform.rotation.yaw,
-                    spawn_yaw,
-                    diff,
+                candidates = []
+                seen = set()
+                for label, candidate in (
+                        ('nearest', wp),
+                        ('left', wp.get_left_lane() if wp else None),
+                        ('right', wp.get_right_lane() if wp else None)):
+                    if candidate is None or candidate.lane_type != carla.LaneType.Driving:
+                        continue
+                    key = (
+                        candidate.road_id,
+                        getattr(candidate, 'section_id', None),
+                        candidate.lane_id,
+                    )
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    candidates.append((label, candidate, _yaw_diff(candidate.transform.rotation.yaw, spawn_yaw)))
+
+                if candidates:
+                    label, wp, diff = min(candidates, key=lambda item: item[2])
+                    log.info(
+                        "Spawn snap for %s: selected %s road=%s lane=%s yaw=%.1f requested_yaw=%.1f yaw_diff=%.1f",
+                        cav_config.get('name', i),
+                        label,
+                        wp.road_id,
+                        wp.lane_id,
+                        wp.transform.rotation.yaw,
+                        spawn_yaw,
+                        diff,
+                    )
+                spawn_transform = wp.transform
+                spawn_transform.location.z += 0.3
+
+                vehicle = self.world.try_spawn_actor(cav_vehicle_bp, spawn_transform)
+                if vehicle is None:
+                    for next_wp in wp.next(5.0):
+                        t = next_wp.transform
+                        t.location.z += 0.3
+                        vehicle = self.world.try_spawn_actor(cav_vehicle_bp, t)
+                        if vehicle:
+                            break
+                if vehicle is None:
+                    raise RuntimeError(f"Failed to spawn vehicle at {spawn_transform.location}")
+                vehicle_manager = VehicleManager(
+                    vehicle, cav_config, application,
+                    self.carla_map, self.cav_world,
+                    current_time=self.scenario_params['current_time'],
+                    data_dumping=data_dump)
+
+                self.world.tick()
+
+                vehicle_manager.v2x_manager.set_platoon(None)
+
+                destination = carla.Location(x=cav_config['destination'][0],
+                                             y=cav_config['destination'][1],
+                                             z=cav_config['destination'][2])
+                vehicle_manager.update_info()
+                vehicle_manager.set_destination(
+                    vehicle_manager.vehicle.get_location(),
+                    destination,
+                    clean=True)
+
+                buf_len = len(vehicle_manager.agent.get_local_planner().get_waypoint_buffer())
+                if buf_len == 0:
+                    print(f"WARNING: waypoint buffer empty after set_destination for CAV "
+                          f"{cav_config.get('name', i)}. "
+                          f"Destination {destination} may be unreachable. "
+                          f"Check coordinate conversion in utils.py.")
+                else:
+                    print(f"DEBUG: CAV {cav_config.get('name', i)} route OK, "
+                          f"buffer has {buf_len} waypoints.")
+
+                single_cav_list.append(vehicle_manager)
+            except Exception as e:
+                log.warning(
+                    "CAV #%d (%s) spawn failed, skipping: %s",
+                    i, cav_config.get('name', i), e,
                 )
-            spawn_transform = wp.transform
-            spawn_transform.location.z += 0.3
-
-            vehicle = self.world.try_spawn_actor(cav_vehicle_bp, spawn_transform)
-            if vehicle is None:
-                for next_wp in wp.next(5.0):
-                    t = next_wp.transform
-                    t.location.z += 0.3
-                    vehicle = self.world.try_spawn_actor(cav_vehicle_bp, t)
-                    if vehicle:
-                        break
-            if vehicle is None:
-                raise RuntimeError(f"Failed to spawn vehicle at {spawn_transform.location}")
-            vehicle_manager = VehicleManager(
-                vehicle, cav_config, application,
-                self.carla_map, self.cav_world,
-                current_time=self.scenario_params['current_time'],
-                data_dumping=data_dump)
-
-            self.world.tick()
-
-            vehicle_manager.v2x_manager.set_platoon(None)
-
-            destination = carla.Location(x=cav_config['destination'][0],
-                                         y=cav_config['destination'][1],
-                                         z=cav_config['destination'][2])
-            vehicle_manager.update_info()
-            vehicle_manager.set_destination(
-                vehicle_manager.vehicle.get_location(),
-                destination,
-                clean=True)
-
-            buf_len = len(vehicle_manager.agent.get_local_planner().get_waypoint_buffer())
-            if buf_len == 0:
-                print(f"WARNING: waypoint buffer empty after set_destination for CAV "
-                      f"{cav_config.get('name', i)}. "
-                      f"Destination {destination} may be unreachable. "
-                      f"Check coordinate conversion in utils.py.")
-            else:
-                print(f"DEBUG: CAV {cav_config.get('name', i)} route OK, "
-                      f"buffer has {buf_len} waypoints.")
-
-            single_cav_list.append(vehicle_manager)
+                if vehicle is not None:
+                    try:
+                        vehicle.destroy()
+                    except Exception as destroy_err:
+                        log.warning(
+                            "CAV #%d: also failed to destroy orphaned "
+                            "vehicle: %s", i, destroy_err,
+                        )
 
         return single_cav_list
 
@@ -518,42 +533,83 @@ class ScenarioManager:
             platoon = OmegaConf.merge(self.scenario_params['platoon_base'],
                                       platoon)
             platoon_manager = PlatooningManager(platoon, self.cav_world)
+            lead_set = False
+            members_spawned = 0
             for j, cav in enumerate(platoon['members']):
-                platton_base = OmegaConf.create({'platoon': platoon})
-                cav = OmegaConf.merge(self.scenario_params['vehicle_base'],
-                                      platton_base,
-                                      cav
-                                      )
-                if 'spawn_special' not in cav:
-                    spawn_transform = carla.Transform(
-                        carla.Location(
-                            x=cav['spawn_position'][0],
-                            y=cav['spawn_position'][1],
-                            z=cav['spawn_position'][2]),
-                        carla.Rotation(
-                            pitch=cav['spawn_position'][5],
-                            yaw=cav['spawn_position'][4],
-                            roll=cav['spawn_position'][3]))
-                else:
-                    spawn_transform = map_helper(self.carla_version,
-                                                 *cav['spawn_special'])
+                vehicle = None
+                try:
+                    platton_base = OmegaConf.create({'platoon': platoon})
+                    cav = OmegaConf.merge(self.scenario_params['vehicle_base'],
+                                          platton_base,
+                                          cav
+                                          )
+                    if 'spawn_special' not in cav:
+                        spawn_transform = carla.Transform(
+                            carla.Location(
+                                x=cav['spawn_position'][0],
+                                y=cav['spawn_position'][1],
+                                z=cav['spawn_position'][2]),
+                            carla.Rotation(
+                                pitch=cav['spawn_position'][5],
+                                yaw=cav['spawn_position'][4],
+                                roll=cav['spawn_position'][3]))
+                    else:
+                        spawn_transform = map_helper(self.carla_version,
+                                                     *cav['spawn_special'])
 
-                cav_vehicle_bp.set_attribute('color', '0, 0, 255')
-                vehicle = self.world.spawn_actor(cav_vehicle_bp,
-                                                 spawn_transform)
+                    cav_vehicle_bp.set_attribute('color', '0, 0, 255')
+                    # try_spawn_actor (not spawn_actor) so a collision at
+                    # one member's spawn point skips that member instead of
+                    # raising and aborting every remaining member/platoon --
+                    # same fix already applied to single-CAV and background
+                    # traffic spawning elsewhere in this file.
+                    vehicle = self.world.try_spawn_actor(cav_vehicle_bp,
+                                                         spawn_transform)
+                    if vehicle is None:
+                        raise RuntimeError(
+                            f"Failed to spawn platoon member at "
+                            f"{spawn_transform.location}"
+                        )
 
-                # create vehicle manager for each cav
-                vehicle_manager = VehicleManager(
-                    vehicle, cav, ['platooning'],
-                    self.carla_map, self.cav_world,
-                    current_time=self.scenario_params['current_time'],
-                    data_dumping=data_dump)
+                    # create vehicle manager for each cav
+                    vehicle_manager = VehicleManager(
+                        vehicle, cav, ['platooning'],
+                        self.carla_map, self.cav_world,
+                        current_time=self.scenario_params['current_time'],
+                        data_dumping=data_dump)
 
-                # add the vehicle manager to platoon
-                if j == 0:
-                    platoon_manager.set_lead(vehicle_manager)
-                else:
-                    platoon_manager.add_member(vehicle_manager, leader=False)
+                    # add the vehicle manager to platoon. The first member
+                    # that actually spawns becomes lead, not strictly
+                    # member #0 -- if #0 fails to spawn, #1 (or whichever
+                    # spawns first) takes over rather than leaving the
+                    # platoon leaderless.
+                    if not lead_set:
+                        platoon_manager.set_lead(vehicle_manager)
+                        lead_set = True
+                    else:
+                        platoon_manager.add_member(vehicle_manager, leader=False)
+                    members_spawned += 1
+                except Exception as e:
+                    log.warning(
+                        "Platoon #%d member #%d spawn failed, skipping: %s",
+                        i, j, e,
+                    )
+                    if vehicle is not None:
+                        try:
+                            vehicle.destroy()
+                        except Exception as destroy_err:
+                            log.warning(
+                                "Platoon #%d member #%d: also failed to "
+                                "destroy orphaned vehicle: %s",
+                                i, j, destroy_err,
+                            )
+
+            if members_spawned == 0:
+                log.warning(
+                    "Platoon #%d: no members spawned, skipping this platoon",
+                    i,
+                )
+                continue
 
             self.world.tick()
             destination = carla.Location(x=platoon['destination'][0],
@@ -584,15 +640,25 @@ class ScenarioManager:
         rsu_list = []
         for i, rsu_config in enumerate(
                 self.scenario_params['scenario']['rsu_list']):
-            rsu_config = OmegaConf.merge(self.scenario_params['rsu_base'],
-                                         rsu_config)
-            rsu_manager = RSUManager(self.world, rsu_config,
-                                     self.carla_map,
-                                     self.cav_world,
-                                     self.scenario_params['current_time'],
-                                     data_dump)
+            try:
+                rsu_config = OmegaConf.merge(self.scenario_params['rsu_base'],
+                                             rsu_config)
+                rsu_manager = RSUManager(self.world, rsu_config,
+                                         self.carla_map,
+                                         self.cav_world,
+                                         self.scenario_params['current_time'],
+                                         data_dump)
 
-            rsu_list.append(rsu_manager)
+                rsu_list.append(rsu_manager)
+            except Exception as e:
+                # Same isolation as CAV/background-traffic spawn: one bad
+                # RSU config (unlike CAVs/traffic, RSUManager doesn't spawn
+                # a physical CARLA actor here, so there's nothing to
+                # destroy on failure) shouldn't abort every other RSU in
+                # the scenario.
+                log.warning(
+                    "RSU #%d setup failed, skipping: %s", i, e,
+                )
 
         return rsu_list
 
@@ -660,17 +726,45 @@ class ScenarioManager:
                             'color').recommended_values)
                     ego_vehicle_bp.set_attribute('color', color)
 
-            vehicle = self.world.spawn_actor(ego_vehicle_bp, spawn_transform)
-            vehicle.set_autopilot(True, traffic_config['port'])
+            # spawn_actor() (unlike try_spawn_actor() used for CAVs/
+            # pedestrians elsewhere in this file) raises on any spawn
+            # collision instead of returning None -- confirmed against the
+            # CARLA docs, the only difference between the two is exception
+            # vs None on failure. With background traffic placed at many
+            # fixed coordinates, a collision is the most likely of all three
+            # actor types here, and it used to abort every remaining
+            # vehicle in the list, not just this one.
+            vehicle = self.world.try_spawn_actor(ego_vehicle_bp, spawn_transform)
+            if vehicle is None:
+                log.warning(
+                    "Background traffic vehicle #%d: spawn collision at "
+                    "%s, skipping", i, spawn_transform.location,
+                )
+                continue
 
-            speed_difference = vehicle_config.get(
-                'vehicle_speed_perc',
-                traffic_config['global_speed_perc'],
-            )
-            tm.vehicle_percentage_speed_difference(vehicle, speed_difference)
-            self.configure_traffic_vehicle(tm, vehicle, traffic_config)
+            try:
+                vehicle.set_autopilot(True, traffic_config['port'])
 
-            bg_list.append(vehicle)
+                speed_difference = vehicle_config.get(
+                    'vehicle_speed_perc',
+                    traffic_config['global_speed_perc'],
+                )
+                tm.vehicle_percentage_speed_difference(vehicle, speed_difference)
+                self.configure_traffic_vehicle(tm, vehicle, traffic_config)
+
+                bg_list.append(vehicle)
+            except Exception as e:
+                log.warning(
+                    "Background traffic vehicle #%d: setup after spawn "
+                    "failed, destroying and skipping: %s", i, e,
+                )
+                try:
+                    vehicle.destroy()
+                except Exception as destroy_err:
+                    log.warning(
+                        "Background traffic vehicle #%d: also failed to "
+                        "destroy orphaned vehicle: %s", i, destroy_err,
+                    )
 
         return bg_list
 
@@ -787,16 +881,34 @@ class ScenarioManager:
             if not vehicle:
                 continue
 
-            vehicle.set_autopilot(True, traffic_config['port'])
-            self.configure_traffic_vehicle(tm, vehicle, traffic_config)
+            try:
+                vehicle.set_autopilot(True, traffic_config['port'])
+                self.configure_traffic_vehicle(tm, vehicle, traffic_config)
 
-            # each vehicle have slight different speed
-            tm.vehicle_percentage_speed_difference(
-                vehicle,
-                traffic_config['global_speed_perc'] + random.randint(-30, 30))
+                # each vehicle have slight different speed
+                tm.vehicle_percentage_speed_difference(
+                    vehicle,
+                    traffic_config['global_speed_perc'] + random.randint(-30, 30))
 
-            bg_list.append(vehicle)
-            count += 1
+                bg_list.append(vehicle)
+                count += 1
+            except Exception as e:
+                # Same isolation as spawn_vehicles_by_list: the spawn call
+                # above is already safe (try_spawn_actor), but setup after
+                # a successful spawn wasn't -- a failure here used to abort
+                # the whole while loop, leaving spawn_num - count vehicles
+                # never spawned even though spawn_list still had entries.
+                log.warning(
+                    "Background traffic vehicle (range-based) setup "
+                    "failed, destroying and skipping: %s", e,
+                )
+                try:
+                    vehicle.destroy()
+                except Exception as destroy_err:
+                    log.warning(
+                        "Background traffic vehicle (range-based): also "
+                        "failed to destroy orphaned vehicle: %s", destroy_err,
+                    )
 
         return bg_list
 

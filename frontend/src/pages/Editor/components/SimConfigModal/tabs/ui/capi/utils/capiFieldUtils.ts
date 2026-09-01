@@ -1,5 +1,5 @@
 import { SimulationConfig } from '@/store';
-import { parseNumberInputChange } from '../../../../utils/numberInputUtils';
+import { parseNumberInputChange } from '@/shared/utils/numberInputUtils';
 
 type CapiConfig = SimulationConfig['capi'];
 

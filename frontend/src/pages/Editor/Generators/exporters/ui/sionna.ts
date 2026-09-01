@@ -1,34 +1,56 @@
 import type { SimulationConfig } from '../../types/configGeneratorsTypes';
-import type { Building, Car, RSU } from '@/store/types/useEditorStoreTypes';
+import type {
+  Building,
+  Car,
+  Pedestrian,
+  RSU,
+} from '@/store/types/useEditorStoreTypes';
 
 export function generateSionnaConfig(
   config: SimulationConfig,
   RSUs: RSU[],
   buildings: Building[],
-  cars: Car[]
+  cars: Car[],
+  pedestrians: Pedestrian[] = []
 ): object {
   return {
     scene: {
       carrier_frequency: config.sionna.carrier_frequency,
       synthetic_array: true,
     },
-    transmitters: RSUs.map((rsu, i) => ({
-      name: rsu.name || `rsu_${i}`,
-      position: [+rsu.x.toFixed(2), +rsu.y.toFixed(2), +rsu.z.toFixed(2)],
-      frequency: rsu.frequency,
-      antenna: {
-        type: rsu.antenna_type ?? 'isotropic',
-        height: rsu.antenna_height ?? 5,
-        gain: rsu.antenna_gain ?? 0,
-        polarization: rsu.polarization ?? 'vertical',
-        orientation: { azimuth: rsu.azimuth ?? 0, tilt: rsu.tilt ?? 0 },
-        array: {
-          rows: rsu.mimo_rows ?? 1,
-          columns: rsu.mimo_columns ?? 1,
-          element_spacing: rsu.element_spacing ?? 0.5,
+    transmitters: [
+      ...RSUs.map((rsu, i) => ({
+        name: rsu.name || `rsu_${i}`,
+        position: [+rsu.x.toFixed(2), +rsu.y.toFixed(2), +rsu.z.toFixed(2)],
+        frequency: rsu.frequency,
+        antenna: {
+          type: rsu.antenna_type ?? 'isotropic',
+          height: rsu.antenna_height ?? 5,
+          gain: rsu.antenna_gain ?? 0,
+          polarization: rsu.polarization ?? 'vertical',
+          orientation: { azimuth: rsu.azimuth ?? 0, tilt: rsu.tilt ?? 0 },
+          array: {
+            rows: rsu.mimo_rows ?? 1,
+            columns: rsu.mimo_columns ?? 1,
+            element_spacing: rsu.element_spacing ?? 0.5,
+          },
         },
-      },
-    })),
+      })),
+
+      ...pedestrians.map((ped, i) => ({
+        name: `pedestrian_${i}`,
+        position: [+ped.x.toFixed(2), +ped.y.toFixed(2), +ped.z.toFixed(2)],
+        frequency: ped.frequency,
+        antenna: {
+          type: 'isotropic',
+          height: 1.2,
+          gain: 0,
+          polarization: 'vertical',
+          orientation: { azimuth: 0, tilt: 0 },
+          array: { rows: 1, columns: 1, element_spacing: 0.5 },
+        },
+      })),
+    ],
     receivers: cars.map((car, i) => ({
       name: `vehicle_${i}`,
       position: [+car.x.toFixed(2), +car.y.toFixed(2), +car.z.toFixed(2)],

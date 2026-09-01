@@ -8,7 +8,7 @@ import {
 } from '@mui/material';
 import { useEditorStore } from '@/store';
 import type { Car } from '@/store/types/useEditorStoreTypes';
-import { numInputSlot } from '../../../types/PanelTypes';
+import { numInputSlot } from '@right-panel/types/PanelTypes';
 import { parseNumberFromEvent } from '../utils/carOpenCDAHelpers';
 
 interface CarV2XSectionProps {

@@ -1,5 +1,5 @@
 import { Divider, Stack, TextField, Typography } from '@mui/material';
-import { parseNumberInputChange } from '../../../../utils/numberInputUtils';
+import { parseNumberInputChange } from '@/shared/utils/numberInputUtils';
 import { MPCConfig } from '../utils/MpcUtils';
 
 type Props = {

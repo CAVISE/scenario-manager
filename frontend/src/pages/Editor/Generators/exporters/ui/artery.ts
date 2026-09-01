@@ -1,9 +1,10 @@
 import { SimulationConfig } from '@/store';
-import { RSU } from '@/store/types/useEditorStoreTypes';
+import { Pedestrian, RSU } from '@/store/types/useEditorStoreTypes';
 
 export function generateArteryConfig(
   config: SimulationConfig,
-  RSUs: RSU[]
+  RSUs: RSU[],
+  pedestrians: Pedestrian[] = []
 ): string {
   const vehicleServices = [
     '<service type=\\"artery.application.CaService\\"><listener port=\\"2001\\"/></service>',
@@ -49,6 +50,19 @@ export function generateArteryConfig(
 *.rsu[${i}].appl.camInterval = ${rsu.cam_interval ?? 100}ms`;
   }).join('\n');
 
+  const pedestrianLines = pedestrians
+    .map(
+      (ped, i) => `
+*.pedestrian[${i}].mobility.x = ${ped.x.toFixed(1)}
+*.pedestrian[${i}].mobility.y = ${ped.y.toFixed(1)}
+*.pedestrian[${i}].mobility.z = ${ped.z.toFixed(1)}
+*.pedestrian[${i}].wlan[0].radio.transmitter.power = ${ped.tx_power}dBm
+*.pedestrian[${i}].wlan[0].radio.centerFrequency = ${ped.frequency}Hz
+*.pedestrian[${i}].vanetza[0].access.protocol = "${ped.protocol}"
+*.pedestrian[${i}].appl.beaconInterval = ${ped.beacon_interval}ms`
+    )
+    .join('\n');
+
   return `[General]
 network = artery.inet.PoweredInetRadioMedium
 sim-time-limit = ${config.sim_duration}s
@@ -70,5 +84,8 @@ debug-on-errors = true
 
 **.numRSU = ${RSUs.length}
 ${rsuLines}
+
+**.numPedestrian = ${pedestrians.length}
+${pedestrianLines}
 `;
 }

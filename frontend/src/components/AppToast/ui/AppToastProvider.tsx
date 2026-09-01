@@ -67,12 +67,12 @@ export function AppToastProvider({ children }: { children: ReactNode }) {
       {children}
       <Snackbar
         open={open}
-        autoHideDuration={action ? null : 3500}
+        autoHideDuration={action ? 8000 : 3500}
         onClose={(_event, reason) => {
           if (action && reason === 'clickaway') return;
           handleClose();
         }}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
       >
         <Alert
           onClose={handleClose}

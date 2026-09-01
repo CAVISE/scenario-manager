@@ -131,7 +131,6 @@ export function useDblClickHandler(ctx: SharedMouseContext) {
   const {
     sceneRef,
     cameraRef,
-    loadPointsRef,
     transformControlsRef,
     carMeshesRef,
     pointsArrRef,
@@ -268,14 +267,6 @@ export function useDblClickHandler(ctx: SharedMouseContext) {
           true
         );
         if (roadHits.length > 0 && roadHits[0].object === road) {
-          if (cubeCircles[selectedIdx]) {
-            cubeCircles[selectedIdx].forEach((c) => {
-              c.parent?.remove(c);
-              c.geometry?.dispose();
-              (c.material as THREE.Material)?.dispose();
-            });
-            cubeCircles[selectedIdx] = [];
-          }
           const pt = roadHits[0].point;
           if (currentSelectedId) {
             useEditorStore
@@ -283,7 +274,6 @@ export function useDblClickHandler(ctx: SharedMouseContext) {
               .addPoint(currentSelectedId, pt.x, pt.y, pt.z);
             waypointInactivityTimerRef.current?.scheduleReset();
           }
-          loadPointsRef.current();
           updateSceneGraph();
         }
         return;

@@ -32,6 +32,9 @@ class CavWorld(object):
     _rsu_manager_dict : dict
         A dictionary that stores RSU managers.
 
+    _pedestrian_manager_dict : dict
+        A dictionary that stores pedestrian managers.
+
     ml_manager : opencda object.
         The machine learning manager class.
     """
@@ -42,6 +45,7 @@ class CavWorld(object):
         self._vehicle_manager_dict = {}
         self._platooning_dict = {}
         self._rsu_manager_dict = {}
+        self._pedestrian_manager_dict = {}
         self.ml_manager = None
         self.global_clock = 0
 
@@ -61,6 +65,8 @@ class CavWorld(object):
             vehicle_manager.destroy()
         for rsu_manager in self._rsu_manager_dict.values():
             rsu_manager.destroy()
+        for pedestrian_manager in self._pedestrian_manager_dict.values():
+            pedestrian_manager.destroy()
 
     def update_vehicle_manager(self, vehicle_manager):
         """
@@ -97,6 +103,24 @@ class CavWorld(object):
             The RSU manager class.
         """
         self._rsu_manager_dict.update({rsu_manager.rid: rsu_manager})
+
+    def update_pedestrian_manager(self, pedestrian_manager):
+        """
+        Add pedestrian manager.
+
+        Parameters
+        ----------
+        pedestrian_manager : opencda object
+            The pedestrian manager class.
+        """
+        self._pedestrian_manager_dict.update(
+            {pedestrian_manager.pid: pedestrian_manager})
+
+    def get_pedestrian_managers(self):
+        """
+        Return pedestrian manager dictionary.
+        """
+        return self._pedestrian_manager_dict
 
     def update_sumo_vehicles(self, sumo2carla_ids):
         """

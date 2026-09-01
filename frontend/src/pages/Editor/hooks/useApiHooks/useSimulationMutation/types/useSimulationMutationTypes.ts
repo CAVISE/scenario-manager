@@ -4,7 +4,6 @@ import { OpenCDAAttackConfig } from '@editor/Generators/types/configGeneratorsTy
 export interface StartSimulationPayload {
   scenario_id: string;
   scenario_name: string;
-  weather: string;
   scenario: ScenarioGroup[];
   description: string;
   opencda_config_yaml: string;

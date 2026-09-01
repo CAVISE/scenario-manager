@@ -11,6 +11,7 @@ from opencda.core.actuation.control_manager \
     import ControlManager
 from opencda.core.application.platooning.platoon_behavior_agent\
     import PlatooningBehaviorAgent
+from opencda.core.common.rsu_trust import is_plausible_rsu_object
 from opencda.core.common.v2x_manager \
     import V2XManager
 from opencda.core.sensing.localization.localization_manager \
@@ -142,8 +143,6 @@ class VehicleManager(object):
         else:
             self.data_dumper = None
 
-        cav_world.update_vehicle_manager(self)
-
         from collections import deque as _deque
         self.gt_dynamic_trace = _deque()
         self.ground_truth_pose = None
@@ -156,7 +155,26 @@ class VehicleManager(object):
             'ticks_total': 0,
             'ticks_rsu_in_range': 0,
             'objects_merged_total': 0,
+            'objects_rejected_implausible': 0,
         }
+        # Per-tick history backing the coverage-over-time plot
+        # (evaluate_manager.py's rsu_coverage_eval). Kept separate from
+        # rsu_merge_stats above rather than folded into it, since that
+        # dict's job is the small set of run-summary counters printed to
+        # the log -- this is unbounded per-tick detail those callers
+        # don't need and shouldn't have to skip over.
+        self.rsu_merge_history = _deque()
+        self._rsu_merge_this_tick = 0
+
+        # Register last, once every attribute above exists. Registering
+        # earlier left a window where a failure in one of these trivial
+        # assignments (unlikely, but not impossible under e.g. MemoryError)
+        # would leave a half-built object reachable through
+        # cav_world.get_vehicle_managers() by anything that reads it later
+        # (confirmed concrete case: evaluate_manager.py's
+        # _planning_eval_single reads vm.rsu_merge_stats with no hasattr
+        # guard). RSUManager already registers last for the same reason.
+        cav_world.update_vehicle_manager(self)
 
     def set_destination(
             self,
@@ -241,14 +259,30 @@ class VehicleManager(object):
         self.gt_dynamic_trace.append(self.ground_truth_pose)
 
         self.rsu_merge_stats['ticks_total'] += 1
-        if self.v2x_manager.rsu_nearby:
+        rsu_in_range = bool(self.v2x_manager.rsu_nearby)
+        if rsu_in_range:
             self.rsu_merge_stats['ticks_rsu_in_range'] += 1
+        self._rsu_merge_this_tick = 0
         objects = self._merge_rsu_perception(objects)
+        self.rsu_merge_history.append(
+            (self.cav_world.global_clock, rsu_in_range,
+             self._rsu_merge_this_tick))
 
         self.agent.update_information(
             self.navigation_pose, navigation_spd, objects)
         self.controller.update_info(
             self.navigation_pose, navigation_spd)
+
+    def _is_plausible_rsu_object(self, v, rsu) -> bool:
+        """
+        Thin wrapper around the shared rsu_trust.is_plausible_rsu_object
+        (see that module for the actual rule and its rationale) --
+        kept as a method here for backward compatibility with existing
+        callers/tests, since RSUManager's neighbor relay
+        (_relay_neighbor_objects) now shares the same underlying
+        function directly rather than duplicating this logic.
+        """
+        return is_plausible_rsu_object(v, rsu)
 
     def _merge_rsu_perception(self, objects: dict) -> dict:
         """
@@ -256,7 +290,10 @@ class VehicleManager(object):
 
         RSUs act as infrastructure sensors — they see vehicles that may be
         outside the ego CAV's own perception range (e.g. around corners or
-        at intersections). The merged list is deduplicated by CARLA actor id.
+        at intersections). Each reported object passes
+        _is_plausible_rsu_object before merging (see its docstring for
+        exactly what is and isn't checked). The merged list is
+        deduplicated by CARLA actor id.
 
         Returns a new dict so the original is not mutated.
         """
@@ -277,11 +314,16 @@ class VehicleManager(object):
                     continue
                 if v.carla_id == self.vehicle.id:
                     continue  # skip self
-                if v.carla_id not in existing_ids:
-                    extra_vehicles.append(v)
-                    existing_ids.add(v.carla_id)
+                if v.carla_id in existing_ids:
+                    continue
+                if not self._is_plausible_rsu_object(v, rsu):
+                    self.rsu_merge_stats['objects_rejected_implausible'] += 1
+                    continue
+                extra_vehicles.append(v)
+                existing_ids.add(v.carla_id)
 
         self.rsu_merge_stats['objects_merged_total'] += len(extra_vehicles)
+        self._rsu_merge_this_tick = len(extra_vehicles)
 
         merged = dict(objects)
         merged['vehicles'] = list(objects.get('vehicles', [])) + extra_vehicles

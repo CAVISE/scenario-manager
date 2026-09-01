@@ -18,10 +18,11 @@ export default function RayTracingExportSection({
         RSUs,
         buildings,
         cars,
+        pedestrians,
       } = useEditorStore.getState();
       const simConfig = mergeSimConfigWithDefaults(raw);
       return JSON.stringify(
-        generateSionnaConfig(simConfig, RSUs, buildings, cars),
+        generateSionnaConfig(simConfig, RSUs, buildings, cars, pedestrians),
         null,
         2
       );

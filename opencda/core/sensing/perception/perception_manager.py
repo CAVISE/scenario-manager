@@ -439,6 +439,20 @@ class PerceptionManager:
         # RSUs may override the server-side detection range.
         self.detection_range = config_yaml.get('detection_range', 50)
 
+        # Opt-in line-of-sight filtering for deactivate_mode. Off by
+        # default: deactivate_mode has always been a pure radius filter
+        # (all actors within detection_range are "seen" regardless of
+        # occlusion), and existing scenarios/evaluation baselines were
+        # built against that behavior. When enabled, a target is only
+        # kept if a ray from ego_pos to it isn't blocked by static
+        # scene geometry (buildings, walls) -- carla.World.cast_ray
+        # only intersects static geometry, not dynamic actors, so a
+        # vehicle standing in front of another vehicle does not itself
+        # cause an occlusion here; that's a coarser approximation than
+        # full mutual-actor occlusion, deliberately, to keep this a
+        # single well-scoped addition rather than a bigger vision model.
+        self.line_of_sight = config_yaml.get('line_of_sight', False)
+
     def dist(self, a):
         """
         A fast method to retrieve the obstacle distance the ego
@@ -455,6 +469,57 @@ class PerceptionManager:
             The distance between ego and the target actor.
         """
         return a.get_location().distance(self.ego_pos.location)
+
+    def _has_line_of_sight(self, target_actor, sensor_height=1.6):
+        """
+        Ray-cast from ego_pos to target_actor and check whether static
+        scene geometry (buildings, walls) blocks the path. Only used
+        when self.line_of_sight is enabled -- see its definition in
+        __init__ for why this is opt-in and what it deliberately does
+        not cover (mutual-actor occlusion).
+
+        Both ends of the ray are raised by sensor_height above their
+        base location before casting: a ray between two z=0 ground
+        points can clip through a low curb that wouldn't actually
+        block a sensor mounted at a realistic height, or miss a
+        low wall that would. 1.6m approximates a roadside sensor mast
+        or a mid-height vehicle-mounted sensor; this is a fixed
+        approximation rather than per-actor sensor mount height, kept
+        simple since exact mount height isn't tracked per RSU/CAV
+        elsewhere in this class either.
+
+        Parameters
+        ----------
+        target_actor : carla.Actor
+            The candidate vehicle being checked for visibility.
+
+        sensor_height : float
+            Height in meters added to both ray endpoints.
+
+        Returns
+        -------
+        visible : bool
+            True if no static geometry blocks the ray between ego and
+            the target.
+        """
+        import carla
+
+        start = self.ego_pos.location
+        start = carla.Location(x=start.x, y=start.y,
+                               z=start.z + sensor_height)
+        end = target_actor.get_location()
+        end = carla.Location(x=end.x, y=end.y, z=end.z + sensor_height)
+
+        hits = self.carla_world.cast_ray(start, end)
+        # CARLA's cast_ray returns intersections between the ray and
+        # static scene geometry -- it does not add synthetic entries
+        # for the ray's own start/end points (confirmed against
+        # CARLA's own description of the API: "cast_ray return
+        # intersections between the line connecting init and end and
+        # the geometry of the scene", carla-simulator/carla#3508). So
+        # any hit at all means something static intersects the ray;
+        # zero hits means the line of sight is clear.
+        return len(hits) == 0
 
     def detect(self, ego_pos):
         """
@@ -587,7 +652,9 @@ class PerceptionManager:
         thresh = self.detection_range
 
         vehicle_list = [v for v in vehicle_list if self.dist(v) < thresh and
-                        v.id != self.id]
+                        v.id != self.id and
+                        (not self.line_of_sight or
+                         self._has_line_of_sight(v))]
 
         # use semantic lidar to filter out vehicles out of the range
         if self.data_dump:

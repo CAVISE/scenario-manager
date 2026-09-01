@@ -18,7 +18,7 @@ import {
 import {
   opencdaPanelPaperSx,
   opencdaSectionLabelSx,
-} from '../../../../opencdaUiStyles';
+} from '@sim-config/opencdaUiStyles';
 
 type Oc = SimulationConfig['opencda'];
 type Props = { oc: Oc; update: (patch: Partial<Oc>) => void };

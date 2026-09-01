@@ -47,7 +47,7 @@ export const COLORS = {
 };
 export interface OdrMapMaterials {
   refline: THREE.LineBasicMaterial;
-  road_network: THREE.MeshPhongMaterial;
+  road_network: THREE.MeshLambertMaterial;
   lane_outlines: THREE.LineBasicMaterial;
   roadmark_outlines: THREE.LineBasicMaterial;
   roadmarks: THREE.MeshBasicMaterial;
@@ -57,7 +57,7 @@ export interface OdrMapMeshes {
   refline_lines: THREE.LineSegments | null;
   road_network_mesh: THREE.Mesh<
     THREE.BufferGeometry,
-    THREE.MeshPhongMaterial
+    THREE.MeshLambertMaterial
   > | null;
   roadmarks_mesh: THREE.Mesh<
     THREE.BufferGeometry,

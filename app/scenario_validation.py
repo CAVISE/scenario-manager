@@ -7,6 +7,7 @@ import re
 from typing import Any
 
 SCENARIO_ID_RE = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$")
+MAP_NAME_RE = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$")
 ALLOWED_VEHICLE_TYPES = frozenset({"car", "RSU", "building", "pedestrian"})
 MAX_SCENARIO_NAME_LEN = 200
 MAX_SCENARIO_ID_LEN = 128
@@ -40,6 +41,15 @@ def validate_scenario_id(value: Any, *, required: bool = False) -> str | None:
         raise ValueError(
             "scenario_id must start with a letter or digit and contain only "
             "letters, digits, underscores, and hyphens"
+        )
+    return normalized
+
+
+def validate_map_name(normalized: str) -> str:
+    if not MAP_NAME_RE.match(normalized):
+        raise ValueError(
+            "map must start with a letter or digit and contain only letters, "
+            "digits, underscores, and hyphens (no path separators)"
         )
     return normalized
 
@@ -88,6 +98,26 @@ def validate_preview(value: Any) -> str | None:
     if len(text) > MAX_PREVIEW_LEN:
         raise ValueError(f"preview must be at most {MAX_PREVIEW_LEN} characters")
     return text
+
+
+def validate_attack_numbers(attacks: list[dict]) -> list[dict]:
+    def _walk(value: Any, path: str) -> None:
+        if isinstance(value, bool):
+            return
+        if isinstance(value, (int, float)):
+            if not math.isfinite(value):
+                raise ValueError(f"attacks: {path} must be finite")
+        elif isinstance(value, dict):
+            for key, nested in value.items():
+                _walk(nested, f"{path}.{key}" if path else str(key))
+        elif isinstance(value, list):
+            for index, nested in enumerate(value):
+                _walk(nested, f"{path}[{index}]")
+
+    for attack_index, attack in enumerate(attacks):
+        _walk(attack, f"attacks[{attack_index}]")
+
+    return attacks
 
 
 def extract_scenario_groups(scenario: Any) -> list[dict[str, Any]]:
@@ -152,5 +182,35 @@ def extract_scenario_groups(scenario: Any) -> list[dict[str, Any]]:
                         f"scenario group #{index + 1} path item #{path_index + 1} "
                         f"coordinate '{coord}' must be finite"
                     )
+            points = item.get("points")
+            if points is not None:
+                if not isinstance(points, list):
+                    raise ValueError(
+                        f"scenario group #{index + 1} path item #{path_index + 1} "
+                        "points must be a list"
+                    )
+                for point_index, point in enumerate(points):
+                    if not isinstance(point, dict):
+                        raise ValueError(
+                            f"scenario group #{index + 1} path item #{path_index + 1} "
+                            f"point #{point_index + 1} must be an object"
+                        )
+                    for coord in ("x", "y", "z"):
+                        if coord not in point:
+                            continue
+                        try:
+                            point_coordinate = float(point[coord])
+                        except (TypeError, ValueError) as exc:
+                            raise ValueError(
+                                f"scenario group #{index + 1} path item "
+                                f"#{path_index + 1} point #{point_index + 1} "
+                                f"coordinate '{coord}' must be a number"
+                            ) from exc
+                        if not math.isfinite(point_coordinate):
+                            raise ValueError(
+                                f"scenario group #{index + 1} path item "
+                                f"#{path_index + 1} point #{point_index + 1} "
+                                f"coordinate '{coord}' must be finite"
+                            )
 
     return groups

@@ -1,5 +1,6 @@
 import { useEditorStore } from '@/store';
 import { ScenarioGroup, ScenarioPayload } from '@/api/types/IScenarioTypes';
+import { groupByCarId, getGroupedByCarId } from '@/shared/utils/groupByCarId';
 import {
   Building,
   Car,
@@ -107,6 +108,8 @@ export function generatePreviewSync(): string | null {
 export function buildScenarioPayload(): ScenarioPayload {
   const s = useEditorStore.getState();
   const preview = generatePreviewSync();
+  const pointsByCarId = groupByCarId(s.points);
+  const lidarsByCarId = groupByCarId(s.lidars);
 
   return {
     scenario_id: s.Scenario?.id || null,
@@ -150,17 +153,16 @@ export function buildScenarioPayload(): ScenarioPayload {
             sumo_edges: car.sumo_edges,
             sumo_vtype: car.sumo_vtype,
             sumo_stop: car.sumo_stop,
-            points: s.points
-              .filter((p: Point) => p.carId === car.id)
-              .map((p: Point, i: number) => ({
+            points: getGroupedByCarId(pointsByCarId, car.id).map(
+              (p: Point, i: number) => ({
                 id: i,
                 x: p.x,
                 y: p.y,
                 z: p.z,
-              })),
-            lidars: s.lidars
-              .filter((l: Lidar) => l.carId === car.id)
-              .map((l: Lidar) => ({
+              })
+            ),
+            lidars: getGroupedByCarId(lidarsByCarId, car.id).map(
+              (l: Lidar) => ({
                 x: l.x,
                 y: l.y,
                 z: l.z,
@@ -168,7 +170,8 @@ export function buildScenarioPayload(): ScenarioPayload {
                 range: l.range,
                 channels: l.channels,
                 rotation_frequency: l.rotation_frequency,
-              })),
+              })
+            ),
           })),
         },
         {

@@ -75,6 +75,7 @@ export default function OpenCDATab() {
         overtakeCounterRecover={oc.overtake_counter_recover}
         ignoreTrafficLight={oc.ignore_traffic_light}
         overtakeAllowed={oc.overtake_allowed}
+        staticObstacleAvoidanceEnabled={oc.static_obstacle_avoidance_enabled}
         onUpdate={updateSimConfigOpenCDA}
       />
 

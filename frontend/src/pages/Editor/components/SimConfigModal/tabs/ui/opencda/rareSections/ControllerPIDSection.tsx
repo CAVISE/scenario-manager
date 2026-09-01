@@ -6,7 +6,7 @@ import {
   Typography,
 } from '@mui/material';
 import { NumField } from '../rareComponents/NumField';
-import OpenCDACollapsibleSection from '../../../../components/OpenCDACollapsibleSection';
+import OpenCDACollapsibleSection from '@sim-config/components/OpenCDACollapsibleSection';
 
 type ControllerConfig = {
   type?: string;

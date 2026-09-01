@@ -13,7 +13,7 @@ import type { Car } from '@/store/types/useEditorStoreTypes';
 import { formLabelStyles } from '../types/CarPropertiesTypes';
 import { useEditorStore } from '@/store';
 import OpenCDACollapsibleSection from '@editor/components/SimConfigModal/components/OpenCDACollapsibleSection';
-import { parseNumberInputChange } from '@editor/components/SimConfigModal/utils/numberInputUtils';
+import { parseNumberInputChange } from '@/shared/utils/numberInputUtils';
 import { numInputSlot } from '@right-panel/types/PanelTypes';
 export default function CarOpenCDARareSection({ car }: { car: Car }) {
   const updateCar = useEditorStore((s) => s.updateCar);

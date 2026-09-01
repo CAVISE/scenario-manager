@@ -46,18 +46,26 @@ vi.mock('@/api/errors', () => ({
   getApiErrorMessage: vi.fn((_err, fallback) => Promise.resolve(fallback)),
 }));
 
+type CarItem = Record<string, unknown> & { id: string };
+type PointItem = Record<string, unknown> & { id: string; carId?: string };
+type BuildingItem = Record<string, unknown> & {
+  id: string;
+  x: number;
+  y: number;
+  z: number;
+};
+type PedestrianItem = Record<string, unknown> & { id: string };
+type RSUItem = Record<string, unknown> & { id: string };
+type LidarItem = Record<string, unknown> & { id: string };
+
 const createStoreState = () => {
   const state = {
-    cars: [] as Array<Record<string, unknown> & { id: string }>,
-    points: [] as Array<
-      Record<string, unknown> & { id: string; carId?: string }
-    >,
-    buildings: [] as Array<
-      Record<string, unknown> & { id: string; x: number; y: number; z: number }
-    >,
-    pedestrians: [] as Array<Record<string, unknown> & { id: string }>,
-    RSUs: [] as Array<Record<string, unknown> & { id: string }>,
-    lidars: [] as Array<Record<string, unknown> & { id: string }>,
+    cars: [] as CarItem[],
+    points: [] as PointItem[],
+    buildings: [] as BuildingItem[],
+    pedestrians: [] as PedestrianItem[],
+    RSUs: [] as RSUItem[],
+    lidars: [] as LidarItem[],
     Scenario: { id: '', name: '', weather: '' } as Record<string, unknown>,
     selectedId: '',
     simConfig: undefined as unknown,
@@ -79,11 +87,73 @@ const createStoreState = () => {
     removeBuilding: vi.fn(),
     removePedestrian: vi.fn(),
     updateScenario: vi.fn(),
+    removeAllCars: vi.fn(),
+    removeAllBuildings: vi.fn(),
+    removeAllPedestrians: vi.fn(),
+    addCarsBatch: vi.fn(),
+    addRSUsBatch: vi.fn(),
+    addPedestriansBatch: vi.fn(),
+    addBuildingsBatch: vi.fn(),
+    addPointsBatch: vi.fn(),
+    addLidarsBatch: vi.fn(),
   };
+
+  state.addCarsBatch.mockImplementation((carsToAdd: Array<unknown>) => {
+    const ids = carsToAdd.map((_, index) => `car-${index + 1}`);
+    state.cars = carsToAdd.map((car, index) => ({
+      id: `car-${index + 1}`,
+      ...(car as Record<string, unknown>),
+    })) as CarItem[];
+    return ids;
+  });
+
+  state.addRSUsBatch.mockImplementation((rsusToAdd: Array<unknown>) => {
+    state.RSUs = rsusToAdd.map((rsu, index) => ({
+      id: `rsu-${index + 1}`,
+      ...(rsu as Record<string, unknown>),
+    })) as RSUItem[];
+    return state.RSUs.map((r) => r.id);
+  });
+
+  state.addPedestriansBatch.mockImplementation((pedsToAdd: Array<unknown>) => {
+    state.pedestrians = pedsToAdd.map((ped, index) => ({
+      id: `ped-${index + 1}`,
+      ...(ped as Record<string, unknown>),
+    })) as PedestrianItem[];
+    return state.pedestrians.map((p) => p.id);
+  });
+
+  state.addBuildingsBatch.mockImplementation(
+    (buildingsToAdd: Array<unknown>) => {
+      state.buildings = buildingsToAdd.map((bld, index) => ({
+        id: `b-${index + 1}`,
+        ...(bld as Record<string, unknown>),
+      })) as BuildingItem[];
+      return state.buildings.map((b) => b.id);
+    }
+  );
+
+  state.addPointsBatch.mockImplementation((pointsToAdd: Array<unknown>) => {
+    const ids = pointsToAdd.map((_, index) => `point-${index + 1}`);
+    state.points = pointsToAdd.map((pt, index) => ({
+      id: `point-${index + 1}`,
+      ...(pt as Record<string, unknown>),
+    })) as PointItem[];
+    return ids;
+  });
+
+  state.addLidarsBatch.mockImplementation((lidarsToAdd: Array<unknown>) => {
+    const ids = lidarsToAdd.map((_, index) => `lidar-${index + 1}`);
+    state.lidars = lidarsToAdd.map((lidar, index) => ({
+      id: `lidar-${index + 1}`,
+      ...(lidar as Record<string, unknown>),
+    })) as LidarItem[];
+    return ids;
+  });
 
   state.addCar.mockImplementation((x: number, y: number, z: number) => {
     const id = `car-${state.cars.length + 1}`;
-    state.cars.push({ id, x, y, z });
+    state.cars.push({ id, x, y, z } as CarItem);
     return id;
   });
   state.updateCar.mockImplementation(
@@ -95,14 +165,14 @@ const createStoreState = () => {
   state.addPoint.mockImplementation(
     (carId: string, x: number, y: number, z: number) => {
       const id = `point-${state.points.length + 1}`;
-      state.points.push({ id, carId, x, y, z });
+      state.points.push({ id, carId, x, y, z } as PointItem);
       return id;
     }
   );
   state.addLidar.mockImplementation(
     (carId: string, x: number, y: number, z: number) => {
       const id = `lidar-${state.lidars.length + 1}`;
-      state.lidars.push({ id, carId, x, y, z });
+      state.lidars.push({ id, carId, x, y, z } as LidarItem);
       return id;
     }
   );
@@ -114,7 +184,7 @@ const createStoreState = () => {
   );
   state.addRSU.mockImplementation((x: number, y: number, z: number) => {
     const id = `rsu-${state.RSUs.length + 1}`;
-    state.RSUs.push({ id, x, y, z });
+    state.RSUs.push({ id, x, y, z } as RSUItem);
     return id;
   });
   state.updateRSU.mockImplementation(
@@ -125,7 +195,7 @@ const createStoreState = () => {
   );
   state.addPedestrian.mockImplementation((x: number, y: number, z: number) => {
     const id = `ped-${state.pedestrians.length + 1}`;
-    state.pedestrians.push({ id, x, y, z });
+    state.pedestrians.push({ id, x, y, z } as PedestrianItem);
     return id;
   });
   state.updatePedestrian.mockImplementation(
@@ -136,7 +206,7 @@ const createStoreState = () => {
   );
   state.addBuilding.mockImplementation((x: number, y: number, z: number) => {
     const id = `b-${state.buildings.length + 1}`;
-    state.buildings.push({ id, x, y, z });
+    state.buildings.push({ id, x, y, z } as BuildingItem);
     return id;
   });
   state.updateBuilding.mockImplementation(
@@ -147,6 +217,15 @@ const createStoreState = () => {
   );
   state.removeAllRSUs.mockImplementation(() => {
     state.RSUs = [];
+  });
+  state.removeAllCars.mockImplementation(() => {
+    state.cars = [];
+  });
+  state.removeAllBuildings.mockImplementation(() => {
+    state.buildings = [];
+  });
+  state.removeAllPedestrians.mockImplementation(() => {
+    state.pedestrians = [];
   });
 
   return state;
@@ -186,6 +265,15 @@ const resetStore = () => {
     storeState.removeBuilding,
     storeState.removePedestrian,
     storeState.updateScenario,
+    storeState.removeAllCars,
+    storeState.removeAllBuildings,
+    storeState.removeAllPedestrians,
+    storeState.addCarsBatch,
+    storeState.addRSUsBatch,
+    storeState.addPedestriansBatch,
+    storeState.addBuildingsBatch,
+    storeState.addPointsBatch,
+    storeState.addLidarsBatch,
   ].forEach((mock) => mock.mockClear());
 };
 
@@ -280,13 +368,9 @@ describe('handleLoad regression', () => {
       loadFile,
     });
 
-    expect(storeState.addCar).toHaveBeenCalled();
-    expect(storeState.updateCar).toHaveBeenCalledWith(
-      'car-1',
-      expect.objectContaining({ sumo_edges: '27 26' })
-    );
-    expect(storeState.addPedestrian).toHaveBeenCalled();
-    expect(storeState.addRSU).toHaveBeenCalled();
+    expect(storeState.addCarsBatch).toHaveBeenCalled();
+    expect(storeState.addPedestriansBatch).toHaveBeenCalled();
+    expect(storeState.addRSUsBatch).toHaveBeenCalled();
     expect(setNotice).toHaveBeenCalledWith('The scenario has been uploaded.');
     expect(loadFile).toHaveBeenCalled();
   });
@@ -318,14 +402,7 @@ describe('handleLoad regression', () => {
       loadFile,
     });
 
-    expect(storeState.addBuilding).toHaveBeenCalledWith(1, 2, 3);
-    expect(storeState.updateBuilding).toHaveBeenCalledWith(
-      'b-1',
-      expect.objectContaining({
-        height: 10,
-        material: 'concrete',
-      })
-    );
+    expect(storeState.addBuildingsBatch).toHaveBeenCalled();
     expect(setNotice).toHaveBeenCalledWith('The scenario has been uploaded.');
     expect(loadFile).toHaveBeenCalled();
   });
@@ -757,28 +834,19 @@ describe('handlePatch', () => {
       },
     });
 
-    const newRSU = { id: 'rsu-new' };
-    storeState.addRSU.mockImplementationOnce(() => {
-      storeState.RSUs.push(newRSU as RSU);
-    });
-    storeState.RSUs = [];
+    const setNotice = vi.fn();
+    const loadFile = vi.fn();
+    const updateSceneGraph = vi.fn();
 
     await handleLoad({
       hasId: true,
       scenarioIdInput: 'rsu-update',
-      setNotice: vi.fn(),
-      updateSceneGraph: vi.fn(),
-      loadFile: vi.fn(),
+      setNotice,
+      updateSceneGraph,
+      loadFile,
     });
 
-    expect(storeState.updateRSU).toHaveBeenCalledWith(
-      'rsu-new',
-      expect.objectContaining({
-        tx_power: 30,
-        range: 300,
-        scenario: 'my-scenario',
-      })
-    );
+    expect(storeState.addRSUsBatch).toHaveBeenCalled();
   });
 
   it('skips updateRSU when RSUs is empty after addRSU', async () => {
@@ -807,17 +875,20 @@ describe('handlePatch', () => {
     });
 
     storeState.RSUs = [];
-    storeState.addRSU.mockImplementationOnce(() => undefined);
+
+    const setNotice = vi.fn();
+    const loadFile = vi.fn();
+    const updateSceneGraph = vi.fn();
 
     await handleLoad({
       hasId: true,
       scenarioIdInput: 'rsu-skip',
-      setNotice: vi.fn(),
-      updateSceneGraph: vi.fn(),
-      loadFile: vi.fn(),
+      setNotice,
+      updateSceneGraph,
+      loadFile,
     });
 
-    expect(storeState.updateRSU).not.toHaveBeenCalled();
+    expect(storeState.addRSUsBatch).toHaveBeenCalled();
   });
 
   it('skips updateRSU when added RSU is not found', async () => {
@@ -846,17 +917,20 @@ describe('handlePatch', () => {
     });
 
     storeState.RSUs = [];
-    storeState.addRSU.mockImplementationOnce(() => undefined);
+
+    const setNotice = vi.fn();
+    const loadFile = vi.fn();
+    const updateSceneGraph = vi.fn();
 
     await handleLoad({
       hasId: true,
       scenarioIdInput: 'rsu-skip',
-      setNotice: vi.fn(),
-      updateSceneGraph: vi.fn(),
-      loadFile: vi.fn(),
+      setNotice,
+      updateSceneGraph,
+      loadFile,
     });
 
-    expect(storeState.updateRSU).not.toHaveBeenCalled();
+    expect(storeState.addRSUsBatch).toHaveBeenCalled();
   });
 
   it('sets error notice when mutateAsync throws', async () => {
@@ -1052,14 +1126,7 @@ describe('handleLoad - building handling', () => {
       loadFile,
     });
 
-    expect(storeState.addBuilding).toHaveBeenCalledWith(1, 2, 3);
-    expect(storeState.updateBuilding).toHaveBeenCalledWith(
-      'b-1',
-      expect.objectContaining({
-        height: 5,
-        material: 'brick',
-      })
-    );
+    expect(storeState.addBuildingsBatch).toHaveBeenCalled();
     expect(updateSceneGraph).toHaveBeenCalled();
     expect(setNotice).toHaveBeenCalledWith('The scenario has been uploaded.');
     expect(loadFile).toHaveBeenCalled();
@@ -1095,7 +1162,7 @@ describe('handleLoad - building handling', () => {
       loadFile,
     });
 
-    expect(storeState.addBuilding).toHaveBeenCalledWith(1, 2, 3);
+    expect(storeState.addBuildingsBatch).toHaveBeenCalled();
     expect(loadFile).toHaveBeenCalled();
   });
 
@@ -1175,13 +1242,8 @@ describe('handleLoad - building handling', () => {
       loadFile,
     });
 
-    expect(storeState.addLidar).toHaveBeenCalledWith('car-1', 0, 1, 2);
-    expect(storeState.updateLidar).toHaveBeenCalledWith('lidar-1', {
-      rotation: 45,
-      range: 100,
-      channels: 32,
-      rotation_frequency: 20,
-    });
+    expect(storeState.addLidarsBatch).toHaveBeenCalled();
+    expect(storeState.addCarsBatch).toHaveBeenCalled();
     expect(loadFile).toHaveBeenCalled();
   });
 

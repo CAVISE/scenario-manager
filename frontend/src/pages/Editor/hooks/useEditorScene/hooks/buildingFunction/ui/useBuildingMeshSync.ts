@@ -1,13 +1,16 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { useEditorStore } from '@/store';
 import { useHooks, useEditorRefs } from '@editor/context';
 import { disposeMesh } from '@right-panel/components/SceneTreePanel/funcs/sceneUtils';
 
+type Building = ReturnType<typeof useEditorStore.getState>['buildings'][number];
+
 export function useBuildingMeshSync(): void {
   const buildings = useEditorStore((s) => s.buildings);
   const { updateSceneGraph, buildingModelRef } = useHooks();
   const { sceneRef, buildingMeshesRef, transformControlsRef } = useEditorRefs();
+  const lastSyncedBuildingsRef = useRef<Map<string, Building>>(new Map());
 
   useEffect(() => {
     let cancelled = false;
@@ -33,6 +36,7 @@ export function useBuildingMeshSync(): void {
         if (attached === mesh) tc?.detach();
         disposeMesh(mesh);
         scene.remove(mesh);
+        lastSyncedBuildingsRef.current.delete(mesh.userData.id);
         return false;
       });
 
@@ -42,6 +46,10 @@ export function useBuildingMeshSync(): void {
         );
 
         if (existing) {
+          if (lastSyncedBuildingsRef.current.get(building.id) === building)
+            return;
+          lastSyncedBuildingsRef.current.set(building.id, building);
+
           if (attached !== existing) {
             existing.position.set(building.x, building.y, building.z);
             existing.rotation.y = building.rotation ?? 0;
@@ -58,6 +66,7 @@ export function useBuildingMeshSync(): void {
         scene.add(mesh);
 
         buildingMeshesRef.current.push(mesh);
+        lastSyncedBuildingsRef.current.set(building.id, building);
       });
 
       updateSceneGraph();

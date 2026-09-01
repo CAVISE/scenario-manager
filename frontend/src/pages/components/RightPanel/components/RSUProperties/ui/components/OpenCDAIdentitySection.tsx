@@ -9,7 +9,7 @@ import {
   Typography,
 } from '@mui/material';
 import { RSU } from '@/store/types/useEditorStoreTypes';
-import { parseNumberInputChange } from '@editor/components/SimConfigModal/utils/numberInputUtils';
+import { parseNumberInputChange } from '@/shared/utils/numberInputUtils';
 import { numInputSlot } from '@right-panel/types/PanelTypes';
 import { AIM_CHECK_RSU_BEHAVIOR_SERVICES } from '@editor/Generators/exporters/aimCheckDefaults';
 

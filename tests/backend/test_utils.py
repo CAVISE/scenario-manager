@@ -148,6 +148,12 @@ def test_yaml_compiler_builds_pedestrians_from_json(open_cda_config_factory):
             "speed": 1.8,
             "cross_factor": 0.2,
             "is_invincible": False,
+            "v2x": {
+                "tx_power": 10,
+                "frequency": 5.9e9,
+                "protocol": "DSRC",
+                "beacon_interval": 1000,
+            },
         }
     ]
 

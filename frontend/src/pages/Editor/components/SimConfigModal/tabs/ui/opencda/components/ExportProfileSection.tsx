@@ -10,7 +10,7 @@ import {
 import {
   opencdaPanelPaperSx,
   opencdaSectionLabelSx,
-} from '../../../../opencdaUiStyles';
+} from '@sim-config/opencdaUiStyles';
 
 interface ExportProfileSectionProps {
   exportProfile: 'standard' | 'aim_check';

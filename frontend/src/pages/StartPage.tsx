@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CP, css, WEATHER_OPTIONS } from './types/StartPageTypes';
 import { useEditorStore } from '../store';
+import type { CarlaWeather } from '../store/types/useEditorStoreTypes';
 import {
   useScenariosListQuery,
   useScenarioCreateMutation,
@@ -13,6 +14,7 @@ import {
 } from './components/RightPanel/components/ScenarioControlWidget/Handlers';
 import type { ScenarioListItem } from '../api/types/IScenarioTypes';
 import { getApiErrorMessageSync } from '../api/errors';
+import { preloadXodrText } from './Editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
 
 const Corner: React.FC<{ pos: CP }> = ({ pos }) => (
   <div className={`sm-home-corner sm-home-corner-${pos}`} />
@@ -68,6 +70,8 @@ const StartPage = () => {
   const navigate = useNavigate();
   const scenario = useEditorStore((s) => s.Scenario);
   const updateScenario = useEditorStore((s) => s.updateScenario);
+  const weatherPreset = useEditorStore((s) => s.simConfig.carla.weather_preset);
+  const updateSimConfigCarla = useEditorStore((s) => s.updateSimConfigCarla);
   const [notice, setNotice] = useState('');
 
   const {
@@ -79,6 +83,10 @@ const StartPage = () => {
   const createMutation = useScenarioCreateMutation();
   const patchMutation = useScenarioPatchMutation();
   const isSaving = createMutation.isPending || patchMutation.isPending;
+
+  useEffect(() => {
+    void preloadXodrText(useEditorStore.getState().simConfig?.carla?.map);
+  }, []);
 
   const resetStore = () => {
     const s = useEditorStore.getState();
@@ -96,6 +104,7 @@ const StartPage = () => {
       description: '',
       file_: null,
     });
+    s.updateSimConfigCarla({ weather_preset: 'ClearNoon' });
   };
 
   const handleChangeName = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -124,7 +133,9 @@ const StartPage = () => {
   };
 
   const handleWeatherChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    updateScenario({ weather: event.target.value });
+    updateSimConfigCarla({
+      weather_preset: event.target.value as CarlaWeather,
+    });
   };
   return (
     <>
@@ -218,7 +229,7 @@ const StartPage = () => {
             <div className="sm-home-select-wrap">
               <select
                 className="sm-home-select"
-                value={scenario.weather}
+                value={weatherPreset}
                 onChange={handleWeatherChange}
               >
                 {WEATHER_OPTIONS.map((val) => (

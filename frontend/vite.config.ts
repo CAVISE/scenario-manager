@@ -5,6 +5,10 @@ import svgr from 'vite-plugin-svgr';
 import compression from 'vite-plugin-compression';
 
 export default defineConfig(({ mode }) => ({
+  resolve: {
+    tsconfigPaths: true,
+  },
+
   server: {
     port: 3000,
     open: true,
@@ -66,10 +70,6 @@ export default defineConfig(({ mode }) => ({
               test: /\/three\//,
             },
             {
-              name: 'vendor-mui',
-              test: /\/@mui\//,
-            },
-            {
               name: 'vendor-react',
               test: /\/react(?:-dom)?\//,
             },
@@ -82,12 +82,12 @@ export default defineConfig(({ mode }) => ({
               test: /\/@emotion\//,
             },
             {
-              name: 'vendor-zustand',
-              test: /\/zustand\//,
+              name: 'vendor-mui',
+              test: /\/@mui\//,
             },
             {
-              name: 'vendor-axios',
-              test: /\/axios\//,
+              name: 'vendor-zustand',
+              test: /\/zustand\//,
             },
             {
               name: 'vendor-common',
@@ -96,11 +96,6 @@ export default defineConfig(({ mode }) => ({
             {
               name: 'pages',
               test: /\/src\/pages\//,
-            },
-
-            {
-              name: 'ui-components',
-              test: /\/src\/components\/ui\//,
             },
           ],
         },

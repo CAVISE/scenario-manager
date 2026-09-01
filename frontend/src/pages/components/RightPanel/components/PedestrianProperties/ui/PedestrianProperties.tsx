@@ -17,7 +17,7 @@ import {
   toggleButtonStyles,
   typographyStyles,
 } from '@/shared/styles/panelStyles';
-import { parseNumberInputChange } from '@editor/components/SimConfigModal/utils/numberInputUtils';
+import { parseNumberInputChange } from '@/shared/utils/numberInputUtils';
 
 function clampCrossFactor(value: number): number {
   return Math.max(0, Math.min(1, value));

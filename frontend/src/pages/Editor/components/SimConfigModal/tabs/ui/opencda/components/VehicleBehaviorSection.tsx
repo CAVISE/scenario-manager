@@ -3,6 +3,7 @@ import {
   Stack,
   Switch,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import {
@@ -23,6 +24,7 @@ interface VehicleBehaviorSectionProps {
   overtakeCounterRecover: number;
   ignoreTrafficLight: boolean;
   overtakeAllowed: boolean;
+  staticObstacleAvoidanceEnabled: boolean;
   onUpdate: (update: Partial<SimulationConfig['opencda']>) => void;
 }
 
@@ -38,6 +40,7 @@ export const VehicleBehaviorSection = ({
   overtakeCounterRecover,
   ignoreTrafficLight,
   overtakeAllowed,
+  staticObstacleAvoidanceEnabled,
   onUpdate,
 }: VehicleBehaviorSectionProps) => {
   const updateField = (
@@ -176,6 +179,27 @@ export const VehicleBehaviorSection = ({
           }
           label="Overtake allowed"
         />
+        <Tooltip
+          title="Checks planned paths against nearby traffic-light poles using
+            each pole's actor origin with a fixed collision radius, not its
+            real bounding box -- this can flag a hazard from a pole that
+            isn't actually blocking the path, so it's off by default."
+        >
+          <FormControlLabel
+            control={
+              <Switch
+                checked={staticObstacleAvoidanceEnabled}
+                onChange={(e) =>
+                  updateField(
+                    'static_obstacle_avoidance_enabled',
+                    e.target.checked
+                  )
+                }
+              />
+            }
+            label="Avoid traffic-light poles"
+          />
+        </Tooltip>
       </Stack>
     </Stack>
   );

@@ -107,17 +107,38 @@ class EvaluationManager(object):
         """
         log_file = os.path.join(self.eval_save_path, 'log.txt')
 
-        self.planning_eval(log_file)
-        print('Planning Evaluation Done.')
+        # Each eval method is isolated: this runs from runner.py's finally
+        # block after a run that may have failed partway through (e.g. a
+        # NaN-corrupted attack parameter reaching a CAV's control step), so
+        # one method's failure should not skip the others -- especially
+        # localization_eval, the only source of metrics.json's structured
+        # numbers, which previously would never run if planning_eval (first
+        # in this sequence) raised.
+        localization_metrics = None
 
-        localization_metrics = self.localization_eval(log_file)
-        print('Localization Evaluation Done.')
+        try:
+            self.planning_eval(log_file)
+            print('Planning Evaluation Done.')
+        except Exception as e:
+            print(f'Planning Evaluation failed: {e}')
 
-        self.kinematics_eval(log_file)
-        print('Kinematics Evaluation Done.')
+        try:
+            localization_metrics = self.localization_eval(log_file)
+            print('Localization Evaluation Done.')
+        except Exception as e:
+            print(f'Localization Evaluation failed: {e}')
 
-        self.platooning_eval(log_file)
-        print('Platooning Evaluation Done.')
+        try:
+            self.kinematics_eval(log_file)
+            print('Kinematics Evaluation Done.')
+        except Exception as e:
+            print(f'Kinematics Evaluation failed: {e}')
+
+        try:
+            self.platooning_eval(log_file)
+            print('Platooning Evaluation Done.')
+        except Exception as e:
+            print(f'Platooning Evaluation failed: {e}')
 
         # Only localization feeds structured metrics in so far — the
         # other three eval methods (planning/kinematics/platooning)
@@ -148,6 +169,21 @@ class EvaluationManager(object):
             else:
                 route_dist += prev.location.distance(cur.location)
         return route_dist
+
+    def cumulative_route_dist(self, route):
+        """Same accumulation as calculate_route_dist, but returns the
+        running total after each point instead of only the final sum --
+        for plot_distance_over_time. First point starts at 0.0."""
+        cumulative = [0.0]
+        for i in range(len(route) - 1):
+            prev = route[i][0] if isinstance(route[i], (list, tuple)) else route[i]
+            cur = route[i + 1][0] if isinstance(route[i + 1], (list, tuple)) else route[i + 1]
+            if isinstance(prev, carla.libcarla.Waypoint):
+                step = prev.transform.location.distance(cur.transform.location)
+            else:
+                step = prev.location.distance(cur.location)
+            cumulative.append(cumulative[-1] + step)
+        return cumulative
 
     @staticmethod
     def plot_3d(timestamp, acc_x_axis, acc_y_axis, acc_z_axis, acc_magnitude,
@@ -206,6 +242,51 @@ class EvaluationManager(object):
         plt.ylabel("Event Occurrence")
         plt.title("Time Series with Event Occurrence")
         plt.legend()
+        return fig
+
+    @staticmethod
+    def plot_distance_over_time(timestamps, planned_dist_total, real_dist,
+                                 transmitted_dist):
+        """Cumulative distance travelled vs elapsed time for the GT and
+        V2X-transmitted routes, against the (fixed, non-time-varying)
+        planned route length as a reference line. planned_route is the
+        global route planner's static waypoint sequence -- computed once
+        at the start, not accumulated tick by tick like the other two --
+        so it has no time axis of its own; drawn as a constant target
+        line instead of a third growing curve. Shows where real/
+        transmitted distance start to diverge from each other and from
+        the planned target over the run, rather than only the
+        single final-tick numbers planning_eval already logs as text."""
+        fig, ax = plt.subplots()
+        ax.plot(timestamps, real_dist, label='Real (GT)')
+        ax.plot(timestamps, transmitted_dist, label='V2X-transmitted',
+                linestyle='--')
+        ax.axhline(planned_dist_total, color='gray', linestyle=':',
+                   label='Planned route length')
+        plt.xlabel("Time")
+        plt.ylabel("Cumulative distance (m)")
+        plt.title("Distance Travelled Over Time")
+        plt.legend()
+        return fig
+
+    @staticmethod
+    def plot_rsu_coverage(timestamp, in_range, cumulative_merged):
+        """RSU-in-range coverage and cumulative merged-object count over
+        the run. Companion to the ticks_rsu_in_range/objects_merged_total
+        summary already logged as text in rsu_coverage_eval -- this shows
+        when coverage happened, not just how much."""
+        fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
+        ax1.plot(timestamp, in_range, linestyle='None', marker='.',
+                 label='RSU in range')
+        ax1.set_ylim(-0.2, 1.2)
+        ax1.set_ylabel("RSU in range")
+        ax1.set_title("RSU Cooperative Perception Coverage")
+        ax1.legend()
+
+        ax2.plot(timestamp, cumulative_merged, label='Cumulative merged objects')
+        ax2.set_xlabel("Time")
+        ax2.set_ylabel("Objects merged (cumulative)")
+        ax2.legend()
         return fig
 
     @staticmethod
@@ -348,6 +429,39 @@ class EvaluationManager(object):
         fig_hazard.savefig(os.path.join(self.eval_save_path, f'{actor_id}_hazard.png'), dpi=100)
         plt.close(fig_hazard)
 
+        # Full transmitted_route/gt_route (not the imu_data-synced [:n]
+        # slice above -- gt_route only needs to line up with
+        # transmitted_route, one entry per tick each, which it already
+        # does since both are appended unconditionally in the same
+        # run_step call with no early return between them. Still
+        # min()-guarded rather than assumed, the same defensive stance
+        # already used elsewhere in this method (imu_data's own [:n]
+        # slice above) and in vehicle_manager.py's registration-order
+        # fix, in case that invariant ever breaks.
+        dist_timestamps = list(map(lambda e: e[2], transmitted_route))
+        cumulative_transmitted = self.cumulative_route_dist(transmitted_route)
+        cumulative_real = (
+            self.cumulative_route_dist(gt_route) if gt_route
+            else cumulative_transmitted
+        )
+        dn = min(len(dist_timestamps), len(cumulative_transmitted),
+                 len(cumulative_real))
+        dist_timestamps = dist_timestamps[:dn]
+        cumulative_transmitted = cumulative_transmitted[:dn]
+        cumulative_real = cumulative_real[:dn]
+        dist_skip = min(self.skip_head, max(10, len(dist_timestamps) // 10))
+        fig_distance = self.plot_distance_over_time(
+            dist_timestamps[dist_skip:],
+            planned_dist,
+            cumulative_real[dist_skip:],
+            cumulative_transmitted[dist_skip:],
+        )
+        fig_distance.savefig(
+            os.path.join(self.eval_save_path, f'{actor_id}_distance_over_time.png'),
+            dpi=100,
+        )
+        plt.close(fig_distance)
+
         # Summaries use the full run rather than the plot's trimmed window.
         lprint(log_file, "--- Hazard summary (full run) ---")
         for key, label in (('collision', 'Collisions'),
@@ -380,12 +494,39 @@ class EvaluationManager(object):
                 else:
                     lprint(log_file, f"{label}: 0")
 
-        rs = vm.rsu_merge_stats
-        pct_in_range = (100.0 * rs['ticks_rsu_in_range'] / rs['ticks_total']
-                        if rs['ticks_total'] else 0.0)
-        lprint(log_file, "--- RSU cooperative perception ---")
-        lprint(log_file, f"Ticks with >=1 RSU in range: {rs['ticks_rsu_in_range']}/{rs['ticks_total']} ({pct_in_range:.1f}%)")
-        lprint(log_file, f"Total objects merged from RSU perception: {rs['objects_merged_total']}")
+        # Guarded the same way as gt_dynamic_trace below: a VehicleManager
+        # whose __init__ raised before this attribute was assigned (now
+        # fixed at the source in vehicle_manager.py, which registers last,
+        # but guarding here too in case a ghost object ever reaches this
+        # method some other way) would otherwise raise AttributeError and
+        # abort planning_eval's for-loop for every remaining CAV, not just
+        # this one.
+        rs = getattr(vm, 'rsu_merge_stats', None)
+        if rs is not None:
+            pct_in_range = (100.0 * rs['ticks_rsu_in_range'] / rs['ticks_total']
+                            if rs['ticks_total'] else 0.0)
+            lprint(log_file, "--- RSU cooperative perception ---")
+            lprint(log_file, f"Ticks with >=1 RSU in range: {rs['ticks_rsu_in_range']}/{rs['ticks_total']} ({pct_in_range:.1f}%)")
+            lprint(log_file, f"Total objects merged from RSU perception: {rs['objects_merged_total']}")
+
+        rsu_history = list(getattr(vm, 'rsu_merge_history', []))
+        if rsu_history:
+            rsu_timestamps = [e[0] for e in rsu_history]
+            rsu_in_range_series = [int(e[1]) for e in rsu_history]
+            rsu_merged_series = [e[2] for e in rsu_history]
+            rsu_cumulative_merged = []
+            running = 0
+            for m in rsu_merged_series:
+                running += m
+                rsu_cumulative_merged.append(running)
+            fig_rsu = self.plot_rsu_coverage(
+                rsu_timestamps, rsu_in_range_series, rsu_cumulative_merged
+            )
+            fig_rsu.savefig(
+                os.path.join(self.eval_save_path, f'{actor_id}_rsu_coverage.png'),
+                dpi=100,
+            )
+            plt.close(fig_rsu)
 
         gt_route = list(vm.gt_dynamic_trace) if hasattr(vm, 'gt_dynamic_trace') else []
 
@@ -473,15 +614,25 @@ class EvaluationManager(object):
         lprint(log_file, "***********Platooning Analysis***********")
 
         for pmid, pm in self.cav_world.get_platoon_dict().items():
-            lprint(log_file, 'Platoon ID: %s' % pmid)
-            figure, perform_txt = pm.evaluate()
+            # A platoon that ended up with zero spawned members (all
+            # member spawns failed in create_platoon_manager) is still
+            # registered here -- cav_world never removes failed
+            # registrations, same as the vehicle-manager registry -- and
+            # pm.evaluate() on an empty platoon is expected to raise. This
+            # loop had no per-platoon isolation, so one such platoon used
+            # to abort evaluation for every remaining platoon too.
+            try:
+                lprint(log_file, 'Platoon ID: %s' % pmid)
+                figure, perform_txt = pm.evaluate()
 
-            # save plotting
-            figure_save_path = os.path.join(
-                self.eval_save_path,
-                '%s_platoon_plotting.png' %
-                pmid)
-            figure.savefig(figure_save_path, dpi=100)
+                # save plotting
+                figure_save_path = os.path.join(
+                    self.eval_save_path,
+                    '%s_platoon_plotting.png' %
+                    pmid)
+                figure.savefig(figure_save_path, dpi=100)
 
-            # save log txt
-            lprint(log_file, perform_txt)
+                # save log txt
+                lprint(log_file, perform_txt)
+            except Exception as e:
+                lprint(log_file, f"WARNING: evaluation failed for platoon {pmid}, skipping: {e}")

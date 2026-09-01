@@ -1,5 +1,5 @@
 import { Stack, TextField, Typography } from '@mui/material';
-import { parseNumberInputChange } from '../../../../utils/numberInputUtils';
+import { parseNumberInputChange } from '@/shared/utils/numberInputUtils';
 import { numInputSlot, validateNumber } from '../utils/opencdaFieldUtils';
 
 type Props = {

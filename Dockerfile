@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --gid "${APP_GID}" appuser \
     && useradd --uid "${APP_UID}" --gid "${APP_GID}" \
-        --create-home --shell /usr/sbin/nologin appuser
+    --create-home --shell /usr/sbin/nologin appuser
 
 ENV PATH="/app/.venv/bin:$PATH" \
     HOME="/home/appuser" \

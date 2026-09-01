@@ -1,4 +1,4 @@
-import { parseNumberInputChange } from '@editor/components/SimConfigModal/utils/numberInputUtils';
+import { parseNumberInputChange } from '@/shared/utils/numberInputUtils';
 import { useEditorStore } from '@/store';
 import { Building } from '@/store/types/useEditorStoreTypes';
 import { Button, ToggleButtonGroup, ToggleButton } from '@mui/material';

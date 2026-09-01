@@ -7,7 +7,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { parseNumberInputChange } from '../../../utils/numberInputUtils';
+import { parseNumberInputChange } from '@/shared/utils/numberInputUtils';
 
 export default function ArteryTab() {
   const simConfig = useEditorStore((s) => s.simConfig);

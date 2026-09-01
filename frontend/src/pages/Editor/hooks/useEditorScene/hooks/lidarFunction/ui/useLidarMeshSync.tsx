@@ -1,14 +1,19 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { useEditorStore } from '@/store';
 import { useEditorRefs, useHooks } from '@editor/context';
 import { createLidarMesh, disposeLidarGroup } from '../utils/LidarUtils';
+
+type Lidar = ReturnType<typeof useEditorStore.getState>['lidars'][number];
 
 export function useLidarMeshSync() {
   const { carMeshesRef, transformControlsRef } = useEditorRefs();
   const { updateSceneGraph } = useHooks();
   const lidars = useEditorStore((s) => s.lidars);
   const cars = useEditorStore((s) => s.cars);
+  const lastSyncedLidarsRef = useRef<
+    Map<string, { lidar: Lidar; parentScale: number }>
+  >(new Map());
   useEffect(() => {
     const timer = setTimeout(() => {
       const carMeshes = carMeshesRef.current;
@@ -28,6 +33,7 @@ export function useLidarMeshSync() {
         if (!lidarIds.has(id)) {
           group.parent?.remove(group);
           disposeLidarGroup(group);
+          lastSyncedLidarsRef.current.delete(id);
         }
       });
 
@@ -39,6 +45,16 @@ export function useLidarMeshSync() {
         const existing = existingGroups.get(lidar.id);
 
         if (existing) {
+          const parentScale = wrapper.scale.x || 1;
+          const lastSynced = lastSyncedLidarsRef.current.get(lidar.id);
+          if (
+            lastSynced?.lidar === lidar &&
+            lastSynced.parentScale === parentScale
+          ) {
+            return;
+          }
+          lastSyncedLidarsRef.current.set(lidar.id, { lidar, parentScale });
+
           const isAttached =
             (
               transformControlsRef.current as unknown as {
@@ -49,7 +65,6 @@ export function useLidarMeshSync() {
             existing.position.set(lidar.x, lidar.y, lidar.z);
             existing.rotation.z = lidar.rotation;
           }
-          const parentScale = wrapper.scale.x || 1;
           existing.scale.setScalar(1 / parentScale);
 
           const cone = existing.children.find(
@@ -72,6 +87,7 @@ export function useLidarMeshSync() {
           const parentScale = wrapper.scale.x || 1;
           group.scale.setScalar(1 / parentScale);
           wrapper.add(group);
+          lastSyncedLidarsRef.current.set(lidar.id, { lidar, parentScale });
         }
       });
       updateSceneGraph();

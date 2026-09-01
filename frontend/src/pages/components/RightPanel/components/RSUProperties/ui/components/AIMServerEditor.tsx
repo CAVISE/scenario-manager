@@ -8,7 +8,7 @@ import {
   Box,
   Switch,
 } from '@mui/material';
-import { parseNumberInputChange } from '@editor/components/SimConfigModal/utils/numberInputUtils';
+import { parseNumberInputChange } from '@/shared/utils/numberInputUtils';
 import { numInputSlot } from '@right-panel/types/PanelTypes';
 import { formLabelStyles } from '@/shared/styles/panelStyles';
 import { RsuBehaviorService } from '@/store/types/useEditorStoreTypes';

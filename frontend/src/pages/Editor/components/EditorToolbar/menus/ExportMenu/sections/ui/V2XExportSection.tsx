@@ -15,16 +15,21 @@ import {
 export default function V2XExportSection({ openExportDialog }: SimulatorProps) {
   const handleExportOmnet = () => {
     openExportDialog('omnetpp.ini', () => {
-      const { simConfig: raw, RSUs, cars } = useEditorStore.getState();
+      const {
+        simConfig: raw,
+        RSUs,
+        cars,
+        pedestrians,
+      } = useEditorStore.getState();
       const simConfig = mergeSimConfigWithDefaults(raw);
-      return generateOmnetConfig(simConfig, RSUs, cars);
+      return generateOmnetConfig(simConfig, RSUs, cars, pedestrians);
     });
   };
   const handleExportArtery = () => {
     openExportDialog('artery.ini', () => {
-      const { simConfig: raw, RSUs } = useEditorStore.getState();
+      const { simConfig: raw, RSUs, pedestrians } = useEditorStore.getState();
       const simConfig = mergeSimConfigWithDefaults(raw);
-      return generateArteryConfig(simConfig, RSUs);
+      return generateArteryConfig(simConfig, RSUs, pedestrians);
     });
   };
   return (

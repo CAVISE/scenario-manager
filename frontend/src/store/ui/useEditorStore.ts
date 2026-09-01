@@ -220,6 +220,12 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
     return ped.id;
   },
 
+  addPedestriansBatch: (pedestrians) => {
+    const withIds = pedestrians.map((p) => ({ ...p, id: nanoid() }));
+    set((s) => ({ pedestrians: [...s.pedestrians, ...withIds] }));
+    return withIds.map((p) => p.id);
+  },
+
   updatePedestrian: (id, props) =>
     set((s) => ({
       pedestrians: s.pedestrians.map((p) =>
@@ -231,6 +237,10 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
     set((s) => ({
       pedestrians: s.pedestrians.filter((p) => p.id !== id),
       selectedId: s.selectedId === id ? null : s.selectedId,
+    })),
+  removeAllPedestrians: () =>
+    set(() => ({
+      pedestrians: [],
     })),
 
   updateSimConfigCarla: (props) =>
@@ -277,6 +287,12 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
     return id;
   },
 
+  addCarsBatch: (cars) => {
+    const withIds = cars.map((c) => ({ ...c, id: nanoid() }));
+    set((s) => ({ cars: [...s.cars, ...withIds] }));
+    return withIds.map((c) => c.id);
+  },
+
   updateCar: (id, props) => {
     set((s) => ({
       cars: s.cars.map((c) => (c.id === id ? { ...c, ...props } : c)),
@@ -292,6 +308,12 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
         selectedId: s.selectedId === id ? null : s.selectedId,
       };
     }),
+  removeAllCars: () =>
+    set(() => ({
+      cars: [],
+      points: [],
+      lidars: [],
+    })),
 
   addRSU: (x, y, z) => {
     const rsu: RSU = {
@@ -332,6 +354,16 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
     return rsu.id;
   },
 
+  addRSUsBatch: (rsus) => {
+    const withIds = rsus.map((r, i) => ({
+      ...r,
+      id: nanoid(),
+      name: r.name || `rsu_${i + 1}`,
+    }));
+    set((s) => ({ RSUs: [...s.RSUs, ...withIds] }));
+    return withIds.map((r) => r.id);
+  },
+
   removeRSU: (index) =>
     set((s) => ({ RSUs: s.RSUs.filter((_, i) => i !== index) })),
   removeAllRSUs: () =>
@@ -364,6 +396,12 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
     return id;
   },
 
+  addLidarsBatch: (lidars) => {
+    const withIds = lidars.map((l) => ({ ...l, id: nanoid() }));
+    set((s) => ({ lidars: [...s.lidars, ...withIds] }));
+    return withIds.map((l) => l.id);
+  },
+
   updateLidar: (id, props) =>
     set((s) => ({
       lidars: s.lidars.map((l) => (l.id === id ? { ...l, ...props } : l)),
@@ -379,6 +417,12 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
     const id = nanoid();
     set((s) => ({ points: [...s.points, { id, carId, x, y, z }] }));
     return id;
+  },
+
+  addPointsBatch: (points) => {
+    const withIds = points.map((p) => ({ ...p, id: nanoid() }));
+    set((s) => ({ points: [...s.points, ...withIds] }));
+    return withIds.map((p) => p.id);
   },
 
   removePoint: (id) =>
@@ -424,6 +468,16 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
     return id;
   },
 
+  addBuildingsBatch: (buildings) => {
+    const withIds = buildings.map((b, i) => ({
+      ...b,
+      id: nanoid(),
+      name: b.name || `building_${i + 1}`,
+    }));
+    set((s) => ({ buildings: [...s.buildings, ...withIds] }));
+    return withIds.map((b) => b.id);
+  },
+
   updateBuilding: (id, props) =>
     set((s) => ({
       buildings: s.buildings.map((b) => (b.id === id ? { ...b, ...props } : b)),
@@ -431,6 +485,10 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
 
   removeBuilding: (id) =>
     set((s) => ({ buildings: s.buildings.filter((b) => b.id !== id) })),
+  removeAllBuildings: () =>
+    set(() => ({
+      buildings: [],
+    })),
 
   pushDeletionSnapshot: (snapshot) => {
     const snapshotId = nanoid();

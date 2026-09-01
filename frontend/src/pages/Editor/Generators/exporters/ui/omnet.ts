@@ -1,10 +1,11 @@
 import type { SimulationConfig } from '../../types/configGeneratorsTypes';
-import type { Car, RSU } from '@/store/types/useEditorStoreTypes';
+import type { Car, Pedestrian, RSU } from '@/store/types/useEditorStoreTypes';
 
 export function generateOmnetConfig(
   config: SimulationConfig,
   RSUs: RSU[],
-  cars: Car[]
+  cars: Car[],
+  pedestrians: Pedestrian[] = []
 ): string {
   const rsuLines = RSUs.map(
     (rsu, i) => `
@@ -14,6 +15,17 @@ export function generateOmnetConfig(
 *.rsu[${i}].appl.txPower = ${rsu.tx_power}dBm
 *.rsu[${i}].appl.communicationRange = ${rsu.range}m`
   ).join('\n');
+
+  const pedestrianLines = pedestrians
+    .map(
+      (ped, i) => `
+*.pedestrian[${i}].mobility.x = ${ped.x.toFixed(1)}
+*.pedestrian[${i}].mobility.y = ${ped.y.toFixed(1)}
+*.pedestrian[${i}].mobility.z = ${ped.z.toFixed(1)}
+*.pedestrian[${i}].appl.txPower = ${ped.tx_power}dBm
+*.pedestrian[${i}].appl.beaconInterval = ${ped.beacon_interval}ms`
+    )
+    .join('\n');
 
   return `[General]
 network = V2XScenario
@@ -44,5 +56,8 @@ debug-on-errors = true
 **.numVehicles = ${cars.length}
 **.numRSU = ${RSUs.length}
 ${rsuLines}
+
+**.numPedestrian = ${pedestrians.length}
+${pedestrianLines}
 `;
 }

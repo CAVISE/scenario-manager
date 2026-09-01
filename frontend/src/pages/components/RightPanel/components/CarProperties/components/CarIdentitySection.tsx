@@ -8,7 +8,7 @@ import {
 import { useEditorStore } from '@/store';
 import type { Car } from '@/store/types/useEditorStoreTypes';
 import { parseNumberFromEvent } from '../utils/carOpenCDAHelpers';
-import { numInputSlot } from '@editor/components/SimConfigModal/tabs/ui/opencda/utils/opencdaFieldUtils';
+import { numInputSlot } from '@right-panel/types/PanelTypes';
 
 interface CarIdentitySectionProps {
   car: Car;

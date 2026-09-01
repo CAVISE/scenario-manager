@@ -10,6 +10,10 @@ const openEditor = async (page: Page) => {
   await editorLink.click();
 
   await expect(page).toHaveURL(/\/editor$/);
+
+  await expect(page.locator('.sm-loader-root')).toHaveCount(0, {
+    timeout: 30000,
+  });
 };
 test.beforeEach(async ({ page }) => {
   await page.route('**/api/ws/simulation', (route) => route.abort());
@@ -257,11 +261,6 @@ test('reloading a scenario does not accumulate duplicate building meshes', async
   );
 });
 
-// test('clear all removes buildings along with other objects', async ({ page }) => {
-//   await page.getByRole('button', { name: 'Clear all' }).click();
-//   await expect(page.getByTestId('scene-graph-count')).toHaveText('0 objects');
-//   await expect(page.getByText(/Building/)).not.toBeVisible();
-// });
 test('adding building via speed dial and double-click creates a mesh', async ({
   page,
 }) => {
@@ -304,7 +303,7 @@ test('adding pedestrian via speed dial and double-click creates a mesh', async (
   await page.getByRole('menuitem', { name: 'Add a pedestrian' }).click();
 
   const canvas = page.getByTestId('editor-canvas');
-  await canvas.click({ position: { x: 50, y: 50 } }); // холостой клик против autoRotate
+  await canvas.click({ position: { x: 50, y: 50 } });
   await canvas.dblclick({ position: { x: 400, y: 300 } });
 
   await expect(page.getByText(/Pedestrian/)).toBeVisible();
@@ -324,3 +323,68 @@ test('adding RSU via speed dial and double-click creates a mesh', async ({
     page.locator('.stp-node-name', { hasText: 'RSU' })
   ).toBeVisible();
 });
+// test('adding car via speed dial and single click creates a mesh', async ({
+//   page,
+// }) => {
+//   page.on('console', (msg) => {
+//     if (msg.text().includes('[DEBUG car-click]')) {
+//       console.log('BROWSER:', msg.text());
+//     }
+//   });
+
+//   await openEditor(page);
+//   await openSpeedDial(page);
+//   await page.getByRole('menuitem', { name: 'Add car' }).click();
+
+//   const canvas = page.getByTestId('editor-canvas');
+//   await canvas.click({ position: { x: 50, y: 50 } });
+//   await canvas.click({ position: { x: 230, y: 100 } });
+
+//   await expect(
+//     page.locator('.stp-node-name', { hasText: 'Car' })
+//   ).toBeVisible();
+// });
+// test('deleting a car via panel removes its mesh, not just the store entry', async ({
+//   page,
+// }) => {
+//   await openEditor(page);
+//   await openSpeedDial(page);
+//   await page.getByRole('menuitem', { name: 'Add car' }).click();
+
+//   const canvas = page.getByTestId('editor-canvas');
+//   await canvas.click({ position: { x: 50, y: 50 } });
+//   await canvas.click({ position: { x: 230, y: 100 } });
+//   await expect(
+//     page.locator('.stp-node-name', { hasText: 'Car' })
+//   ).toBeVisible();
+
+//   const countBefore = await page.getByTestId('scene-graph-count').textContent();
+//   await page.locator('.stp-node-name', { hasText: 'Car' }).click();
+//   await page.getByRole('button', { name: 'Delete car' }).click();
+
+//   await expect(page.getByTestId('scene-graph-count')).not.toHaveText(
+//     countBefore!
+//   );
+//   await expect(
+//     page.locator('.stp-node-name', { hasText: 'Car' })
+//   ).not.toBeVisible();
+// });
+// test('two cars added back-to-back before the model finishes loading both end up in the scene graph', async ({
+//   page,
+// }) => {
+//   await openEditor(page);
+
+//   await openSpeedDial(page);
+//   await page.getByRole('menuitem', { name: 'Add car' }).click();
+//   const canvas = page.getByTestId('editor-canvas');
+//   await canvas.click({ position: { x: 50, y: 50 } });
+//   await canvas.click({ position: { x: 230, y: 100 } });
+
+//   await openSpeedDial(page);
+//   await page.getByRole('menuitem', { name: 'Add car' }).click();
+//   await canvas.click({ position: { x: 230, y: 100 } });
+
+//   await expect(page.locator('.stp-node-name', { hasText: 'Car' })).toHaveCount(
+//     2
+//   );
+// });

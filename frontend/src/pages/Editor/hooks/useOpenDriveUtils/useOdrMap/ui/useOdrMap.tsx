@@ -19,10 +19,9 @@ import { PickingScenes } from '../../useThreeSetup/types/useThreeSetupTypes';
 export function createOdrMaterials(): OdrMapMaterials {
   return {
     refline: new THREE.LineBasicMaterial({ color: COLORS.ref_line }),
-    road_network: new THREE.MeshPhongMaterial({
+    road_network: new THREE.MeshLambertMaterial({
       vertexColors: true,
       wireframe: false,
-      shininess: 20.0,
       transparent: true,
       opacity: 0.4,
     }),
@@ -137,7 +136,6 @@ export function buildOdrScene(p: LoadOdrMapParams): OdrMapMeshes {
     );
   addPicking(pickingScenes.lane, pickingMaterials.id);
   addPicking(pickingScenes.xyz, pickingMaterials.xyz);
-  addPicking(pickingScenes.st, pickingMaterials.st);
 
   const odr_roadmarks_mesh = odr_road_network_mesh.roadmarks_mesh;
   const roadmarks_geom = get_geometry(odr_roadmarks_mesh);
