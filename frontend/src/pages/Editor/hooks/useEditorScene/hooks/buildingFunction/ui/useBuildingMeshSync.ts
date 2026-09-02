@@ -9,7 +9,8 @@ type Building = ReturnType<typeof useEditorStore.getState>['buildings'][number];
 export function useBuildingMeshSync(): void {
   const buildings = useEditorStore((s) => s.buildings);
   const { updateSceneGraph, buildingModelRef } = useHooks();
-  const { sceneRef, buildingMeshesRef, transformControlsRef } = useEditorRefs();
+  const { sceneRef, buildingMeshesRef, transformControlsRef, isDraggingRef } =
+    useEditorRefs();
   const lastSyncedBuildingsRef = useRef<Map<string, Building>>(new Map());
 
   useEffect(() => {
@@ -50,7 +51,7 @@ export function useBuildingMeshSync(): void {
             return;
           lastSyncedBuildingsRef.current.set(building.id, building);
 
-          if (attached !== existing) {
+          if (!(attached === existing && isDraggingRef.current)) {
             existing.position.set(building.x, building.y, building.z);
             existing.rotation.y = building.rotation ?? 0;
             existing.scale.setScalar(building.scale ?? 0.5);

@@ -41,6 +41,10 @@ const {
         object?: THREE.Object3D;
       } | null,
     },
+
+    isDraggingRef: {
+      current: false,
+    },
   },
 
   mockLoad: vi.fn(),
@@ -121,6 +125,7 @@ describe('usePedestrianMeshSync', () => {
     mockRefs.pedestrianMeshesRef.current = [];
     mockRefs.pedestrianObjsRef.current = [];
     mockRefs.transformControlsRef.current = null;
+    mockRefs.isDraggingRef.current = false;
 
     mockStoreState.pedestrians = [];
 
@@ -260,6 +265,119 @@ describe('usePedestrianMeshSync', () => {
       expect(mockRefs.pedestrianMeshesRef.current).toHaveLength(1);
 
       expect(mockRefs.pedestrianObjsRef.current).toHaveLength(1);
+    });
+  });
+
+  describe('position synchronization', () => {
+    it('updates position of an existing pedestrian when the store changes', async () => {
+      const existingPedestrian = new THREE.Mesh();
+
+      existingPedestrian.userData = {
+        type: 'pedestrian',
+        id: 'ped-1',
+        offsetZ: 0,
+      };
+
+      existingPedestrian.position.set(1, 2, 3);
+
+      scene.add(existingPedestrian);
+
+      mockRefs.pedestrianMeshesRef.current = [existingPedestrian];
+      mockRefs.pedestrianObjsRef.current = [existingPedestrian];
+
+      setPedestrians([
+        {
+          id: 'ped-1',
+          x: 100,
+          y: 200,
+          z: 300,
+        },
+      ]);
+
+      renderHook(() => usePedestrianMeshSync());
+
+      await waitFor(() => {
+        expect(existingPedestrian.position.x).toBe(100);
+      });
+
+      expect(existingPedestrian.position.y).toBe(200);
+      expect(existingPedestrian.position.z).toBeCloseTo(300.05);
+
+      expect(getScenePedestrians(scene)).toHaveLength(1);
+    });
+
+    it('updates position when attached to TransformControls but not actively dragging', async () => {
+      const existingPedestrian = new THREE.Mesh();
+
+      existingPedestrian.userData = {
+        type: 'pedestrian',
+        id: 'ped-1',
+        offsetZ: 0,
+      };
+
+      existingPedestrian.position.set(1, 2, 3);
+
+      scene.add(existingPedestrian);
+
+      mockRefs.pedestrianMeshesRef.current = [existingPedestrian];
+      mockRefs.pedestrianObjsRef.current = [existingPedestrian];
+      mockRefs.transformControlsRef.current = { object: existingPedestrian };
+      mockRefs.isDraggingRef.current = false;
+
+      setPedestrians([
+        {
+          id: 'ped-1',
+          x: 100,
+          y: 200,
+          z: 300,
+        },
+      ]);
+
+      renderHook(() => usePedestrianMeshSync());
+
+      await waitFor(() => {
+        expect(existingPedestrian.position.x).toBe(100);
+      });
+
+      expect(existingPedestrian.position.y).toBe(200);
+    });
+
+    it('does not update position while actively being dragged via TransformControls', async () => {
+      const existingPedestrian = new THREE.Mesh();
+
+      existingPedestrian.userData = {
+        type: 'pedestrian',
+        id: 'ped-1',
+        offsetZ: 0,
+      };
+
+      existingPedestrian.position.set(1, 2, 3);
+
+      scene.add(existingPedestrian);
+
+      mockRefs.pedestrianMeshesRef.current = [existingPedestrian];
+      mockRefs.pedestrianObjsRef.current = [existingPedestrian];
+      mockRefs.transformControlsRef.current = { object: existingPedestrian };
+      mockRefs.isDraggingRef.current = true;
+
+      setPedestrians([
+        {
+          id: 'ped-1',
+          x: 100,
+          y: 200,
+          z: 300,
+        },
+      ]);
+
+      renderHook(() => usePedestrianMeshSync());
+
+      await waitFor(() => {
+        expect(mockUpdateSceneGraph).toHaveBeenCalled();
+      });
+
+      expect(existingPedestrian.position.x).toBe(1);
+      expect(existingPedestrian.position.y).toBe(2);
+      expect(existingPedestrian.position.z).toBe(3);
     });
   });
 

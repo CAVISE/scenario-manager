@@ -13,6 +13,7 @@ const CARLA_MAPS = [
   'Town06',
   'Town07',
   'Town10HD',
+  'Town10HD_Opt',
   'TownBig',
 ] as const;
 

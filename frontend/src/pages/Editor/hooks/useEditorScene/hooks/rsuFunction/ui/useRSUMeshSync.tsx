@@ -15,6 +15,7 @@ export function useRSUMeshSync(): void {
     transformControlsRef,
     pointsObjsRef,
     rsuMeshesRef,
+    isDraggingRef,
   } = useEditorRefs();
   const lastSyncedRSUsRef = useRef<Map<string, RSU>>(new Map());
   useEffect(() => {
@@ -63,7 +64,7 @@ export function useRSUMeshSync(): void {
           if (existing) {
             if (existing.userData?.isFallbackRSU) {
               if (!hasModel) {
-                if (attached !== existing)
+                if (!(attached === existing && isDraggingRef.current))
                   existing.position.set(rsu.x, rsu.y, rsu.z);
                 return;
               }
@@ -91,7 +92,7 @@ export function useRSUMeshSync(): void {
             } else {
               if (lastSyncedRSUsRef.current.get(rsu.id) === rsu) return;
               lastSyncedRSUsRef.current.set(rsu.id, rsu);
-              if (attached !== existing)
+              if (!(attached === existing && isDraggingRef.current))
                 existing.position.set(rsu.x, rsu.y, rsu.z);
               return;
             }

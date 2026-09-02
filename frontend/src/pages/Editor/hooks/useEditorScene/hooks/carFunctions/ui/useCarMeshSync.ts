@@ -11,7 +11,8 @@ export function useCarMeshSync() {
   const cars = useEditorStore((s) => s.cars);
   const selectedId = useEditorStore((s) => s.selectedId);
   const { carModelRef, modelLoaded } = useCarModel();
-  const { sceneRef, carMeshesRef, transformControlsRef } = useEditorRefs();
+  const { sceneRef, carMeshesRef, transformControlsRef, isDraggingRef } =
+    useEditorRefs();
   const { updateSceneGraph } = useHooks();
   const lastSyncedCarsRef = useRef<Map<string, Car>>(new Map());
   function syncMeshes() {
@@ -53,8 +54,9 @@ export function useCarMeshSync() {
               object?: THREE.Object3D;
             }
           )?.object === already;
+        const isActivelyDragging = isAttached && isDraggingRef.current;
 
-        if (!isAttached) {
+        if (!isActivelyDragging) {
           already.position.set(car.x, car.y, car.z);
           already.scale.set(car.scale, car.scale, car.scale);
           already.rotation.z = car.rotation ?? 0;

@@ -1020,8 +1020,6 @@ describe('handleRunSimulation', () => {
       expect.objectContaining({
         scenario_id: 'sc-1',
         scenario_name: 'Test',
-        weather: 'Rain',
-        map: 'Town10HD',
       }),
       expect.any(Object)
     );

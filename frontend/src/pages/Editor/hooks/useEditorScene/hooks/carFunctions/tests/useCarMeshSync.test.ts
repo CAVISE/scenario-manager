@@ -46,6 +46,7 @@ const transformControlsRefMock = {
     mode: 'translate',
   },
 };
+const isDraggingRefMock = { current: false };
 
 const updateSceneGraphMock = vi.fn();
 
@@ -55,6 +56,7 @@ vi.mock('@editor/context', () => ({
     sceneRef: sceneRefMock,
     carMeshesRef: carMeshesRefMock,
     transformControlsRef: transformControlsRefMock,
+    isDraggingRef: isDraggingRefMock,
   }),
 }));
 
@@ -70,6 +72,7 @@ describe('useCarMeshSync', () => {
     transformControlsRefMock.current.object = null;
     transformControlsRefMock.current.mode = 'translate';
     transformControlsRefMock.current.attach.mockClear();
+    isDraggingRefMock.current = false;
   });
 
   afterEach(() => {
@@ -276,6 +279,7 @@ describe('useCarMeshSync', () => {
     const existingMesh = carMeshesRefMock.current[0];
     transformControlsRefMock.current.object = existingMesh;
     transformControlsRefMock.current.mode = 'translate';
+    isDraggingRefMock.current = true;
 
     storeState = {
       cars: [{ id: 'car-A', x: 10, y: 20, z: 30, scale: 2, rotation: Math.PI }],
@@ -311,6 +315,7 @@ describe('useCarMeshSync', () => {
     const existingMesh = carMeshesRefMock.current[0];
     transformControlsRefMock.current.object = existingMesh;
     transformControlsRefMock.current.mode = 'rotate';
+    isDraggingRefMock.current = true;
 
     storeState = {
       cars: [{ id: 'car-A', x: 10, y: 20, z: 30, scale: 2, rotation: Math.PI }],
@@ -346,6 +351,7 @@ describe('useCarMeshSync', () => {
     const existingMesh = carMeshesRefMock.current[0];
     transformControlsRefMock.current.object = existingMesh;
     transformControlsRefMock.current.mode = 'scale';
+    isDraggingRefMock.current = true;
 
     storeState = {
       cars: [{ id: 'car-A', x: 10, y: 20, z: 30, scale: 2, rotation: Math.PI }],
@@ -410,6 +416,7 @@ vi.mock('@editor/context', () => ({
     sceneRef: sceneRefMock,
     carMeshesRef: carMeshesRefMock,
     transformControlsRef: transformControlsRefMock,
+    isDraggingRef: isDraggingRefMock,
   }),
 }));
 
@@ -425,6 +432,7 @@ describe('useCarMeshSync - final coverage', () => {
     transformControlsRefMock.current.object = null;
     transformControlsRefMock.current.mode = 'translate';
     transformControlsRefMock.current.attach.mockClear();
+    isDraggingRefMock.current = false;
   });
 
   afterEach(() => {
@@ -472,6 +480,7 @@ describe('useCarMeshSync - final coverage', () => {
     existingMesh.rotation.z = 1.5;
     transformControlsRefMock.current.object = existingMesh;
     transformControlsRefMock.current.mode = 'rotate';
+    isDraggingRefMock.current = true;
 
     storeState = {
       cars: [{ id: 'car-A', x: 0, y: 0, z: 0, scale: 1, rotation: 0 }],
@@ -558,6 +567,7 @@ vi.mock('@editor/context', () => ({
     sceneRef: sceneRefMock,
     carMeshesRef: carMeshesRefMock,
     transformControlsRef: transformControlsRefMock,
+    isDraggingRef: isDraggingRefMock,
   }),
 }));
 
@@ -573,6 +583,7 @@ describe('useCarMeshSync - coverage lines 53, 59', () => {
     transformControlsRefMock.current.object = null;
     transformControlsRefMock.current.mode = 'translate';
     transformControlsRefMock.current.attach.mockClear();
+    isDraggingRefMock.current = false;
   });
 
   afterEach(() => {
@@ -632,6 +643,7 @@ describe('useCarMeshSync - coverage lines 53, 59', () => {
     existingMesh.rotation.z = 0;
     transformControlsRefMock.current.object = existingMesh;
     transformControlsRefMock.current.mode = 'translate';
+    isDraggingRefMock.current = true;
 
     storeState = {
       cars: [{ id: 'car-A', x: 0, y: 0, z: 0, scale: 1, rotation: 0.7 }],

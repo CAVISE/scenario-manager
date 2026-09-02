@@ -33,6 +33,7 @@ vi.mock('@editor/context', () => ({
     sceneRef: sceneRefMock,
     buildingMeshesRef: buildingMeshesRefMock,
     transformControlsRef: transformControlsRefMock,
+    isDraggingRef: isDraggingRefMock,
   }),
 }));
 
@@ -49,6 +50,7 @@ const transformControlsRefMock = {
     object: null as THREE.Object3D | null,
   },
 };
+const isDraggingRefMock = { current: false };
 
 import { disposeMesh } from '@right-panel/components/SceneTreePanel/funcs/sceneUtils';
 
@@ -62,6 +64,7 @@ describe('useBuildingMeshSync', () => {
     updateSceneGraphMock.mockClear();
     transformControlsRefMock.current.object = null;
     transformControlsRefMock.current.detach.mockClear();
+    isDraggingRefMock.current = false;
     (disposeMesh as ReturnType<typeof vi.fn>).mockClear();
   });
 
@@ -177,7 +180,7 @@ describe('useBuildingMeshSync', () => {
     expect(mesh.scale.x).toBe(2);
   });
 
-  it('should not update building position if attached to transform controls', () => {
+  it('should update building position when attached but not actively dragging', () => {
     buildingModelRefMock.current = new THREE.Group();
     storeState = {
       buildings: [{ id: 'b1', x: 0, y: 0, z: 0 }],
@@ -186,6 +189,31 @@ describe('useBuildingMeshSync', () => {
     const { rerender } = renderHook(() => useBuildingMeshSync());
     const mesh = buildingMeshesRefMock.current[0];
     transformControlsRefMock.current.object = mesh;
+    isDraggingRefMock.current = false;
+
+    storeState = {
+      buildings: [{ id: 'b1', x: 50, y: 50, z: 50 }],
+    };
+
+    act(() => {
+      rerender();
+    });
+
+    expect(mesh.position.x).toBe(50);
+    expect(mesh.position.y).toBe(50);
+    expect(mesh.position.z).toBe(50);
+  });
+
+  it('should not update building position while actively being dragged via transform controls', () => {
+    buildingModelRefMock.current = new THREE.Group();
+    storeState = {
+      buildings: [{ id: 'b1', x: 0, y: 0, z: 0 }],
+    };
+
+    const { rerender } = renderHook(() => useBuildingMeshSync());
+    const mesh = buildingMeshesRefMock.current[0];
+    transformControlsRefMock.current.object = mesh;
+    isDraggingRefMock.current = true;
 
     storeState = {
       buildings: [{ id: 'b1', x: 50, y: 50, z: 50 }],

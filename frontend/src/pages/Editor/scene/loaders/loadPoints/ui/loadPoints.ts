@@ -8,9 +8,21 @@ import {
 } from '../types/loadPointsTypes';
 
 export function loadPoints(ctx: LoadPointsContext) {
-  const { scene, points } = ctx;
+  const { scene, points, transformControlsRef } = ctx;
   const cubeCircles = ctx.cubeCircles;
   let lines = ctx.lines;
+
+  const tc = transformControlsRef?.current;
+  const attachedObj = (tc as unknown as { object?: THREE.Object3D } | null)
+    ?.object;
+  const attachedPointId =
+    attachedObj?.userData?.type === 'circle'
+      ? (attachedObj.userData.id as string | undefined)
+      : undefined;
+
+  if (attachedPointId !== undefined && tc) {
+    tc.detach();
+  }
 
   cubeCircles.forEach((circleArray, index) => {
     if (circleArray) {
@@ -58,6 +70,10 @@ export function loadPoints(ctx: LoadPointsContext) {
       sprite.scale.set(2, 2, 1);
       sprite.position.set(0, 0, 1);
       circle.add(sprite);
+
+      if (attachedPointId !== undefined && point.id === attachedPointId) {
+        tc?.attach(circle);
+      }
     });
   });
 

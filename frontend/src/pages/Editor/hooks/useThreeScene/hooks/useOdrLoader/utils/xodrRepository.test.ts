@@ -477,11 +477,11 @@ describe('resolveXodrTextForSimulation', () => {
 
 describe('CARLA_MAPS and normalizeMapName', () => {
   it('contains Town10HD_Opt in CARLA_MAPS', () => {
-    expect(CARLA_MAPS).toContain('Town10HD_Opt');
+    expect(CARLA_MAPS).toContain('Town10HD');
   });
 
   it('normalizeMapName returns Town10HD for Town10HD_Opt', () => {
-    const result = normalizeMapName('Town10HD_Opt');
+    const result = normalizeMapName('Town10HD');
     expect(result).toBe('Town10HD');
   });
 

@@ -46,6 +46,10 @@ let {
         detach?: () => void;
       } | null,
     },
+
+    isDraggingRef: {
+      current: false,
+    },
   },
 
   mockEnsureRsuModel: vi.fn(),
@@ -149,24 +153,11 @@ describe('useRSUMeshSync', () => {
     mockRefs.rsuMeshesRef.current = [];
 
     mockRefs.transformControlsRef.current = null;
+    mockRefs.isDraggingRef.current = false;
 
     mockStoreState.RSUs = [];
 
-    /*
-     * By default the RSU model is available.
-     *
-     * The actual RsuUtils module is mocked, so this resolves
-     * immediately and does not depend on the module-level
-     * rsuModel / rsuModelPromise state.
-     */
     mockEnsureRsuModel.mockResolvedValue(true);
-
-    /*
-     * The component imports rsuModel as a named binding.
-     * Since the mock above returns null for it, tests which
-     * specifically exercise the fallback path use the fallback
-     * behaviour of ensureRsuModel(false).
-     */
   });
 
   describe('initial synchronization', () => {
@@ -180,14 +171,6 @@ describe('useRSUMeshSync', () => {
         },
       ]);
 
-      /*
-       * Because the mocked rsuModel is null, this test would
-       * normally create a fallback object even though
-       * ensureRsuModel resolves true.
-       *
-       * The important part here is that synchronization occurs
-       * and the RSU receives the correct metadata and position.
-       */
       renderHook(() => useRSUMeshSync());
 
       await waitFor(() => {
@@ -400,7 +383,7 @@ describe('useRSUMeshSync', () => {
       expect(getSceneRSUs(scene)).toHaveLength(1);
     });
 
-    it('does not update position when the RSU is attached to TransformControls', async () => {
+    it('updates position when the RSU is attached to TransformControls but not actively being dragged', async () => {
       const existing = createExistingRsu('rsu-1', { x: 1, y: 2, z: 3 });
 
       scene.add(existing);
@@ -413,6 +396,41 @@ describe('useRSUMeshSync', () => {
         object: existing,
         detach: vi.fn(),
       };
+      mockRefs.isDraggingRef.current = false;
+
+      setRSUs([
+        {
+          id: 'rsu-1',
+          x: 100,
+          y: 200,
+          z: 300,
+        },
+      ]);
+
+      renderHook(() => useRSUMeshSync());
+
+      await waitFor(() => {
+        expect(existing.position.x).toBe(100);
+      });
+
+      expect(existing.position.y).toBe(200);
+      expect(existing.position.z).toBe(300);
+    });
+
+    it('does not update position while the RSU is actively being dragged via TransformControls', async () => {
+      const existing = createExistingRsu('rsu-1', { x: 1, y: 2, z: 3 });
+
+      scene.add(existing);
+
+      mockRefs.pointsArrRef.current = [existing];
+      mockRefs.pointsObjsRef.current = [existing];
+      mockRefs.rsuMeshesRef.current = [existing];
+
+      mockRefs.transformControlsRef.current = {
+        object: existing,
+        detach: vi.fn(),
+      };
+      mockRefs.isDraggingRef.current = true;
 
       setRSUs([
         {
@@ -560,14 +578,6 @@ describe('useRSUMeshSync', () => {
     });
 
     it('replaces fallback RSU when model becomes available', async () => {
-      /*
-       * The actual hook imports rsuModel as a module binding.
-       * Because the test mock exposes null, the replacement branch
-       * cannot reach the `hasModel && rsuModel` creation path.
-       *
-       * This test therefore verifies the cleanup side of the
-       * fallback replacement logic.
-       */
       mockEnsureRsuModel.mockResolvedValue(true);
 
       const fallback = createExistingRsu('rsu-1', { x: 1, y: 2, z: 3 }, true);

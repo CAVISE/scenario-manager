@@ -18,6 +18,7 @@ export function useSceneObjects({}: UseSceneObjectsProps): UseSceneObjectsResult
 
     cubeCirclesRef,
     roadMeshRef,
+    transformControlsRef,
   } = useEditorRefs();
 
   const localLineArrRef = useRef<THREE.Line[][]>([]);
@@ -35,11 +36,12 @@ export function useSceneObjects({}: UseSceneObjectsProps): UseSceneObjectsResult
       points: cars.map((car) => getGroupedByCarId(pointsByCarId, car.id)),
       cubeCircles: cubeCirclesRef.current,
       lines: localLineArrRef.current,
+      transformControlsRef,
     });
 
     cubeCirclesRef.current = result.cubeCircles;
     localLineArrRef.current = result.lines;
-  }, [cubeCirclesRef, threeRef]);
+  }, [cubeCirclesRef, threeRef, transformControlsRef]);
 
   const syncRoadMesh = useCallback(
     (roadMesh: THREE.Mesh | null) => {
