@@ -190,6 +190,7 @@ describe('useBuildingMeshSync', () => {
     const mesh = buildingMeshesRefMock.current[0];
     transformControlsRefMock.current.object = mesh;
     isDraggingRefMock.current = false;
+    updateSceneGraphMock.mockClear();
 
     storeState = {
       buildings: [{ id: 'b1', x: 50, y: 50, z: 50 }],
@@ -202,6 +203,7 @@ describe('useBuildingMeshSync', () => {
     expect(mesh.position.x).toBe(50);
     expect(mesh.position.y).toBe(50);
     expect(mesh.position.z).toBe(50);
+    expect(updateSceneGraphMock).not.toHaveBeenCalled();
   });
 
   it('should not update building position while actively being dragged via transform controls', () => {
@@ -214,6 +216,7 @@ describe('useBuildingMeshSync', () => {
     const mesh = buildingMeshesRefMock.current[0];
     transformControlsRefMock.current.object = mesh;
     isDraggingRefMock.current = true;
+    updateSceneGraphMock.mockClear();
 
     storeState = {
       buildings: [{ id: 'b1', x: 50, y: 50, z: 50 }],
@@ -226,6 +229,7 @@ describe('useBuildingMeshSync', () => {
     expect(mesh.position.x).toBe(0);
     expect(mesh.position.y).toBe(0);
     expect(mesh.position.z).toBe(0);
+    expect(updateSceneGraphMock).not.toHaveBeenCalled();
   });
 
   it('should detach transform controls when building is removed', () => {
@@ -237,6 +241,7 @@ describe('useBuildingMeshSync', () => {
     const { rerender } = renderHook(() => useBuildingMeshSync());
     const mesh = buildingMeshesRefMock.current[0];
     transformControlsRefMock.current.object = mesh;
+    updateSceneGraphMock.mockClear();
 
     storeState = { buildings: [] };
 
@@ -245,6 +250,7 @@ describe('useBuildingMeshSync', () => {
     });
 
     expect(transformControlsRefMock.current.detach).toHaveBeenCalled();
+    expect(updateSceneGraphMock).toHaveBeenCalled();
   });
 
   it('should retry sync while model is loading', () => {

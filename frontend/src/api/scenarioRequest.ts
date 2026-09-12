@@ -43,6 +43,7 @@ export function toUploadScenarioBody(
     preview: payload.preview ?? undefined,
     file_: payload.file_ ?? undefined,
     scenario: scenarioToStoredJson(payload.scenario),
+    map: payload.map ?? undefined,
   };
 }
 
@@ -64,6 +65,8 @@ export function toUpdateScenarioBody(
     ...(payload.scenario !== undefined
       ? { scenario: scenarioToStoredJson(groups) }
       : {}),
+    map: payload.map ?? undefined,
+    explicit_clear: payload.explicit_clear ?? false,
   };
 }
 
@@ -88,6 +91,7 @@ export function normalizeLoadedScenario(
     description: row.description ?? null,
     preview: row.preview ?? null,
     file_: row.file_ ?? null,
+    map: row.map ?? null,
     scenario: groups.length > 0 ? { scenario_text: groups } : undefined,
   };
 }

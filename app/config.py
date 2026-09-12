@@ -12,11 +12,11 @@ load_dotenv(ENV_FILE, override=True)
 
 
 class Settings(BaseSettings):
-    # CARLA
     carla_host: str
     carla_port: int = Field(ge=1, le=65535)
     carla_traffic_manager_port: int = Field(default=8001, ge=1, le=65535)
     carla_timeout_seconds: float = Field(gt=0)
+    carla_setup_timeout_seconds: float = Field(default=90.0, gt=0)
 
     db_name: str
     db_user: str
@@ -30,7 +30,6 @@ class Settings(BaseSettings):
     eval_dir: Path = BASE_DIR / "evaluation_outputs"
     log_dir: Path = BASE_DIR / "logs"
 
-    # Simulation
     max_ticks_default: int = 3000
     eval_retention_days: int = 30
 

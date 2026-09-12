@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { CP, css, LOG_LINES } from './types/EditorNotFoundPageTypes';
 
-const Corner: React.FC<{ pos: CP }> = ({ pos }) => (
+export const Corner: React.FC<{ pos: CP }> = ({ pos }) => (
   <div className={`nf-corner nf-corner-${pos}`} />
 );
 
-const HexLogo: React.FC = () => (
+export const HexLogo: React.FC = () => (
   <svg width="48" height="55" viewBox="0 0 56 64" fill="none">
     <polygon
       points="28,3 53,17 53,47 28,61 3,47 3,17"

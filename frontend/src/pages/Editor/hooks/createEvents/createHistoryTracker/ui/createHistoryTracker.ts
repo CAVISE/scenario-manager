@@ -14,6 +14,12 @@ import {
 
 type WithId = { id: string };
 
+const activeFlushers = new Set<() => void>();
+
+export function flushPendingHistory() {
+  activeFlushers.forEach((flush) => flush());
+}
+
 function fieldsDiffer<T extends object>(a: T, b: T): boolean {
   const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
   for (const key of keys) {
@@ -82,8 +88,9 @@ function createCollectionTracker<T extends WithId>(
   };
 
   const dispose = () => {
+    const ids = [...pending.keys()];
     for (const edit of pending.values()) clearTimeout(edit.timer);
-    pending.clear();
+    for (const id of ids) commit(id);
   };
 
   return { onTick, dispose };
@@ -158,13 +165,19 @@ export function createHistoryTracker(
     };
   });
 
-  return () => {
-    unsubscribe();
+  const flush = () => {
     carsTracker.dispose();
     rsusTracker.dispose();
     buildingsTracker.dispose();
     pedestriansTracker.dispose();
     lidarsTracker.dispose();
     pointsTracker.dispose();
+  };
+  activeFlushers.add(flush);
+
+  return () => {
+    unsubscribe();
+    activeFlushers.delete(flush);
+    flush();
   };
 }

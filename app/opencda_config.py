@@ -18,14 +18,11 @@ MAX_OPEN_CDA_CONFIG_LENGTH = 2_000_000
 _ALLOWED_INTERPOLATIONS = {"${world.fixed_delta_seconds}"}
 _INTERPOLATION_RE = re.compile(r"\$\{[^{}]+}")
 
-# Weather-driven perception/localization scaling (see
-# _apply_weather_perception_effects). Kept as module constants so the
-# severity->effect mapping is visible in one place rather than buried
-# in the function body.
+
 _DEFAULT_DETECTION_RANGE_M = 50.0
 _MIN_DETECTION_RANGE_M = 15.0
-_MIN_DETECTION_RANGE_FRACTION = 0.4  # detection_range at severity 1.0, as a fraction of its pre-weather value
-_MAX_GNSS_NOISE_MULTIPLIER = 3.0  # noise_*_stddev multiplier at severity 1.0
+_MIN_DETECTION_RANGE_FRACTION = 0.4
+_MAX_GNSS_NOISE_MULTIPLIER = 3.0
 
 
 class OpenCDAConfigError(ValueError):
@@ -618,6 +615,60 @@ def _apply_weather_perception_effects(
                 f"scale {key} for compiled weather severity {severity:.2f}",
                 overrides,
             )
+
+
+def weather_report(config: DictConfig) -> dict[str, Any]:
+    """Summarize world.weather and its effect on this run, for
+    metrics.json (see EvaluationManager.weather_eval).
+
+    Kept here rather than in evaluate_manager.py so the severity
+    formula and the effect scaling it drives (range_scale/noise_scale,
+    mirroring _apply_weather_perception_effects above) stay defined in
+    exactly one place -- this just reports the same numbers that
+    function already computed and applied via config_overrides.json,
+    rather than re-deriving them from that file's free-text "reason"
+    strings.
+
+    active=False means severity was 0.0 and
+    _apply_weather_perception_effects was a no-op: detection_range and
+    GNSS noise were left exactly as the scenario's own config had them,
+    same as if world.weather were absent entirely. This is the
+    common case -- most presets/overrides only touch cosmetic fields
+    (cloudiness, sun_altitude_angle, wind_intensity, fog_distance,
+    fog_falloff, precipitation_deposits), which affect the CARLA
+    render but, by design, nothing a CAV/RSU actually measures.
+    """
+    weather = OmegaConf.select(config, "world.weather", default={}) or {}
+    severity = _weather_severity(config)
+    active = severity > 0.0
+    return {
+        "raw": {k: OmegaConf.select(weather, k, default=None) for k in (
+            "cloudiness", "precipitation", "precipitation_deposits",
+            "wind_intensity", "sun_altitude_angle", "fog_density",
+            "fog_distance", "fog_falloff", "wetness",
+        )},
+        "severity": round(severity, 4),
+        "active": active,
+        "effect": {
+            "detection_range_scale": round(
+                1.0 - severity * (1.0 - _MIN_DETECTION_RANGE_FRACTION), 4
+            ),
+            "gnss_noise_scale": round(
+                1.0 + severity * (_MAX_GNSS_NOISE_MULTIPLIER - 1.0), 4
+            ),
+        } if active else None,
+        "note": (
+            "precipitation/wetness/fog_density are 0, so weather had no "
+            "effect this run beyond the CARLA render -- perception "
+            "detection_range and GNSS noise were unchanged."
+            if not active else
+            "precipitation/wetness/fog_density combined into a nonzero "
+            "severity, which shrank sensing.perception.detection_range "
+            "and scaled up sensing.localization.gnss noise_*_stddev for "
+            "every CAV and RSU (see effect above and "
+            "config_overrides.json for the exact before/after values)."
+        ),
+    }
 
 
 def apply_environment_overrides(

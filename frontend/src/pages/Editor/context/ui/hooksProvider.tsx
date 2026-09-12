@@ -4,7 +4,6 @@ import { useLoadingState } from '../../hooks/useEditorEngine/useLoadingState';
 import { useSceneGraph } from '../../hooks/useEditorEngine/useSceneGraph';
 import { useEditorRefs } from './EditorRefsContext';
 import { HooksContext } from './hooksContext';
-import { useEffect } from 'react';
 import { useThreeScene } from '../../hooks/useThreeScene';
 
 export const HooksProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -49,9 +48,6 @@ export const HooksProvider: React.FC<{ children: React.ReactNode }> = ({
     detachTransformControls,
     handleSetBuildingMode,
   };
-  useEffect(() => {
-    console.log('[Loading] text:', loadingText, 'progress:', loadingProgress);
-  }, [loadingText, loadingProgress]);
   return (
     <HooksContext.Provider value={value}>{children}</HooksContext.Provider>
   );

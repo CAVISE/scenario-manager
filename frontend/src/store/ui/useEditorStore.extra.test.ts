@@ -8,63 +8,63 @@ describe('useEditorStore — additional branch coverage', () => {
     useEditorStore.setState(useEditorStore.getInitialState(), true);
   });
 
-  it('selectObject sets selectedId and selectedObject', () => {
+  it('selectObjects sets selectedIds and selectedObjects', () => {
     const s = useEditorStore.getState();
     const carId = s.addCar(0, 0, 0, 'car', 'ff0000');
     const obj = { id: carId, type: 'car' } as never;
-    s.selectObject(obj);
-    expect(useEditorStore.getState().selectedId).toBe(carId);
-    expect(useEditorStore.getState().selectedObject).toBe(obj);
+    s.selectObjects([obj]);
+    expect(useEditorStore.getState().selectedIds).toEqual([carId]);
+    expect(useEditorStore.getState().selectedObjects).toEqual([obj]);
   });
 
-  it('selectObject with null clears selection', () => {
-    useEditorStore.getState().selectObject(null);
-    expect(useEditorStore.getState().selectedId).toBeNull();
-    expect(useEditorStore.getState().selectedObject).toBeNull();
+  it('selectObjects with an empty array clears selection', () => {
+    useEditorStore.getState().selectObjects([]);
+    expect(useEditorStore.getState().selectedIds).toEqual([]);
+    expect(useEditorStore.getState().selectedObjects).toEqual([]);
   });
 
-  it('removeSelectedId clears selectedId and selectedObject', () => {
+  it('clearSelection clears selectedIds and selectedObjects', () => {
     const s = useEditorStore.getState();
     const carId = s.addCar(0, 0, 0, 'car', 'ff0000');
-    s.selectObject({ id: carId, type: 'car' } as never);
-    s.removeSelectedId();
-    expect(useEditorStore.getState().selectedId).toBeNull();
-    expect(useEditorStore.getState().selectedObject).toBeNull();
+    s.selectObjects([{ id: carId, type: 'car' } as never]);
+    s.clearSelection();
+    expect(useEditorStore.getState().selectedIds).toEqual([]);
+    expect(useEditorStore.getState().selectedObjects).toEqual([]);
   });
 
   it('removeCar clears selectedId when deleted car was selected', () => {
     const s = useEditorStore.getState();
     const carId = s.addCar(0, 0, 0, 'car', DEFAULT_COLOR);
-    s.selectObject({ id: carId, type: 'car' } as never);
+    s.selectObjects([{ id: carId, type: 'car' } as never]);
     s.removeCar(carId);
-    expect(useEditorStore.getState().selectedId).toBeNull();
+    expect(useEditorStore.getState().selectedIds).toEqual([]);
   });
 
   it('removeCar keeps selectedId when a different car is selected', () => {
     const s = useEditorStore.getState();
     const carId1 = s.addCar(0, 0, 0, 'car', DEFAULT_COLOR);
     const carId2 = s.addCar(1, 1, 1, 'car', DEFAULT_COLOR);
-    s.selectObject({ id: carId2, type: 'car' } as never);
+    s.selectObjects([{ id: carId2, type: 'car' } as never]);
     s.removeCar(carId1);
-    expect(useEditorStore.getState().selectedId).toBe(carId2);
+    expect(useEditorStore.getState().selectedIds).toEqual([carId2]);
   });
 
   it('setBuildingMode true clears selectedId', () => {
     const s = useEditorStore.getState();
     const carId = s.addCar(0, 0, 0, 'car', DEFAULT_COLOR);
-    s.selectObject({ id: carId, type: 'car' } as never);
+    s.selectObjects([{ id: carId, type: 'car' } as never]);
     s.setBuildingMode(true);
     expect(useEditorStore.getState().isBuildingMode).toBe(true);
-    expect(useEditorStore.getState().selectedId).toBeNull();
+    expect(useEditorStore.getState().selectedIds).toEqual([]);
   });
 
   it('setBuildingMode false does not clear selectedId', () => {
     const s = useEditorStore.getState();
     const carId = s.addCar(0, 0, 0, 'car', DEFAULT_COLOR);
-    s.selectObject({ id: carId, type: 'car' } as never);
+    s.selectObjects([{ id: carId, type: 'car' } as never]);
     s.setBuildingMode(false);
     expect(useEditorStore.getState().isBuildingMode).toBe(false);
-    expect(useEditorStore.getState().selectedId).toBe(carId);
+    expect(useEditorStore.getState().selectedIds).toEqual([carId]);
   });
 
   it('addRSU and removeRSU by index', () => {
@@ -253,8 +253,8 @@ describe('useEditorStore — additional branch coverage', () => {
         points: [],
         buildings: [],
         pedestrians: [],
-        selectedId: null,
-        selectedObject: null,
+        selectedIds: [],
+        selectedObjects: [],
         Scenario: {
           id: '1',
           name: 'Test',

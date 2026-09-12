@@ -16,7 +16,7 @@ export default function CarlaTab() {
   } = useCarlaConfig();
 
   useEffect(() => {
-    if (storedMap && storedMap !== simConfig.carla.map) {
+    if (storedMap && !simConfig.carla.map) {
       updateSimConfigCarla({ map: storedMap });
     }
   }, [simConfig.carla.map, storedMap, updateSimConfigCarla]);

@@ -111,7 +111,7 @@ def _wp_route_depth_to_dest(start_wp, dest_wp, max_steps: int = _BFS_MAX_STEPS) 
 
     while queue and steps < max_steps:
         current, depth = queue.pop(0)
-        key = (current.road_id, current.lane_id)   # section_id removed
+        key = (current.road_id, current.lane_id)
         if key in visited:
             continue
         visited.add(key)
@@ -125,7 +125,6 @@ def _wp_route_depth_to_dest(start_wp, dest_wp, max_steps: int = _BFS_MAX_STEPS) 
 
         steps += 1
 
-        # Support CARLA versions without next_until_lane_end.
         try:
             end_wps = current.next_until_lane_end(_BFS_STEP_M)
             pivot = end_wps[-1] if end_wps else current
@@ -380,8 +379,7 @@ def _apply_attacks(
         mode = str(params.get("mode", "noise")).lower()
 
         targets = attack.get("targets") or {}
-        target_index = targets.get("cav_index")  # 1-based; None → all CAVs
-
+        target_index = targets.get("cav_index")
         for idx, cav in enumerate(cav_list, 1):
             if target_index is not None and idx != int(target_index):
                 continue
@@ -389,7 +387,6 @@ def _apply_attacks(
             sensing = cav.setdefault("sensing", {})
             loc = sensing.setdefault("localization", {})
 
-            # Runtime spoofing is part of the active localization pipeline.
             loc["activate"] = True
             loc.setdefault("dt", fixed_delta_seconds)
 
@@ -410,11 +407,7 @@ def _apply_attacks(
                     "start_time", "ramp_duration", "drift_rate",
                     "jitter_stddev", "max_offset",
                 ):
-                    # math.isfinite() catches NaN/Infinity, which `< 0`
-                    # alone would miss: NaN compares False to every
-                    # comparison, so it would otherwise slip past this
-                    # check and reach numpy.random.normal downstream,
-                    # which returns NaN silently instead of raising.
+
                     if not math.isfinite(spoofing[key]) or spoofing[key] < 0:
                         raise ValueError(
                             "GNSS spoofing %s must be a finite, "

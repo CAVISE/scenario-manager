@@ -24,10 +24,30 @@ export function setCanvasReference(canvas: HTMLCanvasElement | null): void {
   cachedPreview = null;
 }
 
+const PREVIEW_MAX_DIMENSION = 400;
+
 function capturePreview(): string | null {
   if (!canvasRef) return null;
   try {
-    return canvasRef.toDataURL('image/png');
+    const { width, height } = canvasRef;
+    if (width === 0 || height === 0) return null;
+
+    const scale = Math.min(1, PREVIEW_MAX_DIMENSION / Math.max(width, height));
+    if (scale >= 1) {
+      return canvasRef.toDataURL('image/png');
+    }
+
+    const targetWidth = Math.max(1, Math.round(width * scale));
+    const targetHeight = Math.max(1, Math.round(height * scale));
+
+    const offscreen = document.createElement('canvas');
+    offscreen.width = targetWidth;
+    offscreen.height = targetHeight;
+    const ctx2d = offscreen.getContext('2d');
+    if (!ctx2d) return canvasRef.toDataURL('image/png');
+
+    ctx2d.drawImage(canvasRef, 0, 0, targetWidth, targetHeight);
+    return offscreen.toDataURL('image/png');
   } catch (error) {
     console.warn('Failed to capture preview:', error);
     return null;
@@ -116,6 +136,7 @@ export function buildScenarioPayload(): ScenarioPayload {
     scenario_name: s.Scenario?.name || null,
     weather: s.Scenario?.weather || undefined,
     map: s.simConfig?.carla?.map || DEFAULT_XODR,
+    explicit_clear: s.sceneExplicitlyCleared,
     id: s.Scenario?.id || null,
     name_of_scenario: s.Scenario?.name || null,
     description: s.Scenario?.description || null,
@@ -133,7 +154,7 @@ export function buildScenarioPayload(): ScenarioPayload {
             color: Number(`0x${car.color}`),
             scale: car.scale,
             rotation: Math.floor((car.rotation ?? 0) * 57.32),
-            selected: car.id === s.selectedId,
+            selected: s.selectedIds.includes(car.id),
             opencda_max_speed: car.opencda_max_speed,
             opencda_ignore_traffic_light: car.opencda_ignore_traffic_light,
             opencda_overtake_allowed: car.opencda_overtake_allowed,

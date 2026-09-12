@@ -51,7 +51,7 @@ export const appTheme = createTheme({
     MuiFormLabel: {
       styleOverrides: {
         root: {
-          fontSize: '0.75rem',
+          fontSize: '0.875rem',
           marginBottom: 4,
           color: 'text.secondary',
         },

@@ -1,7 +1,10 @@
 import { disposeMesh } from '../../sceneUtils';
 import * as THREE from 'three';
 import { useEditorStore } from '@/store';
-import { pushClearSceneSnapshot } from '../../deletionSnapshots';
+import {
+  pushClearSceneSnapshot,
+  watchSnapshotValidity,
+} from '../../deletionSnapshots';
 import { handleClearSceneProps } from '../types/handleClearSceneTypes';
 export function handleClearScene({
   carMeshesRef,
@@ -52,13 +55,16 @@ export function handleClearScene({
   [...s.pedestrians].forEach((p) => s.removePedestrian(p.id));
   [...s.lidars].forEach((l) => s.removeLidar(l.id));
 
-  s.selectObject(null);
+  s.selectObjects([]);
   transformControlsRef.current?.detach();
   detachTransformControls();
 
   if (pushed) {
-    toast.undo(pushed.label, () =>
-      useEditorStore.getState().restoreLastDeletion(pushed.snapshotId)
+    toast.undo(
+      pushed.label,
+      () => useEditorStore.getState().restoreLastDeletion(pushed.snapshotId),
+      undefined,
+      watchSnapshotValidity(pushed.snapshotId)
     );
   }
 }

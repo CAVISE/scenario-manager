@@ -583,3 +583,114 @@ def test_pedestrian_manager_v2x_integration():
         #    cleanup) -- must not raise and must not touch the walker.
         ped_legacy.destroy()
         assert walker.is_alive is True
+
+
+def _fake_carla_map(name="Town01", road_x_range=(0.0, 200.0)):
+    """A minimal carla_map stand-in for _check_scenario_matches_map:
+    simulates a straight road along the x-axis spanning road_x_range,
+    at y=0 -- get_waypoint() snaps any point to the nearest point on
+    that segment, same shape (transform.location.x/y) as a real
+    carla.Waypoint."""
+    import types as _types
+
+    lo, hi = road_x_range
+
+    class _Map:
+        pass
+
+    m = _Map()
+    m.name = name
+
+    def get_waypoint(location, project_to_road=True, lane_type=None):
+        snapped_x = max(lo, min(hi, location.x))
+        return _types.SimpleNamespace(
+            transform=_types.SimpleNamespace(
+                location=_types.SimpleNamespace(x=snapped_x, y=0.0, z=0.0)
+            )
+        )
+
+    m.get_waypoint = get_waypoint
+    return m
+
+
+def _scene_with(cavs=None, rsus=None):
+    from omegaconf import OmegaConf
+    return OmegaConf.create({
+        "scenario": {
+            "single_cav_list": cavs or [],
+            "rsu_list": rsus or [],
+        }
+    })
+
+
+def test_check_scenario_matches_map_passes_for_onroad_points():
+    from app.runner import _check_scenario_matches_map
+
+    scene = _scene_with(
+        cavs=[{
+            "name": "cav1",
+            "spawn_position": [50.0, 2.0, 0.3],
+            "destination": [150.0, 1.0, 0.0],
+        }],
+        rsus=[{"name": "rsu1", "spawn_position": [100.0, 3.0, 0.3]}],
+    )
+    # Should not raise -- every point is a few meters of an actual road.
+    _check_scenario_matches_map(scene, _fake_carla_map())
+
+
+def test_check_scenario_matches_map_raises_for_offmap_cav():
+    from app.runner import _check_scenario_matches_map
+
+    scene = _scene_with(
+        cavs=[{
+            "name": "cav_wrong_town",
+            "spawn_position": [900.0, 500.0, 0.3],
+            "destination": [150.0, 1.0, 0.0],
+        }],
+    )
+    with pytest.raises(RuntimeError) as excinfo:
+        _check_scenario_matches_map(scene, _fake_carla_map())
+    assert "cav_wrong_town.spawn_position" in str(excinfo.value)
+
+
+@pytest.mark.parametrize("distance", [43.0, 400.0])
+def test_check_scenario_matches_map_warns_for_offroad_rsu_without_moving_it(distance, monkeypatch):
+    from app.runner import _check_scenario_matches_map
+    from app import runner
+    from unittest.mock import Mock
+
+    warning = Mock()
+    monkeypatch.setattr(runner.log, "warning", warning)
+    scene = _scene_with(
+        rsus=[{"name": "rsu3", "spawn_position": [100.0, distance, 0.3]}],
+    )
+    _check_scenario_matches_map(scene, _fake_carla_map())
+    warning.assert_called_once()
+    assert warning.call_args.args[1:] == ("rsu3", distance, "Town01")
+    assert list(scene.scenario.rsu_list[0].spawn_position) == [100.0, distance, 0.3]
+
+
+def test_check_scenario_matches_map_reports_all_offenders_together():
+    from app.runner import _check_scenario_matches_map
+
+    scene = _scene_with(
+        cavs=[{
+            "name": "cav_bad",
+            "spawn_position": [900.0, 500.0, 0.3],
+            "destination": [150.0, 100.0, 0.0],
+        }],
+        rsus=[{"name": "rsu_bad", "spawn_position": [-900.0, 400.0, 0.3]}],
+    )
+    with pytest.raises(RuntimeError) as excinfo:
+        _check_scenario_matches_map(scene, _fake_carla_map())
+    message = str(excinfo.value)
+    assert "cav_bad.spawn_position" in message
+    assert "rsu_bad.spawn_position" not in message
+    assert "cav_bad.destination" in message
+    assert "2 vehicle point(s)" in message
+
+
+def test_check_scenario_matches_map_empty_scenario_is_fine():
+    from app.runner import _check_scenario_matches_map
+
+    _check_scenario_matches_map(_scene_with(), _fake_carla_map())

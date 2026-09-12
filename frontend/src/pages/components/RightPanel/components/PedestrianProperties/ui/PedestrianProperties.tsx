@@ -18,6 +18,7 @@ import {
   typographyStyles,
 } from '@/shared/styles/panelStyles';
 import { parseNumberInputChange } from '@/shared/utils/numberInputUtils';
+import { usePropertiesMode } from '../../../context/PropertiesModeContext';
 
 function clampCrossFactor(value: number): number {
   return Math.max(0, Math.min(1, value));
@@ -28,6 +29,7 @@ export default function PedestrianProperties({
   onDelete,
 }: IPedestrianProps) {
   const updatePedestrian = useEditorStore((s) => s.updatePedestrian);
+  const propertiesMode = usePropertiesMode();
 
   return (
     <Stack spacing={2}>
@@ -127,94 +129,100 @@ export default function PedestrianProperties({
         </ToggleButtonGroup>
       </FormControl>
 
-      <Divider />
-      <Typography variant="subtitle2" sx={typographyStyles}>
-        V2X
-      </Typography>
+      {propertiesMode === 'advanced' && (
+        <>
+          <Divider />
+          <Typography variant="subtitle2" sx={typographyStyles}>
+            V2X
+          </Typography>
 
-      <Grid item container spacing={1}>
-        <Grid item xs={6}>
+          <Grid item container spacing={1}>
+            <Grid item xs={6}>
+              <FormControl>
+                <FormLabel>TX Power (mW)</FormLabel>
+                <Input
+                  size="small"
+                  type="number"
+                  slotProps={numInputSlot}
+                  value={pedestrian.tx_power}
+                  onChange={(e) => {
+                    const parsed_tx_power = parseNumberInputChange(e.target);
+                    if (parsed_tx_power === undefined || isNaN(parsed_tx_power))
+                      return;
+                    updatePedestrian(pedestrian.id, {
+                      tx_power: parsed_tx_power,
+                    });
+                  }}
+                />
+              </FormControl>
+            </Grid>
+            <Grid item xs={6}>
+              <FormControl>
+                <FormLabel>Beacon interval (ms)</FormLabel>
+                <Input
+                  size="small"
+                  type="number"
+                  slotProps={numInputSlot}
+                  value={pedestrian.beacon_interval}
+                  onChange={(e) => {
+                    const parsed_beacon_interval = parseNumberInputChange(
+                      e.target
+                    );
+                    if (
+                      parsed_beacon_interval === undefined ||
+                      isNaN(parsed_beacon_interval)
+                    )
+                      return;
+                    updatePedestrian(pedestrian.id, {
+                      beacon_interval: parsed_beacon_interval,
+                    });
+                  }}
+                />
+              </FormControl>
+            </Grid>
+          </Grid>
+
           <FormControl>
-            <FormLabel>TX Power (mW)</FormLabel>
+            <FormLabel>Frequency (Hz)</FormLabel>
             <Input
               size="small"
               type="number"
               slotProps={numInputSlot}
-              value={pedestrian.tx_power}
+              value={pedestrian.frequency}
               onChange={(e) => {
-                const parsed_tx_power = parseNumberInputChange(e.target);
-                if (parsed_tx_power === undefined || isNaN(parsed_tx_power))
+                const parsed_frequency = parseNumberInputChange(e.target);
+                if (parsed_frequency === undefined || isNaN(parsed_frequency))
                   return;
                 updatePedestrian(pedestrian.id, {
-                  tx_power: parsed_tx_power,
+                  frequency: parsed_frequency,
                 });
               }}
             />
           </FormControl>
-        </Grid>
-        <Grid item xs={6}>
-          <FormControl>
-            <FormLabel>Beacon interval (ms)</FormLabel>
-            <Input
+
+          <FormControl onClick={(e) => e.stopPropagation()}>
+            <FormLabel>Protocol</FormLabel>
+            <ToggleButtonGroup
+              exclusive
+              value={pedestrian.protocol}
+              onChange={(_, val) => {
+                if (val)
+                  updatePedestrian(pedestrian.id, {
+                    protocol: val as 'DSRC' | 'C-V2X',
+                  });
+              }}
               size="small"
-              type="number"
-              slotProps={numInputSlot}
-              value={pedestrian.beacon_interval}
-              onChange={(e) => {
-                const parsed_beacon_interval = parseNumberInputChange(e.target);
-                if (
-                  parsed_beacon_interval === undefined ||
-                  isNaN(parsed_beacon_interval)
-                )
-                  return;
-                updatePedestrian(pedestrian.id, {
-                  beacon_interval: parsed_beacon_interval,
-                });
-              }}
-            />
+              fullWidth
+            >
+              {(['DSRC', 'C-V2X'] as const).map((proto) => (
+                <ToggleButton key={proto} value={proto} sx={toggleButtonStyles}>
+                  {proto}
+                </ToggleButton>
+              ))}
+            </ToggleButtonGroup>
           </FormControl>
-        </Grid>
-      </Grid>
-
-      <FormControl>
-        <FormLabel>Frequency (Hz)</FormLabel>
-        <Input
-          size="small"
-          type="number"
-          slotProps={numInputSlot}
-          value={pedestrian.frequency}
-          onChange={(e) => {
-            const parsed_frequency = parseNumberInputChange(e.target);
-            if (parsed_frequency === undefined || isNaN(parsed_frequency))
-              return;
-            updatePedestrian(pedestrian.id, {
-              frequency: parsed_frequency,
-            });
-          }}
-        />
-      </FormControl>
-
-      <FormControl onClick={(e) => e.stopPropagation()}>
-        <FormLabel>Protocol</FormLabel>
-        <ToggleButtonGroup
-          exclusive
-          value={pedestrian.protocol}
-          onChange={(_, val) => {
-            if (val)
-              updatePedestrian(pedestrian.id, {
-                protocol: val as 'DSRC' | 'C-V2X',
-              });
-          }}
-          size="small"
-          fullWidth
-        >
-          {(['DSRC', 'C-V2X'] as const).map((proto) => (
-            <ToggleButton key={proto} value={proto} sx={toggleButtonStyles}>
-              {proto}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
-      </FormControl>
+        </>
+      )}
 
       <Button color="error" variant="outlined" onClick={onDelete}>
         Delete pedestrian

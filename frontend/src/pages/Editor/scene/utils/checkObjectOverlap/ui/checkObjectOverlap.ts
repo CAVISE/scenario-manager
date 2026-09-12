@@ -2,54 +2,25 @@ import type {
   Footprint2D,
   OverlapCheckResult,
 } from '../types/checkObjectOverlapTypes';
-
-export interface Vec2 {
-  x: number;
-  y: number;
-}
-
-export function getCorners(fp: Footprint2D): Vec2[] {
-  const cos = Math.cos(fp.rotation);
-  const sin = Math.sin(fp.rotation);
-
-  const localCorners: Vec2[] = [
-    { x: -fp.halfExtentX, y: -fp.halfExtentY },
-    { x: fp.halfExtentX, y: -fp.halfExtentY },
-    { x: fp.halfExtentX, y: fp.halfExtentY },
-    { x: -fp.halfExtentX, y: fp.halfExtentY },
-  ];
-
-  return localCorners.map((c) => ({
-    x: fp.centerX + c.x * cos - c.y * sin,
-    y: fp.centerY + c.x * sin + c.y * cos,
-  }));
-}
-
-function getAxes(rotation: number): Vec2[] {
-  return [
-    { x: Math.cos(rotation), y: Math.sin(rotation) },
-    { x: -Math.sin(rotation), y: Math.cos(rotation) },
-  ];
-}
-
-function projectOntoAxis(
-  corners: Vec2[],
-  axis: Vec2
-): { min: number; max: number } {
-  let min = Infinity;
-  let max = -Infinity;
-  for (const c of corners) {
-    const proj = c.x * axis.x + c.y * axis.y;
-    if (proj < min) min = proj;
-    if (proj > max) max = proj;
-  }
-  return { min, max };
-}
+import {
+  getAxes,
+  getCorners,
+  projectOntoAxis,
+} from '../utils/checkObjectOverlap.utils';
 
 export function checkObjectOverlap(
   a: Footprint2D,
   b: Footprint2D
 ): OverlapCheckResult {
+  if (
+    a.halfExtentX === 0 ||
+    a.halfExtentY === 0 ||
+    b.halfExtentX === 0 ||
+    b.halfExtentY === 0
+  ) {
+    return { overlaps: false };
+  }
+
   const cornersA = getCorners(a);
   const cornersB = getCorners(b);
   const axes = [...getAxes(a.rotation), ...getAxes(b.rotation)];
@@ -60,17 +31,19 @@ export function checkObjectOverlap(
     const projA = projectOntoAxis(cornersA, axis);
     const projB = projectOntoAxis(cornersB, axis);
 
-    const separated = projA.max < projB.min || projB.max < projA.min;
-    if (separated) {
+    if (projA.max < projB.min || projB.max < projA.min) {
       return { overlaps: false };
     }
 
-    const overlapOnAxis =
+    const overlap =
       Math.min(projA.max, projB.max) - Math.max(projA.min, projB.min);
-    if (overlapOnAxis < minPenetration) {
-      minPenetration = overlapOnAxis;
+    if (overlap < minPenetration) {
+      minPenetration = overlap;
     }
   }
 
-  return { overlaps: true, penetrationDepth: minPenetration };
+  return {
+    overlaps: true,
+    penetrationDepth: minPenetration,
+  };
 }

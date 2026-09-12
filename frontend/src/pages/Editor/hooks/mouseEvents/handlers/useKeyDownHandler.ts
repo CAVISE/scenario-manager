@@ -4,8 +4,13 @@ import { useEditorStore } from '@/store';
 import { useHooks, useEditorRefs } from '@editor/context';
 import { groupByCarId, getGroupedByCarId } from '@/shared/utils/groupByCarId';
 import { ToastApi } from '@components/AppToast/types/toastTypes';
-import { pushSingleDeletionSnapshot } from '@right-panel/components/SceneTreePanel/funcs/deletionSnapshots';
+import {
+  pushSingleDeletionSnapshot,
+  watchSnapshotValidity,
+} from '@right-panel/components/SceneTreePanel/funcs/deletionSnapshots';
 import { useHistoryActions } from '../../createEvents/useHistoryActions';
+import { deleteSelectedObjects } from '@right-panel/components/MultiSelectionProperties/model/batchActions';
+import { watchHistoryEntryValidity } from '@/pages/components/RightPanel/components/SceneTreePanel/funcs/deletionSnapshots/ui/deletionSnapshots';
 
 function disposeObject3D(obj: THREE.Object3D): void {
   obj.traverse((child) => {
@@ -41,11 +46,13 @@ export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
     cubeCirclesRef,
     modeRef,
   } = useEditorRefs();
-  const onSelectObject = useEditorStore((s) => s.selectObject);
+  const onSelectObjects = useEditorStore((s) => s.selectObjects);
   const { undo, redo } = useHistoryActions();
 
   return useCallback(
     (e: KeyboardEvent) => {
+      if (useEditorStore.getState().simulationSession.phase === 'running')
+        return;
       const handleDeleteWithUndo = (
         id: string | undefined,
         label: string,
@@ -63,12 +70,16 @@ export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
 
         deleteFn();
 
-        onSelectObject(null);
+        onSelectObjects([]);
         updateSceneGraph();
 
         if (pushed) {
-          toast.undo(`Deleted ${label}`, () =>
-            useEditorStore.getState().restoreLastDeletion(pushed.snapshotId)
+          toast.undo(
+            `Deleted ${label}`,
+            () =>
+              useEditorStore.getState().restoreLastDeletion(pushed.snapshotId),
+            undefined,
+            watchSnapshotValidity(pushed.snapshotId)
           );
         }
       };
@@ -104,7 +115,7 @@ export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
       }
 
       if (e.key === 'Escape') {
-        onSelectObject(null);
+        onSelectObjects([]);
         transformControlsRef.current?.detach();
         carMeshes.forEach((mesh) => {
           useEditorStore.getState().updateCar(mesh.userData.id, {
@@ -144,6 +155,20 @@ export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
       const tc = transformControls as unknown as {
         object: THREE.Object3D | undefined;
       };
+      if (useEditorStore.getState().selectedIds.length > 1) {
+        e.preventDefault();
+        transformControls.detach();
+        const result = deleteSelectedObjects();
+        if (result) {
+          toast.undo(
+            `${result.count} objects deleted`,
+            () => useEditorStore.getState().undo(),
+            undefined,
+            watchHistoryEntryValidity(result.entryId)
+          );
+        }
+        return;
+      }
       const attached = tc?.object;
       if (!attached) return;
 
@@ -283,14 +308,18 @@ export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
 
               useEditorStore.getState().removePoint(pointId);
 
-              onSelectObject(null);
+              onSelectObjects([]);
               updateSceneGraph();
 
               if (pushed) {
-                toast.undo('Deleted WPT', () =>
-                  useEditorStore
-                    .getState()
-                    .restoreLastDeletion(pushed.snapshotId)
+                toast.undo(
+                  'Deleted WPT',
+                  () =>
+                    useEditorStore
+                      .getState()
+                      .restoreLastDeletion(pushed.snapshotId),
+                  undefined,
+                  watchSnapshotValidity(pushed.snapshotId)
                 );
               }
             } else {
@@ -309,12 +338,16 @@ export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
         const pushed = pushSingleDeletionSnapshot({ id, label: 'OBJ' });
         scene.remove(attached);
         disposeObject3D(attached);
-        onSelectObject(null);
+        onSelectObjects([]);
         updateSceneGraph();
 
         if (pushed) {
-          toast.undo('Deleted OBJ', () =>
-            useEditorStore.getState().restoreLastDeletion(pushed.snapshotId)
+          toast.undo(
+            'Deleted OBJ',
+            () =>
+              useEditorStore.getState().restoreLastDeletion(pushed.snapshotId),
+            undefined,
+            watchSnapshotValidity(pushed.snapshotId)
           );
         }
       }
@@ -331,7 +364,7 @@ export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
       updateSceneGraph,
       undo,
       redo,
-      onSelectObject,
+      onSelectObjects,
       toast,
     ]
   );

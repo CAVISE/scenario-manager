@@ -58,7 +58,7 @@ export function clearScene({
   useEditorStore.getState().removeAllRSUs();
   s.points.forEach((p) => s.removePoint(p.id));
   s.cars.forEach((c) => s.removeCar(c.id.toString()));
-  s.selectObject(null);
+  s.selectObjects([]);
 
   syncRoadMesh(null);
 }

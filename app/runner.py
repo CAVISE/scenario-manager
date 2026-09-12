@@ -1,18 +1,22 @@
+import math
 import os
 import random
 import threading
+from typing import TYPE_CHECKING
 
 import carla
 from omegaconf import OmegaConf
 
 from app.config import get_settings
 from app.log_config import add_run_file_handler, get_logger, remove_run_file_handler
-from app.opencda_config import compile_open_cda_config, write_open_cda_artifacts
+from app.opencda_config import compile_open_cda_config, weather_report, write_open_cda_artifacts
 from opencda.core.common.cav_world import CavWorld
 from opencda.core.common.pedestrian_manager import PedestrianManager
 from opencda.scenario_testing.evaluations.evaluate_manager import EvaluationManager
 from opencda.scenario_testing.utils import customized_map_api as map_api
-from opencda.scenario_testing.utils import sim_api
+
+if TYPE_CHECKING:
+    from opencda.scenario_testing.utils import sim_api
 
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 XODR_PATH = os.path.join(_BASE_DIR, "..", "assets", "xodrs")
@@ -39,8 +43,94 @@ def _build_scene_dict(scenario_raw: dict, carla_map=None) -> tuple:
     )
 
 
+def _check_scenario_matches_map(scene_dict, carla_map) -> None:
+    """Reject vehicle coordinates implausibly far from driving lanes.
+
+    This pre-spawn heuristic catches vehicles authored for a different map
+    before road snapping produces unrelated routes. RSUs are stationary
+    infrastructure: distance to a driving lane is advisory, not evidence
+    that their coordinates are invalid. Never move them onto a road here.
+    """
+    MAX_SNAP_DISTANCE_M = 40.0
+    def _snap_distance(x: float, y: float, z: float) -> float:
+        wp = carla_map.get_waypoint(
+            carla.Location(x=x, y=y, z=z),
+            project_to_road=True,
+            lane_type=carla.LaneType.Driving,
+        )
+        if wp is None:
+            return math.inf
+        loc = wp.transform.location
+        return math.dist((x, y), (loc.x, loc.y))
+
+    offenders = []
+    for cav in scene_dict.scenario.get("single_cav_list", []):
+        for field in ("spawn_position", "destination"):
+            pos = cav.get(field)
+            if not pos:
+                continue
+            dist = _snap_distance(pos[0], pos[1], pos[2] if len(pos) > 2 else 0.0)
+            if dist > MAX_SNAP_DISTANCE_M:
+                offenders.append(f"{cav.get('name', '?')}.{field} ({dist:.0f}m off-road)")
+    for rsu in scene_dict.scenario.get("rsu_list", []):
+        pos = rsu.get("spawn_position")
+        if not pos:
+            continue
+        dist = _snap_distance(pos[0], pos[1], pos[2] if len(pos) > 2 else 0.0)
+        if dist > MAX_SNAP_DISTANCE_M:
+            log.warning(
+                "RSU %s.spawn_position is %.0fm from the nearest driving lane "
+                "on map '%s'. Continuing with its configured position; "
+                "verify placement and communication coverage if unexpected.",
+                rsu.get('name', '?'), dist, carla_map.name,
+            )
+
+    if offenders:
+        raise RuntimeError(
+            f"Scenario coordinates don't match map '{carla_map.name}' -- "
+            f"{len(offenders)} vehicle point(s) are implausibly far from a driving lane "
+            f"(>{MAX_SNAP_DISTANCE_M:.0f}m): {', '.join(offenders)}. This "
+            f"usually means the scenario was authored for a different map "
+            f"and the map was changed afterward without recomputing "
+            f"positions. Re-place these entities on the current map "
+            f"before running."
+        )
+
+
+def _check_perception_requires_apply_ml(scene_dict, apply_ml: bool) -> None:
+    """Reject any CAV/RSU with perception.activate=true when apply_ml=false.
+
+    OpenCDA's PerceptionManager calls sys.exit() (a BaseException, not
+    Exception) deep inside VehicleManager.__init__ when this combination is
+    hit, which aborts the run for every already-spawned CAV with no chance
+    to skip just the offender. Catching it here, before any actor spawns,
+    turns a hard crash after CARLA spawning has started into a clean
+    pre-flight error.
+    """
+    if apply_ml:
+        return
+
+    offenders = []
+    for cav in scene_dict.scenario.get("single_cav_list", []):
+        if cav.get("sensing", {}).get("perception", {}).get("activate"):
+            offenders.append(cav.get("name", "?"))
+    for rsu in scene_dict.scenario.get("rsu_list", []):
+        if rsu.get("sensing", {}).get("perception", {}).get("activate"):
+            offenders.append(rsu.get("name", "?"))
+
+    if offenders:
+        raise RuntimeError(
+            f"{len(offenders)} entity(ies) have perception.activate=true "
+            f"but apply_ml is false for this run: {', '.join(offenders)}. "
+            f"Either enable 'apply_ml' for the run, or turn off the "
+            f"perception/detection toggle for these entities."
+        )
+
+
 def _make_scenario_manager(scene_dict, apply_ml: bool, xodr_path, map_name: str,
-                            cav_world: CavWorld) -> sim_api.ScenarioManager:
+                            cav_world: CavWorld) -> "sim_api.ScenarioManager":
+    from opencda.scenario_testing.utils import sim_api
+
     return sim_api.ScenarioManager(
         scene_dict,
         apply_ml,
@@ -49,6 +139,81 @@ def _make_scenario_manager(scene_dict, apply_ml: bool, xodr_path, map_name: str,
         town=map_name if xodr_path is None else None,
         cav_world=cav_world,
     )
+
+
+def _reset_stale_sync_mode(client: "carla.Client") -> None:
+    """Guard against a CARLA server left wedged in synchronous_mode by a
+    previous run that hung or was killed before its `finally` cleanup
+    (scenario_manager.close()) could restore origin_settings.
+
+    A server stuck this way blocks on the next tick that never arrives,
+    which can freeze this run's own load_world()/apply_settings() before
+    ScenarioManager even exists to fix it. Nothing legitimate should have
+    synchronous_mode already on this early, so if we see it, force it off.
+    """
+    try:
+        world = client.get_world()
+        current = world.get_settings()
+    except Exception as e:
+        log.warning("Preflight sync-mode check failed (continuing anyway): %s", e)
+        return
+
+    if current.synchronous_mode:
+        log.warning(
+            "CARLA server was already in synchronous_mode before this run "
+            "started (likely left over from a hung/killed prior run) — "
+            "forcing it back to asynchronous mode before proceeding."
+        )
+        try:
+            current.synchronous_mode = False
+            current.fixed_delta_seconds = None
+            world.apply_settings(current)
+            log.info("Stale synchronous_mode cleared.")
+        except Exception as e:
+            log.error(
+                "Failed to clear stale synchronous_mode — the upcoming "
+                "load_world()/ScenarioManager setup may hang: %s", e
+            )
+
+
+class _SetupTimeout(Exception):
+    """Raised when the CARLA setup phase (map load through actor spawning)
+    does not complete within carla_setup_timeout_seconds. Unlike the tick
+    loop, this phase has no _stop_event checkpoints to interrupt a blocked
+    RPC call, so a plain timeout is the only way to keep a wedged CARLA
+    connection from hanging run_scenario forever."""
+
+
+def _run_with_timeout(fn, timeout_seconds: float, description: str):
+    """Run fn() on a background thread and wait up to timeout_seconds.
+
+    If fn raises, that exception is re-raised here. If it doesn't finish in
+    time, raises _SetupTimeout — the background thread is a daemon and is
+    left to die with the process/CARLA call it's stuck on; we don't attempt
+    to cancel the blocking RPC itself, only to stop waiting on it so the
+    normal except/finally cleanup path in run_scenario can still run.
+    """
+    result: dict = {}
+
+    def _target():
+        try:
+            result["value"] = fn()
+        except BaseException as e:
+            result["error"] = e
+
+    thread = threading.Thread(target=_target, daemon=True, name=f"setup-{description}")
+    thread.start()
+    thread.join(timeout_seconds)
+
+    if thread.is_alive():
+        raise _SetupTimeout(
+            f"{description} did not complete within {timeout_seconds:.0f}s "
+            f"— CARLA connection is likely wedged (see preflight sync-mode "
+            f"check / a previous run that never cleaned up)."
+        )
+    if "error" in result:
+        raise result["error"]
+    return result["value"]
 
 
 def _spawn_pedestrians(world, pedestrian_list: list, cav_world) -> list:
@@ -81,11 +246,7 @@ def _spawn_pedestrians(world, pedestrian_list: list, cav_world) -> list:
             ctrl.start()
             ctrl.go_to_location(world.get_random_location_from_navigation())
             ctrl.set_max_speed(ped["speed"])
-            # V2X wrapper. Constructed inside this same try block so a
-            # failure here (e.g. an unexpected error building the v2x
-            # config) triggers the same orphaned-walker cleanup below
-            # as any other setup failure, rather than leaving a walker
-            # with no manager and no V2X presence.
+
             manager = PedestrianManager(walker, ctrl, ped, cav_world)
             spawned.append(manager)
             log.info("PED%d spawned id=%d speed=%.1f m/s", i, walker.id, ped["speed"])
@@ -235,11 +396,7 @@ def _log_rsu_forensic(tick_count: int, rsu) -> None:
 def run_scenario(scenario_raw: dict, params: dict):
     settings = get_settings()
 
-    # Cleanup targets, defaulted before anything that can raise. If CARLA
-    # connect, config compilation, or actor spawning fails partway through,
-    # the finally block below still needs a consistent (possibly-empty)
-    # picture of what was actually created, rather than raising NameError
-    # on top of the original exception.
+
     forensic_log_handler = None
     forensic_log_file = "<unknown>"
     scenario_manager = None
@@ -287,21 +444,30 @@ def run_scenario(scenario_raw: dict, params: dict):
         client.set_timeout(settings.carla_timeout_seconds)
         log.info("CARLA server version: %s", client.get_server_version())
 
-        log.info("Loading map once via client: %s ...", map_name)
-        if xodr_path:
-            with open(xodr_path) as f:
-                client.generate_opendrive_world(f.read())
-        else:
-            client.load_world(map_name)
+        _reset_stale_sync_mode(client)
 
-        carla_map = client.get_world().get_map()
-        log.info("carla_map obtained: %s", carla_map.name)
+        def _load_map():
+            log.info("Loading map once via client: %s ...", map_name)
+            if xodr_path:
+                with open(xodr_path) as f:
+                    client.generate_opendrive_world(f.read())
+            else:
+                client.load_world(map_name)
+            loaded_map = client.get_world().get_map()
+            log.info("carla_map obtained: %s", loaded_map.name)
+            return loaded_map
+
+        carla_map = _run_with_timeout(
+            _load_map, settings.carla_setup_timeout_seconds, "map load"
+        )
 
         cav_world = CavWorld(apply_ml)
         scene_dict, pedestrian_list, config_overrides = _build_scene_dict(
             scenario_raw,
             carla_map=carla_map,
         )
+        _check_scenario_matches_map(scene_dict, carla_map)
+        _check_perception_requires_apply_ml(scene_dict, apply_ml)
         OmegaConf.update(scene_dict, "current_time", current_time, merge=False)
         config_overrides.append({
             "path": "current_time",
@@ -317,18 +483,46 @@ def run_scenario(scenario_raw: dict, params: dict):
         )
         log.info("OpenCDA configs saved: %s", run_output_dir)
 
-        scenario_manager = _make_scenario_manager(
-            scene_dict, apply_ml, xodr_path=None, map_name=None, cav_world=cav_world
+        wr = weather_report(scene_dict)
+        if wr["active"]:
+            log.info(
+                "Weather severity %.2f (raw=%s) -> detection_range x%.2f, "
+                "GNSS noise x%.2f for every CAV/RSU",
+                wr["severity"], wr["raw"],
+                wr["effect"]["detection_range_scale"],
+                wr["effect"]["gnss_noise_scale"],
+            )
+        else:
+            log.info(
+                "Weather (raw=%s) has no perception/localization effect "
+                "this run (severity 0.0 — cosmetic only)", wr["raw"],
+            )
+
+        scenario_manager = _run_with_timeout(
+            lambda: _make_scenario_manager(
+                scene_dict, apply_ml, xodr_path=None, map_name=None, cav_world=cav_world
+            ),
+            settings.carla_setup_timeout_seconds,
+            "ScenarioManager setup (apply_settings/set_weather)",
         )
         log.info("ScenarioManager ready | map loaded: %s", map_name)
 
         log.info("Spawning CAVs ...")
-        single_cav_list = scenario_manager.create_vehicle_manager(
-            application=["single"],
-            map_helper=map_api.spawn_helper_2lanefree if xodr_path else None,
+        single_cav_list = _run_with_timeout(
+            lambda: scenario_manager.create_vehicle_manager(
+                application=["single"],
+                map_helper=map_api.spawn_helper_2lanefree if xodr_path else None,
+            ),
+            settings.carla_setup_timeout_seconds,
+            "CAV spawning",
         )
         log.info("Spawned %d CAV(s)", len(single_cav_list))
         for i, cav in enumerate(single_cav_list):
+            if not cav.vehicle.is_alive:
+                log.error("CAV[%d] id=%d actor is not alive right after spawn "
+                          "(destroyed by collision/physics before first tick?)",
+                          i, cav.vehicle.id)
+                continue
             loc  = cav.vehicle.get_location()
             dest = (cav.agent.end_waypoint.transform.location
                     if hasattr(cav, "agent") and cav.agent
@@ -365,6 +559,7 @@ def run_scenario(scenario_raw: dict, params: dict):
             script_name=map_name,
             current_time=current_time,
             fixed_delta_seconds=float(scene_dict.world.fixed_delta_seconds),
+            weather_report=wr,
         )
 
         spectator = scenario_manager.world.get_spectator()
@@ -380,7 +575,6 @@ def run_scenario(scenario_raw: dict, params: dict):
 
             active_cavs = [c for c in single_cav_list if c.vehicle.id not in finished_ids]
 
-            # CAV updates consume RSU detections from the current tick.
             for rsu in rsu_list:
                 try:
                     rsu.update_info()
@@ -388,13 +582,7 @@ def run_scenario(scenario_raw: dict, params: dict):
                 except Exception as _rsu_err:
                     log.warning("RSU id=%d update_info failed: %s", rsu.rid, _rsu_err)
 
-            # Pedestrian V2X updates -- position/speed only (no
-            # perception, see PedestrianManager's docstring). Same
-            # per-actor isolation as RSUs: one pedestrian's walker
-            # actor going away mid-run (get_ego_pos returning None,
-            # handled inside update_info) shouldn't need this, but an
-            # unexpected error here still shouldn't take down the tick
-            # loop for the rest of the pedestrians or the CAVs after them.
+
             for pedestrian in spawned_pedestrians:
                 try:
                     pedestrian.update_info()
@@ -421,7 +609,6 @@ def run_scenario(scenario_raw: dict, params: dict):
             for cav in active_cavs:
                 loc = cav.vehicle.get_location()
 
-                # Projection handles junction geometry; distance rejects off-road poses.
                 _wp = scenario_manager.carla_map.get_waypoint(
                     loc,
                     project_to_road=True,
@@ -494,6 +681,9 @@ def run_scenario(scenario_raw: dict, params: dict):
             tick_count += 1
 
             if tick_count % log_interval == 0:
+                progress = params.get("on_progress")
+                if callable(progress):
+                    progress(tick_count, max_ticks)
                 log.info("Progress: tick %d / %d (%.0f%%) | finished %d/%d",
                          tick_count, max_ticks,
                          100 * tick_count / max_ticks,
@@ -510,7 +700,7 @@ def run_scenario(scenario_raw: dict, params: dict):
             stop_reason = "stop_event"
         log.info("Simulation loop ended after %d ticks (reason: %s)", tick_count, stop_reason)
 
-    except Exception as e:
+    except BaseException as e:
         log.exception("Exception in simulation loop at tick %d: %s", tick_count, e)
         raise
 
@@ -555,3 +745,5 @@ def run_scenario(scenario_raw: dict, params: dict):
         log.info("=== run_scenario END | map=%s ticks=%d ===", map_name, tick_count)
         log.info("Per-run forensic log saved at: %s", forensic_log_file)
         remove_run_file_handler(forensic_log_handler)
+
+    return {"tick": tick_count, "max_ticks": max_ticks, "partial": stop_reason == "stop_event"}

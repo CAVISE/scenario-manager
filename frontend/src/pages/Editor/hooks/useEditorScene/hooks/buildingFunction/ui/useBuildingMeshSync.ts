@@ -32,12 +32,15 @@ export function useBuildingMeshSync(): void {
       const currentBuildings = useEditorStore.getState().buildings;
       const buildingIds = new Set(currentBuildings.map((b) => b.id));
 
+      let structuralChange = false;
+
       buildingMeshesRef.current = buildingMeshesRef.current.filter((mesh) => {
         if (buildingIds.has(mesh.userData.id)) return true;
         if (attached === mesh) tc?.detach();
         disposeMesh(mesh);
         scene.remove(mesh);
         lastSyncedBuildingsRef.current.delete(mesh.userData.id);
+        structuralChange = true;
         return false;
       });
 
@@ -68,9 +71,10 @@ export function useBuildingMeshSync(): void {
 
         buildingMeshesRef.current.push(mesh);
         lastSyncedBuildingsRef.current.set(building.id, building);
+        structuralChange = true;
       });
 
-      updateSceneGraph();
+      if (structuralChange) updateSceneGraph();
     };
 
     trySync();

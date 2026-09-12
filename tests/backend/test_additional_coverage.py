@@ -13,7 +13,10 @@ def test_upload_scenario_without_scenario_id(scenario_client, db_session):
 
     assert response.status_code == 200
     assert response.json()["status"] == "success"
-    assert db_session.scalar(select(Scenario.scenario_id)) is None
+    generated_id = response.json()["scenario_id"]
+    assert generated_id
+    assert db_session.scalar(select(Scenario.scenario_id)) == generated_id
+    assert scenario_client.get(f"/api/load_scenario/{generated_id}").status_code == 200
 
 def test_update_scenario_with_none_fields(scenario_client, db_session):
     scenario = Scenario(

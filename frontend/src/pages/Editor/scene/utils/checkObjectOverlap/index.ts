@@ -1,9 +1,10 @@
-import { checkObjectOverlap, getCorners } from './ui/checkObjectOverlap';
+import { checkObjectOverlap } from './ui/checkObjectOverlap';
 import type {
   Footprint2D,
   OverlapCheckResult,
+  Vec2,
 } from './types/checkObjectOverlapTypes';
-import type { Vec2 } from './ui/checkObjectOverlap';
+import { getCorners } from './utils/checkObjectOverlap.utils';
 
 export { checkObjectOverlap, getCorners };
 export type { Footprint2D, OverlapCheckResult, Vec2 };

@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   test: {
+    server: { deps: { inline: ['@mui/x-tree-view'] } },
     environment: 'jsdom',
     globals: true,
     clearMocks: true,

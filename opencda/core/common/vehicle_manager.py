@@ -6,6 +6,7 @@ Basic class of CAV
 # License: TDG-Attribution-NonCommercial-NoDistrib
 
 import uuid
+import weakref
 
 from opencda.core.actuation.control_manager \
     import ControlManager
@@ -88,6 +89,14 @@ class VehicleManager(object):
         self.vid = str(uuid.uuid1())
         self.vehicle = vehicle
         self.carla_map = carla_map
+        # Weak ref, same pattern as V2XManager/SafetyManager/PerceptionManager/
+        # PlatooningManager below -- avoids a reference cycle with CavWorld,
+        # which holds a strong reference back to this VehicleManager via
+        # update_vehicle_manager() at the end of this __init__. Needed here
+        # (not just on the sub-managers) because rsu_merge_history below
+        # timestamps its per-tick entries against cav_world.global_clock
+        # directly from VehicleManager.update_info().
+        self.cav_world = weakref.ref(cav_world)()
 
         # retrieve the configure for different modules
         sensing_config = config_yaml['sensing']

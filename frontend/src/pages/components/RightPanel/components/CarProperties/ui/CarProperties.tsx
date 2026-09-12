@@ -22,11 +22,17 @@ import {
   DEFAULT_CAR_COLOR,
 } from '@/shared/styles/panelStyles';
 import { numInputSlot } from '@right-panel/types/PanelTypes';
+import { usePropertiesMode } from '../../../context/PropertiesModeContext';
 
-export default function CarProperties({ car, onDelete }: CarPropertiesProps) {
+export default function CarProperties({
+  car,
+  carLidars: carLidarsProp,
+  onDelete,
+}: CarPropertiesProps) {
   const updateCar = useEditorStore((s) => s.updateCar);
+  const propertiesMode = usePropertiesMode();
   const lidars = useEditorStore((s) => s.lidars);
-  const carLidars = lidars.filter((l) => l.carId === car.id);
+  const carLidars = carLidarsProp ?? lidars.filter((l) => l.carId === car.id);
 
   return (
     <Stack spacing={2}>
@@ -108,12 +114,14 @@ export default function CarProperties({ car, onDelete }: CarPropertiesProps) {
         </Typography>
       </FormControl>
 
-      <CarOpenCDASection car={car} />
-      <CarOpenCDARareSection car={car} />
-
-      <Divider />
-
-      <CarLidarList carId={car.id} lidars={carLidars} />
+      {propertiesMode === 'advanced' && (
+        <>
+          <CarOpenCDASection car={car} />
+          <CarOpenCDARareSection car={car} />
+          <Divider />
+          <CarLidarList carId={car.id} lidars={carLidars} />
+        </>
+      )}
 
       <Button color="error" variant="outlined" onClick={onDelete}>
         Delete car

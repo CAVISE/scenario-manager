@@ -261,6 +261,19 @@ export type ErrorLogEntry = {
   context?: string;
 };
 
+export type SimulationPhase = 'idle' | 'running' | 'finished' | 'error';
+
+export type SimulationSession = {
+  phase: SimulationPhase;
+  runId: string | null;
+  status: string | null;
+  error: string | null;
+  startedAt: number | null;
+  tick?: number;
+  maxTicks?: number;
+  partial?: boolean;
+};
+
 export type EditorState = {
   cars: Car[];
   RSUs: RSU[];
@@ -268,21 +281,27 @@ export type EditorState = {
   points: Point[];
   buildings: Building[];
   error: Error | null;
-  selectedId: string | null;
+  simulationSession: SimulationSession;
+  selectedIds: string[];
   isBuildingMode: boolean;
   routes: RouteNode;
   simConfig: SimulationConfig;
   Scenario: Scenario;
+
+  sceneExplicitlyCleared: boolean;
+  setSceneExplicitlyCleared: (value: boolean) => void;
   pedestrians: Pedestrian[];
   isPanelOpen: boolean;
   setError: (err: Error | null) => void;
   errorLog: ErrorLogEntry[];
   logError: (entry: Omit<ErrorLogEntry, 'id' | 'timestamp'>) => void;
   clearErrorLog: () => void;
+  updateSimulationSession: (patch: Partial<SimulationSession>) => void;
+  resetSimulationSession: () => void;
   setChangePanelMode: () => void;
   setBuildingMode: (value: boolean) => void;
-  removeSelectedId: () => void;
-  selectedObject: SelectedObject | null;
+  selectedObjects: SelectedObject[];
+  clearSelection: () => void;
   updateSimConfig: (props: Partial<SimulationConfig>) => void;
   updateSimConfigOmnet: (props: Partial<SimulationConfig['omnet']>) => void;
   updateSimConfigArtery: (props: Partial<SimulationConfig['artery']>) => void;
@@ -338,7 +357,8 @@ export type EditorState = {
     props: Partial<Omit<Point, 'id' | 'carId'>>
   ) => void;
 
-  selectObject: (obj: SelectedObject | null) => void;
+  selectObjects: (objs: SelectedObject[]) => void;
+  toggleObjectSelection: (obj: SelectedObject) => void;
   addBuilding: (x: number, y: number, z: number) => string;
   addBuildingsBatch: (buildings: Omit<Building, 'id'>[]) => string[];
   updateBuilding: (id: string, props: Partial<Omit<Building, 'id'>>) => void;
@@ -356,7 +376,7 @@ export type EditorState = {
   historyCursor: number;
 
   isApplyingHistory: boolean;
-  pushHistoryEntry: (entry: Omit<HistoryEntry, 'id' | 'timestamp'>) => void;
+  pushHistoryEntry: (entry: Omit<HistoryEntry, 'id' | 'timestamp'>) => string;
   undo: () => boolean;
   redo: () => boolean;
   canUndo: () => boolean;

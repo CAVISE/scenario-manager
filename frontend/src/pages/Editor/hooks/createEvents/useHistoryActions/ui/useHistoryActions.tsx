@@ -1,11 +1,12 @@
 import { useCallback } from 'react';
 import { useEditorStore } from '@/store';
 import { useHooks, useEditorRefs } from '@editor/context';
+import { flushPendingHistory } from '../../createHistoryTracker/ui/createHistoryTracker';
 
 export function useHistoryActions() {
   const { updateSceneGraph } = useHooks();
   const { transformControlsRef } = useEditorRefs();
-  const onSelectObject = useEditorStore((s) => s.selectObject);
+  const onSelectObjects = useEditorStore((s) => s.selectObjects);
 
   const canUndo = useEditorStore((s) => s.historyCursor > 0);
   const canRedo = useEditorStore(
@@ -14,31 +15,31 @@ export function useHistoryActions() {
 
   const withSceneRefresh = useCallback(
     (canApply: boolean, run: () => void) => {
+      if (useEditorStore.getState().simulationSession.phase === 'running')
+        return false;
       if (!canApply) return false;
       transformControlsRef.current?.detach();
-      onSelectObject(null);
+      onSelectObjects([]);
       run();
       updateSceneGraph();
       return true;
     },
-    [transformControlsRef, onSelectObject, updateSceneGraph]
+    [transformControlsRef, onSelectObjects, updateSceneGraph]
   );
 
-  const undo = useCallback(
-    () =>
-      withSceneRefresh(canUndo, () => {
-        useEditorStore.getState().undo();
-      }),
-    [withSceneRefresh, canUndo]
-  );
+  const undo = useCallback(() => {
+    flushPendingHistory();
+    return withSceneRefresh(useEditorStore.getState().canUndo(), () => {
+      useEditorStore.getState().undo();
+    });
+  }, [withSceneRefresh]);
 
-  const redo = useCallback(
-    () =>
-      withSceneRefresh(canRedo, () => {
-        useEditorStore.getState().redo();
-      }),
-    [withSceneRefresh, canRedo]
-  );
+  const redo = useCallback(() => {
+    flushPendingHistory();
+    return withSceneRefresh(useEditorStore.getState().canRedo(), () => {
+      useEditorStore.getState().redo();
+    });
+  }, [withSceneRefresh]);
 
   return { undo, redo, canUndo, canRedo };
 }

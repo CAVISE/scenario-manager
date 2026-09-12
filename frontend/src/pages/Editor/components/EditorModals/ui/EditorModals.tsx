@@ -53,12 +53,18 @@ import {
 export default function EditorModals() {
   const [telemetryModalOpen, setTelemetryModalOpen] = useState(false);
   const [simulationConfirmOpen, setSimulationConfirmOpen] = useState(false);
-  const [mapPickerOpen, setMapPickerOpen] = useState(false);
+  const [mapPickerOpen, setMapPickerOpen] = useState(
+    () => new URLSearchParams(window.location.search).get('mapPicker') === '1'
+  );
   const [simulationError, setSimulationError] = useState<string | null>(null);
   const [mapPickerError, setMapPickerError] = useState<string | null>(null);
   const [loadingMap, setLoadingMap] = useState<string | null>(null);
   const startSimulationMutation = useStartSimulationMutation();
   const updateSimConfigCarla = useEditorStore((s) => s.updateSimConfigCarla);
+  const setSceneExplicitlyCleared = useEditorStore(
+    (s) => s.setSceneExplicitlyCleared
+  );
+  const updateScenario = useEditorStore((s) => s.updateScenario);
   const { loadFile } = useHooks();
   const { odrMapRef } = useEditorRefs();
 
@@ -87,6 +93,10 @@ export default function EditorModals() {
         updateSimConfigCarla({ map: mapName });
         clearLoadedSumoNetwork();
         loadFile(xodrText, true);
+
+        updateScenario({ id: '' });
+
+        setSceneExplicitlyCleared(true);
         setMapPickerOpen(false);
       } catch (err) {
         console.error(err);
@@ -97,7 +107,7 @@ export default function EditorModals() {
         setLoadingMap(null);
       }
     },
-    [loadFile, updateSimConfigCarla]
+    [loadFile, updateSimConfigCarla, setSceneExplicitlyCleared, updateScenario]
   );
 
   const handleStart = useCallback(async () => {

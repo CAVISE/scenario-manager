@@ -1,0 +1,143 @@
+.editor-navigation {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 120;
+  width: var(--editor-nav-width, 92px);
+  background: #102c45;
+  color: #e5eff9;
+  border-right: 1px solid #25415b;
+}
+
+.editor-navigation-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 20px 8px 12px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.editor-navigation-brand {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding-bottom: 28px;
+}
+
+.editor-navigation-mark {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #2765e5;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 750;
+  letter-spacing: -0.5px;
+}
+
+.editor-navigation-brand-name {
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: center;
+  color: #bacfe3;
+}
+
+.editor-navigation .editor-navigation-tabs {
+  min-width: 0;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.editor-navigation .MuiTabs-flexContainer {
+  gap: 8px;
+}
+
+.editor-navigation .MuiTabs-indicator {
+  display: none;
+}
+
+.editor-navigation .editor-navigation-tab {
+  min-width: 0;
+  min-height: 72px;
+  padding: 10px 2px;
+  border-radius: 9px;
+  color: #b3c9de;
+  font:
+    500 12px/1.4 'Segoe UI',
+    sans-serif;
+  text-transform: none;
+  opacity: 1;
+  transition:
+    background-color 150ms,
+    color 150ms;
+
+  svg {
+    width: 24px;
+    height: 24px;
+    margin-bottom: 8px;
+  }
+
+  &:hover {
+    background: #1d3d59;
+    color: #fff;
+  }
+
+  &.Mui-selected {
+    background: #244b76;
+    color: #fff;
+    box-shadow: inset 3px 0 #75aaff;
+  }
+}
+
+.editor-navigation-footer {
+  display: grid;
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+.editor-navigation-footer-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-height: 62px;
+  padding: 8px 2px;
+  border-radius: 8px;
+  color: #b3c9de;
+  font-size: 12px;
+  text-decoration: none;
+
+  &:hover,
+  &.active {
+    color: #fff;
+    background: #1d3d59;
+  }
+}
+
+.editor-navigation-footer-icon {
+  display: flex;
+  font-size: 22px;
+}
+
+@media (width <= 600px) {
+  .editor-navigation-inner {
+    padding: 16px 4px 8px;
+  }
+
+  .editor-navigation-brand-name {
+    display: none;
+  }
+
+  .editor-navigation .editor-navigation-tab {
+    min-height: 64px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .editor-navigation-footer-link {
+    min-height: 58px;
+  }
+}

@@ -1,89 +1,22 @@
-import { useEffect, useRef, useState } from 'react';
-import * as THREE from 'three';
-import {
-  CoordinateWidgetActiveStyles,
-  CoordinatesWidgetDeactiveStyles,
-} from '../types/CoordinateWidgetTypes';
-import { GROUND_PLANE } from '../types/CoordinateWidgetTypes';
-import { editorToCarla } from '@/helpers/coordinateTransform';
 import { useEditorRefs } from '@editor/context';
-import { Vec3 } from '@editor/types/editorTypes';
+import { CoordinatesDisplay } from '../components/CoordinatesDisplay';
+import { NoCoordinates } from '../components/NoCoordinates';
+import { WidgetContainer } from '../components/WidgetContainer';
+import { useCarlaOffset } from '../hooks/useCarlaOffset';
+import { useCoordinatesTracking } from '../hooks/useCoordinatesTracking';
 
 export function CoordinatesWidget() {
-  const [coords, setCoords] = useState<Vec3 | null>(null);
-  const [onMap, setOnMap] = useState(false);
-  const raycaster = useRef(new THREE.Raycaster());
-  const mouse = useRef(new THREE.Vector2());
-  const planeTarget = useRef(new THREE.Vector3());
-  const { cameraRef, roadMeshRef, odrMapRef } = useEditorRefs();
-  useEffect(() => {
-    const onMouseMove = (e: MouseEvent) => {
-      mouse.current.x = (e.clientX / window.innerWidth) * 2 - 1;
-      mouse.current.y = -(e.clientY / window.innerHeight) * 2 + 1;
-
-      const camera = cameraRef.current;
-      const road = roadMeshRef.current;
-      if (!camera) return;
-
-      raycaster.current.setFromCamera(mouse.current, camera);
-
-      if (road) {
-        const hits = raycaster.current.intersectObject(road, true);
-        if (hits.length > 0) {
-          const p = hits[0].point;
-          setCoords({ x: p.x, y: p.y, z: p.z });
-          setOnMap(true);
-          return;
-        }
-      }
-
-      if (
-        raycaster.current.ray.intersectPlane(GROUND_PLANE, planeTarget.current)
-      ) {
-        const p = planeTarget.current;
-        setCoords({ x: p.x, y: p.y, z: 0 });
-        setOnMap(false);
-      }
-    };
-
-    window.addEventListener('mousemove', onMouseMove);
-    return () => window.removeEventListener('mousemove', onMouseMove);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { cameraRef, roadMeshRef } = useEditorRefs();
+  const { coords, onMap } = useCoordinatesTracking({ cameraRef, roadMeshRef });
+  const offset = useCarlaOffset();
 
   return (
-    <div
-      style={
-        onMap ? CoordinateWidgetActiveStyles : CoordinatesWidgetDeactiveStyles
-      }
-    >
+    <WidgetContainer onMap={onMap}>
       {coords ? (
-        <>
-          Editor X <b>{coords.x.toFixed(2)}</b> &nbsp; Y{' '}
-          <b>{coords.y.toFixed(2)}</b> &nbsp; Z <b>{coords.z.toFixed(2)}</b>
-          {onMap && odrMapRef.current && (
-            <>
-              {' '}
-              | CARLA X{' '}
-              <b>
-                {editorToCarla(coords.x, coords.y, coords.z, {
-                  x: odrMapRef.current.x_offs,
-                  y: odrMapRef.current.y_offs,
-                }).x.toFixed(2)}
-              </b>{' '}
-              Y{' '}
-              <b>
-                {editorToCarla(coords.x, coords.y, coords.z, {
-                  x: odrMapRef.current.x_offs,
-                  y: odrMapRef.current.y_offs,
-                }).y.toFixed(2)}
-              </b>
-            </>
-          )}
-        </>
+        <CoordinatesDisplay coords={coords} onMap={onMap} offset={offset} />
       ) : (
-        <span style={{ opacity: 0.5 }}>move cursor over map</span>
+        <NoCoordinates />
       )}
-    </div>
+    </WidgetContainer>
   );
 }

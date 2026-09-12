@@ -39,6 +39,8 @@ import {
   Point,
 } from '@/store/types/useEditorStoreTypes';
 import { LoadScenarioOptions } from '../types/scenario.load.handlerTypes';
+import { toCarlaMapNameFromXodr } from '@sim-config/tabs/ui/carla/utils/carlaUtils';
+import { setStoredXodrName } from '@editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
 
 export const handleLoad = async ({
   hasId,
@@ -66,6 +68,14 @@ export const handleLoad = async ({
       file_: data.file_ ?? null,
     });
     const xodr = data.file_ ?? (data.scenario as unknown as Scenario)?.file_;
+
+    const resolvedMap =
+      data.map ||
+      (xodr && !isOpenDrive(xodr) ? toCarlaMapNameFromXodr(xodr) : null);
+    if (resolvedMap) {
+      s.updateSimConfigCarla({ map: resolvedMap });
+      setStoredXodrName(resolvedMap);
+    }
     if (xodr) {
       const xodrText = isOpenDrive(xodr) ? xodr : await fetchXodrText(xodr);
 
@@ -250,42 +260,34 @@ export const handleLoad = async ({
 
 export const handleCreate = async (
   setNotice: (value: string) => void,
-  createMutation: ReturnType<typeof useScenarioCreateMutation>,
-  scenarioIdInput = '',
-  onIdResolved?: (id: string) => void
-) => {
+  createMutation: ReturnType<typeof useScenarioCreateMutation>
+): Promise<boolean> => {
   try {
     const payload = buildScenarioPayload();
-    const trimmedId = scenarioIdInput.trim();
 
     const scenarioName = payload.name_of_scenario ?? payload.scenario_name;
     if (!scenarioName || !scenarioName.trim()) {
       setNotice('Scenario name is required.');
-      return;
+      return false;
     }
 
     const data = await createMutation.mutateAsync({
-      payload: {
-        ...payload,
-        scenario_id: trimmedId || payload.scenario_id,
-      },
-      scenarioIdInput: trimmedId,
+      payload,
+      scenarioIdInput: payload.scenario_id ?? '',
     });
 
-    const resolvedId =
-      trimmedId ||
-      payload.scenario_id?.trim() ||
-      data?.scenario_id?.trim() ||
-      '';
+    const resolvedId = data?.scenario_id?.trim() || '';
 
     if (resolvedId) {
       useEditorStore.getState().updateScenario({ id: resolvedId });
-      onIdResolved?.(resolvedId);
     }
+    useEditorStore.getState().setSceneExplicitlyCleared(false);
     setNotice('Scenario saved.');
+    return true;
   } catch (err) {
     console.error(err);
     setNotice(await getApiErrorMessage(err, 'Failed to save scenario.'));
+    return false;
   }
 };
 
@@ -294,24 +296,32 @@ export const handlePatch = async (
   scenarioIdInput: string,
   hasId: boolean,
   patchMutation: ReturnType<typeof useScenarioPatchMutation>
-) => {
-  if (!hasId) return;
+): Promise<boolean> => {
+  if (!hasId) return false;
   try {
     const id = scenarioIdInput.trim();
     const payload = buildScenarioPayload();
     const validation = validateUpdatePayload(id, payload);
     if (!validation.ok) {
       setNotice(validation.message);
-      return;
+      return false;
     }
-    await patchMutation.mutateAsync({
+    const result = await patchMutation.mutateAsync({
       id,
       payload,
     });
-    setNotice('The scenario has been updated.');
+
+    useEditorStore.getState().setSceneExplicitlyCleared(false);
+    setNotice(
+      result?.warning
+        ? `The scenario has been updated. ${result.warning}`
+        : 'The scenario has been updated.'
+    );
+    return true;
   } catch (err) {
     console.error(err);
     setNotice(await getApiErrorMessage(err, 'Failed to update the scenario.'));
+    return false;
   }
 };
 
@@ -383,10 +393,32 @@ export const handleRunSimulation = async (
     return;
   }
 
+  const updateSimulationSession =
+    useEditorStore.getState().updateSimulationSession;
+  if (typeof updateSimulationSession === 'function') {
+    updateSimulationSession({
+      phase: 'running',
+      runId: null,
+      status: 'running',
+      error: null,
+      startedAt: Date.now(),
+      tick: 0,
+      maxTicks: 0,
+      partial: false,
+    });
+  }
+
   startMutation.mutate(payload, {
     onSuccess: () => setNotice('The simulation has started.'),
     onError: async (err) => {
       console.error(err);
+      if (typeof updateSimulationSession === 'function') {
+        updateSimulationSession({
+          phase: 'error',
+          status: 'error',
+          error: await getApiErrorMessage(err, 'Failed to start simulation.'),
+        });
+      }
       setNotice(await getApiErrorMessage(err, 'Failed to start simulation.'));
     },
   });

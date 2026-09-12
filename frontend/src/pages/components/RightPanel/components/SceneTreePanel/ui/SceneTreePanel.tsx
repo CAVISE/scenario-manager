@@ -1,204 +1,321 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { SimpleTreeView } from '@mui/x-tree-view/SimpleTreeView';
 import { TreeItem } from '@mui/x-tree-view/TreeItem';
-import { css, extraCss } from '../types/SceneTreePanelTypes';
-import { countNodes, getTypeMeta } from '../types/SceneTreePanelTypes';
-import { syncPointsWithScene } from '../funcs/syncPointsWithScene';
-import { collectExpandedIds } from '../funcs/collectExpandedIds';
-import { handleSelect } from '../funcs/handleSelect';
-import { handleClearScene } from '../funcs/handleClearScene';
-import { handleDeleteNode } from '../funcs/handleDeleteNode';
-import { useEditorRefs, useHooks } from '@editor/context';
-import { SceneNode } from '@editor/hooks/useEditorEngine/useSceneGraph/types/useSceneGraphTypes';
-import { useAppToast } from '@/components/AppToast';
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Menu,
+  MenuItem,
+} from '@mui/material';
 import { useEditorStore } from '@/store';
+import { useWorkspacePreferences } from '@/store/ui/useWorkspacePreferences';
+import { resolveSelection } from '@/store/utils/sceneEntities';
+import { useEditorRefs } from '@editor/context';
+import { useAppToast } from '@/components/AppToast';
+import { deleteSelectedObjects } from '../../MultiSelectionProperties/model/batchActions';
+import {
+  buildNavigationTree,
+  filterNavigationTree,
+  getNavigationIds,
+  type NavigationNode,
+} from '../funcs/navigationTree';
+import { TYPE_META } from '../types/SceneTreePanelTypes';
+import '../styles/SceneTreePanel.scss';
+import { findObjectInScene } from '../funcs/sceneUtils';
+import * as THREE from 'three';
+import '../styles/navigation.scss';
+import { watchHistoryEntryValidity } from '../funcs/deletionSnapshots/ui/deletionSnapshots';
 
-export default function SceneTreePanel() {
-  const { sceneGraph, detachTransformControls } = useHooks();
+const typeKeys = {
+  car: 'Car',
+  rsu: 'RSU',
+  building: 'Building',
+  pedestrian: 'Pedestrian',
+  point: 'Point',
+  lidar: 'Lidar',
+};
+
+export default function SceneTreePanel({
+  readOnly = false,
+}: {
+  readOnly?: boolean;
+}) {
+  const state = useEditorStore(
+    useShallow((s) => ({
+      cars: s.cars,
+      RSUs: s.RSUs,
+      buildings: s.buildings,
+      pedestrians: s.pedestrians,
+      points: s.points,
+      lidars: s.lidars,
+      selectedIds: s.selectedIds,
+    }))
+  );
+  const { sceneRef } = useEditorRefs();
   const toast = useAppToast();
-  const onSelectObject = useEditorStore((s) => s.selectObject);
-  const selectedId = useEditorStore((s) => s.selectedId);
-  const selectObject = useEditorStore((s) => s.selectObject);
-  const [expandedItems, setExpandedItems] = useState<string[]>([]);
-  const {
-    sceneRef,
-    pointsArrRef,
-    pointsObjsRef,
-    rsuMeshesRef,
-    transformControlsRef,
-    carMeshesRef,
-    cubeCirclesRef,
-  } = useEditorRefs();
-  useEffect(() => {
-    syncPointsWithScene({ sceneRef, pointsArrRef });
-  }, [sceneRef, pointsArrRef]);
-
-  useEffect(() => {
-    collectExpandedIds({ sceneGraph, setExpandedItems });
-  }, [sceneGraph]);
-
-  const handle_select = useCallback(
-    (itemId: string) => {
-      handleSelect({
-        sceneRef,
-        transformControlsRef,
-        detachTransformControls,
-        itemId,
-        pointsArrRef,
-        selectObject,
-        onSelectObject,
-        carMeshesRef,
-      });
-    },
-    [
-      sceneRef,
-      transformControlsRef,
-      pointsArrRef,
-      carMeshesRef,
-      selectObject,
-      onSelectObject,
-      detachTransformControls,
-    ]
-  );
-
-  const handleDelete = useCallback(
-    (e: React.MouseEvent, id: string, name: string) => {
-      handleDeleteNode({
-        e,
-        id,
-        name,
-        sceneRef,
-        transformControlsRef,
-        detachTransformControls,
-        carMeshesRef,
-        cubeCirclesRef,
-        pointsArrRef,
-        pointsObjsRef,
-        rsuMeshesRef,
-        toast,
-      });
-    },
-    [
-      transformControlsRef,
-      carMeshesRef,
-      cubeCirclesRef,
-      pointsArrRef,
-      pointsObjsRef,
-      rsuMeshesRef,
-      sceneRef,
-      detachTransformControls,
-      toast,
-    ]
-  );
-
-  const handle_clear_scene = useCallback(() => {
-    handleClearScene({
-      transformControlsRef,
-      carMeshesRef,
-      cubeCirclesRef,
-      pointsArrRef,
-      pointsObjsRef,
-      rsuMeshesRef,
-      sceneRef,
-      detachTransformControls,
-      toast,
-    });
-  }, [
-    transformControlsRef,
-    carMeshesRef,
-    cubeCirclesRef,
-    pointsArrRef,
-    pointsObjsRef,
-    rsuMeshesRef,
-    sceneRef,
-    detachTransformControls,
-    toast,
+  const [query, setQuery] = useState('');
+  const [expandedItems, setExpandedItems] = useState<string[]>([
+    'group:car',
+    'group:building',
+    'group:rsu',
+    'group:pedestrian',
+    'group:point',
+    'group:lidar',
   ]);
-
-  const renderTreeItem = useCallback(
-    (node: SceneNode): React.ReactNode => {
-      const meta = getTypeMeta(node.name);
-      const isSelected = node.id === selectedId;
-
-      return (
-        <TreeItem
-          key={node.id}
-          itemId={node.id}
-          label={
-            <div className="stp-node">
-              <div className="stp-node-left">
-                <span
-                  className="stp-node-dot"
-                  style={{ background: meta.color }}
-                />
-                <span className="stp-node-icon">{meta.icon}</span>
-                <span
-                  className={`stp-node-name ${isSelected ? 'selected' : ''}`}
-                >
-                  {node.name}
-                </span>
-              </div>
-              <div className="stp-node-right">
-                <span
-                  className="stp-node-badge"
-                  style={{ color: meta.color, background: `${meta.color}18` }}
-                >
-                  {meta.label}
-                </span>
-                <button
-                  className="stp-node-delete"
-                  onClick={(e) => handleDelete(e, node.id, node.name)}
-                  title="Delete"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-          }
-        >
-          {node.children?.map(renderTreeItem)}
-        </TreeItem>
-      );
-    },
-    [selectedId, handleDelete]
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+  const [clearOpen, setClearOpen] = useState(false);
+  const hoverHelper = useRef<THREE.BoxHelper | null>(null);
+  const tree = useMemo(() => buildNavigationTree(state), [state]);
+  const filtered = useMemo(
+    () => filterNavigationTree(tree, query),
+    [tree, query]
   );
+  const allIds = getNavigationIds(tree, true);
+  const visibleIds = getNavigationIds(filtered, true);
+  const clearHover = () => {
+    const helper = hoverHelper.current;
+    if (helper) {
+      helper.parent?.remove(helper);
+      helper.dispose();
+      hoverHelper.current = null;
+    }
+  };
+  useEffect(() => clearHover, []);
 
-  const total = sceneGraph ? countNodes(sceneGraph) - 1 : 0;
+  useEffect(() => {
+    const show = (event: Event) => {
+      const id = (event as CustomEvent<{ id: string }>).detail?.id;
+      if (!id) return;
+      setQuery('');
+      setExpandedItems(getNavigationIds(tree));
+      requestAnimationFrame(() => {
+        document
+          .querySelector<HTMLElement>(`[data-scene-id="${CSS.escape(id)}"]`)
+          ?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      });
+    };
+    window.addEventListener('editor-show-in-scene-graph', show);
+    return () => window.removeEventListener('editor-show-in-scene-graph', show);
+  }, [tree]);
+
+  const select = (ids: string[]) => {
+    const current = useEditorStore.getState();
+    current.selectObjects(resolveSelection(current, ids));
+  };
+  const renderNode = (node: NavigationNode) => {
+    const meta = node.kind ? TYPE_META[typeKeys[node.kind]] : null;
+    return (
+      <TreeItem
+        key={node.id}
+        itemId={node.id}
+        label={
+          <div
+            className="stp-node"
+            data-scene-id={node.id}
+            onMouseEnter={() => {
+              clearHover();
+              if (!node.kind || !sceneRef.current) return;
+              const object = findObjectInScene({ itemId: node.id, sceneRef });
+              if (object) {
+                const helper = new THREE.BoxHelper(object, 0x54b8e8);
+                helper.raycast = () => {};
+                sceneRef.current.add(helper);
+                hoverHelper.current = helper;
+              }
+            }}
+            onMouseLeave={clearHover}
+          >
+            <span className="stp-node-icon" aria-hidden="true">
+              {meta?.icon ?? '▤'}
+            </span>
+            <span className="stp-node-name">{node.name}</span>
+            {meta && (
+              <span className="stp-node-badge" style={{ color: meta.color }}>
+                {meta.label}
+              </span>
+            )}
+          </div>
+        }
+      >
+        {node.children?.map(renderNode)}
+      </TreeItem>
+    );
+  };
 
   return (
     <div className="stp-root">
-      <style>{css + extraCss}</style>
       <div className="stp-header">
         <span className="stp-header-label">Scene Graph</span>
         <span className="stp-header-count" data-testid="scene-graph-count">
-          {total} objects
+          {allIds.length} objects
         </span>
-        {total > 0 && (
-          <button className="stp-clear-btn" onClick={handle_clear_scene}>
-            Clear all
-          </button>
-        )}
+        <button
+          type="button"
+          className="stp-menu-button"
+          aria-label="Scene actions"
+          aria-haspopup="menu"
+          onClick={(event) => setMenuAnchor(event.currentTarget)}
+        >
+          ⋯
+        </button>
       </div>
-
-      {sceneGraph && total > 0 ? (
+      <div className="stp-search">
+        <input
+          type="search"
+          aria-label="Search scene objects"
+          placeholder="Search objects…"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          onKeyDown={(event) => event.stopPropagation()}
+        />
+      </div>
+      {allIds.length ? (
         <div className="stp-tree">
-          <SimpleTreeView
-            expandedItems={expandedItems}
-            onExpandedItemsChange={(_, items) => setExpandedItems(items)}
-            selectedItems={selectedId ?? ''}
-            onSelectedItemsChange={(_, itemId) => {
-              if (itemId) handle_select(itemId);
-            }}
-          >
-            {sceneGraph.children?.map(renderTreeItem)}
-          </SimpleTreeView>
+          {filtered.length ? (
+            <SimpleTreeView
+              multiSelect
+              expansionTrigger="iconContainer"
+              expandedItems={
+                query.trim() ? getNavigationIds(filtered) : expandedItems
+              }
+              onExpandedItemsChange={(_, ids) => setExpandedItems(ids)}
+              selectedItems={state.selectedIds}
+              onSelectedItemsChange={(_, ids) => {
+                const selected = resolveSelection(
+                  useEditorStore.getState(),
+                  ids
+                );
+                if (ids.length && !selected.length) return;
+                const hidden = query.trim()
+                  ? state.selectedIds.filter((id) => !visibleIds.includes(id))
+                  : [];
+                const nextIds = [
+                  ...new Set([...hidden, ...selected.map((item) => item.id!)]),
+                ];
+                select(nextIds);
+                if (
+                  nextIds.length === 1 &&
+                  useWorkspacePreferences.getState().focusOnSelection
+                )
+                  window.dispatchEvent(
+                    new CustomEvent('editor-focus-object', {
+                      detail: { id: nextIds[0] },
+                    })
+                  );
+              }}
+            >
+              {filtered.map(renderNode)}
+            </SimpleTreeView>
+          ) : (
+            <p className="stp-empty-text">No matching objects</p>
+          )}
         </div>
       ) : (
         <div className="stp-empty">
-          <div className="stp-empty-icon">⬡</div>
-          <span className="stp-empty-text">scene is empty</span>
+          <span className="stp-empty-text">
+            Add an object to start building your scenario.
+          </span>
         </div>
       )}
+      <p className="stp-selection-hint">
+        {state.selectedIds.length} selected · Ctrl/⌘ toggles · Shift selects a
+        range
+      </p>
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={() => setMenuAnchor(null)}
+      >
+        <MenuItem
+          disabled={!visibleIds.length}
+          onClick={() => {
+            select(visibleIds);
+            setMenuAnchor(null);
+          }}
+        >
+          Select all shown
+        </MenuItem>
+        <MenuItem
+          disabled={!state.selectedIds.length}
+          onClick={() => {
+            select([]);
+            setMenuAnchor(null);
+          }}
+        >
+          Clear selection
+        </MenuItem>
+        <MenuItem
+          disabled={readOnly || !state.selectedIds.length}
+          onClick={() => {
+            setMenuAnchor(null);
+            const result = deleteSelectedObjects();
+            if (result) {
+              toast.undo(
+                `${result.count} objects deleted`,
+                () => useEditorStore.getState().undo(),
+                undefined,
+                watchHistoryEntryValidity(result.entryId)
+              );
+            }
+          }}
+        >
+          Delete selected
+        </MenuItem>
+        <MenuItem
+          disabled={readOnly || !allIds.length}
+          onClick={() => {
+            setMenuAnchor(null);
+            setClearOpen(true);
+          }}
+        >
+          Clear scene…
+        </MenuItem>
+      </Menu>
+      <Dialog
+        open={clearOpen}
+        onClose={() => setClearOpen(false)}
+        aria-labelledby="clear-scene-title"
+      >
+        <DialogTitle id="clear-scene-title">Clear scene?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Remove all {allIds.length} objects and their routes and sensors? You
+            can restore them with Undo.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setClearOpen(false)}>Cancel</Button>
+          <Button
+            color="error"
+            disabled={readOnly}
+            onClick={() => {
+              if (
+                readOnly ||
+                useEditorStore.getState().simulationSession.phase === 'running'
+              )
+                return;
+              select(allIds);
+              const result = deleteSelectedObjects();
+              setClearOpen(false);
+              if (result) {
+                toast.undo(
+                  'Scene cleared',
+                  () => useEditorStore.getState().undo(),
+                  undefined,
+                  watchHistoryEntryValidity(result.entryId)
+                );
+              }
+            }}
+          >
+            Clear scene
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }

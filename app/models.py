@@ -14,6 +14,7 @@ class Scenario(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     scenario_id: Mapped[str | None] = mapped_column(String, unique=True)
     name_of_scenario: Mapped[str] = mapped_column(String, nullable=False)
+    map: Mapped[str | None] = mapped_column(String)
     scenario_text: Mapped[str | None] = mapped_column(Text)
     preview: Mapped[str | None] = mapped_column(Text)
     annotation: Mapped[str | None] = mapped_column(Text)

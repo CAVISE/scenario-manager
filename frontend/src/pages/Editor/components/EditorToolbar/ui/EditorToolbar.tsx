@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import { Badge, IconButton, Tooltip } from '@mui/material';
-import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+import { Badge, Button, IconButton, Tooltip } from '@mui/material';
+import { SaveOutlined, AccountTreeOutlined } from '@mui/icons-material';
 import { Menu as MenuIcon } from '@mui/icons-material';
 import { Settings as SettingsIcon } from '@mui/icons-material';
 import { Download as DownloadIcon } from '@mui/icons-material';
@@ -13,7 +12,7 @@ import FileMenu from '../menus';
 import ExportMenu from '../menus/ExportMenu';
 import {
   EditorToolbarDivStyles,
-  EditorToolbarStyles,
+  EditorToolbarGroupEndStyles,
   PendingExport,
 } from '../types/EditorToolbarTypes';
 import { downloadFile } from '@editor/Generators/exporters';
@@ -24,6 +23,7 @@ import UploadScenariosModal from '../../UploadScenariosModal';
 import ExportDialog from '../dialogs';
 import ErrorLogModal from '../../ErrorLogModal';
 import SimConfigModal from '../../SimConfigModal';
+import type { EditorTab } from '../../EditorNavigation/types/EditorNavigationTypes';
 
 function sanitizeDownloadFilename(name: string, fallback: string): string {
   const t = name.trim() || fallback;
@@ -35,7 +35,23 @@ function sanitizeDownloadFilename(name: string, fallback: string): string {
   );
 }
 
-export const EditorToolbar = () => {
+export const EditorToolbar = ({
+  readOnly = false,
+  onWorkspaceChange,
+  onSave,
+  onToggleScene,
+  sceneGraphOpen = false,
+  showSceneToggle = false,
+  isSaving = false,
+}: {
+  readOnly?: boolean;
+  onWorkspaceChange: (tab: EditorTab) => void;
+  onSave: () => Promise<void>;
+  onToggleScene?: () => void;
+  sceneGraphOpen?: boolean;
+  showSceneToggle?: boolean;
+  isSaving?: boolean;
+}) => {
   const [fileMenuAnchor, setFileMenuAnchor] = useState<null | HTMLElement>(
     null
   );
@@ -50,7 +66,9 @@ export const EditorToolbar = () => {
     null
   );
   const [exportFilename, setExportFilename] = useState('');
+
   const { undo, redo, canUndo, canRedo } = useHistoryActions();
+
   const errorCount = useEditorStore((s) => s.errorLog.length);
 
   const openExportDialog = useCallback(
@@ -78,19 +96,28 @@ export const EditorToolbar = () => {
   };
 
   return (
-    <div style={EditorToolbarStyles}>
-      <div style={EditorToolbarDivStyles}>
-        <Tooltip title="Discard changes?">
-          <IconButton size="small" component={Link} to="/">
-            <ArrowBackIcon fontSize="small" />
+    <div className="editor-toolbar" aria-label="Scenario tools">
+      {showSceneToggle && (
+        <Tooltip
+          title={sceneGraphOpen ? 'Hide scene objects' : 'Show scene objects'}
+        >
+          <IconButton
+            aria-label="Toggle scene objects"
+            aria-expanded={sceneGraphOpen}
+            aria-controls="editor-scene-objects"
+            onClick={onToggleScene}
+            color={sceneGraphOpen ? 'primary' : 'default'}
+          >
+            <AccountTreeOutlined fontSize="small" />
           </IconButton>
         </Tooltip>
-      </div>
+      )}
 
-      <div style={EditorToolbarDivStyles}>
+      <div style={EditorToolbarGroupEndStyles}>
         <Tooltip title="Menu">
           <IconButton
             size="small"
+            aria-label="File menu"
             onClick={(e) => setFileMenuAnchor(e.currentTarget)}
           >
             <MenuIcon fontSize="small" />
@@ -100,45 +127,14 @@ export const EditorToolbar = () => {
           anchorEl={fileMenuAnchor}
           onClose={() => setFileMenuAnchor(null)}
           onUpload={() => setUploadModalOpen(true)}
+          readOnly={readOnly}
+          onSave={onSave}
+          onWorkspaceChange={onWorkspaceChange}
         />
-      </div>
-
-      <div style={EditorToolbarDivStyles}>
-        <Tooltip title="Undo (Ctrl+Z)">
-          <span>
-            <IconButton size="small" onClick={undo} disabled={!canUndo}>
-              <UndoIcon fontSize="small" />
-            </IconButton>
-          </span>
-        </Tooltip>
-        <Tooltip title="Redo (Ctrl+Shift+Z)">
-          <span>
-            <IconButton size="small" onClick={redo} disabled={!canRedo}>
-              <RedoIcon fontSize="small" />
-            </IconButton>
-          </span>
-        </Tooltip>
-      </div>
-
-      <div style={EditorToolbarDivStyles}>
-        <Tooltip title="Error log">
-          <IconButton size="small" onClick={() => setErrorLogOpen(true)}>
-            <Badge
-              badgeContent={errorCount}
-              color="error"
-              max={99}
-              overlap="circular"
-            >
-              <BugReportIcon fontSize="small" />
-            </Badge>
-          </IconButton>
-        </Tooltip>
-      </div>
-
-      <div style={EditorToolbarDivStyles}>
         <Tooltip title="Export config">
           <IconButton
             size="small"
+            aria-label="Export configuration"
             onClick={(e) => setExportMenuAnchor(e.currentTarget)}
           >
             <DownloadIcon fontSize="small" />
@@ -151,31 +147,93 @@ export const EditorToolbar = () => {
         />
       </div>
 
+      <div style={EditorToolbarGroupEndStyles}>
+        <Tooltip title="Undo (Ctrl+Z)">
+          <span>
+            <IconButton
+              size="small"
+              aria-label="Undo"
+              onClick={() => undo()}
+              disabled={readOnly || !canUndo}
+            >
+              <UndoIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
+        <Tooltip title="Redo (Ctrl+Shift+Z)">
+          <span>
+            <IconButton
+              size="small"
+              aria-label="Redo"
+              onClick={() => redo()}
+              disabled={readOnly || !canRedo}
+            >
+              <RedoIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
+      </div>
+
       <div style={EditorToolbarDivStyles}>
+        <Tooltip title="Error log">
+          <IconButton
+            aria-label="Error log"
+            size="small"
+            onClick={() => setErrorLogOpen(true)}
+          >
+            <Badge
+              badgeContent={errorCount}
+              color="error"
+              max={99}
+              overlap="circular"
+            >
+              <BugReportIcon fontSize="small" />
+            </Badge>
+          </IconButton>
+        </Tooltip>
         <Tooltip title="Simulation settings">
-          <IconButton size="small" onClick={() => setSimConfigOpen(true)}>
+          <IconButton
+            size="small"
+            aria-label="Simulation settings"
+            disabled={readOnly}
+            onClick={() => setSimConfigOpen(true)}
+          >
             <SettingsIcon fontSize="small" />
           </IconButton>
         </Tooltip>
-      </div>
-      <div style={EditorToolbarDivStyles}>
         <Tooltip title="Attack settings">
-          <IconButton size="small" onClick={() => setAttackConfigOpen(true)}>
+          <IconButton
+            size="small"
+            aria-label="Attack settings"
+            disabled={readOnly}
+            onClick={() => setAttackConfigOpen(true)}
+          >
             <SecurityIcon fontSize="small" />
           </IconButton>
         </Tooltip>
       </div>
 
+      <Button
+        className="editor-save-button"
+        variant="contained"
+        size="small"
+        startIcon={<SaveOutlined />}
+        disabled={readOnly}
+        onClick={onSave}
+      >
+        {isSaving ? 'Saving…' : 'Save'}
+      </Button>
+
       <UploadScenariosModal
-        open={uploadModalOpen}
+        open={uploadModalOpen && !readOnly}
         onClose={() => setUploadModalOpen(false)}
       />
       <SimConfigModal
-        open={simConfigOpen}
+        open={simConfigOpen && !readOnly}
         onClose={() => setSimConfigOpen(false)}
       />
       <AttackConfigModal
-        open={attackConfigOpen}
+        open={attackConfigOpen && !readOnly}
         onClose={() => setAttackConfigOpen(false)}
       />
       <ErrorLogModal

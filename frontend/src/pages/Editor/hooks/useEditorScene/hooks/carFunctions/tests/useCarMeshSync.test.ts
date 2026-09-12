@@ -31,8 +31,17 @@ let storeState: {
 
 vi.mock('@/store', () => ({
   useEditorStore: Object.assign(
-    (selector: (s: typeof storeState) => unknown) => selector(storeState),
-    { getState: () => storeState }
+    (selector: (s: typeof storeState & { selectedIds: string[] }) => unknown) =>
+      selector({
+        ...storeState,
+        selectedIds: storeState.selectedId ? [storeState.selectedId] : [],
+      }),
+    {
+      getState: () => ({
+        ...storeState,
+        selectedIds: storeState.selectedId ? [storeState.selectedId] : [],
+      }),
+    }
   ),
 }));
 
@@ -405,8 +414,17 @@ describe('useCarMeshSync', () => {
 });
 vi.mock('@/store', () => ({
   useEditorStore: Object.assign(
-    (selector: (s: typeof storeState) => unknown) => selector(storeState),
-    { getState: () => storeState }
+    (selector: (s: typeof storeState & { selectedIds: string[] }) => unknown) =>
+      selector({
+        ...storeState,
+        selectedIds: storeState.selectedId ? [storeState.selectedId] : [],
+      }),
+    {
+      getState: () => ({
+        ...storeState,
+        selectedIds: storeState.selectedId ? [storeState.selectedId] : [],
+      }),
+    }
   ),
 }));
 
@@ -556,8 +574,17 @@ vi.mock('../ui/useCarModel', () => ({
 
 vi.mock('@/store', () => ({
   useEditorStore: Object.assign(
-    (selector: (s: typeof storeState) => unknown) => selector(storeState),
-    { getState: () => storeState }
+    (selector: (s: typeof storeState & { selectedIds: string[] }) => unknown) =>
+      selector({
+        ...storeState,
+        selectedIds: storeState.selectedId ? [storeState.selectedId] : [],
+      }),
+    {
+      getState: () => ({
+        ...storeState,
+        selectedIds: storeState.selectedId ? [storeState.selectedId] : [],
+      }),
+    }
   ),
 }));
 

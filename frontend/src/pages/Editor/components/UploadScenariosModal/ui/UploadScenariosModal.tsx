@@ -11,37 +11,6 @@ import {
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
-import {
-  ModalContainer,
-  ModalHeader,
-  ScenarioCard,
-  uploadModalBoxStyles,
-  boxStyles,
-  imgStyles,
-  listContainerStyles,
-  ACCENT,
-  alertStyles,
-  backButtonStyles,
-  cardAnnotationEmptyStyles,
-  cardAnnotationStyles,
-  cardBodyStyles,
-  cardChevronStyles,
-  cardIdStyles,
-  cardThumbWrapStyles,
-  cardTitleStyles,
-  closeButtonStyles,
-  detailImagePlaceholderStyles,
-  detailImageStyles,
-  emptyStateStyles,
-  fieldStyles,
-  loadButtonStyles,
-  saveButtonStyles,
-  scenarioCardStyles,
-  titleStyles,
-  ModalContainerStyles,
-  UploadScenariosModalProps,
-} from '../types/UploadScenariosModalTypes';
-
 import { useNoticeWithToast } from '@/components/AppToast';
 import { getApiErrorMessageSync } from '@/api/errors';
 import { ScenarioListItem } from '@/api/types/IScenarioTypes';
@@ -51,7 +20,30 @@ import {
   useScenarioPatchMutation,
 } from '@editor/hooks/useApiHooks/useScenarioQueries';
 import { handleLoad } from '@right-panel/components/ScenarioControlWidget/Handlers';
-function previewSrc(preview: string | null): string | undefined {
+
+import {
+  ACCENT,
+  alertStyles,
+  backButtonStyles,
+  closeButtonStyles,
+  detailImagePlaceholderStyles,
+  detailImageStyles,
+  emptyStateStyles,
+  fieldStyles,
+  listContainerStyles,
+  loadButtonStyles,
+  ModalContainer,
+  ModalContainerStyles,
+  ModalHeader,
+  saveButtonStyles,
+  titleStyles,
+  uploadModalBoxStyles,
+  type UploadScenariosModalProps,
+} from '../types/UploadScenariosModalTypes';
+
+import ScenarioCard from '../components/ScenarioCard';
+
+const previewSrc = (preview: string | null): string | undefined => {
   if (!preview) return undefined;
   if (
     preview.startsWith('data:') ||
@@ -62,7 +54,7 @@ function previewSrc(preview: string | null): string | undefined {
     return preview;
   }
   return `data:image/png;base64,${preview}`;
-}
+};
 
 const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
   open,
@@ -76,6 +68,7 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
     defaultLevel: 'info',
   });
   const [loadingScene, setLoadingScene] = useState(false);
+
   const {
     data: scenarios = [],
     isLoading,
@@ -83,7 +76,9 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
     error,
     refetch,
   } = useScenariosListQuery(open);
+
   const patchScenarioMutation = useScenarioPatchMutation();
+  const { updateSceneGraph, loadFile, setStep } = useHooks();
 
   const handleSelectScenario = (scenario: ScenarioListItem) => {
     setSelectedScenario(scenario);
@@ -132,7 +127,7 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
     setNoticeWithToast,
     refetch,
   ]);
-  const { updateSceneGraph, loadFile, setStep } = useHooks();
+
   const handleLoadOnScene = useCallback(async () => {
     if (!selectedScenario?.scenario_id) return;
     setLoadingScene(true);
@@ -200,15 +195,15 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
           </IconButton>
         </ModalHeader>
 
-        {notice ? (
+        {notice && (
           <Alert severity="info" sx={alertStyles} onClose={handleClose}>
             {notice}
           </Alert>
-        ) : null}
+        )}
 
         {selectedScenario === null ? (
           <>
-            {isError ? (
+            {isError && (
               <Alert
                 severity="error"
                 sx={alertStyles}
@@ -224,100 +219,26 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
               >
                 {getApiErrorMessageSync(error, 'Failed to load scenario list')}
               </Alert>
-            ) : null}
+            )}
             {isLoading ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
                 <CircularProgress size={28} sx={{ color: ACCENT }} />
               </Box>
             ) : (
               <Box sx={listContainerStyles}>
-                {scenarios.length === 0 && !isLoading ? (
+                {scenarios.length === 0 && (
                   <Box sx={emptyStateStyles}>
                     <Typography sx={{ color: '#9AA1AC', fontSize: 14 }}>
                       No saved scenarios
                     </Typography>
                   </Box>
-                ) : null}
+                )}
                 {scenarios.map((scenario) => (
                   <ScenarioCard
                     key={scenario.scenario_id}
-                    onClick={() => handleSelectScenario(scenario)}
-                    sx={scenarioCardStyles}
-                  >
-                    <Box sx={cardThumbWrapStyles}>
-                      {previewSrc(scenario.preview) ? (
-                        <img
-                          src={previewSrc(scenario.preview)}
-                          alt={scenario.name}
-                          loading="lazy"
-                          style={{
-                            ...imgStyles,
-                            position: 'absolute',
-                            inset: 0,
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                          }}
-                        />
-                      ) : (
-                        <Box
-                          sx={{
-                            ...boxStyles,
-                            position: 'absolute',
-                            inset: 0,
-                            color: '#7A828D',
-                            fontSize: 13,
-                          }}
-                        >
-                          No preview
-                        </Box>
-                      )}
-                    </Box>
-                    <Box sx={cardBodyStyles}>
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'baseline',
-                          gap: 1,
-                          flexWrap: 'wrap',
-                        }}
-                      >
-                        <Typography
-                          variant="subtitle1"
-                          noWrap
-                          sx={cardTitleStyles}
-                          title={scenario.name}
-                        >
-                          {scenario.name}
-                        </Typography>
-                        <Typography variant="caption" sx={cardIdStyles} noWrap>
-                          {scenario.scenario_id}
-                        </Typography>
-                      </Box>
-                      {scenario.annotation ? (
-                        <Typography
-                          variant="body2"
-                          sx={cardAnnotationStyles}
-                          title={scenario.annotation}
-                        >
-                          {scenario.annotation}
-                        </Typography>
-                      ) : (
-                        <Typography
-                          variant="body2"
-                          sx={cardAnnotationEmptyStyles}
-                        >
-                          No description
-                        </Typography>
-                      )}
-                    </Box>
-                    <Box sx={cardChevronStyles}>
-                      <ArrowBackIcon
-                        fontSize="small"
-                        sx={{ transform: 'rotate(180deg)' }}
-                      />
-                    </Box>
-                  </ScenarioCard>
+                    scenario={scenario}
+                    onScenarioSelect={handleSelectScenario}
+                  />
                 ))}
               </Box>
             )}
@@ -335,7 +256,6 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
               <Box sx={detailImagePlaceholderStyles}>No preview</Box>
             )}
             <TextField
-              key={`scenario_id-${selectedScenario.scenario_id}`}
               label="ID"
               value={selectedScenario.scenario_id}
               InputProps={{ readOnly: true }}
@@ -344,7 +264,6 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
               sx={fieldStyles}
             />
             <TextField
-              key={`scenario_description-${selectedScenario.scenario_id}`}
               label="Description"
               placeholder="Enter scenario description"
               value={editedDescription}
@@ -381,4 +300,5 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
     </Modal>
   );
 };
+
 export default UploadScenariosModal;

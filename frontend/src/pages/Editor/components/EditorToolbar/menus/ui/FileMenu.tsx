@@ -5,23 +5,23 @@ import { PlayArrow as PlayArrowIcon } from '@mui/icons-material';
 import { Assessment as AssessmentIcon } from '@mui/icons-material';
 import { Upload as UploadIcon } from '@mui/icons-material';
 import { FileMenuProps, FolderIconStyles } from '../types/FileMenuTypes';
-import { useScenarioSave } from '@editor/hooks/useApiHooks/useScenarioSave';
 
 export default function FileMenu({
   anchorEl,
   onClose,
   onUpload,
+  readOnly,
+  onSave,
+  onWorkspaceChange,
 }: FileMenuProps) {
   const onOpenFile = () => {
     window.editorModals?.openMapPicker();
   };
-  const onSave = useScenarioSave();
-  const onOpenSimulationConfirm = () => window.editorModals?.openSimulation();
-  const onOpenTelemetryModal = () => window.editorModals?.openTelemetry();
 
   return (
     <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={onClose}>
       <MenuItem
+        disabled={readOnly}
         onClick={() => {
           onOpenFile();
           onClose();
@@ -30,6 +30,7 @@ export default function FileMenu({
         <FolderIcon fontSize="small" style={FolderIconStyles} /> Open...
       </MenuItem>
       <MenuItem
+        disabled={readOnly}
         onClick={() => {
           onSave();
           onClose();
@@ -40,7 +41,7 @@ export default function FileMenu({
       <Divider />
       <MenuItem
         onClick={() => {
-          onOpenSimulationConfirm();
+          onWorkspaceChange('simulation');
           onClose();
         }}
       >
@@ -49,7 +50,7 @@ export default function FileMenu({
       </MenuItem>
       <MenuItem
         onClick={() => {
-          onOpenTelemetryModal();
+          onWorkspaceChange('results');
           onClose();
         }}
       >
@@ -57,6 +58,7 @@ export default function FileMenu({
       </MenuItem>
       <Divider />
       <MenuItem
+        disabled={readOnly}
         onClick={() => {
           onUpload();
           onClose();

@@ -12,7 +12,11 @@ import { useEditorStore } from '@/store';
 import { useEffect } from 'react';
 import { useHooks } from '@editor/context';
 
-export default function SpeedDialTooltipOpen() {
+export default function SpeedDialTooltipOpen({
+  disabled = false,
+}: {
+  disabled?: boolean;
+}) {
   const {
     handleAddCube,
     handleAddPoints,
@@ -63,7 +67,13 @@ export default function SpeedDialTooltipOpen() {
   ];
 
   return (
-    <div ref={dialRef}>
+    <div
+      ref={dialRef}
+      style={{
+        pointerEvents: disabled ? 'none' : 'auto',
+        opacity: disabled ? 0.55 : 1,
+      }}
+    >
       <SpeedDial
         ariaLabel="SpeedDial tooltip example"
         sx={IButtStyles}

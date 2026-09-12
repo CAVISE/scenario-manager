@@ -72,11 +72,15 @@ def _build_fake_carla_module() -> types.ModuleType:
       self.g = g
       self.b = b
 
+  class FakeLaneType:
+    Driving = "Driving"
+
   carla.Client = FakeClient
   carla.Transform = FakeTransform
   carla.Location = FakeLocation
   carla.Rotation = FakeRotation
   carla.Color = FakeColor
+  carla.LaneType = FakeLaneType
   carla.WeatherParameters = types.SimpleNamespace(
     ClearNoon="ClearNoon",
     CloudyNoon="CloudyNoon",

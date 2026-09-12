@@ -1,0 +1,107 @@
+.batch-properties {
+  display: grid;
+  gap: 14px;
+  color: var(--workspace-text);
+  font-size: 14px;
+
+  .batch-help {
+    margin: 0;
+    color: var(--workspace-muted);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .batch-fields {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+    display: grid;
+    gap: 12px;
+  }
+
+  .batch-fields:disabled {
+    opacity: 0.6;
+  }
+
+  legend {
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+
+  .batch-field {
+    display: grid;
+    gap: 5px;
+  }
+
+  input,
+  select {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    padding: 8px;
+    border: 1px solid var(--workspace-border);
+    border-radius: 6px;
+    background: var(--workspace-bg);
+    color: var(--workspace-text);
+    font: inherit;
+  }
+
+  input::placeholder {
+    color: var(--workspace-muted);
+    font-style: italic;
+  }
+
+  input[aria-invalid='true'] {
+    border-color: var(--workspace-danger);
+  }
+
+  .batch-error {
+    color: var(--workspace-danger);
+    font-size: 12px;
+  }
+
+  .batch-selection-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 6px;
+    max-height: 160px;
+    overflow-y: auto;
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    background: var(--workspace-accent-soft);
+    border-radius: 5px;
+  }
+
+  li button {
+    border: 0;
+    background: transparent;
+    padding: 7px 9px;
+    color: var(--workspace-accent);
+    cursor: pointer;
+    font: inherit;
+  }
+
+  .batch-object-focus {
+    flex: 1;
+    text-align: left;
+  }
+
+  .rp-btn,
+  .rp-quick-action {
+    font-size: 14px;
+    padding: 9px;
+  }
+
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
+}

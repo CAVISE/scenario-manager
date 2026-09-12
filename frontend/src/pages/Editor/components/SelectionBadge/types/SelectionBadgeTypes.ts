@@ -1,0 +1,16 @@
+export const badgeStyles = {
+  position: 'fixed',
+  top: '4em',
+  right: '540px',
+  zIndex: 1000,
+  background: 'rgba(0,0,0,0.55)',
+  color: '#e0e0e0',
+  fontFamily: 'monospace',
+  fontSize: '12px',
+  padding: '4px 10px',
+  borderRadius: '6px',
+  pointerEvents: 'none',
+  backdropFilter: 'blur(4px)',
+  border: '1px solid rgba(255,255,255,0.15)',
+  whiteSpace: 'nowrap',
+} as const;

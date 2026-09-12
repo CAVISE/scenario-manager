@@ -3,7 +3,30 @@ export interface CoordinatesWidgetProps {
   getCameraRef: () => THREE.PerspectiveCamera | undefined;
   getRoadMesh: () => THREE.Mesh | null;
 }
+import { Vec3 } from '@editor/types/editorTypes';
 
+export interface CoordinatesDisplayProps {
+  coords: Vec3;
+  onMap: boolean;
+  offset: CarlaOffset;
+}
+
+export interface CarlaOffset {
+  x: number;
+  y: number;
+}
+
+export interface CarlaCoordinatesProps {
+  x: number;
+  y: number;
+  z: number;
+  offset: CarlaOffset;
+}
+
+export interface UseCoordinatesTrackingReturn {
+  coords: Vec3 | null;
+  onMap: boolean;
+}
 export const GROUND_PLANE = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
 export const CoordinatesWidgetDeactiveStyles = {
   position: 'fixed',

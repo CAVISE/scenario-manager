@@ -9,7 +9,9 @@ type Car = ReturnType<typeof useEditorStore.getState>['cars'][number];
 
 export function useCarMeshSync() {
   const cars = useEditorStore((s) => s.cars);
-  const selectedId = useEditorStore((s) => s.selectedId);
+  const selectedId = useEditorStore((s) =>
+    s.selectedIds.length === 1 ? s.selectedIds[0] : undefined
+  );
   const { carModelRef, modelLoaded } = useCarModel();
   const { sceneRef, carMeshesRef, transformControlsRef, isDraggingRef } =
     useEditorRefs();
@@ -18,6 +20,8 @@ export function useCarMeshSync() {
   function syncMeshes() {
     const scene = sceneRef.current;
     if (!scene || !carModelRef.current) return;
+
+    let structuralChange = false;
 
     carMeshesRef.current = carMeshesRef.current.filter((wrapper) => {
       const stillExists = cars.find((c) => c.id === wrapper.userData.id);
@@ -35,6 +39,7 @@ export function useCarMeshSync() {
             }
           }
         });
+        structuralChange = true;
       }
 
       return !!stillExists;
@@ -97,6 +102,7 @@ export function useCarMeshSync() {
       scene.add(wrapper);
       carMeshesRef.current.push(wrapper as unknown as THREE.Mesh);
       lastSyncedCarsRef.current.set(car.id, car);
+      structuralChange = true;
     });
 
     if (selectedId) {
@@ -105,11 +111,18 @@ export function useCarMeshSync() {
       );
       if (selectedMesh) {
         setTimeout(() => {
-          transformControlsRef.current?.attach(selectedMesh);
+          const state = useEditorStore.getState();
+          if (
+            state.selectedIds.length === 1 &&
+            state.selectedIds[0] === selectedId &&
+            state.simulationSession?.phase !== 'running'
+          ) {
+            transformControlsRef.current?.attach(selectedMesh);
+          }
         }, 50);
       }
     }
-    updateSceneGraph();
+    if (structuralChange) updateSceneGraph();
   }
 
   useEffect(() => {

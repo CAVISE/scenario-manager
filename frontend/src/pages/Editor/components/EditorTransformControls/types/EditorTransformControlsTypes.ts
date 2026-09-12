@@ -4,10 +4,11 @@ export interface EditorTransformControlsProps {
 }
 export const EditorTransformControlsStyles = {
   position: 'absolute',
-  top: 50,
-  left: 10,
+  top: 10,
+  left: 400,
   display: 'flex',
-  flexDirection: 'column',
+  flexDirection: 'row',
+  alignItems: 'center',
   background: 'rgba(255,255,255,0.8)',
   borderRadius: 4,
   padding: 4,

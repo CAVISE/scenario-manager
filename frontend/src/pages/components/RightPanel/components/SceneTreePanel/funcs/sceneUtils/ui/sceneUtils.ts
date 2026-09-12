@@ -6,7 +6,7 @@ export const findObjectInScene = ({
 }: findObjectInSceneProps): THREE.Object3D | null => {
   let found: THREE.Object3D | null = null;
   sceneRef.current?.traverse((obj: THREE.Object3D) => {
-    if (obj.userData.id === itemId) found = obj;
+    if (!found && obj.userData.id === itemId) found = obj;
   });
   return found;
 };

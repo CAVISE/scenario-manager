@@ -41,11 +41,18 @@ class EvaluationManager(object):
 
     def __init__(
             self, cav_world, script_name, current_time,
-            fixed_delta_seconds=0.05):
+            fixed_delta_seconds=0.05, weather_report=None):
         self.cav_world = cav_world
         self.fixed_delta_seconds = fixed_delta_seconds
         self.skip_head = 60
         self.dest_reach_threshold = 5.0  # meters
+        # Precomputed by app.opencda_config.weather_report() from the
+        # compiled scenario config, before any CAV/RSU spawned -- not
+        # recomputed here so this file doesn't need its own copy of the
+        # severity formula (see that function's docstring). None (the
+        # default) covers callers/tests that construct EvaluationManager
+        # directly without going through runner.py's run_scenario.
+        self.weather_report = weather_report
         current_path = os.path.dirname(os.path.realpath(__file__))
 
         self.eval_save_path = os.path.join(
@@ -115,6 +122,13 @@ class EvaluationManager(object):
         # numbers, which previously would never run if planning_eval (first
         # in this sequence) raised.
         localization_metrics = None
+        weather_metrics = None
+
+        try:
+            weather_metrics = self.weather_eval(log_file)
+            print('Weather Evaluation Done.')
+        except Exception as e:
+            print(f'Weather Evaluation failed: {e}')
 
         try:
             self.planning_eval(log_file)
@@ -140,14 +154,14 @@ class EvaluationManager(object):
         except Exception as e:
             print(f'Platooning Evaluation failed: {e}')
 
-        # Only localization feeds structured metrics in so far — the
+        # localization and weather feed structured metrics in; the
         # other three eval methods (planning/kinematics/platooning)
-        # still only write perform_txt into log.txt. Kept under an
-        # explicit "localization" key rather than flattening it,
-        # precisely so adding those later is additive (new top-level
-        # keys) instead of a format change existing readers of this
-        # file would need to handle.
-        metrics = {'localization': localization_metrics}
+        # still only write perform_txt into log.txt. Kept under
+        # explicit keys rather than flattening, precisely so adding
+        # those later is additive (new top-level keys) instead of a
+        # format change existing readers of this file would need to
+        # handle.
+        metrics = {'localization': localization_metrics, 'weather': weather_metrics}
         metrics_path = os.path.join(self.eval_save_path, 'metrics.json')
         try:
             with open(metrics_path, 'w', encoding='utf-8') as f:
@@ -562,6 +576,39 @@ class EvaluationManager(object):
             figure.savefig(figure_save_path, dpi=100)
 
             lprint(log_file, perform_txt)
+
+    def weather_eval(self, log_file):
+        """
+        Report the scenario's world.weather block and whether it had a
+        measurable effect on this run, for log.txt and metrics.json.
+
+        Unlike the other *_eval methods this doesn't read anything off
+        cav_world -- self.weather_report was already computed by
+        app.opencda_config.weather_report() from the compiled scenario
+        config before the run started, so this just formats it. Returns
+        None (and logs nothing beyond a note) if runner.py didn't pass
+        one through, so this stays a no-op for any caller/test that
+        constructs EvaluationManager directly.
+        """
+        lprint(log_file, "***********Weather***********")
+        if self.weather_report is None:
+            lprint(log_file, "No weather report available for this run.")
+            return None
+
+        report = self.weather_report
+        lprint(log_file, f"Raw world.weather: {report['raw']}")
+        lprint(log_file, f"Computed severity: {report['severity']} (0=clear/dry, 1=max)")
+        lprint(log_file, report["note"])
+        if report["active"]:
+            lprint(
+                log_file,
+                "detection_range scale: %.2fx | GNSS noise scale: %.2fx"
+                % (
+                    report["effect"]["detection_range_scale"],
+                    report["effect"]["gnss_noise_scale"],
+                ),
+            )
+        return report
 
     def localization_eval(self, log_file):
         """

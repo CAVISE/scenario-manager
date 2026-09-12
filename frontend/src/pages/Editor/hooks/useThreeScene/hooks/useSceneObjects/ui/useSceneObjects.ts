@@ -1,25 +1,16 @@
 import { useRef, useCallback } from 'react';
 import * as THREE from 'three';
 
-import { loadRSU as _loadRSU } from '@editor/scene/loaders/loadRSU';
 import { loadPoints as _loadPoints } from '@editor/scene/loaders/loadPoints';
 
-import {
-  UseSceneObjectsProps,
-  UseSceneObjectsResult,
-} from '../types/useSceneObjectsTypes';
+import { UseSceneObjectsResult } from '../types/useSceneObjectsTypes';
 import { useEditorStore } from '@/store';
 import { useEditorRefs } from '@editor/context';
 import { groupByCarId, getGroupedByCarId } from '@/shared/utils/groupByCarId';
 
-export function useSceneObjects({}: UseSceneObjectsProps): UseSceneObjectsResult {
-  const {
-    threeRef,
-
-    cubeCirclesRef,
-    roadMeshRef,
-    transformControlsRef,
-  } = useEditorRefs();
+export function useSceneObjects(): UseSceneObjectsResult {
+  const { threeRef, cubeCirclesRef, roadMeshRef, transformControlsRef } =
+    useEditorRefs();
 
   const localLineArrRef = useRef<THREE.Line[][]>([]);
 

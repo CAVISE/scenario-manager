@@ -97,6 +97,7 @@ export interface ScenarioPayload {
   file_: string | null;
   weather?: string | undefined;
   map?: string | null;
+  explicit_clear?: boolean;
   id?: string | null;
 }
 
@@ -108,6 +109,7 @@ export interface ScenarioDetail {
   description?: string | null;
   preview?: string | null;
   file_?: string | null;
+  map?: string | null;
   scenario?: ScenarioGroup[] | ScenarioStoredJson | null;
 }
 
@@ -129,6 +131,7 @@ export interface ScenarioMutationResponse {
   status: string;
   message: string;
   scenario_id?: string | null;
+  warning?: string | null;
 }
 
 export interface LoadScenarioApiResponse {
@@ -140,6 +143,7 @@ export interface LoadScenarioApiResponse {
     preview?: string | null;
     description?: string | null;
     file_?: string | null;
+    map?: string | null;
   };
 }
 

@@ -2,13 +2,13 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as THREE from 'three';
 
-let {
+const {
   mockStoreState,
   mockSubscribe,
   mockUpdateSceneGraph,
   mockRefs,
   mockEnsureRsuModel,
-  mockRsuModel,
+  mockRsuModelBox,
 } = vi.hoisted(() => ({
   mockStoreState: {
     RSUs: [] as Array<{
@@ -54,7 +54,7 @@ let {
 
   mockEnsureRsuModel: vi.fn(),
 
-  mockRsuModel: null as THREE.Object3D | null,
+  mockRsuModelBox: { current: null as THREE.Object3D | null },
 }));
 
 vi.mock('@/store', () => ({
@@ -81,7 +81,7 @@ vi.mock('../utils/RsuUtils', () => ({
   ensureRsuModel: mockEnsureRsuModel,
 
   get rsuModel() {
-    return mockRsuModel;
+    return mockRsuModelBox.current;
   },
 }));
 
@@ -345,12 +345,14 @@ describe('useRSUMeshSync', () => {
       renderHook(() => useRSUMeshSync());
 
       await waitFor(() => {
-        expect(mockUpdateSceneGraph).toHaveBeenCalled();
+        expect(existing.position.x).toBe(10);
       });
 
       expect(getSceneRSUs(scene)).toHaveLength(1);
 
       expect(mockRefs.pointsArrRef.current).toHaveLength(1);
+
+      expect(mockUpdateSceneGraph).not.toHaveBeenCalled();
     });
 
     it('updates position of an existing RSU', async () => {
@@ -444,12 +446,16 @@ describe('useRSUMeshSync', () => {
       renderHook(() => useRSUMeshSync());
 
       await waitFor(() => {
-        expect(mockUpdateSceneGraph).toHaveBeenCalled();
+        expect(mockEnsureRsuModel).toHaveBeenCalled();
       });
+      await Promise.resolve();
+      await Promise.resolve();
 
       expect(existing.position.x).toBe(1);
       expect(existing.position.y).toBe(2);
       expect(existing.position.z).toBe(3);
+
+      expect(mockUpdateSceneGraph).not.toHaveBeenCalled();
     });
   });
 
@@ -565,16 +571,16 @@ describe('useRSUMeshSync', () => {
       renderHook(() => useRSUMeshSync());
 
       await waitFor(() => {
-        expect(mockUpdateSceneGraph).toHaveBeenCalled();
+        expect(fallback.position.x).toBe(100);
       });
 
       expect(getSceneRSUs(scene)).toHaveLength(1);
 
-      expect(fallback.position.x).toBe(100);
-
       expect(fallback.position.y).toBe(200);
 
       expect(fallback.position.z).toBe(300);
+
+      expect(mockUpdateSceneGraph).not.toHaveBeenCalled();
     });
 
     it('replaces fallback RSU when model becomes available', async () => {
@@ -606,7 +612,7 @@ describe('useRSUMeshSync', () => {
       expect(getSceneRSUs(scene)).toHaveLength(1);
     });
     it('replaces fallback RSU with the loaded model', async () => {
-      mockRsuModel = rsuModel;
+      mockRsuModelBox.current = rsuModel;
       mockEnsureRsuModel.mockResolvedValue(true);
 
       const fallback = createExistingRsu('rsu-1', { x: 1, y: 2, z: 3 }, true);
@@ -664,7 +670,7 @@ describe('useRSUMeshSync', () => {
       expect(scene.children).not.toContain(fallback);
     });
     it('detaches TransformControls when replacing an attached fallback RSU', async () => {
-      mockRsuModel = rsuModel;
+      mockRsuModelBox.current = rsuModel;
       mockEnsureRsuModel.mockResolvedValue(true);
 
       const fallback = createExistingRsu('rsu-1', { x: 1, y: 2, z: 3 }, true);
@@ -863,7 +869,7 @@ describe('useRSUMeshSync', () => {
       expect(mockRefs.pointsArrRef.current).toHaveLength(1);
     });
     it('creates an RSU from the loaded model', async () => {
-      mockRsuModel = rsuModel;
+      mockRsuModelBox.current = rsuModel;
       mockEnsureRsuModel.mockResolvedValue(true);
 
       setRSUs([

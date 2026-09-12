@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useEditorStore } from '@/store';
 import {
   MAX_RECONNECT_DELAY_MS,
   RECONNECT_DELAY_MS,
@@ -34,6 +35,24 @@ export function useSimulationSocket() {
         try {
           const data: SimulationStatus = JSON.parse(event.data);
           setState(data);
+          const phase =
+            data.status === 'running' || data.status === 'stopping'
+              ? 'running'
+              : data.status === 'finished'
+                ? 'finished'
+                : data.status === 'error'
+                  ? 'error'
+                  : 'idle';
+          useEditorStore.getState().updateSimulationSession({
+            phase,
+            runId: data.run_id,
+            status: data.status,
+            error: data.error,
+            tick: data.tick ?? 0,
+            maxTicks: data.max_ticks ?? 0,
+            partial: data.partial ?? false,
+            ...(phase === 'idle' && { startedAt: null }),
+          });
         } catch (e) {
           console.error('Failed to parse simulation status:', e);
         }

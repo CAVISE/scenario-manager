@@ -1,7 +1,3 @@
-* {
-  user-select: none !important;
-}
-
 $press-ease: cubic-bezier(0.4, 0, 0.2, 1);
 $press-ms: 140ms;
 
@@ -129,4 +125,15 @@ body,
 .app-loader--hide {
   opacity: 0;
   transition: opacity 0.3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

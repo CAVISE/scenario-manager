@@ -2,7 +2,10 @@ import * as THREE from 'three';
 import { useEditorStore } from '@/store';
 import { handleDeleteNodeProps } from '../types/handleDeleteNodeTypes';
 import { disposeMesh } from '@editor/scene/utils/disposeMesh';
-import { pushSingleDeletionSnapshot } from '../../deletionSnapshots';
+import {
+  pushSingleDeletionSnapshot,
+  watchSnapshotValidity,
+} from '../../deletionSnapshots';
 import { getTypeMeta } from '../../../types/SceneTreePanelTypes';
 
 export function handleDeleteNode({
@@ -94,13 +97,16 @@ export function handleDeleteNode({
     s.removeLidar(id);
   }
 
-  s.selectObject(null);
+  s.selectObjects([]);
   transformControlsRef.current?.detach();
   detachTransformControls();
 
   if (pushed) {
-    toast.undo(pushed.label, () =>
-      useEditorStore.getState().restoreLastDeletion(pushed.snapshotId)
+    toast.undo(
+      pushed.label,
+      () => useEditorStore.getState().restoreLastDeletion(pushed.snapshotId),
+      undefined,
+      watchSnapshotValidity(pushed.snapshotId)
     );
   }
 }

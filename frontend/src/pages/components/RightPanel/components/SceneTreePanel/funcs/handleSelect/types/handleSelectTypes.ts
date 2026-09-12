@@ -7,7 +7,8 @@ export interface handleSelectProps {
   detachTransformControls: () => void;
   itemId: string;
   pointsArrRef: React.RefObject<THREE.Mesh[]>;
-  selectObject: (obj: SelectedObject | null) => void;
-  onSelectObject: (obj: SelectedObject) => void;
+  selectObjects: (objs: SelectedObject[]) => void;
+  onSelectObjects: (objs: SelectedObject[]) => void;
   carMeshesRef: React.RefObject<THREE.Mesh[]>;
+  focusObject: (object: THREE.Object3D) => void;
 }

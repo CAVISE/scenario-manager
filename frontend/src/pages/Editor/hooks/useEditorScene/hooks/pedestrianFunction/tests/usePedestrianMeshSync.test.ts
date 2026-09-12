@@ -257,7 +257,7 @@ describe('usePedestrianMeshSync', () => {
       renderHook(() => usePedestrianMeshSync());
 
       await waitFor(() => {
-        expect(mockUpdateSceneGraph).toHaveBeenCalled();
+        expect(mockRefs.pedestrianMeshesRef.current).toHaveLength(1);
       });
 
       expect(getScenePedestrians(scene)).toHaveLength(1);
@@ -265,6 +265,8 @@ describe('usePedestrianMeshSync', () => {
       expect(mockRefs.pedestrianMeshesRef.current).toHaveLength(1);
 
       expect(mockRefs.pedestrianObjsRef.current).toHaveLength(1);
+
+      expect(mockUpdateSceneGraph).not.toHaveBeenCalled();
     });
   });
 
@@ -371,13 +373,17 @@ describe('usePedestrianMeshSync', () => {
 
       renderHook(() => usePedestrianMeshSync());
 
-      await waitFor(() => {
-        expect(mockUpdateSceneGraph).toHaveBeenCalled();
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+        await Promise.resolve();
       });
 
       expect(existingPedestrian.position.x).toBe(1);
       expect(existingPedestrian.position.y).toBe(2);
       expect(existingPedestrian.position.z).toBe(3);
+
+      expect(mockUpdateSceneGraph).not.toHaveBeenCalled();
     });
   });
 
@@ -441,12 +447,12 @@ describe('usePedestrianMeshSync', () => {
       renderHook(() => usePedestrianMeshSync());
 
       await waitFor(() => {
-        expect(mockUpdateSceneGraph).toHaveBeenCalled();
+        expect(scene.children).toContain(pedestrian);
       });
 
-      expect(scene.children).toContain(pedestrian);
-
       expect(mockRefs.pedestrianMeshesRef.current).toContain(pedestrian);
+
+      expect(mockUpdateSceneGraph).not.toHaveBeenCalled();
     });
   });
 
@@ -477,12 +483,12 @@ describe('usePedestrianMeshSync', () => {
       renderHook(() => usePedestrianMeshSync());
 
       await waitFor(() => {
-        expect(mockUpdateSceneGraph).toHaveBeenCalled();
+        expect(scene.children).toContain(pedestrian);
       });
 
-      expect(scene.children).toContain(pedestrian);
-
       expect(mockRefs.pedestrianMeshesRef.current).toContain(pedestrian);
+
+      expect(mockUpdateSceneGraph).not.toHaveBeenCalled();
     });
 
     it('keeps a parent pedestrian when a child is attached to TransformControls', async () => {
@@ -523,14 +529,14 @@ describe('usePedestrianMeshSync', () => {
       renderHook(() => usePedestrianMeshSync());
 
       await waitFor(() => {
-        expect(mockUpdateSceneGraph).toHaveBeenCalled();
+        expect(scene.children).toContain(pedestrian);
       });
-
-      expect(scene.children).toContain(pedestrian);
 
       expect(mockRefs.pedestrianMeshesRef.current).toContain(
         pedestrian as unknown as THREE.Mesh
       );
+
+      expect(mockUpdateSceneGraph).not.toHaveBeenCalled();
     });
   });
 
@@ -546,7 +552,6 @@ describe('usePedestrianMeshSync', () => {
       ]);
 
       renderHook(() => usePedestrianMeshSync());
-
       await waitFor(() => {
         expect(getScenePedestrians(scene)).toHaveLength(1);
       });
@@ -646,9 +651,13 @@ describe('usePedestrianMeshSync', () => {
 
       renderHook(() => usePedestrianMeshSync());
 
-      await waitFor(() => {
-        expect(mockUpdateSceneGraph).toHaveBeenCalled();
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+        await Promise.resolve();
       });
+
+      expect(mockUpdateSceneGraph).not.toHaveBeenCalled();
 
       const subscriber = mockSubscribe.mock.calls[0][0] as () => void;
 
@@ -668,6 +677,8 @@ describe('usePedestrianMeshSync', () => {
       await waitFor(() => {
         expect(getScenePedestrians(scene)).toHaveLength(1);
       });
+
+      expect(mockUpdateSceneGraph).toHaveBeenCalledTimes(1);
 
       const pedestrian = getScenePedestrians(scene)[0];
 

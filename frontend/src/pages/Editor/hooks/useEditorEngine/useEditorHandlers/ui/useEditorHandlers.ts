@@ -33,7 +33,7 @@ export const useEditorHandlers = ({
 
   const detachTransformControls = useCallback(() => {
     transformControlsRef.current?.detach();
-    useEditorStore.getState().selectObject(null);
+    useEditorStore.getState().selectObjects([]);
   }, [transformControlsRef]);
 
   const handleSetBuildingMode = useCallback(
@@ -44,7 +44,7 @@ export const useEditorHandlers = ({
         modeRef.current.isAddedPoints = false;
         modeRef.current.isAddPedestrianModeActive = false;
         transformControlsRef.current?.detach();
-        useEditorStore.getState().selectObject(null);
+        useEditorStore.getState().selectObjects([]);
       }
       setBuildingMode(value);
     },

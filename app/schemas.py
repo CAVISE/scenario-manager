@@ -99,6 +99,9 @@ class SimulationStatusResponse(BaseModel):
     error: Optional[str]
     map: Optional[str]
     run_id: Optional[str]
+    tick: int = 0
+    max_ticks: int = 0
+    partial: bool = False
 
 
 class StopSimulationResponse(BaseModel):
@@ -120,6 +123,17 @@ class ResultsResponse(BaseModel):
     run_id: str
 
 
+class ResultRun(BaseModel):
+    run_id: str
+    files_count: int
+    modified_at: float
+    outcome: str = "legacy"
+    tick: Optional[int] = None
+    max_ticks: Optional[int] = None
+    scenario_name: Optional[str] = None
+    scenario_id: Optional[str] = None
+
+
 class ScenarioSummary(BaseModel):
     id: int
     scenario_id: str
@@ -136,6 +150,7 @@ class ScenarioDetail(BaseModel):
     preview: Optional[str]
     annotation: Optional[str]
     file_: Optional[str]
+    map: Optional[str]
 
 
 class LoadAllScenariosResponse(BaseModel):
@@ -156,6 +171,7 @@ class UploadScenarioRequest(BaseModel):
     preview: Optional[str] = None
     description: Optional[str] = None
     file_: Optional[str] = None
+    map: Optional[str] = None
 
     @field_validator("name_of_scenario", mode="before")
     @classmethod
@@ -182,6 +198,11 @@ class UploadScenarioRequest(BaseModel):
     def validate_file_field(cls, value: Any) -> str | None:
         return validate_opendrive(value)
 
+    @field_validator("map", mode="before")
+    @classmethod
+    def validate_map_field(cls, value: Any) -> str | None:
+        return validate_optional_text(value, field_name="map", max_len=200)
+
     @field_validator("scenario", mode="before")
     @classmethod
     def validate_scenario_field(cls, value: Any) -> Any:
@@ -196,6 +217,11 @@ class UpdateScenarioRequest(BaseModel):
     preview: Optional[str] = None
     annotation: Optional[str] = None
     file_: Optional[str] = None
+    map: Optional[str] = None
+
+    map_change_confirmed: bool = False
+
+    explicit_clear: bool = False
 
     @field_validator("scenario_id", mode="before")
     @classmethod
@@ -226,6 +252,11 @@ class UpdateScenarioRequest(BaseModel):
     def validate_file_field(cls, value: Any) -> str | None:
         return validate_opendrive(value)
 
+    @field_validator("map", mode="before")
+    @classmethod
+    def validate_map_field(cls, value: Any) -> str | None:
+        return validate_optional_text(value, field_name="map", max_len=200)
+
     @field_validator("scenario", mode="before")
     @classmethod
     def validate_scenario_field(cls, value: Any) -> Any:
@@ -249,3 +280,4 @@ class ScenarioMutationResponse(BaseModel):
     status: str
     message: str
     scenario_id: Optional[str] = None
+    warning: Optional[str] = None

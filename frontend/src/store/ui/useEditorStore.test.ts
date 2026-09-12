@@ -15,8 +15,8 @@ describe('useEditorStore', () => {
       deletionHistory: [],
       historyStack: [],
       historyCursor: 0,
-      selectedId: null,
-      selectedObject: null,
+      selectedIds: [],
+      selectedObjects: [],
       isBuildingMode: false,
       routes: [[]],
       simConfig: useEditorStore.getState().simConfig,
@@ -74,28 +74,28 @@ describe('useEditorStore', () => {
     expect(simConfig.omnet).toBeDefined();
   });
 
-  it('setBuildingMode(true) enables building mode and clears selectedId', () => {
+  it('setBuildingMode(true) enables building mode and clears selectedIds', () => {
     const store = useEditorStore.getState();
     const carId = store.addCar(0, 0, 0, 'model', 'red');
-    store.selectObject({ id: carId } as unknown as SelectedObject);
-    expect(useEditorStore.getState().selectedId).toBe(carId);
+    store.selectObjects([{ id: carId } as unknown as SelectedObject]);
+    expect(useEditorStore.getState().selectedIds).toEqual([carId]);
 
     useEditorStore.getState().setBuildingMode(true);
 
     expect(useEditorStore.getState().isBuildingMode).toBe(true);
-    expect(useEditorStore.getState().selectedId).toBeNull();
+    expect(useEditorStore.getState().selectedIds).toEqual([]);
   });
 
-  it('setBuildingMode(false) disables building mode without clearing selectedId', () => {
+  it('setBuildingMode(false) disables building mode without clearing selectedIds', () => {
     const store = useEditorStore.getState();
     store.setBuildingMode(true);
     const carId = store.addCar(0, 0, 0, 'model', 'red');
-    useEditorStore.setState({ selectedId: carId });
+    useEditorStore.setState({ selectedIds: [carId] });
 
     useEditorStore.getState().setBuildingMode(false);
 
     expect(useEditorStore.getState().isBuildingMode).toBe(false);
-    expect(useEditorStore.getState().selectedId).toBe(carId);
+    expect(useEditorStore.getState().selectedIds).toEqual([carId]);
   });
 
   it('setError stores the error value', () => {
@@ -148,29 +148,29 @@ describe('useEditorStore', () => {
     expect(simConfig.sumo).toBeDefined();
   });
 
-  it('removePedestrian clears selectedId when the removed ped was selected', () => {
+  it('removePedestrian clears selectedIds when the removed ped was selected', () => {
     const store = useEditorStore.getState();
     const pedId = store.addPedestrian(1, 2, 3);
-    useEditorStore.setState({ selectedId: pedId });
+    useEditorStore.setState({ selectedIds: [pedId] });
 
-    expect(useEditorStore.getState().selectedId).toBe(pedId);
+    expect(useEditorStore.getState().selectedIds).toEqual([pedId]);
 
     useEditorStore.getState().removePedestrian(pedId);
 
     expect(useEditorStore.getState().pedestrians).toHaveLength(0);
-    expect(useEditorStore.getState().selectedId).toBeNull();
+    expect(useEditorStore.getState().selectedIds).toEqual([]);
   });
 
-  it('removePedestrian keeps selectedId when a different ped is removed', () => {
+  it('removePedestrian keeps selectedIds when a different ped is removed', () => {
     const store = useEditorStore.getState();
     const pedId1 = store.addPedestrian(1, 2, 3);
     const pedId2 = store.addPedestrian(4, 5, 6);
-    useEditorStore.setState({ selectedId: pedId1 });
+    useEditorStore.setState({ selectedIds: [pedId1] });
 
     useEditorStore.getState().removePedestrian(pedId2);
 
     expect(useEditorStore.getState().pedestrians).toHaveLength(1);
-    expect(useEditorStore.getState().selectedId).toBe(pedId1);
+    expect(useEditorStore.getState().selectedIds).toEqual([pedId1]);
   });
 
   it('removeRSU removes by index', () => {
@@ -195,14 +195,14 @@ describe('useEditorStore', () => {
     expect(useEditorStore.getState().RSUs[0].tx_power).toBe(99);
   });
 
-  it('removeCar clears selectedId when the removed car was selected', () => {
+  it('removeCar clears selectedIds when the removed car was selected', () => {
     const store = useEditorStore.getState();
     const carId = store.addCar(0, 0, 0, 'model', 'blue');
-    expect(useEditorStore.getState().selectedId).toBe(carId);
+    expect(useEditorStore.getState().selectedIds).toEqual([carId]);
 
     useEditorStore.getState().removeCar(carId);
 
-    expect(useEditorStore.getState().selectedId).toBeNull();
+    expect(useEditorStore.getState().selectedIds).toEqual([]);
   });
 
   it('updateSimConfig merges top-level sim config fields', () => {
@@ -227,15 +227,15 @@ describe('useEditorStore', () => {
     expect(ped?.speed).toBe(2.5);
   });
 
-  it('removeSelectedId clears selectedId and selectedObject', () => {
+  it('clearSelection clears selectedIds and selectedObjects', () => {
     const store = useEditorStore.getState();
     store.addCar(0, 0, 0, 'model', 'red');
-    expect(useEditorStore.getState().selectedId).not.toBeNull();
+    expect(useEditorStore.getState().selectedIds).not.toHaveLength(0);
 
-    useEditorStore.getState().removeSelectedId();
+    useEditorStore.getState().clearSelection();
 
-    expect(useEditorStore.getState().selectedId).toBeNull();
-    expect(useEditorStore.getState().selectedObject).toBeNull();
+    expect(useEditorStore.getState().selectedIds).toEqual([]);
+    expect(useEditorStore.getState().selectedObjects).toEqual([]);
   });
 });
 
@@ -251,8 +251,8 @@ describe('useEditorStore - History additional coverage', () => {
       deletionHistory: [],
       historyStack: [],
       historyCursor: 0,
-      selectedId: null,
-      selectedObject: null,
+      selectedIds: [],
+      selectedObjects: [],
       isBuildingMode: false,
       routes: [[]],
       simConfig: useEditorStore.getState().simConfig,
@@ -566,8 +566,8 @@ describe('useEditorStore - additional coverage', () => {
       deletionHistory: [],
       historyStack: [],
       historyCursor: 0,
-      selectedId: null,
-      selectedObject: null,
+      selectedIds: [],
+      selectedObjects: [],
       isBuildingMode: false,
       routes: [[]],
       simConfig: useEditorStore.getState().simConfig,

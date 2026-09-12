@@ -9,9 +9,10 @@ export function handleSelect({
   detachTransformControls,
   itemId,
   pointsArrRef,
-  selectObject,
-  onSelectObject,
+  selectObjects,
+  onSelectObjects,
   carMeshesRef,
+  focusObject,
 }: handleSelectProps) {
   const scene = sceneRef.current;
   const tc = transformControlsRef.current;
@@ -25,6 +26,7 @@ export function handleSelect({
 
   const obj = found as THREE.Object3D;
   const type = obj.userData.type;
+  focusObject(obj);
   tc.detach();
 
   if (type === 'point') {
@@ -44,8 +46,10 @@ export function handleSelect({
 
     if (rsuMesh) {
       tc.attach(rsuMesh);
-      selectObject({ type: 'rsu', id: itemId });
-      onSelectObject({ type: 'rsu', id: itemId, position: rsuMesh.position });
+      selectObjects([{ type: 'rsu', id: itemId }]);
+      onSelectObjects([
+        { type: 'rsu', id: itemId, position: rsuMesh.position },
+      ]);
       return;
     }
   }
@@ -62,8 +66,8 @@ export function handleSelect({
 
     if (lidarMesh) {
       tc.attach(lidarMesh as THREE.Object3D);
-      selectObject({ type: 'lidar', id: itemId });
-      onSelectObject({ type: 'lidar', id: itemId });
+      selectObjects([{ type: 'lidar', id: itemId }]);
+      onSelectObjects([{ type: 'lidar', id: itemId }]);
       return;
     }
   }
@@ -77,9 +81,9 @@ export function handleSelect({
         Math.abs(p.y - obj.position.y) < 0.001
     );
     const pointId = pt?.id;
-    if (pointId) selectObject({ type: 'point', id: pointId });
-    else selectObject(null);
-    onSelectObject({ type: 'point', id: pointId, position: obj.position });
+    if (pointId) selectObjects([{ type: 'point', id: pointId }]);
+    else selectObjects([]);
+    onSelectObjects([{ type: 'point', id: pointId, position: obj.position }]);
     return;
   }
 
@@ -89,16 +93,18 @@ export function handleSelect({
       root = root.parent;
     }
     tc.attach(root);
-    selectObject({ type: 'pedestrian', id: root.userData.id });
-    onSelectObject({
-      type: 'pedestrian',
-      id: root.userData.id,
-      position: root.position,
-    });
+    selectObjects([{ type: 'pedestrian', id: root.userData.id }]);
+    onSelectObjects([
+      {
+        type: 'pedestrian',
+        id: root.userData.id,
+        position: root.position,
+      },
+    ]);
     return;
   }
 
   tc.attach(obj);
-  selectObject({ type, id: itemId });
-  onSelectObject({ type, id: itemId });
+  selectObjects([{ type, id: itemId }]);
+  onSelectObjects([{ type, id: itemId }]);
 }

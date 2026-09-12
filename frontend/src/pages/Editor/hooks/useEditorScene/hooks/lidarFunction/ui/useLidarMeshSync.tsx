@@ -29,11 +29,14 @@ export function useLidarMeshSync() {
 
       const lidarIds = new Set(lidars.map((l) => l.id));
 
+      let structuralChange = false;
+
       existingGroups.forEach((group, id) => {
         if (!lidarIds.has(id)) {
           group.parent?.remove(group);
           disposeLidarGroup(group);
           lastSyncedLidarsRef.current.delete(id);
+          structuralChange = true;
         }
       });
 
@@ -88,9 +91,10 @@ export function useLidarMeshSync() {
           group.scale.setScalar(1 / parentScale);
           wrapper.add(group);
           lastSyncedLidarsRef.current.set(lidar.id, { lidar, parentScale });
+          structuralChange = true;
         }
       });
-      updateSceneGraph();
+      if (structuralChange) updateSceneGraph();
     }, 0);
 
     return () => clearTimeout(timer);

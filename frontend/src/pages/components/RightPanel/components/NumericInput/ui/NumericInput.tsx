@@ -5,16 +5,7 @@ import {
   OutlinedInput,
   type OutlinedInputProps,
 } from '@mui/material';
-
-type NumericInputProps = {
-  value: number;
-  onValueChange: (value: number) => void;
-  precision?: number;
-  variant?: 'standard' | 'outlined';
-};
-
-const formatValue = (value: number, precision: number) =>
-  Number.isFinite(value) ? value.toFixed(precision) : '';
+import { NumericInputProps, formatValue } from '../types/NumericInputTypes';
 
 export default function NumericInput({
   value,

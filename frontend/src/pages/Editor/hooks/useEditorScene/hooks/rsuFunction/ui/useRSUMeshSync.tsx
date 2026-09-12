@@ -36,6 +36,8 @@ export function useRSUMeshSync(): void {
         const currentRSUs = useEditorStore.getState().RSUs;
         const rsuIds = new Set(currentRSUs.map((r) => r.id));
 
+        let structuralChange = false;
+
         pointsArrRef.current = pointsArrRef.current.filter((p) => {
           if (rsuIds.has(p.userData.id)) return true;
           if (attached === p) tc?.detach();
@@ -50,6 +52,7 @@ export function useRSUMeshSync(): void {
           });
           scene.remove(p);
           lastSyncedRSUsRef.current.delete(p.userData.id);
+          structuralChange = true;
           return false;
         });
 
@@ -89,6 +92,7 @@ export function useRSUMeshSync(): void {
                 pointsObjsRef.current.splice(oldIdx, 1);
                 rsuMeshesRef.current.splice(oldIdx, 1);
               }
+              structuralChange = true;
             } else {
               if (lastSyncedRSUsRef.current.get(rsu.id) === rsu) return;
               lastSyncedRSUsRef.current.set(rsu.id, rsu);
@@ -117,9 +121,10 @@ export function useRSUMeshSync(): void {
           pointsArrRef.current.push(obj as THREE.Mesh);
           pointsObjsRef.current.push(obj as THREE.Mesh);
           rsuMeshesRef.current.push(obj as THREE.Mesh);
+          structuralChange = true;
         });
 
-        updateSceneGraph();
+        if (structuralChange) updateSceneGraph();
       });
     };
 

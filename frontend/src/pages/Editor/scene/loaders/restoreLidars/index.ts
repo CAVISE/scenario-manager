@@ -1,2 +1,3 @@
 import { restoreLidars } from './ui/restoreLidars';
-export { restoreLidars };
+import type { RestoreLidarsOptions } from './types/restoreLidarsTypes';
+export { restoreLidars, RestoreLidarsOptions };

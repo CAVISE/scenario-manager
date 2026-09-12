@@ -42,6 +42,9 @@ function syncPedestrians(
   const attached = (tc as unknown as { object?: THREE.Object3D })?.object;
   const pedestrianMeshes = pedestrianMeshesRef.current;
   if (!pedestrianMeshes) return;
+
+  let structuralChange = false;
+
   pedestrianMeshesRef.current = pedestrianMeshes.filter((p) => {
     if (pedestrians.some((pe) => pe.id === p.userData.id)) return true;
     if (attached && (attached === p || p.getObjectById(attached.id)))
@@ -57,6 +60,7 @@ function syncPedestrians(
     });
     scene.remove(p);
     lastSyncedPedestriansRef.current.delete(p.userData.id);
+    structuralChange = true;
     return false;
   });
 
@@ -95,6 +99,7 @@ function syncPedestrians(
 
     scene.add(modelClone);
     lastSyncedPedestriansRef.current.set(ped.id, ped);
+    structuralChange = true;
 
     const currentMeshes = pedestrianMeshesRef.current;
     if (!currentMeshes) return;
@@ -104,7 +109,7 @@ function syncPedestrians(
     pedestrianObjs.push(modelClone as THREE.Mesh);
   });
 
-  updateSceneGraph();
+  if (structuralChange) updateSceneGraph();
 }
 
 function queuePedestrianSync(

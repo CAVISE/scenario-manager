@@ -18,6 +18,7 @@ def test_alembic_upgrade_creates_scenarios_table(tmp_path):
         "id",
         "scenario_id",
         "name_of_scenario",
+        "map",
         "scenario_text",
         "preview",
         "annotation",

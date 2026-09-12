@@ -12,4 +12,5 @@ export interface StartSimulationPayload {
   max_ticks?: number;
   map_offsets?: { x: number; y: number };
   attacks?: OpenCDAAttackConfig[];
+  weather?: string | undefined;
 }

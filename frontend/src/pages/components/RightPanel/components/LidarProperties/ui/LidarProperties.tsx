@@ -9,9 +9,11 @@ import {
 import { useEditorStore } from '@/store';
 import NumericInput from '../../NumericInput';
 import { ILidarProps } from '../types/LidarPropertiesTypes';
+import { usePropertiesMode } from '../../../context/PropertiesModeContext';
 
 export default function LidarProperties({ lidar, onDelete }: ILidarProps) {
   const updateLidar = useEditorStore((s) => s.updateLidar);
+  const propertiesMode = usePropertiesMode();
 
   return (
     <Stack spacing={1.5}>
@@ -50,40 +52,45 @@ export default function LidarProperties({ lidar, onDelete }: ILidarProps) {
         />
       </FormControl>
 
-      <FormControl>
-        <FormLabel>Channels</FormLabel>
-        <Slider
-          value={lidar.channels}
-          min={1}
-          max={128}
-          step={1}
-          valueLabelDisplay="auto"
-          marks={[
-            { value: 16, label: '16' },
-            { value: 32, label: '32' },
-            { value: 64, label: '64' },
-            { value: 128, label: '128' },
-          ]}
-          onChange={(_, v) => {
-            if (typeof v === 'number') updateLidar(lidar.id, { channels: v });
-          }}
-        />
-      </FormControl>
+      {propertiesMode === 'advanced' && (
+        <>
+          <FormControl>
+            <FormLabel>Channels</FormLabel>
+            <Slider
+              value={lidar.channels}
+              min={1}
+              max={128}
+              step={1}
+              valueLabelDisplay="auto"
+              marks={[
+                { value: 16, label: '16' },
+                { value: 32, label: '32' },
+                { value: 64, label: '64' },
+                { value: 128, label: '128' },
+              ]}
+              onChange={(_, v) => {
+                if (typeof v === 'number')
+                  updateLidar(lidar.id, { channels: v });
+              }}
+            />
+          </FormControl>
 
-      <FormControl>
-        <FormLabel>Rotation frequency (Hz)</FormLabel>
-        <Slider
-          value={lidar.rotation_frequency}
-          min={1}
-          max={50}
-          step={1}
-          valueLabelDisplay="auto"
-          onChange={(_, v) => {
-            if (typeof v === 'number')
-              updateLidar(lidar.id, { rotation_frequency: v });
-          }}
-        />
-      </FormControl>
+          <FormControl>
+            <FormLabel>Rotation frequency (Hz)</FormLabel>
+            <Slider
+              value={lidar.rotation_frequency}
+              min={1}
+              max={50}
+              step={1}
+              valueLabelDisplay="auto"
+              onChange={(_, v) => {
+                if (typeof v === 'number')
+                  updateLidar(lidar.id, { rotation_frequency: v });
+              }}
+            />
+          </FormControl>
+        </>
+      )}
 
       <Button size="small" color="error" variant="outlined" onClick={onDelete}>
         Delete lidar

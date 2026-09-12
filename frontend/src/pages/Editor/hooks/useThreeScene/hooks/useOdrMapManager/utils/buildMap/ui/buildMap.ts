@@ -46,7 +46,7 @@ export function buildMap({
 
   loadPoints();
 
-  const selectedId = useEditorStore.getState().selectedId;
+  const selectedId = useEditorStore.getState().selectedIds[0];
   if (selectedId) {
     const sm = carMeshesRef.current.find((m) => m.userData.id === selectedId);
     if (sm) transformControls.attach(sm);

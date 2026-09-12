@@ -2,54 +2,50 @@ import { useMemo } from 'react';
 import { useEditorStore } from '@/store';
 
 export function useSelectedObject() {
-  const selectedId = useEditorStore((s) => s.selectedId);
-  const selectedObject = useEditorStore((s) => s.selectedObject);
-  const cars = useEditorStore((s) => s.cars);
-  const RSUs = useEditorStore((s) => s.RSUs);
-  const buildings = useEditorStore((s) => s.buildings);
-  const lidars = useEditorStore((s) => s.lidars);
-  const pedestrians = useEditorStore((s) => s.pedestrians);
-  const points = useEditorStore((s) => s.points);
+  const selectedIds = useEditorStore((s) => s.selectedIds);
+  const selectedObjects = useEditorStore((s) => s.selectedObjects);
+  const selectedId = selectedIds[0];
+  const selectedObject = selectedObjects[0];
 
-  const car = useMemo(
-    () => cars.find((c) => c.id === selectedId) ?? null,
-    [cars, selectedId]
+  const car = useEditorStore(
+    (s) => s.cars.find((c) => c.id === s.selectedIds[0]) ?? null
   );
+
+  const lidars = useEditorStore((s) => s.lidars);
 
   const lidar = useMemo(
     () => lidars.find((l) => l.id === selectedId) ?? null,
     [lidars, selectedId]
   );
 
-  const rsu = useMemo(
-    () => RSUs.find((r) => r.id === selectedId) ?? null,
-    [RSUs, selectedId]
-  );
-  const point = useMemo(() => {
-    return selectedObject?.type === 'point'
-      ? (points.find((p) => p.id === selectedObject.id) ?? null)
-      : null;
-  }, [points, selectedObject]);
-
-  const pedestrian = useMemo(
-    () => pedestrians.find((p) => p.id === selectedId) ?? null,
-    [pedestrians, selectedId]
+  const rsu = useEditorStore(
+    (s) => s.RSUs.find((r) => r.id === s.selectedIds[0]) ?? null
   );
 
-  const building = useMemo(() => {
-    if (selectedId) {
-      const b = buildings.find((x) => x.id === selectedId);
+  const point = useEditorStore((s) =>
+    s.selectedObjects[0]?.type === 'point'
+      ? (s.points.find((p) => p.id === s.selectedObjects[0]!.id) ?? null)
+      : null
+  );
+
+  const pedestrian = useEditorStore(
+    (s) => s.pedestrians.find((p) => p.id === s.selectedIds[0]) ?? null
+  );
+
+  const building = useEditorStore((s) => {
+    if (s.selectedIds[0]) {
+      const b = s.buildings.find((x) => x.id === s.selectedIds[0]);
       if (b) return b;
     }
     if (
-      !selectedId &&
-      selectedObject?.type === 'building' &&
-      selectedObject.id
+      !s.selectedIds[0] &&
+      s.selectedObjects[0]?.type === 'building' &&
+      s.selectedObjects[0].id
     ) {
-      return buildings.find((x) => x.id === selectedObject.id) ?? null;
+      return s.buildings.find((x) => x.id === s.selectedObjects[0]!.id) ?? null;
     }
     return null;
-  }, [buildings, selectedId, selectedObject]);
+  });
 
   const carLidars = useMemo(
     () => (car ? lidars.filter((l) => l.carId === car.id) : []),

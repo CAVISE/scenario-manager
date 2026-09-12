@@ -2,6 +2,7 @@ import { useScenarioCreateMutation } from '../../useScenarioQueries';
 import { getApiErrorMessage } from '@/api/errors';
 import { buildScenarioPayload } from '@right-panel/components/ScenarioControlWidget/Handlers';
 import { useAppToast } from '@/components/AppToast';
+import { useEditorStore } from '@/store';
 
 export function useScenarioSave() {
   const createScenarioMutation = useScenarioCreateMutation();
@@ -11,6 +12,7 @@ export function useScenarioSave() {
     try {
       const payload = buildScenarioPayload();
       await createScenarioMutation.mutateAsync({ payload });
+      useEditorStore.getState().setSceneExplicitlyCleared(false);
       toast.success('Scenario saved successfully');
     } catch (err) {
       console.error(err);

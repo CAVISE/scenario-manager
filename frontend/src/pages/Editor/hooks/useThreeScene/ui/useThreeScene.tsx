@@ -86,9 +86,7 @@ export function useThreeScene({
     isDraggingRef,
   });
 
-  const { loadPoints, syncRoadMesh, localLineArrRef } = useSceneObjects({
-    updateSceneGraph,
-  });
+  const { loadPoints, syncRoadMesh, localLineArrRef } = useSceneObjects();
 
   const { getOdrMeshes, loadOdrMap, reloadOdrMap, setModuleRef, setMapRef } =
     useOdrMapManager({
@@ -117,9 +115,6 @@ export function useThreeScene({
     getOpenDriveMap: () => setMapRef.current,
     spotlightEnabled: () => true,
   });
-  useEffect(() => {
-    setThreeReady(true);
-  }, []);
   /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     if (!threeReady) return;

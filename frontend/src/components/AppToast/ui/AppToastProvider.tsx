@@ -25,6 +25,17 @@ export function AppToastProvider({ children }: { children: ReactNode }) {
   const [level, setLevel] = useState<ToastLevel>('info');
   const [action, setAction] = useState<ToastAction | null>(null);
   const actionRef = useRef<ToastAction | null>(null);
+  const invalidateUnsubRef = useRef<(() => void) | null>(null);
+
+  const clearInvalidateSub = useCallback(() => {
+    invalidateUnsubRef.current?.();
+    invalidateUnsubRef.current = null;
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setOpen(false);
+    clearInvalidateSub();
+  }, [clearInvalidateSub]);
 
   const show = useCallback(
     (
@@ -33,31 +44,40 @@ export function AppToastProvider({ children }: { children: ReactNode }) {
       nextAction: ToastAction | null = null
     ) => {
       if (!nextMessage.trim()) return;
+      clearInvalidateSub();
       setLevel(nextLevel);
       setMessage(nextMessage);
       setAction(nextAction);
       actionRef.current = nextAction;
       setOpen(true);
-    },
-    []
-  );
 
-  const handleClose = useCallback(() => {
-    setOpen(false);
-  }, []);
+      if (nextAction?.subscribeInvalidate) {
+        invalidateUnsubRef.current = nextAction.subscribeInvalidate(() => {
+          setOpen(false);
+          clearInvalidateSub();
+        });
+      }
+    },
+    [clearInvalidateSub]
+  );
 
   const handleActionClick = useCallback(() => {
     actionRef.current?.onClick();
     setOpen(false);
-  }, []);
+    clearInvalidateSub();
+  }, [clearInvalidateSub]);
 
   const value = useMemo<ToastApi>(
     () => ({
       success: (msg) => show('success', msg),
       error: (msg) => show('error', msg),
       info: (msg) => show('info', msg),
-      undo: (msg, onAction, actionLabel = 'Undo') =>
-        show('info', msg, { label: actionLabel, onClick: onAction }),
+      undo: (msg, onAction, actionLabel = 'Undo', subscribeInvalidate) =>
+        show('info', msg, {
+          label: actionLabel,
+          onClick: onAction,
+          subscribeInvalidate,
+        }),
     }),
     [show]
   );

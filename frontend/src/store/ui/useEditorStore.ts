@@ -18,10 +18,15 @@ import type {
   DeletionSnapshot,
   HistoryEntry,
   ErrorLogEntry,
+  SimulationSession,
 } from '../types/useEditorStoreTypes';
 
 export type { EditorState, Car, RSU, Lidar, Building, Point, Scenario };
 export type { DeletedEntity, DeletionSnapshot, HistoryEntry, ErrorLogEntry };
+export type {
+  SimulationPhase,
+  SimulationSession,
+} from '../types/useEditorStoreTypes';
 export type {
   V2XProtocol,
   BuildingMaterial,
@@ -32,6 +37,14 @@ export type { SimulationConfig } from '@editor/Generators/types/configGenerators
 const MAX_HISTORY_SIZE = 100;
 
 const MAX_ERROR_LOG_SIZE = 300;
+
+const initialSimulationSession: SimulationSession = {
+  phase: 'idle',
+  runId: null,
+  status: null,
+  error: null,
+  startedAt: null,
+};
 export type EditorPersist = Pick<
   EditorState,
   | 'cars'
@@ -41,21 +54,40 @@ export type EditorPersist = Pick<
   | 'buildings'
   | 'Scenario'
   | 'simConfig'
-  | 'selectedId'
-  | 'selectedObject'
+  | 'selectedIds'
+  | 'selectedObjects'
   | 'pedestrians'
 >;
 
 const persistOptions: PersistOptions<EditorState, EditorPersist> = {
   name: 'editor-scenario-cache',
-  version: 1,
-  migrate: (persisted) => {
-    const state = persisted as Partial<EditorPersist>;
-    const simConfig = state.simConfig;
-    if (!simConfig?.opencda) return state as EditorPersist;
+  version: 2,
+  migrate: (persisted, version) => {
+    const state = persisted as Partial<EditorPersist> & {
+      selectedId?: string | null;
+      selectedObject?: EditorPersist['selectedObjects'][number] | null;
+    };
+    let next: Partial<EditorPersist> & {
+      selectedId?: string | null;
+      selectedObject?: EditorPersist['selectedObjects'][number] | null;
+    } = {
+      ...state,
+    };
+
+    if (version < 2) {
+      const { selectedId, selectedObject, ...rest } = next;
+      next = {
+        ...rest,
+        selectedIds: selectedId ? [selectedId] : [],
+        selectedObjects: selectedObject ? [selectedObject] : [],
+      };
+    }
+
+    const simConfig = next.simConfig;
+    if (!simConfig?.opencda) return next as EditorPersist;
 
     return {
-      ...state,
+      ...next,
       simConfig: {
         ...simConfig,
         opencda: {
@@ -77,8 +109,8 @@ const persistOptions: PersistOptions<EditorState, EditorPersist> = {
     buildings: state.buildings,
     Scenario: { ...state.Scenario, file_: null },
     simConfig: state.simConfig,
-    selectedId: state.selectedId,
-    selectedObject: state.selectedObject,
+    selectedIds: state.selectedIds,
+    selectedObjects: state.selectedObjects,
     pedestrians: state.pedestrians,
   }),
   merge: (persisted, current) => {
@@ -100,12 +132,13 @@ const persistOptions: PersistOptions<EditorState, EditorPersist> = {
 const storeCreator: StateCreator<EditorState> = (set, get) => ({
   cars: [],
   error: null,
+  simulationSession: initialSimulationSession,
   pedestrians: [],
   points: [],
   buildings: [],
   lidars: [],
-  selectedId: null,
-  selectedObject: null,
+  selectedIds: [],
+  selectedObjects: [],
   isBuildingMode: false,
   routes: [[]],
   RSUs: [],
@@ -123,16 +156,18 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
     description: '',
     file_: null,
   },
+  sceneExplicitlyCleared: false,
 
-  removeSelectedId: () => set({ selectedId: null, selectedObject: null }),
+  clearSelection: () => set({ selectedIds: [], selectedObjects: [] }),
   setBuildingMode: (value) => {
     if (!value) {
       console.trace('[building-mode] setBuildingMode(false) called');
     }
-    set({ isBuildingMode: value, ...(value && { selectedId: null }) });
+    set({ isBuildingMode: value, ...(value && { selectedIds: [] }) });
   },
   updateScenario: (props) =>
     set((s) => ({ Scenario: { ...s.Scenario, ...props } })),
+  setSceneExplicitlyCleared: (value) => set({ sceneExplicitlyCleared: value }),
 
   updateSimConfig: (props) =>
     set((s) => ({
@@ -168,6 +203,12 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
   },
 
   clearErrorLog: () => set({ errorLog: [] }),
+  updateSimulationSession: (patch) =>
+    set((s) => ({
+      simulationSession: { ...s.simulationSession, ...patch },
+    })),
+  resetSimulationSession: () =>
+    set({ simulationSession: { ...initialSimulationSession } }),
   updateSimConfigOmnet: (props) =>
     set((s) => {
       const simConfig = mergeSimConfigWithDefaults(s.simConfig);
@@ -236,7 +277,7 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
   removePedestrian: (id) =>
     set((s) => ({
       pedestrians: s.pedestrians.filter((p) => p.id !== id),
-      selectedId: s.selectedId === id ? null : s.selectedId,
+      selectedIds: s.selectedIds.filter((sid) => sid !== id),
     })),
   removeAllPedestrians: () =>
     set(() => ({
@@ -281,7 +322,7 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
         ...s.cars,
         { id, x, y, z, model, color, scale: 1, rotation: 0, speed },
       ],
-      selectedId: id,
+      selectedIds: [id],
       isBuildingMode: false,
     }));
     return id;
@@ -305,7 +346,7 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
         cars: s.cars.filter((c) => c.id !== id),
         points: s.points.filter((p) => p.carId !== id),
         lidars: s.lidars.filter((l) => l.carId !== id),
-        selectedId: s.selectedId === id ? null : s.selectedId,
+        selectedIds: s.selectedIds.filter((sid) => sid !== id),
       };
     }),
   removeAllCars: () =>
@@ -436,14 +477,29 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
       points: s.points.map((p) => (p.id === id ? { ...p, ...props } : p)),
     })),
 
-  selectObject: (obj) =>
-    set(() => {
-      const selectedId = obj?.id || null;
-      return {
-        selectedId,
-        selectedObject: obj,
-      };
-    }),
+  selectObjects: (objs) =>
+    set(() => ({
+      selectedIds: objs
+        .map((o) => o.id)
+        .filter((id): id is string => typeof id === 'string'),
+      selectedObjects: objs,
+    })),
+
+  toggleObjectSelection: (obj) => {
+    const objectId = obj.id;
+    if (typeof objectId !== 'string') return;
+
+    set((s) => {
+      const isSelected = s.selectedIds.includes(objectId);
+      const selectedIds = isSelected
+        ? s.selectedIds.filter((id) => id !== objectId)
+        : [...s.selectedIds, objectId];
+      const selectedObjects = isSelected
+        ? s.selectedObjects.filter((o) => o.id !== objectId)
+        : [...s.selectedObjects, obj];
+      return { selectedIds, selectedObjects };
+    });
+  },
 
   addBuilding: (x, y, z) => {
     const id = nanoid();
@@ -596,9 +652,10 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
   clearDeletionHistory: () => set({ deletionHistory: [] }),
 
   pushHistoryEntry: (entry) => {
+    const id = nanoid();
     set((s) => {
       const base = s.historyStack.slice(0, s.historyCursor);
-      const next = [...base, { ...entry, id: nanoid(), timestamp: Date.now() }];
+      const next = [...base, { ...entry, id, timestamp: Date.now() }];
       const overflow = next.length - MAX_HISTORY_SIZE;
       const trimmed = overflow > 0 ? next.slice(overflow) : next;
       return {
@@ -606,6 +663,7 @@ const storeCreator: StateCreator<EditorState> = (set, get) => ({
         historyCursor: trimmed.length,
       };
     });
+    return id;
   },
 
   undo: () => {

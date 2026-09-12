@@ -67,7 +67,8 @@ const createStoreState = () => {
     RSUs: [] as RSUItem[],
     lidars: [] as LidarItem[],
     Scenario: { id: '', name: '', weather: '' } as Record<string, unknown>,
-    selectedId: '',
+    selectedIds: [] as string[],
+    sceneExplicitlyCleared: false,
     simConfig: undefined as unknown,
     addCar: vi.fn(),
     updateCar: vi.fn(),
@@ -96,6 +97,7 @@ const createStoreState = () => {
     addBuildingsBatch: vi.fn(),
     addPointsBatch: vi.fn(),
     addLidarsBatch: vi.fn(),
+    setSceneExplicitlyCleared: vi.fn(),
   };
 
   state.addCarsBatch.mockImplementation((carsToAdd: Array<unknown>) => {
@@ -243,8 +245,9 @@ const resetStore = () => {
   storeState.RSUs = [];
   storeState.lidars = [];
   storeState.Scenario = { id: '', name: '', weather: '' };
-  storeState.selectedId = '';
+  storeState.selectedIds = [];
   storeState.simConfig = undefined;
+  storeState.sceneExplicitlyCleared = false;
 
   [
     storeState.addCar,
@@ -265,6 +268,7 @@ const resetStore = () => {
     storeState.removeBuilding,
     storeState.removePedestrian,
     storeState.updateScenario,
+    storeState.setSceneExplicitlyCleared,
     storeState.removeAllCars,
     storeState.removeAllBuildings,
     storeState.removeAllPedestrians,
@@ -476,7 +480,7 @@ describe('buildScenarioPayload', () => {
         rotation_frequency: 10,
       } as Lidar,
     ];
-    storeState.selectedId = 'car-1';
+    storeState.selectedIds = ['car-1'];
 
     const payload = buildScenarioPayload();
     const scenario = payload.scenario as ScenarioGroup[];
@@ -507,7 +511,7 @@ describe('buildScenarioPayload', () => {
     expect(carPath.lidars![0].channels).toBe(16);
   });
 
-  it('marks car as not selected when id does not match selectedId', () => {
+  it('marks car as not selected when id does not match selectedIds', () => {
     storeState.cars = [
       {
         id: 'car-2',
@@ -520,7 +524,7 @@ describe('buildScenarioPayload', () => {
         rotation: 0,
       } as Car,
     ];
-    storeState.selectedId = 'car-1';
+    storeState.selectedIds = ['car-1'];
 
     const payload = buildScenarioPayload();
     const scenario = payload.scenario as ScenarioGroup[];
@@ -676,14 +680,13 @@ describe('buildScenarioPayload', () => {
 
 describe('handleCreate', () => {
   it('calls mutateAsync and sets success notice', async () => {
-    storeState.Scenario = { id: '', name: 'Saved scenario', weather: '' };
+    storeState.Scenario = { id: 'sc-new', name: 'Saved scenario', weather: '' };
     const setNotice = vi.fn();
-    const onIdResolved = vi.fn();
     const createMutation = {
       mutateAsync: vi.fn().mockResolvedValue({}),
     } as unknown as ReturnType<typeof useScenarioCreateMutation>;
 
-    await handleCreate(setNotice, createMutation, 'sc-new', onIdResolved);
+    await handleCreate(setNotice, createMutation);
 
     expect(createMutation.mutateAsync).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -694,27 +697,21 @@ describe('handleCreate', () => {
         }),
       })
     );
-    expect(storeState.updateScenario).toHaveBeenCalledWith({
-      id: 'sc-new',
-    });
-    expect(onIdResolved).toHaveBeenCalledWith('sc-new');
+    expect(storeState.updateScenario).not.toHaveBeenCalled();
     expect(setNotice).toHaveBeenCalledWith('Scenario saved.');
   });
 
   it('resolves id from server response when none was provided locally', async () => {
     storeState.Scenario = { id: '', name: 'Saved scenario', weather: '' };
     const setNotice = vi.fn();
-    const onIdResolved = vi.fn();
     const createMutation = {
       mutateAsync: vi.fn().mockResolvedValue({ scenario_id: 'srv-id' }),
     } as unknown as ReturnType<typeof useScenarioCreateMutation>;
 
-    await handleCreate(setNotice, createMutation, '', onIdResolved);
-
+    await handleCreate(setNotice, createMutation);
     expect(storeState.updateScenario).toHaveBeenCalledWith({
       id: 'srv-id',
     });
-    expect(onIdResolved).toHaveBeenCalledWith('srv-id');
   });
 
   it('shows validation message without calling mutate', async () => {
@@ -724,8 +721,7 @@ describe('handleCreate', () => {
       mutateAsync: vi.fn(),
     } as unknown as ReturnType<typeof useScenarioCreateMutation>;
 
-    await handleCreate(setNotice, createMutation, 'sc-new');
-
+    await handleCreate(setNotice, createMutation);
     expect(createMutation.mutateAsync).not.toHaveBeenCalled();
     expect(setNotice).toHaveBeenCalledWith('Scenario name is required.');
   });

@@ -116,10 +116,12 @@ describe('toUpdateScenarioBody', () => {
     ).toEqual({
       scenario_id: 'sc-1',
       scenario_name: undefined,
-      annotation: undefined,
+      description: undefined,
       preview: undefined,
       file_: file,
       scenario: { scenario_text: [] },
+      map: undefined,
+      explicit_clear: false,
     });
   });
 
@@ -139,6 +141,8 @@ describe('toUpdateScenarioBody', () => {
       description: undefined,
       preview: undefined,
       file_: undefined,
+      map: undefined,
+      explicit_clear: false,
     });
   });
 

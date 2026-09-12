@@ -13,3 +13,11 @@ export interface CreateTransformListenerOptions {
   cubeCirclesRef: MutableRefObject<THREE.Mesh[][]>;
   carQuaternionsRef: MutableRefObject<Map<string, THREE.Quaternion>>;
 }
+export type MoveKind =
+  'car' | 'rsu' | 'lidar' | 'building' | 'pedestrian' | 'point';
+
+export type ActiveMove = {
+  kind: MoveKind;
+  id: string;
+  before: Record<string, unknown>;
+};

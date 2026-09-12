@@ -9,9 +9,11 @@ import { OpenCDASensingSection } from './components/OpenCDASensingSection';
 import { PositionSection } from './components/PositionSection';
 import { ScriptSection } from './components/ScriptSection';
 import { V2XParametersSection } from './components/V2XParametersSection';
+import { usePropertiesMode } from '../../../context/PropertiesModeContext';
 
 export default function RSUProperties({ rsu, onDelete }: RSUPropertiesProps) {
   const updateRSU = useEditorStore((s) => s.updateRSU);
+  const propertiesMode = usePropertiesMode();
 
   const [showBehaviorServices, setShowBehaviorServices] = useState(
     (rsu.opencda_behavior_services?.length ?? 0) > 0
@@ -28,33 +30,37 @@ export default function RSUProperties({ rsu, onDelete }: RSUPropertiesProps) {
 
       <V2XParametersSection rsu={rsu} updateRSU={updateRSU} />
 
-      <OpenCDAIdentitySection
-        rsu={rsu}
-        updateRSU={updateRSU}
-        showName={showName}
-        setShowName={setShowName}
-        showId={showId}
-        setShowId={setShowId}
-        setShowBehaviorServices={setShowBehaviorServices}
-      />
+      {propertiesMode === 'advanced' && (
+        <>
+          <OpenCDAIdentitySection
+            rsu={rsu}
+            updateRSU={updateRSU}
+            showName={showName}
+            setShowName={setShowName}
+            showId={showId}
+            setShowId={setShowId}
+            setShowBehaviorServices={setShowBehaviorServices}
+          />
 
-      <OpenCDAColorSection
-        rsu={rsu}
-        updateRSU={updateRSU}
-        showColor={showColor}
-        setShowColor={setShowColor}
-      />
+          <OpenCDAColorSection
+            rsu={rsu}
+            updateRSU={updateRSU}
+            showColor={showColor}
+            setShowColor={setShowColor}
+          />
 
-      <BehaviorServicesSection
-        rsu={rsu}
-        updateRSU={updateRSU}
-        showBehaviorServices={showBehaviorServices}
-        setShowBehaviorServices={setShowBehaviorServices}
-      />
+          <BehaviorServicesSection
+            rsu={rsu}
+            updateRSU={updateRSU}
+            showBehaviorServices={showBehaviorServices}
+            setShowBehaviorServices={setShowBehaviorServices}
+          />
 
-      <OpenCDASensingSection rsu={rsu} updateRSU={updateRSU} />
+          <OpenCDASensingSection rsu={rsu} updateRSU={updateRSU} />
 
-      <ScriptSection rsu={rsu} updateRSU={updateRSU} />
+          <ScriptSection rsu={rsu} updateRSU={updateRSU} />
+        </>
+      )}
 
       <Button color="error" variant="outlined" onClick={onDelete}>
         Delete RSU

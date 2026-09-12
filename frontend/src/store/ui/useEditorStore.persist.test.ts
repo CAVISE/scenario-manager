@@ -29,8 +29,8 @@ beforeEach(() => {
       points: [],
       buildings: [],
       pedestrians: [],
-      selectedId: null,
-      selectedObject: null,
+      selectedIds: [],
+      selectedObjects: [],
       isBuildingMode: false,
       isPanelOpen: true,
       error: null,
@@ -53,24 +53,27 @@ describe('updateScenario', () => {
 });
 
 describe('setBuildingMode', () => {
-  it('sets isBuildingMode to true and clears selectedId', () => {
+  it('sets isBuildingMode to true and clears selectedIds', () => {
     act(() => {
-      useEditorStore.setState({ selectedId: 'some-id' });
+      useEditorStore.setState({ selectedIds: ['some-id'] });
       useEditorStore.getState().setBuildingMode(true);
     });
     const state = useEditorStore.getState();
     expect(state.isBuildingMode).toBe(true);
-    expect(state.selectedId).toBeNull();
+    expect(state.selectedIds).toEqual([]);
   });
 
-  it('sets isBuildingMode to false without clearing selectedId', () => {
+  it('sets isBuildingMode to false without clearing selectedIds', () => {
     act(() => {
-      useEditorStore.setState({ selectedId: 'some-id', isBuildingMode: true });
+      useEditorStore.setState({
+        selectedIds: ['some-id'],
+        isBuildingMode: true,
+      });
       useEditorStore.getState().setBuildingMode(false);
     });
     const state = useEditorStore.getState();
     expect(state.isBuildingMode).toBe(false);
-    expect(state.selectedId).toBe('some-id');
+    expect(state.selectedIds).toEqual(['some-id']);
   });
 });
 
@@ -106,7 +109,7 @@ describe('addCar', () => {
     act(() => {
       id = useEditorStore.getState().addCar(1, 2, 3, 'sedan', 'red');
     });
-    const { cars, selectedId, isBuildingMode } = useEditorStore.getState();
+    const { cars, selectedIds, isBuildingMode } = useEditorStore.getState();
     expect(cars).toHaveLength(1);
     expect(cars[0]).toMatchObject({
       x: 1,
@@ -116,7 +119,7 @@ describe('addCar', () => {
       color: 'red',
       speed: 50,
     });
-    expect(selectedId).toBe(id!);
+    expect(selectedIds).toEqual([id!]);
     expect(isBuildingMode).toBe(false);
   });
 
@@ -156,25 +159,25 @@ describe('removeCar', () => {
     expect(lidars.filter((l) => l.carId === carId!)).toHaveLength(0);
   });
 
-  it('clears selectedId when removing the selected car', () => {
+  it('clears selectedIds when removing the selected car', () => {
     let id: string;
     act(() => {
       id = useEditorStore.getState().addCar(0, 0, 0, 'sedan', 'red');
     });
-    expect(useEditorStore.getState().selectedId).toBe(id!);
+    expect(useEditorStore.getState().selectedIds).toEqual([id!]);
     act(() => useEditorStore.getState().removeCar(id!));
-    expect(useEditorStore.getState().selectedId).toBeNull();
+    expect(useEditorStore.getState().selectedIds).toEqual([]);
   });
 
-  it('preserves selectedId when removing a different car', () => {
+  it('preserves selectedIds when removing a different car', () => {
     let id1: string, id2: string;
     act(() => {
       id1 = useEditorStore.getState().addCar(0, 0, 0, 'sedan', 'red');
       id2 = useEditorStore.getState().addCar(1, 1, 1, 'suv', 'blue');
-      useEditorStore.setState({ selectedId: id1 });
+      useEditorStore.setState({ selectedIds: [id1] });
     });
     act(() => useEditorStore.getState().removeCar(id2!));
-    expect(useEditorStore.getState().selectedId).toBe(id1!);
+    expect(useEditorStore.getState().selectedIds).toEqual([id1!]);
   });
 });
 
@@ -413,55 +416,55 @@ describe('updatePedestrian', () => {
 });
 
 describe('removePedestrian', () => {
-  it('removes pedestrian by id and clears selectedId if matched', () => {
+  it('removes pedestrian by id and clears selectedIds if matched', () => {
     let id: string;
     act(() => {
       id = useEditorStore.getState().addPedestrian(0, 0, 0);
     });
-    act(() => useEditorStore.setState({ selectedId: id! }));
+    act(() => useEditorStore.setState({ selectedIds: [id!] }));
     act(() => useEditorStore.getState().removePedestrian(id!));
     expect(useEditorStore.getState().pedestrians).toHaveLength(0);
-    expect(useEditorStore.getState().selectedId).toBeNull();
+    expect(useEditorStore.getState().selectedIds).toEqual([]);
   });
 
-  it('preserves selectedId when removing a different pedestrian', () => {
+  it('preserves selectedIds when removing a different pedestrian', () => {
     let id1: string, id2: string;
     act(() => {
       id1 = useEditorStore.getState().addPedestrian(0, 0, 0);
       id2 = useEditorStore.getState().addPedestrian(1, 1, 0);
-      useEditorStore.setState({ selectedId: id1 });
+      useEditorStore.setState({ selectedIds: [id1] });
     });
     act(() => useEditorStore.getState().removePedestrian(id2!));
-    expect(useEditorStore.getState().selectedId).toBe(id1!);
+    expect(useEditorStore.getState().selectedIds).toEqual([id1!]);
   });
 });
 
-describe('selectObject', () => {
-  it('sets selectedId and selectedObject', () => {
+describe('selectObjects', () => {
+  it('sets selectedIds and selectedObjects', () => {
     const obj = { id: 'abc', type: 'car' } as unknown as SelectedObject;
-    act(() => useEditorStore.getState().selectObject(obj));
-    expect(useEditorStore.getState().selectedId).toBe('abc');
-    expect(useEditorStore.getState().selectedObject).toBe(obj);
+    act(() => useEditorStore.getState().selectObjects([obj]));
+    expect(useEditorStore.getState().selectedIds).toEqual(['abc']);
+    expect(useEditorStore.getState().selectedObjects).toEqual([obj]);
   });
 
-  it('clears selection when called with null', () => {
+  it('clears selection when called with an empty array', () => {
     act(() => {
-      useEditorStore.getState().selectObject({ id: 'x' } as SelectedObject);
-      useEditorStore.getState().selectObject(null as unknown as SelectedObject);
+      useEditorStore.getState().selectObjects([{ id: 'x' } as SelectedObject]);
+      useEditorStore.getState().selectObjects([]);
     });
-    expect(useEditorStore.getState().selectedId).toBeNull();
-    expect(useEditorStore.getState().selectedObject).toBeNull();
+    expect(useEditorStore.getState().selectedIds).toEqual([]);
+    expect(useEditorStore.getState().selectedObjects).toEqual([]);
   });
 });
 
-describe('removeSelectedId', () => {
-  it('clears both selectedId and selectedObject', () => {
+describe('clearSelection', () => {
+  it('clears both selectedIds and selectedObjects', () => {
     act(() => {
-      useEditorStore.getState().selectObject({ id: 'x' } as SelectedObject);
-      useEditorStore.getState().removeSelectedId();
+      useEditorStore.getState().selectObjects([{ id: 'x' } as SelectedObject]);
+      useEditorStore.getState().clearSelection();
     });
-    expect(useEditorStore.getState().selectedId).toBeNull();
-    expect(useEditorStore.getState().selectedObject).toBeNull();
+    expect(useEditorStore.getState().selectedIds).toEqual([]);
+    expect(useEditorStore.getState().selectedObjects).toEqual([]);
   });
 });
 

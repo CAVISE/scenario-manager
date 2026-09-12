@@ -10,3 +10,7 @@ export interface OverlapCheckResult {
   overlaps: boolean;
   penetrationDepth?: number;
 }
+export interface Vec2 {
+  x: number;
+  y: number;
+}

@@ -6,6 +6,9 @@ export interface SimulationStatus {
   error: string | null;
   map: string | null;
   run_id: string | null;
+  tick?: number;
+  max_ticks?: number;
+  partial?: boolean;
 }
 
 export const WS_URL =

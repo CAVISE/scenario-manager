@@ -194,6 +194,8 @@ export function useDblClickHandler(ctx: SharedMouseContext) {
 
   return useCallback(
     (e: MouseEvent) => {
+      if (useEditorStore.getState().simulationSession.phase === 'running')
+        return;
       if (!ctx.insideEditorCanvas(e)) return;
       const transformControls = transformControlsRef.current;
       if (!transformControls) return;
@@ -256,7 +258,7 @@ export function useDblClickHandler(ctx: SharedMouseContext) {
         return;
       }
 
-      const currentSelectedId = useEditorStore.getState().selectedId;
+      const currentSelectedId = useEditorStore.getState().selectedIds[0];
       const selectedIdx = carMeshes.findIndex(
         (m) => m.userData.id === currentSelectedId
       );

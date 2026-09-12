@@ -16,7 +16,7 @@ const storeState = {
     description: 'A test scenario',
   } as Record<string, unknown>,
   simConfig: undefined as unknown,
-  selectedId: '',
+  selectedIds: [] as string[],
   cars: [] as Array<Record<string, unknown> & { id: string }>,
   points: [] as Array<Record<string, unknown> & { carId?: string }>,
   lidars: [] as Array<Record<string, unknown> & { carId?: string }>,
@@ -47,7 +47,7 @@ const resetStoreState = () => {
     description: 'A test scenario',
   };
   storeState.simConfig = undefined;
-  storeState.selectedId = '';
+  storeState.selectedIds = [];
   storeState.cars = [];
   storeState.points = [];
   storeState.lidars = [];
@@ -84,6 +84,18 @@ describe('scenario.load.handler (sync preview)', () => {
 
       expect(result).toBe('data:image/png;base64,SYNC_PREVIEW');
       expect(canvas.toDataURL).toHaveBeenCalledTimes(1);
+    });
+
+    it('attempts to downscale a large canvas via an offscreen canvas, falling back to full-resolution encoding if 2D context is unavailable', () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1920;
+      canvas.height = 1080;
+      canvas.toDataURL = vi.fn(() => 'data:image/png;base64,FULL_RES');
+      setCanvasReference(canvas);
+
+      const result = generatePreviewSync();
+
+      expect(result).toEqual(expect.stringMatching(/^data:image\/png;base64,/));
     });
 
     it('returns cached preview on subsequent calls without recapturing', () => {
@@ -259,7 +271,7 @@ describe('scenario.load.handler (sync preview)', () => {
     });
 
     it('marks selected car correctly', () => {
-      storeState.selectedId = 'car-1';
+      storeState.selectedIds = ['car-1'];
       storeState.cars = [
         {
           id: 'car-1',

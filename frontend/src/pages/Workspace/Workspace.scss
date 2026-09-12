@@ -1,0 +1,465 @@
+:root {
+  --workspace-bg: #f3f7fc;
+  --workspace-surface: #fff;
+  --workspace-text: #153653;
+  --workspace-muted: #56718a;
+  --workspace-border: #d8e5f2;
+  --workspace-accent: #2163e8;
+  --workspace-accent-soft: #edf3ff;
+  --workspace-hover: #f0f5fb;
+  --workspace-danger: #b93838;
+  --workspace-danger-soft: #fff0ef;
+  --workspace-success: #18704e;
+  --workspace-success-soft: #eaf6ef;
+  --workspace-shadow: 0 8px 28px rgb(15 35 58 / 10%);
+
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --workspace-bg: #102132;
+  --workspace-surface: #172e44;
+  --workspace-text: #e3edf8;
+  --workspace-muted: #a3bdd5;
+  --workspace-border: #2d4963;
+  --workspace-accent: #8ab8ff;
+  --workspace-accent-soft: #203d61;
+  --workspace-hover: #203c53;
+  --workspace-danger: #ffaaa1;
+  --workspace-danger-soft: #4a2b32;
+  --workspace-success: #7bdab3;
+  --workspace-success-soft: #1d4139;
+  --workspace-shadow: 0 8px 28px rgb(0 0 0 / 22%);
+
+  color-scheme: dark;
+}
+
+.workspace-shell {
+  height: 100dvh;
+  display: grid;
+  grid-template: 64px minmax(0, 1fr) / 220px minmax(0, 1fr);
+  background: var(--workspace-bg);
+  color: var(--workspace-text);
+  font:
+    16px/1.5 -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+
+  a {
+    color: #2563eb;
+    text-decoration: none;
+  }
+
+  button,
+  input,
+  select {
+    font: inherit;
+  }
+
+  button,
+  select {
+    cursor: pointer;
+  }
+
+  button,
+  input,
+  select {
+    border: 1px solid var(--workspace-border);
+    border-radius: 7px;
+    background: var(--workspace-surface);
+    color: var(--workspace-text);
+    padding: 9px 14px;
+  }
+
+  button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible {
+    outline: 2px solid #438bff;
+    outline-offset: 3px;
+  }
+
+  input,
+  textarea {
+    user-select: text !important;
+  }
+
+  .workspace-primary {
+    color: #fff;
+    background: #1463ee;
+    border-color: #1463ee;
+  }
+}
+
+.workspace-topbar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 0 28px;
+  background: #0e263b;
+  color: #fff;
+}
+
+.workspace-shell .workspace-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: #fff;
+  font-weight: 650;
+  font-size: 20px;
+}
+
+.workspace-shell .workspace-current {
+  color: #c0d5eb;
+  font-size: 14px;
+  text-align: right;
+}
+
+.workspace-current span {
+  display: block;
+  color: #7eb4ff;
+  font-size: 12px;
+}
+
+.workspace-sidebar {
+  background: #102c45;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 12px;
+}
+
+.workspace-sidebar nav {
+  display: grid;
+  gap: 6px;
+}
+
+.workspace-sidebar a {
+  color: #cee0f2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.workspace-sidebar a.active {
+  background: #1663e7;
+  color: #fff;
+}
+
+.workspace-sidebar a:hover {
+  background: #204567;
+}
+
+.workspace-sidebar-footer {
+  margin-top: auto;
+  padding: 16px;
+  color: #8eadca;
+  font-size: 12px;
+}
+
+.workspace-content {
+  min-width: 0;
+  overflow-y: auto;
+  padding: clamp(24px, 4vw, 56px);
+}
+
+.workspace-content > section {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.workspace-page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 30px;
+}
+
+.workspace-page-heading h1 {
+  margin: 4px 0 8px;
+  font-size: clamp(24px, 3vw, 32px);
+  line-height: 1.2;
+  letter-spacing: -0.7px;
+}
+
+.workspace-page-heading p {
+  margin: 0;
+  color: var(--workspace-muted);
+}
+
+.workspace-kicker {
+  color: #3374b1;
+  font-size: 12px;
+  letter-spacing: 1.2px;
+  font-weight: 600;
+}
+
+.workspace-action-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 38px;
+}
+
+.workspace-action-grid > a,
+.workspace-action-grid > button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  text-align: left;
+  background: var(--workspace-surface);
+  border: 1px solid var(--workspace-border);
+  border-radius: 9px;
+  padding: 24px 18px;
+  color: var(--workspace-text);
+  box-shadow: 0 3px 14px #173d6310;
+}
+
+.workspace-action-grid svg {
+  color: #216cff;
+  margin-bottom: 12px;
+  font-size: 30px;
+}
+
+.workspace-action-grid span {
+  font-size: 14px;
+  color: var(--workspace-muted);
+}
+
+.workspace-action-grid > :hover {
+  border-color: #7af;
+}
+
+.workspace-section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.workspace-section-heading h2,
+.workspace-settings-card h2 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.workspace-section-heading a {
+  font-size: 14px;
+}
+
+.workspace-scenario-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border: 1px solid var(--workspace-border);
+  border-radius: 9px;
+  overflow: hidden;
+}
+
+.workspace-scenario-list li + li {
+  border-top: 1px solid var(--workspace-border);
+}
+
+.workspace-shell .workspace-scenario-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  padding: 16px 20px;
+  border: 0;
+  border-radius: 0;
+  text-align: left;
+}
+
+.workspace-scenario-card:hover {
+  box-shadow: inset 3px 0 #216cff;
+}
+
+.workspace-scenario-card img,
+.workspace-map-placeholder {
+  width: 90px;
+  height: 64px;
+  border-radius: 5px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.workspace-map-placeholder {
+  display: grid;
+  place-items: center;
+  background: #e5f0ff;
+  color: #4284c3;
+  font-size: 32px;
+}
+
+.workspace-scenario-copy {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.workspace-scenario-copy strong,
+.workspace-scenario-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspace-scenario-copy small {
+  font-size: 14px;
+  color: var(--workspace-muted);
+  margin-top: 4px;
+}
+
+.workspace-open-label {
+  color: #307adc;
+  font-size: 14px;
+}
+
+.workspace-badge {
+  border-radius: 12px;
+  padding: 3px 10px;
+  font-size: 12px;
+  background: #e5f0ff;
+  color: #2162ac;
+}
+
+.workspace-list-tools {
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.workspace-list-tools input {
+  width: min(440px, 100%);
+  box-sizing: border-box;
+}
+
+.workspace-list-tools label {
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+.workspace-list-tools select {
+  margin-left: 8px;
+}
+
+.workspace-count {
+  color: var(--workspace-muted);
+  font-size: 14px;
+}
+
+.workspace-empty {
+  padding: 40px 24px;
+  border: 1px dashed var(--workspace-border);
+  border-radius: 8px;
+  color: var(--workspace-muted);
+  background: var(--workspace-surface);
+  text-align: center;
+}
+
+.workspace-settings-card {
+  border: 1px solid var(--workspace-border);
+  border-radius: 9px;
+  padding: 24px;
+  margin-bottom: 20px;
+  background: var(--workspace-surface);
+}
+
+.workspace-setting {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding-top: 22px;
+  font-size: 14px;
+}
+
+.workspace-setting input[type='checkbox'] {
+  width: 20px;
+  height: 20px;
+  accent-color: #216cff;
+}
+
+@media (width <= 1050px) {
+  .workspace-action-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (width <= 700px) {
+  .workspace-shell {
+    grid-template: 60px auto minmax(0, 1fr) / minmax(0, 1fr);
+  }
+
+  .workspace-topbar {
+    padding: 0 16px;
+  }
+
+  .workspace-shell .workspace-brand {
+    font-size: 17px;
+  }
+
+  .workspace-current {
+    display: none;
+  }
+
+  .workspace-sidebar {
+    padding: 6px;
+  }
+
+  .workspace-sidebar nav {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .workspace-sidebar a {
+    justify-content: center;
+    padding: 9px 4px;
+    gap: 6px;
+  }
+
+  .workspace-sidebar-footer {
+    display: none;
+  }
+
+  .workspace-content {
+    padding: 24px 16px;
+  }
+
+  .workspace-page-heading,
+  .workspace-list-tools {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .workspace-list-tools input {
+    width: 100%;
+  }
+
+  .workspace-scenario-card img,
+  .workspace-map-placeholder {
+    width: 56px;
+    height: 48px;
+  }
+
+  .workspace-open-label,
+  .workspace-badge {
+    display: none;
+  }
+}
