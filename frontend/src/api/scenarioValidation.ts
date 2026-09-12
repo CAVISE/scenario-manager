@@ -8,8 +8,8 @@ import {
   ValidationResult,
   type ScenarioGroup,
   type ScenarioPayload,
-} from './types/IScenarioTypes';
-import type { StartSimulationPayload } from '../pages/Editor/hooks/useApiHooks/useSimulationMutation/types/useSimulationMutationTypes';
+} from './scenario.types';
+import type { StartSimulationPayload } from '../pages/editor/hooks/useSimulationMutation.types';
 import { scenarioGroupsFromPayload } from './scenarioRequest';
 
 export function validateScenarioId(

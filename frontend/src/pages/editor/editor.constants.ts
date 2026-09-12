@@ -1,0 +1,2 @@
+export const MAX_SCENE_WAIT_ATTEMPTS = 20;
+export const SCENE_WAIT_INTERVAL_MS = 150;

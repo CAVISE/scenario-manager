@@ -1,0 +1,22 @@
+import React, { useState } from 'react';
+import { SectionProps } from './right-panel.types';
+
+const Section: React.FC<SectionProps> = ({
+  label,
+  defaultOpen = true,
+  children,
+}) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  return (
+    <div className="rp-section">
+      <div className="rp-section-header" onClick={() => setIsOpen(!isOpen)}>
+        <span className="rp-section-label">{label}</span>
+        <span className={`rp-section-chevron ${isOpen ? 'open' : ''}`}>▼</span>
+      </div>
+      {isOpen && <div className="rp-section-content">{children}</div>}
+    </div>
+  );
+};
+
+export default Section;

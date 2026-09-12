@@ -11,7 +11,7 @@ import type {
   ScenarioDetail,
   ScenarioMutationResponse,
   ScenarioPayload,
-} from './types/IScenarioTypes';
+} from './scenario.types';
 
 export const scenariosApi = {
   create: (payload: ScenarioPayload, scenarioIdInput = '') =>

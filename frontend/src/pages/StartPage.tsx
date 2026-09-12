@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { CP, css, WEATHER_OPTIONS } from './types/StartPageTypes';
+import { CP, css, WEATHER_OPTIONS } from './StartPage.types';
 import { useEditorStore } from '../store';
 import {
   useScenariosListQuery,
   useScenarioCreateMutation,
   useScenarioPatchMutation,
-} from './Editor/hooks/useApiHooks/useScenarioQueries';
+} from './editor/hooks/useScenarioQueries';
 import {
   handleCreate,
   handlePatch,
-} from './components/RightPanel/components/ScenarioControlWidget/Handlers';
-import type { ScenarioListItem } from '../api/types/IScenarioTypes';
+} from './editor/right-panel/ScenarioControlWidget/handlers';
+import type { ScenarioListItem } from '../api/scenario.types';
 import { getApiErrorMessageSync } from '../api/errors';
 
 const Corner: React.FC<{ pos: CP }> = ({ pos }) => (

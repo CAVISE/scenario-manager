@@ -4,7 +4,7 @@ import {
   validateUploadPayload,
   validateStartSimulationPayload,
 } from '../scenarioValidation';
-import type { ScenarioPayload } from '../types/IScenarioTypes';
+import type { ScenarioPayload } from '../scenario.types';
 
 const OPENDRIVE = '<?xml version="1.0"?>\n<OpenDRIVE></OpenDRIVE>';
 
