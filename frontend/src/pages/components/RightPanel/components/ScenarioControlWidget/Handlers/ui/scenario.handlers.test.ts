@@ -334,6 +334,27 @@ beforeEach(() => {
 });
 
 describe('handleLoad regression', () => {
+  it('preserves top-level metadata from the normalized API response', async () => {
+    fetchQueryMock.mockResolvedValue({
+      scenario_id: 'saved-1',
+      name_of_scenario: 'Saved scenario',
+      scenario: { scenario_text: [] },
+    });
+
+    await handleLoad({
+      hasId: true,
+      scenarioIdInput: 'saved-1',
+      setNotice: vi.fn(),
+      updateSceneGraph: vi.fn(),
+      loadFile: vi.fn(),
+    });
+
+    expect(storeState.updateScenario).toHaveBeenLastCalledWith({
+      id: 'saved-1',
+      name: 'Saved scenario',
+    });
+  });
+
   it('handles all vehicle types: car, pedestrian, RSU', async () => {
     fetchQueryMock.mockResolvedValue({
       scenario: {

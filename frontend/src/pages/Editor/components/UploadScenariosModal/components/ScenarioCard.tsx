@@ -49,7 +49,12 @@ const ScenarioCard: React.FC<ScenarioCardProps> = ({
       onClick={handleClick}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleClick()}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          handleClick();
+        }
+      }}
     >
       <Box sx={cardThumbWrapStyles}>
         {thumb ? (

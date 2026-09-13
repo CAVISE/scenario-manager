@@ -164,12 +164,24 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
       onClose={handleClose}
       aria-labelledby="upload-scenarios-title"
     >
-      <ModalContainer sx={ModalContainerStyles}>
+      <ModalContainer
+        role="dialog"
+        aria-modal="true"
+        aria-label="Load Scenario"
+        tabIndex={-1}
+        sx={{
+          ...ModalContainerStyles,
+          bgcolor: 'background.paper',
+          color: 'text.primary',
+          borderColor: 'divider',
+        }}
+      >
         <ModalHeader>
           <Box sx={uploadModalBoxStyles}>
             {selectedScenario && (
               <IconButton
                 size="small"
+                aria-label="Back to scenarios"
                 onClick={handleBack}
                 sx={backButtonStyles}
               >
@@ -228,7 +240,7 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
               <Box sx={listContainerStyles}>
                 {scenarios.length === 0 && (
                   <Box sx={emptyStateStyles}>
-                    <Typography sx={{ color: '#9AA1AC', fontSize: 14 }}>
+                    <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>
                       No saved scenarios
                     </Typography>
                   </Box>

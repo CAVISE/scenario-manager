@@ -146,7 +146,14 @@ export default function SimConfigModal({ open, onClose }: SimConfigModalProps) {
 
   return (
     <Modal open={open} onClose={onClose}>
-      <Box ref={modalContentRef} sx={modalBoxSx}>
+      <Box
+        ref={modalContentRef}
+        sx={modalBoxSx}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Simulation settings"
+        tabIndex={-1}
+      >
         <Typography variant="h6" gutterBottom>
           Simulation Settings
         </Typography>

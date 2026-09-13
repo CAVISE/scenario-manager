@@ -129,17 +129,17 @@
 }
 
 .MuiSimpleTreeView-root .MuiTreeItem-content:hover {
-  background: #e9eaec !important;
+  background: var(--workspace-hover) !important;
 }
 
 .MuiSimpleTreeView-root .MuiTreeItem-content.Mui-selected,
 .MuiSimpleTreeView-root .MuiTreeItem-content.Mui-selected.Mui-focused {
-  background: #dbeafe !important;
+  background: var(--workspace-accent-soft) !important;
   border-left: 3px solid var(--workspace-accent) !important;
 }
 
 .MuiSimpleTreeView-root .MuiTreeItem-content.Mui-focused {
-  background: var(--workspace-surface) !important;
+  background: var(--workspace-hover) !important;
 }
 
 .MuiSimpleTreeView-root .MuiTreeItem-group {

@@ -5,9 +5,14 @@
   --workspace-muted: #56718a;
   --workspace-border: #d8e5f2;
   --workspace-accent: #2163e8;
+  --workspace-accent-hover: #1b54c5;
+  --workspace-on-accent: #fff;
   --workspace-accent-soft: #edf3ff;
   --workspace-hover: #f0f5fb;
   --workspace-danger: #b93838;
+  --workspace-danger-action: #b93838;
+  --workspace-danger-action-hover: #962d2d;
+  --workspace-on-danger: #fff;
   --workspace-danger-soft: #fff0ef;
   --workspace-success: #18704e;
   --workspace-success-soft: #eaf6ef;
@@ -23,12 +28,23 @@
   --workspace-muted: #a3bdd5;
   --workspace-border: #2d4963;
   --workspace-accent: #8ab8ff;
+  --workspace-accent-hover: #add0ff;
+  --workspace-on-accent: #102132;
   --workspace-accent-soft: #203d61;
   --workspace-hover: #203c53;
   --workspace-danger: #ffaaa1;
+  --workspace-danger-action: #ffaaa1;
+  --workspace-danger-action-hover: #ffc5be;
+  --workspace-on-danger: #102132;
   --workspace-danger-soft: #4a2b32;
   --workspace-success: #7bdab3;
   --workspace-success-soft: #1d4139;
+  --workspace-object-car: #8ab8ff;
+  --workspace-object-rsu: #f5bd75;
+  --workspace-object-building: #c4a5ff;
+  --workspace-object-lidar: #7bdab3;
+  --workspace-object-point: #ffa3ce;
+  --workspace-object-pedestrian: #a3adff;
   --workspace-shadow: 0 8px 28px rgb(0 0 0 / 22%);
 
   color-scheme: dark;
@@ -47,7 +63,7 @@
     sans-serif;
 
   a {
-    color: #2563eb;
+    color: var(--workspace-accent);
     text-decoration: none;
   }
 
@@ -77,11 +93,17 @@
     cursor: not-allowed;
   }
 
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--workspace-muted);
+    opacity: 1;
+  }
+
   a:focus-visible,
   button:focus-visible,
   input:focus-visible,
   select:focus-visible {
-    outline: 2px solid #438bff;
+    outline: 2px solid var(--workspace-accent);
     outline-offset: 3px;
   }
 
@@ -91,9 +113,14 @@
   }
 
   .workspace-primary {
-    color: #fff;
-    background: #1463ee;
-    border-color: #1463ee;
+    color: var(--workspace-on-accent);
+    background: var(--workspace-accent);
+    border-color: var(--workspace-accent);
+  }
+
+  .workspace-primary:hover:not(:disabled) {
+    background: var(--workspace-accent-hover);
+    border-color: var(--workspace-accent-hover);
   }
 }
 
@@ -199,7 +226,7 @@
 }
 
 .workspace-kicker {
-  color: #3374b1;
+  color: var(--workspace-muted);
   font-size: 12px;
   letter-spacing: 1.2px;
   font-weight: 600;
@@ -228,7 +255,7 @@
 }
 
 .workspace-action-grid svg {
-  color: #216cff;
+  color: var(--workspace-accent);
   margin-bottom: 12px;
   font-size: 30px;
 }
@@ -239,7 +266,7 @@
 }
 
 .workspace-action-grid > :hover {
-  border-color: #7af;
+  border-color: var(--workspace-accent);
 }
 
 .workspace-section-heading {
@@ -285,7 +312,7 @@
 }
 
 .workspace-scenario-card:hover {
-  box-shadow: inset 3px 0 #216cff;
+  box-shadow: inset 3px 0 var(--workspace-accent);
 }
 
 .workspace-scenario-card img,
@@ -300,8 +327,8 @@
 .workspace-map-placeholder {
   display: grid;
   place-items: center;
-  background: #e5f0ff;
-  color: #4284c3;
+  background: var(--workspace-accent-soft);
+  color: var(--workspace-accent);
   font-size: 32px;
 }
 
@@ -326,7 +353,7 @@
 }
 
 .workspace-open-label {
-  color: #307adc;
+  color: var(--workspace-accent);
   font-size: 14px;
 }
 
@@ -334,8 +361,8 @@
   border-radius: 12px;
   padding: 3px 10px;
   font-size: 12px;
-  background: #e5f0ff;
-  color: #2162ac;
+  background: var(--workspace-accent-soft);
+  color: var(--workspace-accent);
 }
 
 .workspace-list-tools {
@@ -394,7 +421,7 @@
 .workspace-setting input[type='checkbox'] {
   width: 20px;
   height: 20px;
-  accent-color: #216cff;
+  accent-color: var(--workspace-accent);
 }
 
 @media (width <= 1050px) {

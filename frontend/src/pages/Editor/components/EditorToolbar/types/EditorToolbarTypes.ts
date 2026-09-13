@@ -10,10 +10,10 @@ export const EditorToolbarStyles = {
   gap: 2,
   alignItems: 'start',
   padding: 4,
-  background: 'rgba(255,255,255,0.92)',
-  border: '1px solid rgba(219,225,232,0.9)',
+  background: 'var(--workspace-surface)',
+  border: '1px solid var(--workspace-border)',
   borderRadius: 6,
-  boxShadow: '0 4px 14px rgba(21,35,49,0.12)',
+  boxShadow: 'var(--workspace-shadow)',
   zIndex: 10,
 } as const;
 export const EditorToolbarDivStyles = {
@@ -26,5 +26,5 @@ export const EditorToolbarGroupEndStyles = {
   ...EditorToolbarDivStyles,
   paddingRight: 6,
   marginRight: 4,
-  borderRight: '1px solid #e5e7eb',
+  borderRight: '1px solid var(--workspace-border)',
 } as const;

@@ -4,12 +4,36 @@ export const TYPE_META: Record<
   string,
   { icon: string; color: string; label: string }
 > = {
-  Car: { icon: '🚗', color: '#2563eb', label: 'CAR' },
-  RSU: { icon: '📡', color: '#d97706', label: 'RSU' },
-  Building: { icon: '🏢', color: '#7c3aed', label: 'BLD' },
-  Lidar: { icon: '⬡', color: '#059669', label: 'LDR' },
-  Point: { icon: '◎', color: '#db2777', label: 'WPT' },
-  Pedestrian: { icon: '🚶', color: '#0920f0', label: 'HMN' },
+  Car: {
+    icon: '🚗',
+    color: 'var(--workspace-object-car, #2563eb)',
+    label: 'CAR',
+  },
+  RSU: {
+    icon: '📡',
+    color: 'var(--workspace-object-rsu, #d97706)',
+    label: 'RSU',
+  },
+  Building: {
+    icon: '🏢',
+    color: 'var(--workspace-object-building, #7c3aed)',
+    label: 'BLD',
+  },
+  Lidar: {
+    icon: '⬡',
+    color: 'var(--workspace-object-lidar, #059669)',
+    label: 'LDR',
+  },
+  Point: {
+    icon: '◎',
+    color: 'var(--workspace-object-point, #db2777)',
+    label: 'WPT',
+  },
+  Pedestrian: {
+    icon: '🚶',
+    color: 'var(--workspace-object-pedestrian, #0920f0)',
+    label: 'HMN',
+  },
 };
 
 export function getTypeMeta(name: string) {

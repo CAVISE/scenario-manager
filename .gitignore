@@ -43,3 +43,5 @@ assets/xodrs/
 frontend/coverage/
 frontend/test-results/
 frontend/stats.html
+frontend/playwright-report/
+frontend/test-results/

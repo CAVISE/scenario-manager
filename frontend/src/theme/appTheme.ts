@@ -1,4 +1,4 @@
-import { createTheme } from '@mui/material/styles';
+import { alpha, createTheme } from '@mui/material/styles';
 import { muiPressableRootStyle } from './pressInteraction';
 
 export const appTheme = createTheme({
@@ -50,11 +50,11 @@ export const appTheme = createTheme({
     },
     MuiFormLabel: {
       styleOverrides: {
-        root: {
+        root: ({ theme }) => ({
           fontSize: '0.875rem',
           marginBottom: 4,
-          color: 'text.secondary',
-        },
+          color: theme.palette.text.secondary,
+        }),
       },
     },
     MuiFormControlLabel: {
@@ -82,38 +82,38 @@ export const appTheme = createTheme({
     },
     MuiTextField: {
       styleOverrides: {
-        root: {
+        root: ({ theme }) => ({
           '& .MuiInputBase-root': {
             minHeight: 32,
             borderRadius: 8,
             transition:
               'border-color 160ms ease-in-out, box-shadow 160ms ease-in-out, background-color 160ms ease-in-out',
             '&:hover': {
-              backgroundColor: 'rgba(15, 23, 42, 0.02)',
+              backgroundColor: theme.palette.action.hover,
             },
             '&:focus-within': {
-              boxShadow: '0 0 0 3px rgba(25, 118, 210, 0.12)',
-              borderColor: 'primary.main',
+              boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.12)}`,
+              borderColor: theme.palette.primary.main,
             },
           },
-        },
+        }),
       },
     },
     MuiInputBase: {
       styleOverrides: {
-        root: {
+        root: ({ theme }) => ({
           minHeight: 32,
           borderRadius: 8,
           transition:
             'border-color 160ms ease-in-out, box-shadow 160ms ease-in-out, background-color 160ms ease-in-out',
           '&:hover': {
-            backgroundColor: 'rgba(15, 23, 42, 0.02)',
+            backgroundColor: theme.palette.action.hover,
           },
           '&.Mui-focused': {
-            boxShadow: '0 0 0 3px rgba(25, 118, 210, 0.12)',
-            borderColor: 'primary.main',
+            boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.12)}`,
+            borderColor: theme.palette.primary.main,
           },
-        },
+        }),
       },
     },
   },

@@ -466,7 +466,7 @@
 }
 
 .rp-selection-count {
-  color: #3477b8;
+  color: var(--workspace-accent);
   font-size: 12px;
   white-space: nowrap;
 }
@@ -986,7 +986,7 @@
 }
 
 .rp-root .rp-btn-danger {
-  color: #fff;
+  color: var(--workspace-on-danger);
 }
 
 .rp-root .rp-quick-action {
@@ -1250,11 +1250,12 @@
 }
 
 .rp-btn-danger {
-  color: var(--workspace-surface);
-  background: #c84b43;
-  border-color: #c84b43;
+  color: var(--workspace-on-danger);
+  background: var(--workspace-danger-action);
+  border-color: var(--workspace-danger-action);
 }
 
-.rp-btn-danger:hover {
-  background: #a83d37;
+.rp-btn-danger:hover:not(:disabled) {
+  background: var(--workspace-danger-action-hover);
+  border-color: var(--workspace-danger-action-hover);
 }

@@ -16,7 +16,18 @@ export function AppThemeProvider({ children }: { children: ReactNode }) {
         ...appTheme,
         palette: {
           mode,
-          primary: { main: mode === 'dark' ? '#8ab8ff' : '#2163e8' },
+          primary: {
+            main: mode === 'dark' ? '#8ab8ff' : '#2163e8',
+            contrastText: mode === 'dark' ? '#102132' : '#ffffff',
+          },
+          error: {
+            main: mode === 'dark' ? '#ffaaa1' : '#b93838',
+            contrastText: mode === 'dark' ? '#102132' : '#ffffff',
+          },
+          success: {
+            main: mode === 'dark' ? '#7bdab3' : '#18704e',
+            contrastText: mode === 'dark' ? '#102132' : '#ffffff',
+          },
           background: {
             default: mode === 'dark' ? '#102132' : '#f3f7fc',
             paper: mode === 'dark' ? '#172e44' : '#ffffff',

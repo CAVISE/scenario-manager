@@ -110,6 +110,7 @@ export const EditorTransformControls = ({
                 onClick={() => handleSetMode(mode)}
                 disabled={!canTransform}
                 aria-label={`Transform ${mode}`}
+                aria-pressed={transformMode === mode}
                 data-testid={`transform-${mode}`}
               >
                 {icon}

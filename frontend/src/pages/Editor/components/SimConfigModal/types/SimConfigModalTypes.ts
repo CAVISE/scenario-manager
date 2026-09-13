@@ -23,6 +23,7 @@ export const modalBoxSx = {
   transform: 'translate(-50%, -50%)',
   width: 'min(94vw, 720px)',
   bgcolor: 'background.paper',
+  color: 'text.primary',
   borderRadius: 2,
   border: '1px solid',
   borderColor: 'divider',

@@ -236,8 +236,12 @@ export const handleLoad = async ({
     const meta = data.scenario as
       { scenario_id?: string; name_of_scenario?: string } | undefined;
     s.updateScenario({
-      id: String(meta?.scenario_id ?? id),
-      name: meta?.name_of_scenario ?? '',
+      id: String(data.scenario_id ?? meta?.scenario_id ?? id),
+      name:
+        data.scenario_name ??
+        data.name_of_scenario ??
+        meta?.name_of_scenario ??
+        '',
     });
     updateSceneGraph();
     setNotice('The scenario has been uploaded.');

@@ -1,4 +1,4 @@
-import { styled } from '@mui/system';
+import { styled } from '@mui/material/styles';
 import { Box, Card } from '@mui/material';
 import { pressActiveSx, pressTransition } from '@/theme/pressInteraction';
 
@@ -75,7 +75,7 @@ export const ModalContainerStyles = {
   scrollbarWidth: 'none',
   msOverflowStyle: 'none',
 } as const;
-export const ModalContainer = styled(Box)({
+export const ModalContainer = styled(Box)(({ theme }) => ({
   position: 'absolute',
   top: '50%',
   left: '50%',
@@ -84,13 +84,13 @@ export const ModalContainer = styled(Box)({
   maxWidth: 900,
   maxHeight: '85vh',
   overflow: 'auto',
-  backgroundColor: 'white',
+  backgroundColor: theme.palette.background.paper,
   boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)',
   padding: 24,
   borderRadius: 8,
   display: 'flex',
   flexDirection: 'column',
-});
+}));
 
 export const ModalHeader = styled(Box)({
   display: 'flex',
@@ -121,7 +121,7 @@ export const uploadModalStyles = {
   maxHeight: 400,
   objectFit: 'contain',
   borderRadius: 1,
-  bgcolor: '#f5f5f5',
+  bgcolor: 'background.default',
 } as const;
 
 export const uploadModalBoxStyles = {
@@ -130,12 +130,12 @@ export const uploadModalBoxStyles = {
   gap: 1,
 } as const;
 
-export const ACCENT = '#4C6FE0';
-export const ACCENT_HOVER = '#3C5BC7';
-export const TEXT_PRIMARY = '#1A1D24';
-export const TEXT_SECONDARY = '#6B7280';
-export const BORDER = '#E5E7EB';
-export const SURFACE_MUTED = '#F7F8FA';
+export const ACCENT = 'var(--workspace-accent)';
+export const ACCENT_HOVER = 'var(--workspace-accent-hover)';
+export const TEXT_PRIMARY = 'var(--workspace-text)';
+export const TEXT_SECONDARY = 'var(--workspace-muted)';
+export const BORDER = 'var(--workspace-border)';
+export const SURFACE_MUTED = 'var(--workspace-hover)';
 export const titleStyles = {
   fontWeight: 600,
   color: TEXT_PRIMARY,
@@ -156,10 +156,16 @@ export const closeButtonStyles = {
 
 export const alertStyles = {
   mb: 2,
-  bgcolor: '#EEF2FF',
+  bgcolor: 'var(--workspace-accent-soft)',
   color: TEXT_PRIMARY,
-  border: `1px solid #DCE3FA`,
+  border: `1px solid ${BORDER}`,
   '& .MuiAlert-icon': { color: ACCENT },
+  '&.MuiAlert-standardError': {
+    bgcolor: 'var(--workspace-danger-soft)',
+    color: 'var(--workspace-danger)',
+    borderColor: 'var(--workspace-danger)',
+    '& .MuiAlert-icon': { color: 'inherit' },
+  },
 };
 
 export const emptyStateStyles = {
@@ -180,12 +186,16 @@ export const listContainerStyles = {
 };
 
 export const scenarioCardStyles = {
+  '&:focus-visible': {
+    outline: '2px solid var(--workspace-accent)',
+    outlineOffset: 3,
+  },
   display: 'flex',
   flexDirection: 'row',
   alignItems: 'stretch',
   width: '100%',
   minHeight: 150,
-  bgcolor: '#FFFFFF',
+  bgcolor: 'background.paper',
   border: `1px solid ${BORDER}`,
   borderRadius: '12px',
   overflow: 'hidden',
@@ -194,7 +204,7 @@ export const scenarioCardStyles = {
   '&:hover': {
     borderColor: ACCENT,
     boxShadow: '0 2px 10px rgba(76,111,224,0.12)',
-    bgcolor: '#FAFBFF',
+    bgcolor: 'action.hover',
   },
   '&:active': {
     transform: 'scale(0.99)',
@@ -205,7 +215,7 @@ export const cardThumbWrapStyles = {
   position: 'relative',
   flex: '0 0 240px',
   minHeight: 150,
-  bgcolor: '#0E0F12',
+  bgcolor: 'background.default',
   overflow: 'hidden',
 };
 
@@ -226,7 +236,7 @@ export const cardTitleStyles = {
 };
 
 export const cardIdStyles = {
-  color: '#9CA3AF',
+  color: TEXT_SECONDARY,
   fontFamily: 'monospace',
   fontSize: '0.7rem',
 };
@@ -242,7 +252,7 @@ export const cardAnnotationStyles = {
 };
 
 export const cardAnnotationEmptyStyles = {
-  color: '#B0B5BE',
+  color: TEXT_SECONDARY,
   fontSize: '0.85rem',
   fontStyle: 'italic',
 };
@@ -252,7 +262,7 @@ export const cardChevronStyles = {
   alignItems: 'center',
   justifyContent: 'center',
   flex: '0 0 40px',
-  color: '#C6CAD3',
+  color: TEXT_SECONDARY,
 };
 
 export const detailImageStyles = {
@@ -261,7 +271,7 @@ export const detailImageStyles = {
   objectFit: 'cover',
   borderRadius: '10px',
   border: `1px solid ${BORDER}`,
-  bgcolor: '#0E0F12',
+  bgcolor: 'background.default',
 };
 
 export const detailImagePlaceholderStyles = {
@@ -270,7 +280,7 @@ export const detailImagePlaceholderStyles = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  color: '#9CA3AF',
+  color: TEXT_SECONDARY,
   bgcolor: SURFACE_MUTED,
   border: `1px solid ${BORDER}`,
   borderRadius: '10px',
@@ -280,10 +290,10 @@ export const fieldStyles = {
   '& .MuiInputLabel-root': { color: TEXT_SECONDARY },
   '& .MuiInputLabel-root.Mui-focused': { color: ACCENT },
   '& .MuiOutlinedInput-root': {
-    bgcolor: '#FFFFFF',
+    bgcolor: 'background.paper',
     color: TEXT_PRIMARY,
     '& fieldset': { borderColor: BORDER },
-    '&:hover fieldset': { borderColor: '#C6CAD3' },
+    '&:hover fieldset': { borderColor: TEXT_SECONDARY },
     '&.Mui-focused fieldset': { borderColor: ACCENT },
   },
   '& .MuiInputBase-input': { color: TEXT_PRIMARY },
@@ -292,12 +302,15 @@ export const fieldStyles = {
 export const loadButtonStyles = {
   ...pressActiveSx,
   bgcolor: ACCENT,
-  color: '#fff',
+  color: 'var(--workspace-on-accent)',
   fontWeight: 600,
   textTransform: 'none',
   px: 3,
   '&:hover': { bgcolor: ACCENT_HOVER },
-  '&.Mui-disabled': { bgcolor: '#C9D3F5', color: '#fff' },
+  '&.Mui-disabled': {
+    bgcolor: 'action.disabledBackground',
+    color: 'action.disabled',
+  },
 };
 
 export const saveButtonStyles = {
@@ -307,6 +320,6 @@ export const saveButtonStyles = {
   fontWeight: 600,
   textTransform: 'none',
   px: 3,
-  '&:hover': { borderColor: ACCENT_HOVER, bgcolor: '#F5F7FE' },
-  '&.Mui-disabled': { borderColor: BORDER, color: '#B0B5BE' },
+  '&:hover': { borderColor: ACCENT_HOVER, bgcolor: SURFACE_MUTED },
+  '&.Mui-disabled': { borderColor: BORDER, color: 'action.disabled' },
 };

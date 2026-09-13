@@ -1,4 +1,5 @@
 import { CoordinatesWidget } from '../../CoordinateWidget';
+import { useHooks } from '@editor/context';
 import { EditorTransformControls } from '../../EditorTransformControls';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { useMediaQuery } from '@mui/material';
@@ -15,6 +16,7 @@ import '../styles/EditorChrome.scss';
 const RightPanel = lazy(() => import('../../../../components/RightPanel'));
 const EditorModals = lazy(() => import('../../EditorModals'));
 export function EditorUI() {
+  const { loadingText } = useHooks();
   const [activeTab, setActiveTab] = useState<EditorTab>('edit');
   const narrowViewport = useMediaQuery('(max-width: 1150px)');
   const [sceneOpen, setSceneOpen] = useState<boolean | null>(null);
@@ -34,7 +36,12 @@ export function EditorUI() {
   useSelectionSceneSync(isSimulationRunning || controls.isBusy);
 
   return (
-    <div className="editor-chrome" data-workspace={activeTab}>
+    <div
+      className="editor-chrome"
+      data-testid="editor-workspace"
+      data-workspace={activeTab}
+      aria-busy={loadingText !== null}
+    >
       <header className="editor-command-bar">
         <div className="editor-scenario-heading">
           <span
