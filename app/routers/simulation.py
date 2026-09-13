@@ -8,7 +8,9 @@ from pathlib import Path
 from urllib.parse import quote
 
 from fastapi import APIRouter, HTTPException, Request, WebSocket, WebSocketDisconnect
+from pydantic import ValidationError
 
+from app.chart_schema import CHARTS_NAME, ChartDocument
 from app.config import get_settings
 from app.log_config import get_logger
 from app.rate_limit import limiter
@@ -85,6 +87,7 @@ async def list_result_runs(request: Request):
             item
             for item in entry.iterdir()
             if item.is_file()
+            and not item.is_symlink()
             and item.name != MANIFEST_NAME
             and item.suffix in {".png", ".txt", ".log", ".yaml", ".json"}
         ]
@@ -94,6 +97,7 @@ async def list_result_runs(request: Request):
                 files_count=len(files),
                 modified_at=entry.stat().st_mtime,
                 outcome=metadata.get("outcome", "legacy"),
+                is_demo=metadata.get("is_demo") is True,
                 tick=metadata.get("tick"),
                 max_ticks=metadata.get("max_ticks"),
                 scenario_name=metadata.get("scenario_name"),
@@ -237,9 +241,24 @@ async def list_results(request: Request, run_id: str):
         for f in sorted(os.listdir(path))
         if f != MANIFEST_NAME
         and (path / f).is_file()
+        and not (path / f).is_symlink()
         and f.endswith((".png", ".txt", ".log", ".yaml", ".json"))
     ]
-    return ResultsResponse(files=files, run_id=run_id)
+    data = None
+    data_error = None
+    chart_path = path / CHARTS_NAME
+    if chart_path.is_symlink():
+        data_error = "Chart data is unavailable. Other result files can still be downloaded."
+    elif chart_path.exists():
+        try:
+            data = ChartDocument.model_validate_json(chart_path.read_text(encoding="utf-8"))
+            if data.run_id != run_id:
+                raise ValueError("Chart run_id does not match its directory")
+        except (OSError, ValueError, ValidationError):
+            log.warning("Cannot read chart data for run_id=%s", run_id, exc_info=True)
+            data = None
+            data_error = "Chart data could not be read. Other result files can still be downloaded."
+    return ResultsResponse(files=files, run_id=run_id, data=data, data_error=data_error)
 
 
 @router.delete("/results/{run_id}")

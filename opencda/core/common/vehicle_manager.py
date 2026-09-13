@@ -88,6 +88,7 @@ class VehicleManager(object):
         # an unique uuid for this vehicle
         self.vid = str(uuid.uuid1())
         self.vehicle = vehicle
+        self.name = config_yaml.get('name') or f'Vehicle {vehicle.id}'
         self.carla_map = carla_map
         # Weak ref, same pattern as V2XManager/SafetyManager/PerceptionManager/
         # PlatooningManager below -- avoids a reference cycle with CavWorld,

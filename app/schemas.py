@@ -2,6 +2,8 @@ from typing import Any, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from app.chart_schema import ChartDocument
+
 from app.opencda_config import (
     MAX_OPEN_CDA_CONFIG_LENGTH,
     parse_open_cda_yaml,
@@ -121,6 +123,8 @@ class ResultFile(BaseModel):
 class ResultsResponse(BaseModel):
     files: list[ResultFile]
     run_id: str
+    data: ChartDocument | None = None
+    data_error: str | None = None
 
 
 class ResultRun(BaseModel):
@@ -128,6 +132,7 @@ class ResultRun(BaseModel):
     files_count: int
     modified_at: float
     outcome: str = "legacy"
+    is_demo: bool = False
     tick: Optional[int] = None
     max_ticks: Optional[int] = None
     scenario_name: Optional[str] = None

@@ -220,7 +220,8 @@ response schemas are documented at `/docs`.
 | `GET` | `/api/status` | Read current simulation status. |
 | `POST` | `/api/stop` | Stop the current simulation. |
 | `WS` | `/api/ws/simulation` | Stream simulation status updates. |
-| `GET` | `/api/results/{run_id}` | List evaluation artifacts. |
+| `GET` | `/api/results` | List completed, partial and archived runs. |
+| `GET` | `/api/results/{run_id}` | Return chart samples, metadata and artifact links. |
 | `DELETE` | `/api/results/{run_id}` | Delete evaluation artifacts. |
 | `GET` | `/evaluation_outputs/{run_id}/{filename}` | Download an artifact. |
 | `GET` | `/health` | Check backend and database health. |
@@ -237,6 +238,69 @@ response schemas are documented at `/docs`.
 - PostgreSQL data is stored in the `postgres_data` named volume.
 - Uploaded custom OpenDRIVE maps are written under `assets/xodrs/`.
 - Run artifacts are also available through `/api/results/{run_id}`.
+
+### Interactive results (MVP)
+
+A ready-to-view example is included as **DEMO · Town01 — GNSS drift**. Open
+Results, press Refresh and select it in the run history. It contains 33 interactive
+charts for three vehicles: routes, speed, acceleration, GNSS/filter errors, safety
+events and RSU coverage. The curves are synthetic and clearly labelled as demo
+data; the original `POC_Scenario_Town01` only supplied the scenario inspiration
+and vehicle start/end positions. No CARLA simulation is needed to view it.
+
+The history list and chart area scroll independently. To recreate the example
+after deleting it or after automatic result retention cleanup, run:
+
+```sh
+docker run --rm -v "$PWD:/app" -w /app python:3.11-slim python scripts/create_demo_results.py
+```
+
+New runs save `evaluation_outputs/<run_id>/charts.json` instead of rendering
+PNG charts on the server. Results use local files only; no new database tables
+or migrations are needed. The existing scenario database is separate from this
+results storage. The configured `EVAL_DIR` and the Docker bind mount determine
+where files survive container restarts; the existing retention policy still applies.
+
+`GET /api/results/<run_id>` returns `files`, `run_id`, `data` and `data_error`.
+`data` is the versioned chart document:
+
+```json
+{
+  "schema_version": 1,
+  "run_id": "Town01_example",
+  "fixed_delta_seconds": 0.05,
+  "elapsed_seconds": 10,
+  "actors": [{ "id": "7", "label": "Vehicle 7", "metrics": [] }],
+  "charts": [{
+    "id": "speed",
+    "actor_id": "7",
+    "title": "Vehicle speed",
+    "description": "Speed reported by the V2X manager.",
+    "category": "motion",
+    "kind": "line",
+    "x_axis": { "label": "Elapsed simulation time", "unit": "s" },
+    "y_axis": { "label": "Speed", "unit": "km/h" },
+    "series": [{ "id": "transmitted", "label": "V2X-transmitted speed", "points": [[0.05, 3.6], [0.1, 7.2]] }]
+  }],
+  "warnings": []
+}
+```
+
+Points are `[x, y]` pairs; `null` Y values mark unavailable measurements and
+produce gaps. Time-stamped buffers use simulation seconds (`tick × step duration`).
+IMU, localization and planner buffers without timestamps use explicitly labelled
+sample indices. Routes use world coordinates in metres with equal axis scaling.
+TTC values ≥ 1000 seconds and platoon gaps ≥ 100 are unavailable sentinels.
+Full available samples are retained, including short and stopped runs. The planner
+itself omits its first 100 updates. Safety counters count affected ticks, while the
+collision indicator also includes late sensor callbacks.
+
+Results provides vehicle and category selection, interactive legends, pointer and
+keyboard inspection, a sample table, metrics and downloads. Select two runs for
+comparison and choose the vehicle independently in each; CARLA actor IDs are not
+stable across runs. Old PNG-only runs remain downloadable with `data: null`.
+Unreadable chart files return `data_error` while keeping other downloads available.
+`metrics.json`, configuration files and diagnostic logs remain available too.
 
 Inspect generated files in the backend container when using Docker:
 

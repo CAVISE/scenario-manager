@@ -1,0 +1,7 @@
+DEMO DATA — not a recorded simulation.
+Inspired by POC_Scenario_Town01 (Town01_2026_09_11_13_04_38_671771).
+Three vehicles, 44 simulated seconds, sample spacing 0.5 s.
+Positions, measurements and events are synthetic. Original start/end positions are reused, but intermediate route geometry is approximate.
+Vehicle cav1: strong GNSS drift from 14–30 s, braking near 22 s, red light violation at 25 s.
+Vehicle cav2: reference without attack. Vehicle cav3: mild GNSS drift.
+All three have route, speed, acceleration, localization, safety and RSU charts.
