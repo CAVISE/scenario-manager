@@ -1,0 +1,77 @@
+:root {
+  --workspace-bg: #f1f8f5;
+  --workspace-surface: #fff;
+  --workspace-media-bg: #103f3d;
+  --workspace-text: #143d39;
+  --workspace-muted: #55716b;
+  --workspace-border: #d8e9e2;
+  --workspace-accent: #087b68;
+  --workspace-accent-soft: #e5f5ee;
+  --workspace-hover: #ecf6f1;
+  --workspace-chrome: #103f3d;
+  --workspace-chrome-text: #cce7db;
+  --workspace-on-accent: #f4fffa;
+  --workspace-selected: #14685e;
+  --workspace-selected-text: #f4fffa;
+  --workspace-focus: #087b68;
+  --workspace-focus-ring: color-mix(
+    in srgb,
+    var(--workspace-focus) 18%,
+    transparent
+  );
+  --workspace-danger: #b93838;
+  --workspace-danger-soft: #fff0ef;
+  --workspace-danger-border: #e4c8c5;
+  --workspace-success: #087b68;
+  --workspace-success-soft: #e5f5ee;
+  --workspace-success-border: #b8e8cb;
+  --workspace-warning: #9a5b00;
+  --workspace-warning-soft: #fff7e8;
+  --workspace-warning-border: #f7ddb0;
+  --workspace-toast-success: #0c6558;
+  --workspace-toast-info: #285f68;
+  --workspace-toast-error: #8a3e49;
+  --workspace-toast-action: #d9fff0;
+  --workspace-shadow: 0 8px 28px rgb(13 66 60 / 10%);
+
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --workspace-bg: #123b39;
+  --workspace-surface: #174946;
+  --workspace-media-bg: #0b2927;
+  --workspace-text: #ebf8f1;
+  --workspace-muted: #a8c9c0;
+  --workspace-border: #2b625d;
+  --workspace-accent: #93f2c8;
+  --workspace-accent-soft: #205a51;
+  --workspace-hover: #20534d;
+  --workspace-chrome: #103f3d;
+  --workspace-chrome-text: #cce7db;
+  --workspace-on-accent: #f4fffa;
+  --workspace-selected: #14685e;
+  --workspace-selected-text: #f4fffa;
+  --workspace-focus: #93f2c8;
+  --workspace-focus-ring: color-mix(
+    in srgb,
+    var(--workspace-focus) 22%,
+    transparent
+  );
+  --workspace-danger: #ffaaa1;
+  --workspace-danger-soft: #4a2b32;
+  --workspace-danger-border: #7f4b52;
+  --workspace-success: #93f2c8;
+  --workspace-success-soft: #1d4b43;
+  --workspace-success-border: #347567;
+  --workspace-warning: #ffd08a;
+  --workspace-warning-soft: #504022;
+  --workspace-warning-border: #836936;
+  --workspace-toast-success: #276e60;
+  --workspace-toast-info: #2a6470;
+  --workspace-toast-error: #814552;
+  --workspace-toast-action: #d2ffeb;
+  --workspace-shadow: 0 8px 28px rgb(0 0 0 / 24%);
+
+  color-scheme: dark;
+}

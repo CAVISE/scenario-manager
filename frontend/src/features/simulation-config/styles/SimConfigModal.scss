@@ -1,0 +1,192 @@
+.sim-config-modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(94vw, 720px);
+  max-height: 90vh;
+  padding: 24px;
+  overflow-y: auto;
+  color: var(--workspace-text);
+  background: var(--workspace-surface);
+  border: 1px solid var(--workspace-border);
+  border-radius: 8px;
+  box-shadow: var(--workspace-shadow);
+  transform: translate(-50%, -50%);
+
+  &__summary-row,
+  &__divider,
+  &__tabs {
+    margin-bottom: 16px !important;
+  }
+
+  &__actions {
+    margin-top: 24px;
+  }
+
+  &__tab,
+  &__close {
+    transition:
+      transform 170ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      background-color 170ms ease,
+      color 170ms ease;
+
+    &:active:not(:disabled, .Mui-disabled) {
+      transform: scale(0.96);
+    }
+  }
+
+  &__tab--opencda.Mui-selected {
+    color: var(--workspace-success) !important;
+    font-weight: 700 !important;
+  }
+}
+
+.sim-config-collapsible {
+  overflow: hidden;
+  background: transparent !important;
+  border: 1px solid var(--workspace-border);
+  border-radius: 6px !important;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+
+  &::before {
+    display: none;
+  }
+
+  &.Mui-expanded {
+    border-color: var(--workspace-accent);
+    box-shadow: var(--workspace-shadow);
+  }
+
+  &__summary {
+    min-height: 44px !important;
+    background: color-mix(in srgb, var(--workspace-text) 3%, transparent);
+
+    .MuiAccordionSummary-content {
+      margin-top: 6px;
+      margin-bottom: 6px;
+    }
+  }
+
+  &__title {
+    font-weight: 600 !important;
+  }
+
+  &__details {
+    padding: 0 16px 16px !important;
+  }
+}
+
+.sim-config-card {
+  padding: 12px;
+  border: 1px solid var(--workspace-border);
+  border-radius: 4px;
+}
+
+.sim-config-field {
+  &--grow {
+    flex: 1;
+  }
+
+  &--half {
+    width: 48%;
+  }
+
+  &--72 {
+    width: 72px;
+  }
+
+  &--90 {
+    width: 90px;
+  }
+
+  &--100 {
+    width: 100px;
+  }
+
+  &--120 {
+    width: 120px;
+  }
+
+  &--140 {
+    width: 140px;
+  }
+
+  &--max-140 {
+    max-width: 140px;
+  }
+
+  &--min-190 {
+    min-width: 190px !important;
+  }
+}
+
+.sim-config-chip {
+  &--30 {
+    min-width: 30px;
+  }
+
+  &--40 {
+    min-width: 40px;
+  }
+
+  &--50 {
+    min-width: 50px;
+  }
+}
+
+.sim-config-section-label {
+  padding-top: 8px;
+
+  &--compact {
+    padding-top: 4px;
+  }
+}
+
+.sim-config-summary {
+  display: block;
+  margin-top: 8px !important;
+
+  &--compact {
+    margin-top: 4px !important;
+  }
+}
+
+.sim-config-card-title {
+  display: block;
+  margin-bottom: 8px !important;
+}
+
+.sim-config-quick-presets {
+  margin-top: 4px;
+}
+
+.sim-config-preset {
+  color: var(--workspace-accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.sim-config-color-preview {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  margin-left: 8px;
+  border: 1px solid var(--workspace-border);
+  border-radius: 4px;
+  cursor: default;
+
+  &::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
+
+  &::-webkit-color-swatch {
+    border: 0;
+    border-radius: 3px;
+  }
+}
+
+.sim-config-helper-text--warning {
+  color: var(--workspace-warning) !important;
+}

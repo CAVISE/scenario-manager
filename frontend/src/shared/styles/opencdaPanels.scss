@@ -1,0 +1,33 @@
+.opencda-panel {
+  max-height: 400px;
+  padding: 16px;
+  overflow-y: auto;
+  color: var(--workspace-text);
+  background: var(--workspace-bg);
+  border: 1px solid var(--workspace-border);
+  border-radius: 8px;
+}
+
+.opencda-panel__label {
+  color: var(--workspace-muted) !important;
+  font-size: 0.7rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase;
+}
+
+.opencda-panel__label--spaced {
+  margin-bottom: 12px !important;
+}
+
+.opencda-panel__description {
+  margin-top: 4px !important;
+}
+
+.opencda-panel__divider {
+  margin-block: 4px !important;
+}
+
+.opencda-panel__action {
+  align-self: flex-start;
+}

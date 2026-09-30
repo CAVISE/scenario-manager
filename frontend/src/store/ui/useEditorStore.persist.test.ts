@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { act } from '@testing-library/react';
 import { SimulationConfig, useEditorStore } from './useEditorStore';
-import { SelectedObject } from '../../pages/Editor/types/editorTypes';
+import type { SelectedObject } from '@editor/types/editorTypes';
 
 let nanoidCounter = 0;
 vi.mock('nanoid', () => ({

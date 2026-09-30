@@ -3,37 +3,39 @@ import {
   normalizeLoadedScenario,
   toUpdateScenarioBody,
   toUploadScenarioBody,
-  type LoadScenarioApiResponse,
 } from './scenarioRequest';
 import { validateDeletePayload } from './scenarioValidation';
 import type {
-  LoadAllScenariosResponse,
+  ScenarioApiDetail,
   ScenarioDetail,
   ScenarioMutationResponse,
+  ScenarioPageResponse,
   ScenarioPayload,
 } from './types/IScenarioTypes';
 
 export const scenariosApi = {
   create: (payload: ScenarioPayload, scenarioIdInput = '') =>
     api
-      .post('api/upload_scenario', {
+      .post('api/v1/scenarios', {
         json: toUploadScenarioBody(payload, scenarioIdInput),
       })
       .json<ScenarioMutationResponse>(),
 
   listAll: () =>
-    api.get('api/load_all_scenarios').json<LoadAllScenariosResponse>(),
+    api.get('api/v1/scenarios?offset=0&limit=100').json<ScenarioPageResponse>(),
 
   get: async (id: string): Promise<ScenarioDetail> => {
-    const res = await api
-      .get(`api/load_scenario/${id}`)
-      .json<LoadScenarioApiResponse>();
-    return normalizeLoadedScenario(res.scenario) as ScenarioDetail;
+    const scenario = await api
+      .get(`api/v1/scenarios/${id}`)
+      .json<ScenarioApiDetail>();
+    return normalizeLoadedScenario(scenario) as ScenarioDetail;
   },
 
   update: (payload: Partial<ScenarioPayload> & { scenario_id: string }) =>
     api
-      .post('api/update_scenario', { json: toUpdateScenarioBody(payload) })
+      .patch(`api/v1/scenarios/${payload.scenario_id}`, {
+        json: toUpdateScenarioBody(payload),
+      })
       .json<ScenarioMutationResponse>(),
 
   remove: (scenarioId: string) => {
@@ -42,7 +44,7 @@ export const scenariosApi = {
       throw new Error(validation.message);
     }
     return api
-      .post('api/delete_scenario', { json: { scenario_id: scenarioId.trim() } })
+      .delete(`api/v1/scenarios/${scenarioId.trim()}`)
       .json<ScenarioMutationResponse>();
   },
 };

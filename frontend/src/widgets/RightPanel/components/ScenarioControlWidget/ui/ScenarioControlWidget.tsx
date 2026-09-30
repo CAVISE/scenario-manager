@@ -1,0 +1,223 @@
+import { useId, useState } from 'react';
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+} from '@mui/material';
+import { useEditorStore } from '@/store';
+import type { ScenarioControlWidgetProps } from '../types/ScenarioControlWidgetTypes';
+
+export default function ScenarioControlWidget({
+  controls,
+  readOnly = false,
+  onOpenSimulation,
+  onOpenResults,
+  onOpenSettings,
+}: ScenarioControlWidgetProps) {
+  const scenario = useEditorStore((s) => s.Scenario);
+  const updateScenario = useEditorStore((s) => s.updateScenario);
+  const map = useEditorStore((s) => s.simConfig.carla.map);
+  const vehicleCount = useEditorStore((s) => s.cars.length);
+  const rsuCount = useEditorStore((s) => s.RSUs.length);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const fieldId = useId();
+  const hasId = Boolean(scenario.id?.trim());
+  const disabled = readOnly || controls.isBusy;
+  const focusIssue = (entityId: string | null) => {
+    if (!entityId) return;
+    window.dispatchEvent(
+      new CustomEvent('editor-focus-object', { detail: { id: entityId } })
+    );
+  };
+
+  return (
+    <div className="rp-scenario-widget rp-context-widget">
+      <div className="rp-context-heading">
+        <span className="rp-title">Scenario</span>
+        <span className="rp-context-status">
+          {hasId ? 'Stored scenario' : 'Local draft'}
+        </span>
+      </div>
+      <fieldset className="rp-context-fields" disabled={disabled}>
+        <label htmlFor={`${fieldId}-name`}>Name</label>
+        <input
+          id={`${fieldId}-name`}
+          className="rp-scenario-input"
+          value={scenario.name ?? ''}
+          placeholder="Scenario name"
+          onKeyDown={(event) => event.stopPropagation()}
+          onChange={(event) => updateScenario({ name: event.target.value })}
+        />
+        <label htmlFor={`${fieldId}-description`}>Description</label>
+        <textarea
+          id={`${fieldId}-description`}
+          className="rp-scenario-input rp-context-description"
+          rows={3}
+          value={scenario.description ?? ''}
+          placeholder="What should this scenario demonstrate?"
+          onKeyDown={(event) => event.stopPropagation()}
+          onChange={(event) =>
+            updateScenario({ description: event.target.value })
+          }
+        />
+      </fieldset>
+      <dl className="rp-context-summary">
+        <div>
+          <dt>Map</dt>
+          <dd>{map || 'Not selected'}</dd>
+        </div>
+        <div>
+          <dt>Vehicles</dt>
+          <dd>{vehicleCount}</dd>
+        </div>
+        <div>
+          <dt>RSUs</dt>
+          <dd>{rsuCount}</dd>
+        </div>
+      </dl>
+      <div className="rp-preflight" aria-live="polite">
+        <div className="rp-preflight__header">
+          <span>Preflight check</span>
+          {controls.preflight ? (
+            <span
+              className={`rp-preflight__status ${
+                controls.preflight.valid ? 'is-valid' : 'has-errors'
+              }`}
+            >
+              {controls.preflight.valid
+                ? controls.preflight.issues.length
+                  ? 'Ready with warnings'
+                  : 'Ready to run'
+                : `${controls.preflight.issues.length} issue${
+                    controls.preflight.issues.length === 1 ? '' : 's'
+                  }`}
+            </span>
+          ) : (
+            <span className="rp-preflight__status">Not checked</span>
+          )}
+        </div>
+        {controls.preflight?.issues.length ? (
+          <ul className="rp-preflight__issues">
+            {controls.preflight.issues.map((issue, index) => (
+              <li
+                key={`${issue.code}-${issue.path.join('.')}-${index}`}
+                className={`is-${issue.severity}`}
+              >
+                <span>{issue.message}</span>
+                {issue.entity_id ? (
+                  <button
+                    type="button"
+                    onClick={() => focusIssue(issue.entity_id)}
+                  >
+                    Show on scene
+                  </button>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="rp-preflight__hint">
+            {controls.preflight?.valid
+              ? 'The scenario configuration is ready for a simulation run.'
+              : 'Check the current configuration before starting a simulation.'}
+          </p>
+        )}
+        <button
+          type="button"
+          className="rp-btn rp-preflight__button"
+          disabled={disabled}
+          onClick={controls.validate}
+        >
+          {controls.operation === 'validate' ? 'Checking…' : 'Check scenario'}
+        </button>
+      </div>
+      <button
+        type="button"
+        className="rp-btn rp-btn-primary"
+        disabled={disabled}
+        onClick={controls.save}
+      >
+        {controls.operation === 'save' ? 'Saving…' : 'Save scenario'}
+      </button>
+      {readOnly && (
+        <p className="rp-context-help">
+          Editing is paused while the simulation is running.
+        </p>
+      )}
+      {controls.notice && (
+        <div className="rp-scenario-notice" role="status">
+          {controls.notice}
+        </div>
+      )}
+      <div className="rp-context-links" aria-label="Scenario workflow">
+        <button
+          type="button"
+          className="rp-quick-action"
+          disabled={disabled}
+          onClick={onOpenSettings}
+        >
+          Simulation parameters <span aria-hidden="true">→</span>
+        </button>
+        <button
+          type="button"
+          className="rp-quick-action"
+          onClick={onOpenSimulation}
+        >
+          Open simulation <span aria-hidden="true">→</span>
+        </button>
+        <button
+          type="button"
+          className="rp-quick-action"
+          onClick={onOpenResults}
+        >
+          View results <span aria-hidden="true">→</span>
+        </button>
+      </div>
+      <details className="rp-context-advanced">
+        <summary>Advanced</summary>
+        <div className="rp-context-id">
+          Scenario ID: {hasId ? scenario.id : 'Assigned when saved'}
+        </div>
+        <button
+          type="button"
+          className="rp-btn rp-context-delete"
+          disabled={disabled || !hasId}
+          onClick={() => setDeleteConfirmOpen(true)}
+        >
+          Delete scenario…
+        </button>
+      </details>
+      <Dialog
+        open={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        aria-labelledby={`${fieldId}-delete-title`}
+      >
+        <DialogTitle id={`${fieldId}-delete-title`}>
+          Delete scenario?
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            This permanently deletes “{scenario.name || 'Untitled scenario'}”
+            from the server. This cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
+          <Button
+            color="error"
+            disabled={disabled || !hasId}
+            onClick={() => {
+              setDeleteConfirmOpen(false);
+              void controls.remove();
+            }}
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </div>
+  );
+}

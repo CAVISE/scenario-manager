@@ -1,0 +1,53 @@
+import { useBuildingLoader } from '../../hooks/useEditorScene/hooks/buildingFunction';
+import { useEditorHandlers } from '../../hooks/useEditorEngine/useEditorHandlers';
+import { useLoadingState } from '../../hooks/useEditorEngine/useLoadingState';
+import { useSceneGraph } from '../../hooks/useEditorEngine/useSceneGraph';
+import { useEditorRefs } from './EditorRefsContext';
+import { HooksContext } from './hooksContext';
+import { useThreeScene } from '../../hooks/useThreeScene';
+import type { EditorProviderProps } from '../types/providerTypes';
+
+export const HooksProvider = ({ children }: EditorProviderProps) => {
+  const { sceneRef, currentCarRef, modeRef, transformControlsRef } =
+    useEditorRefs();
+
+  const buildingModelRef = useBuildingLoader();
+  const { sceneGraph, updateSceneGraph } = useSceneGraph(sceneRef);
+  const { loadingText, loadingProgress, setStep } = useLoadingState();
+  const { actionsRef, loadFile } = useThreeScene({
+    updateSceneGraph,
+    setStep,
+  });
+  const {
+    handleAddCar,
+    handleAddRSU,
+    handleAddPedestrian,
+    handleStartRoutePointPlacement,
+    detachTransformControls,
+    handleSetBuildingMode,
+  } = useEditorHandlers({
+    actionsRef,
+    currentCarRef,
+    modeRef,
+    transformControlsRef,
+  });
+  const value = {
+    buildingModelRef,
+    sceneGraph,
+    updateSceneGraph,
+    loadingProgress,
+    loadingText,
+    setStep,
+    actionsRef,
+    loadFile,
+    handleAddCar,
+    handleAddRSU,
+    handleAddPedestrian,
+    handleStartRoutePointPlacement,
+    detachTransformControls,
+    handleSetBuildingMode,
+  };
+  return (
+    <HooksContext.Provider value={value}>{children}</HooksContext.Provider>
+  );
+};

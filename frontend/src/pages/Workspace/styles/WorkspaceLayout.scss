@@ -1,0 +1,254 @@
+.workspace-shell {
+  height: 100dvh;
+  display: grid;
+  grid-template: 64px minmax(0, 1fr) / 220px minmax(0, 1fr);
+  background: var(--workspace-bg);
+  color: var(--workspace-text);
+  font:
+    16px/1.5 -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  user-select: none;
+
+  a {
+    color: var(--workspace-accent);
+    text-decoration: none;
+  }
+
+  button,
+  input,
+  select {
+    font: inherit;
+  }
+
+  input,
+  textarea,
+  [contenteditable='true'] {
+    user-select: text;
+  }
+
+  button,
+  select {
+    cursor: pointer;
+  }
+
+  button,
+  input,
+  select {
+    min-height: 42px;
+    box-sizing: border-box;
+    padding: 9px 14px;
+    border: 1px solid var(--workspace-border);
+    border-radius: 7px;
+    background: var(--workspace-surface);
+    color: var(--workspace-text);
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible {
+    outline: 2px solid var(--workspace-accent);
+    outline-offset: 3px;
+  }
+
+  input,
+  textarea {
+    user-select: text !important;
+  }
+
+  .workspace-primary {
+    border-color: var(--workspace-accent);
+    background: var(--workspace-accent);
+    color: var(--workspace-on-accent);
+  }
+
+  .workspace-secondary {
+    background: var(--workspace-surface);
+    color: var(--workspace-text);
+
+    &:hover:not(:disabled) {
+      border-color: var(--workspace-accent);
+      background: var(--workspace-hover);
+      box-shadow: 0 0 0 3px var(--workspace-focus-ring);
+    }
+  }
+}
+
+.workspace-topbar {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 0 28px;
+  background: var(--workspace-chrome);
+  color: var(--workspace-on-accent);
+}
+
+.workspace-shell .workspace-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--workspace-on-accent);
+  font-size: 20px;
+  font-weight: 650;
+}
+
+.workspace-shell .workspace-current {
+  color: var(--workspace-chrome-text);
+  font-size: 14px;
+  text-align: right;
+}
+
+.workspace-current span {
+  display: block;
+  color: var(--workspace-accent);
+  font-size: 12px;
+}
+
+.workspace-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.workspace-shell .workspace-account {
+  display: grid;
+  gap: 2px;
+  padding: 4px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--workspace-on-accent);
+  text-align: right;
+}
+
+.workspace-account span {
+  max-width: 220px;
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspace-account small {
+  color: var(--workspace-accent);
+  font-size: 11px;
+}
+
+.workspace-account:hover small {
+  text-decoration: underline;
+}
+
+.workspace-account--development {
+  cursor: default;
+}
+
+.workspace-account--development:hover small {
+  text-decoration: none;
+}
+
+.workspace-sidebar {
+  display: flex;
+  flex-direction: column;
+  padding: 24px 12px;
+  border-right: 1px solid var(--workspace-border);
+  background: var(--workspace-chrome);
+}
+
+.workspace-sidebar nav {
+  display: grid;
+  gap: 6px;
+}
+
+.workspace-sidebar a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 6px;
+  color: var(--workspace-chrome-text);
+  font-size: 14px;
+}
+
+.workspace-sidebar a.active {
+  box-shadow:
+    inset 3px 0 var(--workspace-accent),
+    0 4px 12px rgb(0 0 0 / 14%);
+  background: var(--workspace-selected);
+  color: var(--workspace-selected-text);
+}
+
+.workspace-sidebar a:hover {
+  background: var(--workspace-hover);
+}
+
+.workspace-sidebar-footer {
+  margin-top: auto;
+  padding: 16px;
+  color: var(--workspace-muted);
+  font-size: 12px;
+}
+
+.workspace-content {
+  min-width: 0;
+  overflow-y: auto;
+  padding: clamp(24px, 4vw, 56px);
+}
+
+.workspace-content > section {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+@media (width <= 700px) {
+  .workspace-shell {
+    grid-template: 60px auto minmax(0, 1fr) / minmax(0, 1fr);
+  }
+
+  .workspace-topbar {
+    padding: 0 16px;
+  }
+
+  .workspace-shell .workspace-brand {
+    font-size: 17px;
+  }
+
+  .workspace-current {
+    display: none;
+  }
+
+  .workspace-topbar-actions {
+    margin-left: auto;
+  }
+
+  .workspace-account span,
+  .workspace-sidebar-footer {
+    display: none;
+  }
+
+  .workspace-sidebar {
+    padding: 6px;
+  }
+
+  .workspace-sidebar nav {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .workspace-sidebar a {
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 4px;
+  }
+
+  .workspace-content {
+    padding: 24px 16px;
+  }
+}

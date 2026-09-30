@@ -1,4 +1,9 @@
-import type { EditorState } from '../types/useEditorStoreTypes';
+import type {
+  EntityCollectionByKind,
+  EntityItem,
+  EntityKind,
+  SceneEntities,
+} from '../types/sceneEntityTypes';
 
 export const entityCollections = {
   car: 'cars',
@@ -7,18 +12,7 @@ export const entityCollections = {
   pedestrian: 'pedestrians',
   point: 'points',
   lidar: 'lidars',
-} as const;
-
-export type EntityKind = keyof typeof entityCollections;
-export type EntityCollection = (typeof entityCollections)[EntityKind];
-export type SceneEntities = Pick<EditorState, EntityCollection>;
-export type SceneEntity = SceneEntities[EntityCollection][number];
-export type EntityItem = {
-  id: string;
-  type: EntityKind;
-  label: string;
-  entity: SceneEntity;
-};
+} as const satisfies EntityCollectionByKind;
 
 const labels: Record<EntityKind, string> = {
   car: 'Vehicle',

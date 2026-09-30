@@ -1,0 +1,63 @@
+.attack-config-modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(94vw, 820px);
+  max-height: 90vh;
+  padding: 24px;
+  overflow-y: auto;
+  background: var(--workspace-surface);
+  border: 1px solid var(--workspace-border);
+  border-radius: 8px;
+  box-shadow: var(--workspace-shadow);
+  transform: translate(-50%, -50%);
+
+  &__description {
+    margin-top: 8px !important;
+    margin-bottom: 16px !important;
+  }
+
+  &__header-divider {
+    margin-bottom: 16px !important;
+  }
+
+  &__section-divider {
+    font-size: 12px !important;
+  }
+
+  &__stage {
+    padding: 16px;
+    border: 1px solid var(--workspace-border);
+    border-radius: 4px;
+  }
+
+  &__add-stage {
+    align-self: flex-start;
+  }
+
+  &__stage-type {
+    flex: 1;
+  }
+
+  &__structured-toggle {
+    margin-left: 8px !important;
+  }
+
+  &__stage-chip {
+    height: 16px !important;
+    font-size: 10px !important;
+  }
+
+  &__mode-toggle {
+    display: flex;
+    flex-wrap: wrap;
+
+    .MuiToggleButton-root {
+      flex: 1;
+    }
+  }
+
+  &__caption {
+    display: block;
+  }
+}

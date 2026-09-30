@@ -6,9 +6,9 @@ import {
   MAX_PREVIEW_LEN,
   MAX_OPENDRIVE_LEN,
   ALLOWED_VEHICLES,
-  formatApiDetail,
-  ValidationIssue,
-} from '../types/IScenarioTypes';
+} from '../constants/scenarioConstants';
+import type { ValidationIssue } from '../types/IScenarioTypes';
+import { formatApiDetail } from '../utils/formatApiDetail';
 
 describe('IScenarioTypes', () => {
   describe('SCENARIO_ID_RE', () => {

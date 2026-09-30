@@ -24,14 +24,12 @@ const openSpeedDial = async (page: Page) => {
 };
 
 const mockScenarioApi = async (page: Page) => {
-  await page.route('**/api/load_all_scenarios', async (route) => {
+  await page.route('**/api/v1/scenarios?*', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        status: 'success',
-        count: 1,
-        scenarios: [
+        items: [
           {
             id: 1,
             scenario_id: 'mock-1',
@@ -40,82 +38,84 @@ const mockScenarioApi = async (page: Page) => {
             annotation: 'e2e generated',
           },
         ],
+        total: 1,
+        offset: 0,
+        limit: 100,
       }),
     });
   });
 
-  await page.route('**/api/load_scenario/mock-1', async (route) => {
+  await page.route('**/api/v1/scenarios/mock-1', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        status: 'success',
-        scenario: {
-          scenario_id: 'mock-1',
-          name_of_scenario: 'Mock scenario',
-          scenario_text: [
-            {
-              vehicle: 'car',
-              path: [
-                {
-                  x: 10,
-                  y: 20,
-                  z: 0,
-                  model: 'car',
-                  color: 65280,
-                  points: [],
-                  lidars: [],
-                },
-              ],
-            },
-            {
-              vehicle: 'RSU',
-              path: [
-                {
-                  x: 15,
-                  y: 25,
-                  z: 0,
-                  tx_power: 10,
-                  frequency: 5.9e9,
-                  range: 100,
-                  protocol: 'ITS-G5',
-                },
-              ],
-            },
-            {
-              vehicle: 'pedestrian',
-              path: [
-                {
-                  x: 12,
-                  y: 22,
-                  z: 0,
-                  speed: 1.2,
-                  cross_factor: 0.5,
-                  is_invincible: false,
-                  tx_power: 10,
-                  frequency: 5.9e9,
-                  protocol: 'DSRC',
-                  beacon_interval: 1000,
-                },
-              ],
-            },
-            {
-              vehicle: 'building',
-              path: [
-                {
-                  id: 'mock-building-1',
-                  x: 30,
-                  y: 10,
-                  z: 0,
-                  height: 20,
-                  material: 'concrete',
-                  scale: 0.5,
-                  rotation: 0,
-                },
-              ],
-            },
-          ],
-        },
+        id: 1,
+        revision: 1,
+        scenario_id: 'mock-1',
+        name_of_scenario: 'Mock scenario',
+        scenario_text: [
+          {
+            vehicle: 'car',
+            path: [
+              {
+                x: 10,
+                y: 20,
+                z: 0,
+                model: 'car',
+                color: 65280,
+                points: [],
+                lidars: [],
+              },
+            ],
+          },
+          {
+            vehicle: 'RSU',
+            path: [
+              {
+                x: 15,
+                y: 25,
+                z: 0,
+                tx_power: 10,
+                frequency: 5.9e9,
+                range: 100,
+                protocol: 'ITS-G5',
+              },
+            ],
+          },
+          {
+            vehicle: 'pedestrian',
+            path: [
+              {
+                x: 12,
+                y: 22,
+                z: 0,
+                speed: 1.2,
+                cross_factor: 0.5,
+                is_invincible: false,
+                tx_power: 10,
+                frequency: 5.9e9,
+                protocol: 'DSRC',
+                beacon_interval: 1000,
+              },
+            ],
+          },
+          {
+            vehicle: 'building',
+            path: [
+              {
+                id: 'mock-building-1',
+                x: 30,
+                y: 10,
+                z: 0,
+                height: 20,
+                material: 'concrete',
+                scale: 0.5,
+                rotation: 0,
+              },
+            ],
+          },
+        ],
       }),
     });
   });

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DEFAULT_COLOR } from '../../pages/Editor/hooks/useThreeScene/hooks/useOdrMapManager/utils/clearScene/types/clearSceneTypes';
+import { DEFAULT_COLOR } from '@editor/hooks/useThreeScene/constants/openDriveConstants';
 import { SimulationConfig, useEditorStore } from './useEditorStore';
-import { SelectedObject } from '../../pages/Editor/types/editorTypes';
+import type { SelectedObject } from '@editor/types/editorTypes';
 
 describe('useEditorStore', () => {
   beforeEach(() => {

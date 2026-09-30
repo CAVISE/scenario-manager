@@ -1,0 +1,61 @@
+.app-toast__alert {
+  &.MuiAlert-root {
+    width: min(420px, calc(100vw - 32px));
+    align-items: center;
+    box-sizing: border-box;
+    border: 1px solid rgb(255 255 255 / 18%);
+    border-radius: 12px;
+    box-shadow: 0 16px 38px rgb(5 36 33 / 24%);
+    color: var(--workspace-on-accent);
+    font-weight: 550;
+    letter-spacing: 0.01em;
+
+    .MuiAlert-icon {
+      align-self: center;
+      margin-right: 10px;
+      opacity: 0.94;
+    }
+
+    .MuiAlert-message {
+      padding: 5px 0;
+    }
+
+    .MuiAlert-action {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding: 0 0 0 8px;
+    }
+
+    .MuiButton-root {
+      min-width: 0;
+      border-radius: 7px;
+      color: var(--workspace-toast-action);
+      font-weight: 700;
+
+      &:hover {
+        background: rgb(255 255 255 / 12%);
+      }
+    }
+
+    .MuiIconButton-root {
+      color: var(--workspace-on-accent);
+
+      &:hover {
+        background: rgb(255 255 255 / 12%);
+      }
+    }
+  }
+
+  &.MuiAlert-filledSuccess {
+    background: var(--workspace-toast-success);
+  }
+
+  &.MuiAlert-filledInfo {
+    background: var(--workspace-toast-info);
+  }
+
+  &.MuiAlert-filledError {
+    background: var(--workspace-toast-error);
+  }
+}

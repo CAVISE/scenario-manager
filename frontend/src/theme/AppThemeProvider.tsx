@@ -1,11 +1,11 @@
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useEffect, useMemo } from 'react';
-import type { ReactNode } from 'react';
-import { appTheme } from './appTheme';
 import { useWorkspacePreferences } from '@/store/ui/useWorkspacePreferences';
+import type { AppThemeProviderProps } from './types/themeTypes';
+import './styles/MuiOverrides.scss';
 
-export function AppThemeProvider({ children }: { children: ReactNode }) {
+export function AppThemeProvider({ children }: AppThemeProviderProps) {
   const preference = useWorkspacePreferences((state) => state.theme);
   const systemDark = useMediaQuery('(prefers-color-scheme: dark)');
   const mode =
@@ -13,19 +13,18 @@ export function AppThemeProvider({ children }: { children: ReactNode }) {
   const theme = useMemo(
     () =>
       createTheme({
-        ...appTheme,
         palette: {
           mode,
-          primary: { main: mode === 'dark' ? '#8ab8ff' : '#2163e8' },
+          primary: { main: mode === 'dark' ? '#93f2c8' : '#087b68' },
           background: {
-            default: mode === 'dark' ? '#102132' : '#f3f7fc',
-            paper: mode === 'dark' ? '#172e44' : '#ffffff',
+            default: mode === 'dark' ? '#123b39' : '#f1f8f5',
+            paper: mode === 'dark' ? '#174946' : '#ffffff',
           },
           text: {
-            primary: mode === 'dark' ? '#e3edf8' : '#153653',
-            secondary: mode === 'dark' ? '#a3bdd5' : '#56718a',
+            primary: mode === 'dark' ? '#ebf8f1' : '#143d39',
+            secondary: mode === 'dark' ? '#a8c9c0' : '#55716b',
           },
-          divider: mode === 'dark' ? '#2d4963' : '#d8e5f2',
+          divider: mode === 'dark' ? '#2b625d' : '#d8e9e2',
         },
         typography: {
           fontFamily:

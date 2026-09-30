@@ -1,0 +1,22 @@
+import { ScenarioGroup } from '@/api/types/IScenarioTypes';
+import { OpenCDAAttackConfig } from '@scenario-export';
+
+export interface StartSimulationPayload {
+  scenario_id: string;
+  scenario_name: string;
+  scenario: ScenarioGroup[];
+  description: string;
+  opencda_config_yaml: string;
+  map: string;
+  xodr?: string | undefined;
+  max_ticks?: number;
+  map_offsets?: { x: number; y: number };
+  attacks?: OpenCDAAttackConfig[];
+  weather?: string | undefined;
+}
+
+export interface StartSimulationResponse {
+  status: 'started' | 'queued';
+  map: string;
+  run_id: string;
+}

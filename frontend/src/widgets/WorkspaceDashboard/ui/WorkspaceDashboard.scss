@@ -1,0 +1,104 @@
+.workspace-dashboard {
+  margin-bottom: 36px;
+}
+
+.workspace-dashboard .workspace-section-heading {
+  align-items: flex-end;
+}
+
+.workspace-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.workspace-dashboard-card {
+  display: flex;
+  min-height: 180px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+  box-sizing: border-box;
+  padding: 20px;
+  border: 1px solid var(--workspace-border);
+  border-radius: 12px;
+  background: var(--workspace-surface);
+  box-shadow: 0 3px 14px rgb(13 66 60 / 7%);
+  color: var(--workspace-text);
+  text-decoration: none;
+
+  strong {
+    font-size: 17px;
+    line-height: 1.3;
+  }
+
+  > span:not(
+      .workspace-dashboard-card__icon,
+      .workspace-dashboard-card__eyebrow
+    ) {
+    color: var(--workspace-muted);
+    font-size: 13px;
+  }
+
+  > small,
+  > a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: auto;
+    color: var(--workspace-accent);
+    font-size: 13px;
+    font-weight: 650;
+  }
+
+  &:is(a):hover {
+    border-color: var(--workspace-accent);
+    background: var(--workspace-hover);
+    box-shadow: 0 10px 24px rgb(13 66 60 / 14%);
+    transform: translateY(-2px);
+  }
+
+  progress {
+    width: 100%;
+    height: 6px;
+    margin-top: 4px;
+    accent-color: var(--workspace-accent);
+  }
+}
+
+.workspace-dashboard-card--draft {
+  background:
+    linear-gradient(135deg, var(--workspace-accent-soft), transparent 65%),
+    var(--workspace-surface);
+}
+
+.workspace-dashboard-card--system > a:hover {
+  text-decoration: underline;
+}
+
+.workspace-dashboard-card__icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 11px;
+  background: var(--workspace-accent-soft);
+  color: var(--workspace-accent);
+}
+
+.workspace-dashboard-card__eyebrow {
+  color: var(--workspace-accent);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 1px;
+}
+
+@media (width <= 1050px) {
+  .workspace-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .workspace-dashboard-card {
+    min-height: 155px;
+  }
+}

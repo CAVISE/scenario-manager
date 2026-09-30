@@ -5,10 +5,7 @@ import {
   toUploadScenarioBody,
   normalizeLoadedScenario,
 } from '../scenarioRequest';
-import {
-  ScenarioPayload,
-  LoadScenarioApiResponse,
-} from '../types/IScenarioTypes';
+import { ScenarioPayload, ScenarioApiDetail } from '../types/IScenarioTypes';
 
 describe('toUploadScenarioBody', () => {
   it('wraps scenario groups for upload', () => {
@@ -116,7 +113,7 @@ describe('toUpdateScenarioBody', () => {
     ).toEqual({
       scenario_id: 'sc-1',
       scenario_name: undefined,
-      description: undefined,
+      annotation: undefined,
       preview: undefined,
       file_: file,
       scenario: { scenario_text: [] },
@@ -138,7 +135,7 @@ describe('toUpdateScenarioBody', () => {
     expect(body).toEqual({
       scenario_id: 'sc-1',
       scenario_name: undefined,
-      description: undefined,
+      annotation: undefined,
       preview: undefined,
       file_: undefined,
       map: undefined,
@@ -155,7 +152,7 @@ describe('toUpdateScenarioBody', () => {
     });
 
     expect(body.scenario_name).toBe('Renamed');
-    expect(body.description).toBe('note');
+    expect(body.annotation).toBe('note');
     expect(body.preview).toBe('data:image/png;base64,AAA');
   });
 });
@@ -183,7 +180,9 @@ describe('scenarioGroupsFromPayload', () => {
 });
 
 describe('normalizeLoadedScenario', () => {
-  const baseRow: LoadScenarioApiResponse['scenario'] = {
+  const baseRow: ScenarioApiDetail = {
+    id: 1,
+    revision: 1,
     scenario_id: 'sc-1',
     name_of_scenario: 'My Scenario',
   };
@@ -256,9 +255,11 @@ describe('normalizeLoadedScenario', () => {
 
   it('passes through id, name, description, preview, and file_ with null fallbacks', () => {
     const result = normalizeLoadedScenario({
+      id: 1,
+      revision: 1,
       scenario_id: 'sc-1',
       name_of_scenario: 'My Scenario',
-      description: undefined,
+      annotation: undefined,
       preview: undefined,
       file_: undefined,
     });
@@ -270,10 +271,10 @@ describe('normalizeLoadedScenario', () => {
     expect(result.file_).toBeNull();
   });
 
-  it('preserves explicitly given description, preview, and file_ values', () => {
+  it('maps annotation to description and preserves preview and file_ values', () => {
     const result = normalizeLoadedScenario({
       ...baseRow,
-      description: 'note',
+      annotation: 'note',
       preview: 'data:image/png;base64,AAA',
       file_: '<OpenDRIVE></OpenDRIVE>',
     });

@@ -1,0 +1,42 @@
+import '../../../../styles/EditorToolbar.scss';
+import { ListSubheader, MenuItem } from '@mui/material';
+import { useEditorStore } from '@/store';
+import { generateSionnaConfig } from '@scenario-export';
+import { mergeSimConfigWithDefaults } from '@scenario-export';
+import { Download as DownloadIcon } from '@mui/icons-material';
+import { SimulatorProps } from '../types/SimulationTypes';
+export default function RayTracingExportSection({
+  openExportDialog,
+}: SimulatorProps) {
+  const handleExportSionna = () => {
+    openExportDialog('sionna_config.json', () => {
+      const {
+        simConfig: raw,
+        RSUs,
+        buildings,
+        cars,
+        pedestrians,
+      } = useEditorStore.getState();
+      const simConfig = mergeSimConfigWithDefaults(raw);
+      return JSON.stringify(
+        generateSionnaConfig(simConfig, RSUs, buildings, cars, pedestrians),
+        null,
+        2
+      );
+    });
+  };
+  return (
+    <>
+      <ListSubheader className="editor-toolbar__subheader">
+        Channel / Ray tracing
+      </ListSubheader>
+      <MenuItem onClick={handleExportSionna}>
+        <DownloadIcon
+          fontSize="small"
+          className="editor-toolbar__download-icon"
+        />
+        Sionna (.json)
+      </MenuItem>
+    </>
+  );
+}

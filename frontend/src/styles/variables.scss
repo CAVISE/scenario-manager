@@ -1,16 +1,2 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  scrollbar-width: none;
-}
-
-::-webkit-scrollbar {
-  display: none;
-  width: 0;
-  height: 0;
-}
-
-body {
-  -ms-overflow-style: none;
-}
+// Compatibility entry point injected into every SCSS module by Vite.
+// Global CSS rules belong in main.scss so they are emitted only once.

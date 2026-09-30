@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useScenarioManager } from '../hooks/useScenarioManager';
 import { useWorkspacePreferences } from '@/store/ui/useWorkspacePreferences';
 import { ScenarioCards } from '../../Workspace/ScenarioCards';
+import { WorkspaceDashboard } from '@/widgets/WorkspaceDashboard';
 import {
   AddCircleOutline,
   FolderOpenOutlined,
@@ -32,6 +33,11 @@ export default function StartPage() {
           <p>Create, edit and run V2X scenarios.</p>
         </div>
       </div>
+      <WorkspaceDashboard
+        scenarioName={manager.scenario.name}
+        scenariosCount={manager.scenarios.length}
+        scenariosLoading={manager.isLoading}
+      />
       <div className="workspace-action-grid">
         <button type="button" onClick={manager.handleCreateNew}>
           <AddCircleOutline />
@@ -62,6 +68,7 @@ export default function StartPage() {
         items={recent}
         currentId={manager.scenario.id}
         onOpen={manager.handleOpen}
+        onCreate={manager.handleCreateNew}
         isLoading={manager.isLoading}
         error={manager.error}
         onRetry={manager.refetch}

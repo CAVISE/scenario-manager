@@ -1,5 +1,5 @@
 import type {
-  LoadScenarioApiResponse,
+  ScenarioApiDetail,
   ScenarioGroup,
   ScenarioPayload,
 } from './types/IScenarioTypes';
@@ -58,8 +58,9 @@ export function toUpdateScenarioBody(
   const groups = scenarioGroupsFromPayload(payload.scenario);
   return {
     scenario_id: payload.scenario_id,
+    ...(payload.revision ? { expected_revision: payload.revision } : {}),
     scenario_name: payload.name_of_scenario ?? undefined,
-    description: payload.description ?? undefined,
+    annotation: payload.description ?? undefined,
     preview: payload.preview ?? undefined,
     file_: payload.file_ ?? undefined,
     ...(payload.scenario !== undefined
@@ -70,9 +71,7 @@ export function toUpdateScenarioBody(
   };
 }
 
-export function normalizeLoadedScenario(
-  row: LoadScenarioApiResponse['scenario']
-) {
+export function normalizeLoadedScenario(row: ScenarioApiDetail) {
   const scenarioText = row.scenario_text;
   const groups = Array.isArray(scenarioText)
     ? scenarioText
@@ -87,8 +86,9 @@ export function normalizeLoadedScenario(
 
   return {
     scenario_id: row.scenario_id,
+    revision: row.revision,
     name_of_scenario: row.name_of_scenario,
-    description: row.description ?? null,
+    description: row.annotation ?? null,
     preview: row.preview ?? null,
     file_: row.file_ ?? null,
     map: row.map ?? null,
@@ -96,4 +96,4 @@ export function normalizeLoadedScenario(
   };
 }
 
-export type { LoadScenarioApiResponse };
+export type { ScenarioApiDetail };

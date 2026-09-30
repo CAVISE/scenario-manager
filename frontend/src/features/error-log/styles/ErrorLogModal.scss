@@ -1,0 +1,40 @@
+.error-log__title,
+.error-log__entry-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.error-log__entry-summary {
+  width: 100%;
+  min-width: 0;
+}
+
+.error-log__title-text {
+  flex-grow: 1;
+}
+
+.error-log__time {
+  flex-shrink: 0;
+}
+
+.error-log__message {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.error-log__stack {
+  padding: 8px;
+  margin: 0;
+  overflow-x: auto;
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: var(--workspace-bg);
+  border-radius: 4px;
+}
+
+.error-log__actions-spacer {
+  flex-grow: 1;
+}

@@ -1,0 +1,51 @@
+.car-properties-section__nested {
+  padding-left: 8px;
+}
+
+.car-properties-section__inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.car-properties-section__nested-deep {
+  padding-left: 16px;
+}
+
+.car-properties-section__divider {
+  margin-block: 8px !important;
+}
+
+.car-properties-section__color-preview {
+  width: 36px;
+  height: 14px;
+  padding: 0;
+  margin-top: 8px;
+  border: 1px solid var(--workspace-border);
+  cursor: default;
+
+  &::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
+
+  &::-webkit-color-swatch {
+    border: 0;
+  }
+}
+
+.car-properties-section__color-caption {
+  margin-top: 4px !important;
+}
+
+.car-properties-section__label {
+  color: var(--workspace-muted) !important;
+  font-size: 12px !important;
+}
+
+.car-properties-section__caption {
+  padding-top: 4px;
+}
+
+.car-properties-section__nested-compact {
+  padding-left: 4px;
+}

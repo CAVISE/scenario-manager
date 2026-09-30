@@ -1,0 +1,193 @@
+.editor-navigation {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 120;
+  width: var(--editor-nav-width, 92px);
+  background:
+    linear-gradient(180deg, rgb(22 74 70 / 88%), transparent 36%),
+    var(--workspace-chrome);
+  color: var(--workspace-on-accent);
+  border-right: 1px solid var(--workspace-border);
+}
+
+.editor-navigation-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 20px 8px 12px;
+  overflow-y: auto;
+}
+
+.editor-navigation-brand {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding-bottom: 28px;
+}
+
+.editor-navigation-brand .cavise-logo {
+  width: 44px;
+  height: 44px;
+  transition: transform var(--motion-base) var(--motion-ease);
+}
+
+.editor-navigation-brand:hover .cavise-logo {
+  transform: scale(1.06);
+}
+
+.editor-navigation-brand-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--workspace-accent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1.25;
+  text-align: center;
+
+  small {
+    color: var(--workspace-chrome-text);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0;
+    line-height: 1.25;
+  }
+}
+
+.editor-navigation .editor-navigation-tabs {
+  min-width: 0;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.editor-navigation .MuiTabs-flexContainer {
+  gap: 8px;
+}
+
+.editor-navigation .MuiTabs-indicator {
+  display: none;
+}
+
+.editor-navigation .editor-navigation-tab {
+  min-width: 0;
+  min-height: 72px;
+  padding: 10px 2px;
+  border-radius: 9px;
+  color: var(--workspace-chrome-text);
+  font:
+    500 12px/1.4 'Segoe UI',
+    sans-serif;
+  text-transform: none;
+  opacity: 1;
+  transition:
+    background-color var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease,
+    color var(--motion-fast) ease,
+    transform var(--motion-fast) var(--motion-ease);
+
+  svg {
+    width: 24px;
+    height: 24px;
+    margin-bottom: 8px;
+  }
+
+  &:hover {
+    background: var(--workspace-hover);
+    color: var(--workspace-on-accent);
+    transform: translateX(2px);
+  }
+
+  &.Mui-selected {
+    background: var(--workspace-selected);
+    color: var(--workspace-selected-text);
+    box-shadow:
+      inset 3px 0 var(--workspace-accent),
+      0 6px 16px rgb(0 0 0 / 16%);
+  }
+}
+
+.editor-navigation-footer {
+  display: grid;
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+.editor-navigation-footer-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-height: 62px;
+  padding: 8px 2px;
+  border-radius: 8px;
+  color: var(--workspace-chrome-text);
+  font-size: 12px;
+  text-decoration: none;
+  transition:
+    background-color var(--motion-fast) ease,
+    color var(--motion-fast) ease,
+    transform var(--motion-fast) var(--motion-ease);
+
+  &:hover,
+  &.active {
+    color: var(--workspace-on-accent);
+    background: var(--workspace-hover);
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  &.active {
+    box-shadow: inset 2px 0 var(--workspace-accent);
+  }
+}
+
+.editor-navigation-footer-icon {
+  display: flex;
+  font-size: 22px;
+}
+
+@media (width <= 600px) {
+  .editor-navigation-inner {
+    padding: 14px 4px 8px;
+  }
+
+  .editor-navigation-brand .cavise-logo {
+    width: 36px;
+    height: 36px;
+  }
+
+  .editor-navigation-brand {
+    padding-bottom: 20px;
+  }
+
+  .editor-navigation-brand-name {
+    display: none;
+  }
+
+  .editor-navigation .editor-navigation-tab {
+    min-height: 56px;
+    padding: 8px 0;
+    font-size: 0;
+    white-space: nowrap;
+
+    svg {
+      width: 22px;
+      height: 22px;
+      margin-bottom: 0;
+    }
+  }
+
+  .editor-navigation-footer-link {
+    min-height: 50px;
+    padding: 6px 0;
+    font-size: 0;
+
+    > span:last-child {
+      display: none;
+    }
+  }
+}

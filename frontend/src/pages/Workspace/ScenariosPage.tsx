@@ -63,6 +63,7 @@ export default function ScenariosPage() {
         items={items}
         currentId={manager.scenario.id}
         onOpen={manager.handleOpen}
+        onCreate={manager.handleCreateNew}
         isLoading={manager.isLoading}
         error={manager.error}
         onRetry={manager.refetch}

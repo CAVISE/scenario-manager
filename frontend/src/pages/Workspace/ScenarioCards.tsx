@@ -1,30 +1,32 @@
-import type { ScenarioListItem } from '@/api/types/IScenarioTypes';
+import { FolderOpenOutlined } from '@mui/icons-material';
 import { getApiErrorMessageSync } from '@/api/errors';
+import type { ScenarioCardsProps } from './types/WorkspaceTypes';
 
 export function ScenarioCards({
   items,
   onOpen,
+  onCreate,
   isLoading,
   error,
   currentId,
   onRetry,
-}: {
-  items: ScenarioListItem[];
-  onOpen: (item: ScenarioListItem) => void;
-  isLoading: boolean;
-  error?: Error | null;
-  currentId?: string;
-  onRetry: () => void;
-}) {
+}: ScenarioCardsProps) {
   if (isLoading)
     return (
-      <div className="workspace-empty" role="status">
-        Loading scenarios…
+      <div className="workspace-empty workspace-empty--loading" role="status">
+        <span className="workspace-empty__icon" aria-hidden="true">
+          <FolderOpenOutlined />
+        </span>
+        <strong>Loading scenarios</strong>
+        <p>Preparing your scenario library…</p>
       </div>
     );
   if (error)
     return (
       <div className="workspace-empty" role="alert">
+        <span className="workspace-empty__icon" aria-hidden="true">
+          <FolderOpenOutlined />
+        </span>
         <strong>Could not load scenarios</strong>
         <p>
           {getApiErrorMessageSync(
@@ -32,13 +34,30 @@ export function ScenarioCards({
             'The scenario service is unavailable.'
           )}
         </p>
-        <button type="button" onClick={onRetry}>
+        <button type="button" className="workspace-secondary" onClick={onRetry}>
           Try again
         </button>
       </div>
     );
   if (!items.length)
-    return <div className="workspace-empty">No scenarios to show.</div>;
+    return (
+      <div className="workspace-empty">
+        <span className="workspace-empty__icon" aria-hidden="true">
+          <FolderOpenOutlined />
+        </span>
+        <strong>Your scenario library is empty</strong>
+        <p>Create a scenario to add vehicles, roadside units and routes.</p>
+        {onCreate && (
+          <button
+            type="button"
+            className="workspace-primary"
+            onClick={onCreate}
+          >
+            Create scenario
+          </button>
+        )}
+      </div>
+    );
   return (
     <ul className="workspace-scenario-list">
       {items.map((item) => {

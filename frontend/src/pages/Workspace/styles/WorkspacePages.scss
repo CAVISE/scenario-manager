@@ -1,0 +1,318 @@
+.workspace-page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.workspace-page-heading h1 {
+  margin: 4px 0 8px;
+  font-size: clamp(24px, 3vw, 32px);
+  line-height: 1.2;
+  letter-spacing: -0.7px;
+}
+
+.workspace-page-heading p {
+  margin: 0;
+  color: var(--workspace-muted);
+}
+
+.workspace-kicker {
+  color: var(--workspace-accent);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+}
+
+.workspace-action-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 38px;
+}
+
+.workspace-action-grid > a,
+.workspace-action-grid > button {
+  display: flex;
+  min-height: 172px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 24px 20px;
+  border: 1px solid var(--workspace-border);
+  border-radius: 9px;
+  background: var(--workspace-surface);
+  box-shadow: 0 3px 14px rgb(13 66 60 / 8%);
+  color: var(--workspace-text);
+  text-align: left;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.workspace-action-grid svg {
+  margin-bottom: 12px;
+  color: var(--workspace-accent);
+  font-size: 30px;
+}
+
+.workspace-action-grid span {
+  color: var(--workspace-muted);
+  font-size: 14px;
+}
+
+.workspace-action-grid > :hover {
+  border-color: var(--workspace-accent);
+  box-shadow: 0 10px 24px rgb(13 66 60 / 16%);
+  transform: translateY(-3px);
+}
+
+.workspace-action-grid > :focus-visible {
+  border-color: var(--workspace-accent);
+  box-shadow: 0 0 0 4px var(--workspace-focus-ring);
+}
+
+.workspace-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.workspace-section-heading h2,
+.workspace-settings-card h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.workspace-section-heading a {
+  font-size: 14px;
+}
+
+.workspace-scenario-list {
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--workspace-border);
+  border-radius: 12px;
+  box-shadow: var(--workspace-shadow);
+  list-style: none;
+}
+
+.workspace-scenario-list li + li {
+  border-top: 1px solid var(--workspace-border);
+}
+
+.workspace-shell .workspace-scenario-card {
+  display: flex;
+  width: 100%;
+  min-height: 88px;
+  align-items: center;
+  gap: 18px;
+  padding: 16px 20px;
+  border: 0;
+  border-radius: 0;
+  background: var(--workspace-surface);
+  box-shadow: none;
+  text-align: left;
+  transition:
+    background-color var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease;
+}
+
+.workspace-scenario-card:hover {
+  background: var(--workspace-hover);
+  box-shadow: inset 3px 0 var(--workspace-accent);
+}
+
+.workspace-scenario-card img,
+.workspace-map-placeholder {
+  width: 90px;
+  height: 64px;
+  flex-shrink: 0;
+  border-radius: 5px;
+  object-fit: cover;
+}
+
+.workspace-map-placeholder {
+  display: grid;
+  place-items: center;
+  background: var(--workspace-accent-soft);
+  color: var(--workspace-accent);
+  font-size: 32px;
+}
+
+.workspace-scenario-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.workspace-scenario-copy strong,
+.workspace-scenario-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspace-scenario-copy small {
+  margin-top: 4px;
+  color: var(--workspace-muted);
+  font-size: 14px;
+}
+
+.workspace-open-label {
+  color: var(--workspace-accent);
+  font-size: 14px;
+}
+
+.workspace-badge {
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: var(--workspace-accent-soft);
+  color: var(--workspace-accent);
+  font-size: 12px;
+}
+
+.workspace-list-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.workspace-list-tools input {
+  width: min(440px, 100%);
+  box-sizing: border-box;
+}
+
+.workspace-list-tools label {
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.workspace-list-tools select {
+  margin-left: 8px;
+}
+
+.workspace-count {
+  color: var(--workspace-muted);
+  font-size: 14px;
+}
+
+.workspace-empty {
+  display: grid;
+  min-height: 238px;
+  justify-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  padding: 40px 24px;
+  border: 1px dashed var(--workspace-border);
+  border-radius: 12px;
+  background:
+    linear-gradient(135deg, var(--workspace-accent-soft), transparent 58%),
+    var(--workspace-surface);
+  color: var(--workspace-muted);
+  text-align: center;
+
+  strong {
+    color: var(--workspace-text);
+    font-size: 16px;
+  }
+
+  p {
+    max-width: 400px;
+    margin: 0;
+  }
+}
+
+.workspace-empty__icon {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--workspace-accent-soft);
+  color: var(--workspace-accent);
+
+  svg {
+    font-size: 25px;
+  }
+}
+
+.workspace-empty--loading .workspace-empty__icon {
+  animation: workspace-empty-pulse 1.4s ease-in-out infinite;
+}
+
+.workspace-settings-card {
+  margin-bottom: 20px;
+  padding: 24px;
+  border: 1px solid var(--workspace-border);
+  border-radius: 12px;
+  background: var(--workspace-surface);
+  box-shadow: 0 3px 14px rgb(13 66 60 / 6%);
+}
+
+.workspace-settings-card__hint {
+  margin: 6px 0 0;
+  color: var(--workspace-muted);
+  font-size: 14px;
+}
+
+.workspace-setting {
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding-top: 18px;
+  border-top: 1px solid transparent;
+  font-size: 14px;
+}
+
+.workspace-setting input[type='checkbox'] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--workspace-accent);
+}
+
+@keyframes workspace-empty-pulse {
+  50% {
+    transform: scale(1.06);
+    opacity: 0.72;
+  }
+}
+
+@media (width <= 1050px) {
+  .workspace-action-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (width <= 700px) {
+  .workspace-page-heading,
+  .workspace-list-tools {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .workspace-list-tools input {
+    width: 100%;
+  }
+
+  .workspace-scenario-card img,
+  .workspace-map-placeholder {
+    width: 56px;
+    height: 48px;
+  }
+
+  .workspace-open-label,
+  .workspace-badge {
+    display: none;
+  }
+}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useWorkspacePreferences } from '@/store/ui/useWorkspacePreferences';
-import SimConfigModal from '@editor/components/SimConfigModal';
+import SimConfigModal from '@/features/simulation-config';
 import { useEditorStore } from '@/store';
 
 export default function SettingsPage() {
@@ -21,6 +21,9 @@ export default function SettingsPage() {
       </div>
       <div className="workspace-settings-card">
         <h2>Appearance</h2>
+        <p className="workspace-settings-card__hint">
+          Choose how the workspace looks on this device.
+        </p>
         <label className="workspace-setting">
           <span>Theme</span>
           <select
@@ -39,6 +42,9 @@ export default function SettingsPage() {
       </div>
       <div className="workspace-settings-card">
         <h2>Editor</h2>
+        <p className="workspace-settings-card__hint">
+          Control how selections behave while building a scenario.
+        </p>
         <label className="workspace-setting">
           <span>Focus the camera when selecting in Scene Graph</span>
           <input
@@ -62,9 +68,12 @@ export default function SettingsPage() {
       </div>
       <div className="workspace-settings-card">
         <h2>Current scenario</h2>
-        <p>{scenarioName || 'Untitled scenario'}</p>
+        <p className="workspace-settings-card__hint">
+          {scenarioName || 'Untitled scenario'}
+        </p>
         <button
           type="button"
+          className="workspace-secondary"
           disabled={running}
           onClick={() => setSimulationOpen(true)}
         >

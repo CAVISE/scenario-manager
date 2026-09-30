@@ -1,20 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { WorkspacePreferences } from '../types/workspacePreferencesTypes';
 
-type Preferences = {
-  theme: 'light' | 'dark' | 'system';
-  focusOnSelection: boolean;
-  showSelectionOutline: boolean;
-  recentScenarioIds: string[];
-  update: (
-    patch: Partial<
-      Pick<Preferences, 'theme' | 'focusOnSelection' | 'showSelectionOutline'>
-    >
-  ) => void;
-  recordOpened: (id: string) => void;
-};
-
-export const useWorkspacePreferences = create<Preferences>()(
+export const useWorkspacePreferences = create<WorkspacePreferences>()(
   persist(
     (set) => ({
       theme: 'light',

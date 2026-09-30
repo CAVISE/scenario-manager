@@ -5,16 +5,19 @@ import {
   MAX_OPENDRIVE_LEN,
   MAX_PREVIEW_LEN,
   SCENARIO_ID_RE,
+} from './constants/scenarioConstants';
+import {
   ValidationResult,
   type ScenarioGroup,
   type ScenarioPayload,
 } from './types/IScenarioTypes';
 import type { StartSimulationPayload } from '@editor/hooks/useApiHooks/useSimulationMutation/types/useSimulationMutationTypes';
 import { scenarioGroupsFromPayload } from './scenarioRequest';
+import type { ScenarioIdValidationOptions } from './types/scenarioValidationTypes';
 
 export function validateScenarioId(
   id: string | null | undefined,
-  { required = false }: { required?: boolean } = {}
+  { required = false }: ScenarioIdValidationOptions = {}
 ): ValidationResult {
   const trimmed = id?.trim() ?? '';
   if (!trimmed) {

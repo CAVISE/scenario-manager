@@ -1,0 +1,23 @@
+.editor-toolbar__group {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  padding-inline: 2px;
+}
+
+.editor-toolbar__group--separated {
+  padding-right: 6px;
+  margin-right: 4px;
+  border-right: 1px solid var(--workspace-border);
+}
+
+.editor-toolbar__menu-icon,
+.editor-toolbar__download-icon {
+  margin-right: 8px;
+}
+
+.editor-toolbar__subheader {
+  color: var(--workspace-muted) !important;
+  font-size: 11px !important;
+  line-height: 28px !important;
+}
