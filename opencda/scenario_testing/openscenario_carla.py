@@ -46,7 +46,7 @@ def run_scenario(opt, scenario_params):
         sr_process = Process(target=exec_scenario_runner,
                              args=(scenario_params, ))
         sr_process.start()
-        
+
         world = scenario_manager.world
         ego_vehicle = None
         num_actors = 0

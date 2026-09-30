@@ -20,7 +20,6 @@ evaluation_outputs
 frontend
 logs
 plots
-tests
 
 .coverage
 Dockerfile*

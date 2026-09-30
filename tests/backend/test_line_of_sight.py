@@ -10,6 +10,7 @@ that as a direct module-level mutation here, isolated in its own file,
 is clearer than adding it to the shared conftest.py fixture for a
 single feature's tests.
 """
+
 import math
 import sys
 import types
@@ -33,15 +34,18 @@ if not hasattr(carla, "Actor"):
     carla.Actor = type("Actor", (), {})
 if not hasattr(carla, "Vector3D"):
     carla.Vector3D = type(
-        "Vector3D", (), {"__init__": lambda self, x=0, y=0, z=0: None})
+        "Vector3D", (), {"__init__": lambda self, x=0, y=0, z=0: None}
+    )
 
 # The shared fake carla.Location has no distance() -- dist() (existing,
 # unrelated to this change) and _has_line_of_sight (new) both need it.
 if not hasattr(carla.Location, "distance"):
+
     def _location_distance(self, other):
-        return math.sqrt((self.x - other.x) ** 2 +
-                         (self.y - other.y) ** 2 +
-                         (self.z - other.z) ** 2)
+        return math.sqrt(
+            (self.x - other.x) ** 2 + (self.y - other.y) ** 2 + (self.z - other.z) ** 2
+        )
+
     carla.Location.distance = _location_distance
 
 # perception_manager.py does `import cv2` and `import open3d` at
@@ -86,6 +90,7 @@ class _FakeCavWorld:
     only matters when activate=True) and sumo2carla_ids (read by
     ObstacleVehicle's constructor) are ever touched on the
     activate=False path these tests exercise."""
+
     ml_manager = None
     sumo2carla_ids = {}
 
@@ -110,8 +115,7 @@ class _FakeCarlaWorld:
             # vs non-emptiness matters to _has_line_of_sight, per
             # CARLA's own description of cast_ray's return value
             # (see the method's docstring for the source).
-            return [types.SimpleNamespace(
-                location=carla.Location(x=5, y=5, z=1.6))]
+            return [types.SimpleNamespace(location=carla.Location(x=5, y=5, z=1.6))]
         return []
 
 
@@ -132,9 +136,12 @@ def test_line_of_sight_defaults_to_false():
     deactivate_mode must keep behaving as a pure radius filter unless
     a scenario opts in explicitly."""
     pm = PerceptionManager(
-        vehicle=None, config_yaml=_perception_config(),
+        vehicle=None,
+        config_yaml=_perception_config(),
         cav_world=_FakeCavWorld(),
-        carla_world=_FakeCarlaWorld(blocked=True), infra_id=-1)
+        carla_world=_FakeCarlaWorld(blocked=True),
+        infra_id=-1,
+    )
     assert pm.line_of_sight is False
 
 
@@ -145,16 +152,22 @@ def test_has_line_of_sight_clear_and_blocked():
     target = _FakeVehicleActor(actor_id=1, x=10, y=0)
 
     pm_clear = PerceptionManager(
-        vehicle=None, config_yaml=_perception_config(line_of_sight=True),
+        vehicle=None,
+        config_yaml=_perception_config(line_of_sight=True),
         cav_world=_FakeCavWorld(),
-        carla_world=_FakeCarlaWorld(blocked=False), infra_id=-1)
+        carla_world=_FakeCarlaWorld(blocked=False),
+        infra_id=-1,
+    )
     pm_clear.ego_pos = carla.Transform(carla.Location(x=0, y=0, z=0))
     assert pm_clear._has_line_of_sight(target) is True
 
     pm_blocked = PerceptionManager(
-        vehicle=None, config_yaml=_perception_config(line_of_sight=True),
+        vehicle=None,
+        config_yaml=_perception_config(line_of_sight=True),
         cav_world=_FakeCavWorld(),
-        carla_world=_FakeCarlaWorld(blocked=True), infra_id=-1)
+        carla_world=_FakeCarlaWorld(blocked=True),
+        infra_id=-1,
+    )
     pm_blocked.ego_pos = carla.Transform(carla.Location(x=0, y=0, z=0))
     assert pm_blocked._has_line_of_sight(target) is False
 
@@ -166,13 +179,17 @@ def test_deactivate_mode_filters_occluded_vehicle_when_enabled():
     the list is empty at the point the (real, unrelated to this
     change) ObstacleVehicle constructor would otherwise be called."""
     pm = PerceptionManager(
-        vehicle=None, config_yaml=_perception_config(line_of_sight=True),
+        vehicle=None,
+        config_yaml=_perception_config(line_of_sight=True),
         cav_world=_FakeCavWorld(),
-        carla_world=_FakeCarlaWorld(blocked=True), infra_id=-1)
+        carla_world=_FakeCarlaWorld(blocked=True),
+        infra_id=-1,
+    )
     target = _FakeVehicleActor(actor_id=1, x=10, y=0)
     pm.ego_pos = carla.Transform(carla.Location(x=0, y=0, z=0))
     pm.carla_world.get_actors = lambda: types.SimpleNamespace(
-        filter=lambda pattern: [target])
+        filter=lambda pattern: [target]
+    )
 
     # retrieve_traffic_lights() (map.get_waypoint-based) and
     # ObstacleVehicle construction (get_transform-based) both sit
@@ -186,26 +203,37 @@ def test_deactivate_mode_filters_occluded_vehicle_when_enabled():
     world = pm.carla_world
     vehicle_list = world.get_actors().filter("*vehicle*")
     thresh = pm.detection_range
-    filtered = [v for v in vehicle_list if pm.dist(v) < thresh and
-               v.id != pm.id and
-               (not pm.line_of_sight or pm._has_line_of_sight(v))]
+    filtered = [
+        v
+        for v in vehicle_list
+        if pm.dist(v) < thresh
+        and v.id != pm.id
+        and (not pm.line_of_sight or pm._has_line_of_sight(v))
+    ]
     assert filtered == []
 
 
 def test_deactivate_mode_keeps_visible_vehicle_when_enabled():
     """Same filter, but with a clear ray -- the target must remain."""
     pm = PerceptionManager(
-        vehicle=None, config_yaml=_perception_config(line_of_sight=True),
+        vehicle=None,
+        config_yaml=_perception_config(line_of_sight=True),
         cav_world=_FakeCavWorld(),
-        carla_world=_FakeCarlaWorld(blocked=False), infra_id=-1)
+        carla_world=_FakeCarlaWorld(blocked=False),
+        infra_id=-1,
+    )
     target = _FakeVehicleActor(actor_id=1, x=10, y=0)
     pm.ego_pos = carla.Transform(carla.Location(x=0, y=0, z=0))
 
     vehicle_list = types.SimpleNamespace(filter=lambda pattern: [target])
     thresh = pm.detection_range
-    filtered = [v for v in vehicle_list.filter("*vehicle*")
-               if pm.dist(v) < thresh and v.id != pm.id and
-               (not pm.line_of_sight or pm._has_line_of_sight(v))]
+    filtered = [
+        v
+        for v in vehicle_list.filter("*vehicle*")
+        if pm.dist(v) < thresh
+        and v.id != pm.id
+        and (not pm.line_of_sight or pm._has_line_of_sight(v))
+    ]
     assert filtered == [target]
 
 
@@ -214,15 +242,22 @@ def test_deactivate_mode_ignores_occlusion_when_disabled():
     must NOT filter the target -- backward compatible with every
     scenario that predates this feature."""
     pm = PerceptionManager(
-        vehicle=None, config_yaml=_perception_config(),  # no line_of_sight key
+        vehicle=None,
+        config_yaml=_perception_config(),  # no line_of_sight key
         cav_world=_FakeCavWorld(),
-        carla_world=_FakeCarlaWorld(blocked=True), infra_id=-1)
+        carla_world=_FakeCarlaWorld(blocked=True),
+        infra_id=-1,
+    )
     target = _FakeVehicleActor(actor_id=1, x=10, y=0)
     pm.ego_pos = carla.Transform(carla.Location(x=0, y=0, z=0))
 
     vehicle_list = types.SimpleNamespace(filter=lambda pattern: [target])
     thresh = pm.detection_range
-    filtered = [v for v in vehicle_list.filter("*vehicle*")
-               if pm.dist(v) < thresh and v.id != pm.id and
-               (not pm.line_of_sight or pm._has_line_of_sight(v))]
+    filtered = [
+        v
+        for v in vehicle_list.filter("*vehicle*")
+        if pm.dist(v) < thresh
+        and v.id != pm.id
+        and (not pm.line_of_sight or pm._has_line_of_sight(v))
+    ]
     assert filtered == [target]

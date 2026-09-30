@@ -1,0 +1,37 @@
+default_stages: [pre-commit]
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-yaml
+      - id: check-json
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-merge-conflict
+      - id: detect-private-key
+  - repo: local
+    hooks:
+      - id: ruff-format
+        name: ruff format
+        entry: uv run --frozen ruff format
+        language: system
+        types_or: [python]
+        files: ^(app|tests)/.*\.py$
+      - id: ruff-check
+        name: ruff check
+        entry: uv run --frozen ruff check --fix
+        language: system
+        types_or: [python]
+        files: ^(app|tests)/.*\.py$
+      - id: frontend-eslint
+        name: frontend eslint
+        entry: yarn --cwd frontend eslint --fix
+        language: system
+        pass_filenames: false
+        files: ^frontend/(src|tests)/.*\.(ts|tsx)$
+      - id: frontend-stylelint
+        name: frontend stylelint
+        entry: yarn --cwd frontend stylelint --fix
+        language: system
+        pass_filenames: false
+        files: ^frontend/src/.*\.(scss|sass|css)$

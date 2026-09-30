@@ -48,7 +48,7 @@ class CollisionSensor(object):
 
         self.collided = False
         self.collided_frame = -1
-        self.last_other_actor = None  
+        self.last_other_actor = None
         self.last_other_actor_id = None
         self.last_collision_loc = None
         self.last_collision_event_loc = None

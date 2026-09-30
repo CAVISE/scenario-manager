@@ -1,23 +1,24 @@
 import copy
 import math
 import logging
+
 log = logging.getLogger(__name__)
 
 MAP_OFFSETS = {
-    'Town01':   (212.003,  123.089),
-    'Town02':   (97.995,   223.571),
-    'Town03':   (18.755,   -22.391),
-    'Town04':   (199.921, -169.704),
-    'Town05':   (-56.835,    3.766),
-    'Town06':   (122.551,  110.646),
-    'Town07':   (-74.443,  -47.197),
-    'Town10HD': (-8.377,    28.583),
+    "Town01": (212.003, 123.089),
+    "Town02": (97.995, 223.571),
+    "Town03": (18.755, -22.391),
+    "Town04": (199.921, -169.704),
+    "Town05": (-56.835, 3.766),
+    "Town06": (122.551, 110.646),
+    "Town07": (-74.443, -47.197),
+    "Town10HD": (-8.377, 28.583),
 }
 
 _FALLBACK_SPAWN_Z = 0.5
-_FALLBACK_DEST_Z  = 0.0
+_FALLBACK_DEST_Z = 0.0
 
-_BFS_STEP_M    = 5.0
+_BFS_STEP_M = 5.0
 _BFS_MAX_STEPS = 300
 
 _NUDGE_DIST_M = 30.0
@@ -27,6 +28,7 @@ def _waypoint_z(carla_map, x: float, y: float, hint_z: float = 0.0) -> float | N
     """Return road-surface z at (x, y), or None if no drivable waypoint nearby."""
     try:
         import carla as _carla
+
         wp = carla_map.get_waypoint(
             _carla.Location(x=x, y=y, z=hint_z),
             project_to_road=True,
@@ -54,7 +56,11 @@ def convert_coords(x, y, offset_x, offset_y, carla_map=None, is_spawn=True):
 
     log.debug(
         "convert_coords [%s]: editor=(%.4f, %.4f) → carla_xy=(%.4f, %.4f)",
-        point_type, x, y, carla_x, carla_y,
+        point_type,
+        x,
+        y,
+        carla_x,
+        carla_y,
     )
 
     if carla_map is not None:
@@ -63,20 +69,26 @@ def convert_coords(x, y, offset_x, offset_y, carla_map=None, is_spawn=True):
             carla_z = road_z + 0.3 if is_spawn else road_z
             log.debug(
                 "convert_coords [%s]: road snap OK  road_z=%.4f → final_z=%.4f (+0.3 clearance: %s)",
-                point_type, road_z, carla_z, is_spawn,
+                point_type,
+                road_z,
+                carla_z,
+                is_spawn,
             )
         else:
             log.warning(
                 "convert_coords [%s]: NO road waypoint at (%.2f, %.2f) — "
                 "vehicle may spawn off-road! Using fallback z=%.1f",
-                point_type, carla_x, carla_y,
+                point_type,
+                carla_x,
+                carla_y,
                 _FALLBACK_SPAWN_Z if is_spawn else _FALLBACK_DEST_Z,
             )
             carla_z = _FALLBACK_SPAWN_Z if is_spawn else _FALLBACK_DEST_Z
     else:
         log.debug(
             "convert_coords [%s]: no carla_map available, z=%.1f (fallback)",
-            point_type, _FALLBACK_SPAWN_Z if is_spawn else _FALLBACK_DEST_Z,
+            point_type,
+            _FALLBACK_SPAWN_Z if is_spawn else _FALLBACK_DEST_Z,
         )
         carla_z = _FALLBACK_SPAWN_Z if is_spawn else _FALLBACK_DEST_Z
 
@@ -86,7 +98,11 @@ def convert_coords(x, y, offset_x, offset_y, carla_map=None, is_spawn=True):
 def _yaw_atan2(sx: float, sy: float, dx: float, dy: float) -> float:
     """Fallback yaw from spawn→dest vector."""
     cdx, cdy = dx - sx, dy - sy
-    yaw = math.degrees(math.atan2(cdy, cdx)) if (abs(cdx) > 0.1 or abs(cdy) > 0.1) else 0.0
+    yaw = (
+        math.degrees(math.atan2(cdy, cdx))
+        if (abs(cdx) > 0.1 or abs(cdy) > 0.1)
+        else 0.0
+    )
     log.info("yaw=%.1f deg (atan2 fallback)", yaw)
     return yaw
 
@@ -96,7 +112,9 @@ def _angle_diff(a: float, b: float) -> float:
     return (a - b + 180.0) % 360.0 - 180.0
 
 
-def _wp_route_depth_to_dest(start_wp, dest_wp, max_steps: int = _BFS_MAX_STEPS) -> int | None:
+def _wp_route_depth_to_dest(
+    start_wp, dest_wp, max_steps: int = _BFS_MAX_STEPS
+) -> int | None:
     """
     Return the road-transition depth from start_wp to dest_wp.
 
@@ -119,7 +137,11 @@ def _wp_route_depth_to_dest(start_wp, dest_wp, max_steps: int = _BFS_MAX_STEPS) 
         if current.road_id == target_road and current.lane_id == target_lane:
             log.debug(
                 "BFS: reached target road=%d lane=%d at depth=%d after %d expansions (%d nodes visited)",
-                target_road, target_lane, depth, steps, len(visited),
+                target_road,
+                target_lane,
+                depth,
+                steps,
+                len(visited),
             )
             return depth
 
@@ -134,7 +156,10 @@ def _wp_route_depth_to_dest(start_wp, dest_wp, max_steps: int = _BFS_MAX_STEPS) 
 
     log.debug(
         "BFS: exhausted after %d steps (%d nodes visited) — target road=%d lane=%d NOT reached",
-        steps, len(visited), target_road, target_lane,
+        steps,
+        len(visited),
+        target_road,
+        target_lane,
     )
     return None
 
@@ -144,9 +169,9 @@ def _wp_leads_to_dest(start_wp, dest_wp, max_steps: int = _BFS_MAX_STEPS) -> boo
     return _wp_route_depth_to_dest(start_wp, dest_wp, max_steps) is not None
 
 
-def _compute_yaw(sx: float, sy: float, sz: float,
-                 dx: float, dy: float,
-                 carla_map=None) -> float:
+def _compute_yaw(
+    sx: float, sy: float, sz: float, dx: float, dy: float, carla_map=None
+) -> float:
     """Return the yaw of the spawn lane with the shortest route to dest."""
     if carla_map is None:
         return _yaw_atan2(sx, sy, dx, dy)
@@ -160,13 +185,18 @@ def _compute_yaw(sx: float, sy: float, sz: float,
             lane_type=_carla.LaneType.Driving,
         )
         if wp_spawn is None:
-            log.warning("No spawn waypoint at (%.2f, %.2f, %.2f) — atan2 fallback", sx, sy, sz)
+            log.warning(
+                "No spawn waypoint at (%.2f, %.2f, %.2f) — atan2 fallback", sx, sy, sz
+            )
             return _yaw_atan2(sx, sy, dx, dy)
         log.debug(
             "yaw: spawn wp snap → (%.2f, %.2f, %.2f) road=%d lane=%d yaw=%.1f°",
-            wp_spawn.transform.location.x, wp_spawn.transform.location.y,
+            wp_spawn.transform.location.x,
+            wp_spawn.transform.location.y,
             wp_spawn.transform.location.z,
-            wp_spawn.road_id, wp_spawn.lane_id, wp_spawn.transform.rotation.yaw,
+            wp_spawn.road_id,
+            wp_spawn.lane_id,
+            wp_spawn.transform.rotation.yaw,
         )
 
         wp_dest = carla_map.get_waypoint(
@@ -175,15 +205,20 @@ def _compute_yaw(sx: float, sy: float, sz: float,
             lane_type=_carla.LaneType.Driving,
         )
         if wp_dest is None:
-            log.warning("No dest waypoint at (%.2f, %.2f) — using spawn lane yaw", dx, dy)
+            log.warning(
+                "No dest waypoint at (%.2f, %.2f) — using spawn lane yaw", dx, dy
+            )
             yaw = wp_spawn.transform.rotation.yaw
             log.info("yaw=%.1f deg (spawn lane, dest wp not found)", yaw)
             return yaw
         log.debug(
             "yaw: dest wp snap → (%.2f, %.2f, %.2f) road=%d lane=%d yaw=%.1f°",
-            wp_dest.transform.location.x, wp_dest.transform.location.y,
+            wp_dest.transform.location.x,
+            wp_dest.transform.location.y,
             wp_dest.transform.location.z,
-            wp_dest.road_id, wp_dest.lane_id, wp_dest.transform.rotation.yaw,
+            wp_dest.road_id,
+            wp_dest.lane_id,
+            wp_dest.transform.rotation.yaw,
         )
 
         candidates: list[tuple] = []
@@ -200,15 +235,21 @@ def _compute_yaw(sx: float, sy: float, sz: float,
                     candidates.append((flipped, label + "_twin"))
 
         _add(wp_spawn, "forward")
-        _add(wp_spawn.get_left_lane(),  "left_lane")
+        _add(wp_spawn.get_left_lane(), "left_lane")
         _add(wp_spawn.get_right_lane(), "right_lane")
 
         log.debug(
             "yaw BFS: testing %d candidates for route to road=%d lane=%d: %s",
             len(candidates),
-            wp_dest.road_id, wp_dest.lane_id,
-            [(lbl, f"road={wp.road_id} lane={wp.lane_id} yaw={wp.transform.rotation.yaw:.1f}°")
-             for wp, lbl in candidates],
+            wp_dest.road_id,
+            wp_dest.lane_id,
+            [
+                (
+                    lbl,
+                    f"road={wp.road_id} lane={wp.lane_id} yaw={wp.transform.rotation.yaw:.1f}°",
+                )
+                for wp, lbl in candidates
+            ],
         )
 
         to_dest_yaw = math.degrees(math.atan2(dy - sy, dx - sx))
@@ -235,7 +276,9 @@ def _compute_yaw(sx: float, sy: float, sz: float,
             reachable.append((depth, yaw_error, label, wp_cand))
             log.debug(
                 "yaw BFS: candidate=%s -> route depth=%d yaw_error=%.1f",
-                label, depth, yaw_error,
+                label,
+                depth,
+                yaw_error,
             )
 
         if reachable:
@@ -244,7 +287,10 @@ def _compute_yaw(sx: float, sy: float, sz: float,
             yaw = wp_cand.transform.rotation.yaw
             log.info(
                 "yaw=%.1f deg (BFS best route, candidate=%s, depth=%d, yaw_error=%.1f)",
-                yaw, label, depth, yaw_error,
+                yaw,
+                label,
+                depth,
+                yaw_error,
             )
             return yaw
 
@@ -262,8 +308,12 @@ def _compute_yaw(sx: float, sy: float, sz: float,
 
 
 def _nudge_dest_if_same_waypoint(
-    sx: float, sy: float, sz: float,
-    dx: float, dy: float, dz: float,
+    sx: float,
+    sy: float,
+    sz: float,
+    dx: float,
+    dy: float,
+    dz: float,
     cav_index: int,
     carla_map,
 ) -> tuple[float, float, float]:
@@ -304,32 +354,49 @@ def _nudge_dest_if_same_waypoint(
             "CAV%d nudge check: spawn wp id=%d (road=%d lane=%d) at (%.2f,%.2f,%.2f)  "
             "dest wp id=%d (road=%d lane=%d) at (%.2f,%.2f,%.2f)",
             cav_index,
-            wp_s.id, wp_s.road_id, wp_s.lane_id,
-            wp_s.transform.location.x, wp_s.transform.location.y, wp_s.transform.location.z,
-            wp_d.id, wp_d.road_id, wp_d.lane_id,
-            wp_d.transform.location.x, wp_d.transform.location.y, wp_d.transform.location.z,
+            wp_s.id,
+            wp_s.road_id,
+            wp_s.lane_id,
+            wp_s.transform.location.x,
+            wp_s.transform.location.y,
+            wp_s.transform.location.z,
+            wp_d.id,
+            wp_d.road_id,
+            wp_d.lane_id,
+            wp_d.transform.location.x,
+            wp_d.transform.location.y,
+            wp_d.transform.location.z,
         )
 
         if wp_s.id == wp_d.id:
             log.warning(
                 "CAV%d: spawn and dest snap to same waypoint (id=%d, road=%d, lane=%d)"
                 " — nudging dest %.0fm forward",
-                cav_index, wp_s.id, wp_s.road_id, wp_s.lane_id, _NUDGE_DIST_M,
+                cav_index,
+                wp_s.id,
+                wp_s.road_id,
+                wp_s.lane_id,
+                _NUDGE_DIST_M,
             )
             nexts = wp_d.next(_NUDGE_DIST_M)
             if nexts:
                 loc = nexts[0].transform.location
                 dx, dy, dz = loc.x, loc.y, loc.z
-                log.info("CAV%d nudged dest to (%.2f, %.2f, %.2f)", cav_index, dx, dy, dz)
+                log.info(
+                    "CAV%d nudged dest to (%.2f, %.2f, %.2f)", cav_index, dx, dy, dz
+                )
             else:
                 log.warning(
                     "CAV%d: no waypoint %.0fm ahead of dest — dest unchanged",
-                    cav_index, _NUDGE_DIST_M,
+                    cav_index,
+                    _NUDGE_DIST_M,
                 )
         else:
             log.debug(
                 "CAV%d nudge check: spawn wp id=%d ≠ dest wp id=%d — no nudge needed",
-                cav_index, wp_s.id, wp_d.id,
+                cav_index,
+                wp_s.id,
+                wp_d.id,
             )
 
     except Exception as exc:
@@ -339,10 +406,23 @@ def _nudge_dest_if_same_waypoint(
 
 
 _GNSS_SPOOF_LEVELS = {
-    "low":    {"noise_alt_stddev": 1.0,  "noise_lat_stddev": 3e-5,  "noise_lon_stddev": 3e-5},
-    "medium": {"noise_alt_stddev": 5.0,  "noise_lat_stddev": 1e-4,  "noise_lon_stddev": 1e-4},
-    "high":   {"noise_alt_stddev": 15.0, "noise_lat_stddev": 5e-4,  "noise_lon_stddev": 5e-4},
+    "low": {
+        "noise_alt_stddev": 1.0,
+        "noise_lat_stddev": 3e-5,
+        "noise_lon_stddev": 3e-5,
+    },
+    "medium": {
+        "noise_alt_stddev": 5.0,
+        "noise_lat_stddev": 1e-4,
+        "noise_lon_stddev": 1e-4,
+    },
+    "high": {
+        "noise_alt_stddev": 15.0,
+        "noise_lat_stddev": 5e-4,
+        "noise_lon_stddev": 5e-4,
+    },
 }
+
 
 def _normalize_attack_stages(stages: object) -> list[dict]:
     """Flatten attack stages received from persisted frontend state."""
@@ -372,10 +452,16 @@ def _apply_attacks(
 
         atk_type = attack.get("type") or (stages[0].get("type", "") if stages else "")
         if atk_type != "spoofer":
-            log.warning("Attack %r: type %r not implemented — skipped", attack.get("name"), atk_type)
+            log.warning(
+                "Attack %r: type %r not implemented — skipped",
+                attack.get("name"),
+                atk_type,
+            )
             continue
 
-        params = attack.get("params") or (stages[0].get("params") or {} if stages else {})
+        params = attack.get("params") or (
+            stages[0].get("params") or {} if stages else {}
+        )
         mode = str(params.get("mode", "noise")).lower()
 
         targets = attack.get("targets") or {}
@@ -404,14 +490,17 @@ def _apply_attacks(
                     "max_offset": float(params.get("max_offset", 3.0)),
                 }
                 for key in (
-                    "start_time", "ramp_duration", "drift_rate",
-                    "jitter_stddev", "max_offset",
+                    "start_time",
+                    "ramp_duration",
+                    "drift_rate",
+                    "jitter_stddev",
+                    "max_offset",
                 ):
-
                     if not math.isfinite(spoofing[key]) or spoofing[key] < 0:
                         raise ValueError(
                             "GNSS spoofing %s must be a finite, "
-                            "non-negative number" % key)
+                            "non-negative number" % key
+                        )
                 loc["gnss_spoofing"] = spoofing
                 log.info(
                     "ATTACK spoofer -> CAV%d | mode=drift start=%.2fs "
@@ -442,13 +531,17 @@ def _apply_attacks(
                     "max_sigma": float(params.get("max_sigma", 2.0)),
                 }
                 for key in (
-                    "start_time", "ramp_duration", "drift_rate",
-                    "jitter_stddev", "max_sigma",
+                    "start_time",
+                    "ramp_duration",
+                    "drift_rate",
+                    "jitter_stddev",
+                    "max_sigma",
                 ):
                     if not math.isfinite(spoofing[key]) or spoofing[key] < 0:
                         raise ValueError(
                             "GNSS spoofing %s must be a finite, "
-                            "non-negative number" % key)
+                            "non-negative number" % key
+                        )
                 loc["gnss_spoofing"] = spoofing
                 log.info(
                     "ATTACK spoofer -> CAV%d | mode=stealth start=%.2fs "
@@ -469,14 +562,14 @@ def _apply_attacks(
                 raise ValueError("Unsupported GNSS spoofing mode: %s" % mode)
 
             intensity = str(params.get("intensity", "medium")).lower()
-            noise = _GNSS_SPOOF_LEVELS.get(
-                intensity, _GNSS_SPOOF_LEVELS["medium"])
+            noise = _GNSS_SPOOF_LEVELS.get(intensity, _GNSS_SPOOF_LEVELS["medium"])
             gnss = loc.setdefault("gnss", {})
             gnss.update(noise)
             log.info(
                 "ATTACK spoofer -> CAV%d | mode=noise intensity=%s | "
                 "alt_std=%.2f lat_std=%.2e lon_std=%.2e",
-                idx, intensity,
+                idx,
+                intensity,
                 noise["noise_alt_stddev"],
                 noise["noise_lat_stddev"],
                 noise["noise_lon_stddev"],
@@ -510,12 +603,14 @@ def _record_config_override(
 ) -> None:
     if source == effective:
         return
-    overrides.append({
-        "path": path,
-        "source": source,
-        "effective": effective,
-        "reason": reason,
-    })
+    overrides.append(
+        {
+            "path": path,
+            "source": source,
+            "effective": effective,
+            "reason": reason,
+        }
+    )
 
 
 def yaml_to_runtime_scenario(
@@ -551,9 +646,7 @@ def yaml_to_runtime_scenario(
             raise ValueError(f"scenario.single_cav_list[{index - 1}] must be an object")
         cav = copy.deepcopy(source_cav)
         source_destination = cav["destination"]
-        dx_raw, dy_raw, _ = _source_xyz(
-            source_destination, f"CAV{index} destination"
-        )
+        dx_raw, dy_raw, _ = _source_xyz(source_destination, f"CAV{index} destination")
         dx, dy, dz = convert_coords(
             dx_raw,
             dy_raw,
@@ -574,9 +667,7 @@ def yaml_to_runtime_scenario(
                 carla_map=carla_map,
                 is_spawn=True,
             )
-            spawn_yaw = _compute_yaw(
-                sx, sy, sz, dx, dy, carla_map=carla_map
-            )
+            spawn_yaw = _compute_yaw(sx, sy, sz, dx, dy, carla_map=carla_map)
             if carla_map is not None:
                 dx, dy, dz = _nudge_dest_if_same_waypoint(
                     sx, sy, sz, dx, dy, dz, index, carla_map
@@ -642,18 +733,20 @@ def yaml_to_runtime_scenario(
             carla_map=carla_map,
             is_spawn=True,
         )
-        pedestrian_list.append({
-            "spawn": [px, py, pz],
-            "speed": raw_pedestrian.get("speed", 1.4),
-            "cross_factor": raw_pedestrian.get("cross_factor", 0.0),
-            "is_invincible": raw_pedestrian.get("is_invincible", True),
-            "v2x": {
-                "tx_power": raw_pedestrian.get("tx_power", 10),
-                "frequency": raw_pedestrian.get("frequency", 5.9e9),
-                "protocol": raw_pedestrian.get("protocol", "DSRC"),
-                "beacon_interval": raw_pedestrian.get("beacon_interval", 1000),
-            },
-        })
+        pedestrian_list.append(
+            {
+                "spawn": [px, py, pz],
+                "speed": raw_pedestrian.get("speed", 1.4),
+                "cross_factor": raw_pedestrian.get("cross_factor", 0.0),
+                "is_invincible": raw_pedestrian.get("is_invincible", True),
+                "v2x": {
+                    "tx_power": raw_pedestrian.get("tx_power", 10),
+                    "frequency": raw_pedestrian.get("frequency", 5.9e9),
+                    "protocol": raw_pedestrian.get("protocol", "DSRC"),
+                    "beacon_interval": raw_pedestrian.get("beacon_interval", 1000),
+                },
+            }
+        )
 
     source_scenario["name"] = json_data.get("scenario_name", "scenario")
     source_scenario["map"] = map_name

@@ -1,2 +1,3 @@
-yarn --cwd frontend test
-uv run pytest tests/backend -q
+#!/bin/sh
+
+exec uv run --frozen pre-commit run --hook-stage pre-commit

@@ -72,4 +72,3 @@ def run_scenario(opt, scenario_params):
             v.destroy()
         for v in bg_veh_list:
             v.destroy()
-

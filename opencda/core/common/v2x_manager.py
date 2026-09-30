@@ -255,7 +255,7 @@ class V2XManager(object):
                 self.pedestrian_nearby[pid] = pedestrian
     """
     -----------------------------------------------------------
-                 Below is platooning related 
+                 Below is platooning related
     -----------------------------------------------------------
     """
 

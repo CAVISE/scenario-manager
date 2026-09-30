@@ -16,6 +16,7 @@ def test_alembic_upgrade_creates_scenarios_table(tmp_path):
     assert "alembic_version" in inspector.get_table_names()
     assert {column["name"] for column in inspector.get_columns("scenarios")} == {
         "id",
+        "revision",
         "scenario_id",
         "name_of_scenario",
         "map",
@@ -26,4 +27,5 @@ def test_alembic_upgrade_creates_scenarios_table(tmp_path):
         "created_at",
         "updated_at",
     }
+    assert "users" in inspector.get_table_names()
     engine.dispose()

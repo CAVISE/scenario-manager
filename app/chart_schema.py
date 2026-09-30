@@ -1,4 +1,5 @@
 """Versioned, file-backed chart API. Coordinates are always in original units."""
+
 from typing import Literal
 
 from pydantic import BaseModel, Field, FiniteFloat

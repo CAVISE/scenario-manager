@@ -105,6 +105,8 @@ because Compose sets `RUN_MIGRATIONS=1`.
 | `docker compose restart backend` | Restart only the backend service. |
 | `docker compose exec backend alembic current` | Show the applied database revision. |
 | `docker compose exec backend alembic upgrade head` | Apply all pending migrations manually. |
+| `docker build --target test --tag scenario-manager-backend-test .` | Build the isolated backend test image used by CI. |
+| `docker run --rm scenario-manager-backend-test` | Run the backend pytest suite in that image. |
 | `docker compose stop` | Stop services without removing containers. |
 | `docker compose down` | Stop and remove service containers. |
 | `docker compose down -v` | Also delete database and evaluation volumes. |
@@ -124,6 +126,15 @@ Include CARLA and the full simulation stack when needed:
 ```bash
 uv sync --extra simulation
 ```
+
+Install the repository hook once after dependency installation:
+
+```bash
+uv run pre-commit install
+```
+
+It formats and checks only staged Python, TypeScript, and SCSS files. Run the
+same checks for the whole repository with `uv run pre-commit run --all-files`.
 
 | Command | Description |
 | --- | --- |
@@ -165,6 +176,9 @@ at its default address.
 | `make frontend` | Shortcut for the Vite development server. |
 | `make frontend-test` | Shortcut for frontend tests. |
 
+Before running Playwright locally for the first time, install its browser with
+`yarn --cwd frontend playwright install chromium`.
+
 ## Configuration
 
 The backend loads `.env` through `pydantic-settings` and `python-dotenv`.
@@ -188,6 +202,21 @@ start PostgreSQL when the required database values are missing.
 Compose defines `RUN_MIGRATIONS=1`. Other values belong in `.env`; do not put
 secrets in `docker-compose.yml`.
 
+In production, set `AUTH_JWT_SECRET` (at least 32 characters),
+`AUTH_BOOTSTRAP_ADMIN_EMAIL`, and `AUTH_BOOTSTRAP_ADMIN_PASSWORD` (at least
+12 characters). The first startup creates that admin if it does not yet exist.
+Authenticate via `POST /api/auth/login`; the access token is also stored in a
+secure httpOnly cookie. The web interface shows a sign-in screen whenever JWT
+authentication is enabled; it never stores the token in browser storage. Admins
+can create `operator` and `viewer` users through `POST /api/auth/users`.
+Viewers have read-only API access; operators and admins can edit scenarios and
+control simulation runs.
+
+When `AUTH_JWT_SECRET` is empty in development, the app deliberately uses a
+local development admin and disables login/logout. Set all three `AUTH_*`
+variables and restart Compose to enable the login screen and real user
+sessions.
+
 ## Runtime Flow
 
 1. The frontend creates or imports a road network and scenario objects.
@@ -206,11 +235,11 @@ response schemas are documented at `/docs`.
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `GET` | `/api/load_all_scenarios` | List scenarios. |
-| `GET` | `/api/load_scenario/{scenario_id}` | Load a scenario. |
-| `POST` | `/api/upload_scenario` | Create a scenario. |
-| `POST` | `/api/update_scenario` | Update a scenario. |
-| `POST` | `/api/delete_scenario` | Delete a scenario. |
+| `GET` | `/api/v1/scenarios?offset=0&limit=50` | List scenarios. |
+| `GET` | `/api/v1/scenarios/{scenario_id}` | Load a scenario. |
+| `POST` | `/api/v1/scenarios` | Create a scenario. |
+| `PATCH` | `/api/v1/scenarios/{scenario_id}` | Update a scenario. |
+| `DELETE` | `/api/v1/scenarios/{scenario_id}` | Delete a scenario. |
 
 ### Simulation
 
@@ -223,7 +252,7 @@ response schemas are documented at `/docs`.
 | `GET` | `/api/results` | List completed, partial and archived runs. |
 | `GET` | `/api/results/{run_id}` | Return chart samples, metadata and artifact links. |
 | `DELETE` | `/api/results/{run_id}` | Delete evaluation artifacts. |
-| `GET` | `/evaluation_outputs/{run_id}/{filename}` | Download an artifact. |
+| `GET` | `/api/results/{run_id}/files/{filename}` | Download an artifact. |
 | `GET` | `/health` | Check backend and database health. |
 
 ## Logs and Data

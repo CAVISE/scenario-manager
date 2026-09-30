@@ -203,7 +203,7 @@ class ScenarioManager:
                     f"{bcolors.FAIL} %s is not found in your CARLA repo! "
                     f"Please download all town maps to your CARLA "
                     f"repo!{bcolors.ENDC}" % town)
-                self.world = None 
+                self.world = None
         else:
             self.world = self.client.get_world()
 

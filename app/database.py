@@ -35,7 +35,9 @@ def get_session() -> Generator[Session, None, None]:
     except SQLAlchemyError as exc:
         session.rollback()
         log.exception("Database operation failed")
-        raise HTTPException(status_code=500, detail="Database operation failed") from exc
+        raise HTTPException(
+            status_code=500, detail="Database operation failed"
+        ) from exc
     finally:
         session.close()
 

@@ -78,4 +78,3 @@ def save_yaml(data, save_name):
     else:
         with open(save_name, "w") as f:
             OmegaConf.save(data, f)
-
