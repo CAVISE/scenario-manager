@@ -1,5 +1,4 @@
 import json
-import sys
 import types
 from unittest.mock import MagicMock
 
@@ -11,7 +10,12 @@ from app.run_results import MANIFEST_NAME, read_run_metadata
 
 @pytest.fixture(autouse=True)
 def result_environment(monkeypatch, tmp_path):
-    settings = types.SimpleNamespace(eval_dir=tmp_path, eval_retention_days=7)
+    settings = types.SimpleNamespace(
+        eval_dir=tmp_path,
+        eval_retention_days=7,
+        base_dir=tmp_path,
+        simulation_max_runtime_seconds=1,
+    )
     monkeypatch.setattr(simulation, "get_settings", lambda: settings)
     monkeypatch.setattr("app.run_results.get_settings", lambda: settings)
     monkeypatch.setattr(
@@ -29,6 +33,26 @@ def result_environment(monkeypatch, tmp_path):
         },
     )
     monkeypatch.setattr(simulation, "_broadcast_state", MagicMock())
+    monkeypatch.setattr(simulation, "_update_run_record", MagicMock())
+    monkeypatch.setattr(simulation, "_schedule_next_run", MagicMock())
+
+
+def install_worker_response(monkeypatch, payload):
+    class CompletedWorker:
+        pid = 123
+        returncode = 0
+
+        def poll(self):
+            return 0
+
+    def launch(_input_path, result_path, progress_path):
+        result_path.write_text(json.dumps(payload), encoding="utf-8")
+        progress_path.write_text(
+            json.dumps({"tick": 25, "max_ticks": 100}), encoding="utf-8"
+        )
+        return CompletedWorker()
+
+    monkeypatch.setattr(simulation, "_launch_worker", launch)
 
 
 def create_run(root, name, outcome=None):
@@ -83,7 +107,7 @@ def test_results_encode_special_characters_in_file_urls(scenario_client, tmp_pat
     (directory / "vehicle #1.png").write_bytes(b"plot")
     response = scenario_client.get("/api/results/run")
     files = {file["filename"]: file["url"] for file in response.json()["files"]}
-    assert files["vehicle #1.png"] == "/evaluation_outputs/run/vehicle%20%231.png"
+    assert files["vehicle #1.png"] == "/api/results/run/files/vehicle%20%231.png"
     assert MANIFEST_NAME not in files
 
 
@@ -105,16 +129,10 @@ def test_result_symlinks_cannot_escape_the_results_directory(scenario_client, tm
 def test_completed_run_persists_its_outcome_and_progress(
     monkeypatch, tmp_path, partial
 ):
-    import app
-
-    def run_scenario(_scenario, params):
-        params["on_progress"](25, 100)
-        return {"tick": 30, "max_ticks": 100, "partial": partial}
-
-    runner = types.ModuleType("app.runner")
-    runner.run_scenario = run_scenario
-    monkeypatch.setitem(sys.modules, "app.runner", runner)
-    monkeypatch.setattr(app, "runner", runner, raising=False)
+    install_worker_response(
+        monkeypatch,
+        {"result": {"tick": 30, "max_ticks": 100, "partial": partial}},
+    )
     simulation.simulation_state.update(
         running=True, status="running", run_id="Town01_test"
     )
@@ -129,6 +147,7 @@ def test_completed_run_persists_its_outcome_and_progress(
     metadata = read_run_metadata(tmp_path / "Town01_test")
     assert metadata == {
         "outcome": "partial" if partial else "complete",
+        "map": "Town01",
         "tick": 30,
         "max_ticks": 100,
         "scenario_id": "city-1",
@@ -139,12 +158,7 @@ def test_completed_run_persists_its_outcome_and_progress(
 
 
 def test_failed_run_retains_failure_metadata_and_error_status(monkeypatch, tmp_path):
-    import app
-
-    runner = types.ModuleType("app.runner")
-    runner.run_scenario = MagicMock(side_effect=RuntimeError("CARLA crashed"))
-    monkeypatch.setitem(sys.modules, "app.runner", runner)
-    monkeypatch.setattr(app, "runner", runner, raising=False)
+    install_worker_response(monkeypatch, {"error": "CARLA crashed"})
     simulation.simulation_state.update(
         running=True, status="running", run_id="Town01_test"
     )

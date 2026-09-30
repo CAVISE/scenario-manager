@@ -6,17 +6,21 @@ from sqlalchemy import select
 from app.models import Scenario
 
 
-def test_upload_scenario_without_scenario_id(scenario_client, db_session):
-    response = scenario_client.post("/api/upload_scenario", json={
-        "name_of_scenario": "No ID Scenario",
-    })
+def test_create_scenario_without_scenario_id(scenario_client, db_session):
+    response = scenario_client.post(
+        "/api/v1/scenarios",
+        json={
+            "name_of_scenario": "No ID Scenario",
+        },
+    )
 
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert response.json()["status"] == "success"
     generated_id = response.json()["scenario_id"]
     assert generated_id
     assert db_session.scalar(select(Scenario.scenario_id)) == generated_id
-    assert scenario_client.get(f"/api/load_scenario/{generated_id}").status_code == 200
+    assert scenario_client.get(f"/api/v1/scenarios/{generated_id}").status_code == 200
+
 
 def test_update_scenario_with_none_fields(scenario_client, db_session):
     scenario = Scenario(
@@ -28,18 +32,22 @@ def test_update_scenario_with_none_fields(scenario_client, db_session):
     db_session.add(scenario)
     db_session.commit()
 
-    response = scenario_client.post("/api/update_scenario", json={
-        "scenario_id": "sc-1",
-        "scenario_name": None,
-        "preview": None,
-        "annotation": None,
-    })
+    response = scenario_client.patch(
+        "/api/v1/scenarios/sc-1",
+        json={
+            "scenario_id": "sc-1",
+            "scenario_name": None,
+            "preview": None,
+            "annotation": None,
+        },
+    )
 
     assert response.status_code == 200
     db_session.refresh(scenario)
     assert scenario.name_of_scenario == "Original"
     assert scenario.preview == "preview"
     assert scenario.annotation == "annotation"
+
 
 def test_spawn_yaw_is_zero_when_coords_identical(open_cda_config_factory):
     from app.utils import yaml_to_runtime_scenario
@@ -49,17 +57,24 @@ def test_spawn_yaw_is_zero_when_coords_identical(open_cda_config_factory):
     config["scenario"]["single_cav_list"][0]["destination"] = [5, 5, 0]
     payload = {
         "map": "Town03",
-        "scenario": [{
-            "vehicle": "car",
-            "path": [{
-                "x": 5, "y": 5, "z": 0,
-                "points": [{"x": 5, "y": 5, "z": 0}],
-            }]
-        }]
+        "scenario": [
+            {
+                "vehicle": "car",
+                "path": [
+                    {
+                        "x": 5,
+                        "y": 5,
+                        "z": 0,
+                        "points": [{"x": 5, "y": 5, "z": 0}],
+                    }
+                ],
+            }
+        ],
     }
     result, _, _ = yaml_to_runtime_scenario(config, payload)
     cav = result["scenario"]["single_cav_list"][0]
     assert cav["spawn_position"][4] == 0.0
+
 
 def test_unknown_map_uses_zero_offset(open_cda_config_factory):
     from app.utils import yaml_to_runtime_scenario
@@ -68,15 +83,15 @@ def test_unknown_map_uses_zero_offset(open_cda_config_factory):
     config["scenario"]["single_cav_list"][0]["spawn_position"] = [10, 20, 0, 0, 0, 0]
     payload = {
         "map": "UnknownMap",
-        "scenario": [{
-            "vehicle": "car",
-            "path": [{"x": 10, "y": 20, "z": 0, "points": []}]
-        }]
+        "scenario": [
+            {"vehicle": "car", "path": [{"x": 10, "y": 20, "z": 0, "points": []}]}
+        ],
     }
     result, _, _ = yaml_to_runtime_scenario(config, payload)
     cav = result["scenario"]["single_cav_list"][0]
     assert cav["spawn_position"][0] == 10
-    assert cav["spawn_position"][1] == -20 
+    assert cav["spawn_position"][1] == -20
+
 
 def test_broadcast_state_skips_when_no_loop(caplog):
     import logging
@@ -91,6 +106,7 @@ def test_broadcast_state_skips_when_no_loop(caplog):
         assert "no event loop" in caplog.text
     finally:
         sim_module._main_loop = original_loop
+
 
 def test_broadcast_state_skips_when_loop_closed(caplog):
     import logging
@@ -116,8 +132,10 @@ def test_broadcast_state_removes_dead_client():
     loop = asyncio.new_event_loop()
 
     dead_ws = MagicMock()
+
     async def failing_send(_):
         raise RuntimeError("connection closed")
+
     dead_ws.send_json = failing_send
 
     original_loop = sim_module._main_loop

@@ -1,5 +1,6 @@
 from locust import HttpUser, task, between
 
+
 class ScenarioManagerUser(HttpUser):
     wait_time = between(1, 3)
 
@@ -13,20 +14,23 @@ class ScenarioManagerUser(HttpUser):
 
     @task(5)
     def list_scenarios(self):
-        self.client.get("/api/load_all_scenarios")
+        self.client.get("/api/v1/scenarios")
 
     @task(2)
-    def load_scenario(self):
-        self.client.get("/api/load_scenario/test-scenario-id")
+    def get_scenario(self):
+        self.client.get("/api/v1/scenarios/test-scenario-id")
 
     @task(2)
     def list_results(self):
         self.client.get("/api/results/Town01_20250101_120000")
-        
+
     @task(1)
-    def upload_scenario(self):
-        self.client.post("/api/upload_scenario", json={
-            "name_of_scenario": "Load Test Scenario",
-            "scenario_id": f"load-test-{self.user_id}",
-            "scenario": [],
-        })
+    def create_scenario(self):
+        self.client.post(
+            "/api/v1/scenarios",
+            json={
+                "name_of_scenario": "Load Test Scenario",
+                "scenario_id": f"load-test-{self.user_id}",
+                "scenario": [],
+            },
+        )

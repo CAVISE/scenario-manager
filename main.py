@@ -2,16 +2,21 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from app.config import get_settings
-from app.database import close_database, database_is_ready, initialize_database
+from app.auth import bootstrap_admin
+from app.database import (
+    SessionLocal,
+    close_database,
+    database_is_ready,
+    initialize_database,
+)
 from app.log_config import get_logger
 from app.rate_limit import limiter
-from app.routers import scenarios_router, simulation_router
-from app.routers.simulation import cleanup_old_results
+from app.routers import auth_router, scenarios_router, simulation_router
+from app.routers.simulation import cleanup_old_results, recover_persisted_queue
 
 log = get_logger(__name__)
 
@@ -25,11 +30,15 @@ async def lifespan(app: FastAPI):
     settings.log_dir.mkdir(parents=True, exist_ok=True)
 
     initialize_database()
+    with SessionLocal() as session:
+        bootstrap_admin(session)
 
     try:
         cleanup_old_results()
     except Exception as e:
         log.warning("Cleanup failed: %s", e)
+
+    recover_persisted_queue()
 
     yield
 
@@ -57,12 +66,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    app.mount(
-        "/evaluation_outputs",
-        StaticFiles(directory=str(settings.eval_dir)),
-        name="results",
-    )
-
+    app.include_router(auth_router, prefix="/api")
     app.include_router(simulation_router, prefix="/api", tags=["simulation"])
     app.include_router(scenarios_router, prefix="/api", tags=["scenarios"])
 
@@ -83,4 +87,5 @@ app = create_app()
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)

@@ -2,8 +2,8 @@ import pytest
 from pydantic import ValidationError
 
 from app.schemas import (
-    DeleteScenarioRequest,
     StartSimulationRequest,
+    UpdateScenarioRequest,
     UploadScenarioRequest,
 )
 
@@ -42,9 +42,9 @@ def test_upload_rejects_invalid_vehicle_type():
         )
 
 
-def test_delete_requires_valid_scenario_id():
+def test_update_requires_valid_scenario_id():
     with pytest.raises(ValidationError):
-        DeleteScenarioRequest(scenario_id="")
+        UpdateScenarioRequest(scenario_id="")
 
 
 def test_start_simulation_requires_car_with_route(open_cda_yaml):
