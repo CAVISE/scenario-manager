@@ -48,7 +48,7 @@ export function useScenarioControls(): ScenarioControls {
     if (
       operationRef.current ||
       startMutation.isPending ||
-      (next !== 'run' &&
+      (next !== 'validate' &&
         useEditorStore.getState().simulationSession.phase === 'running')
     )
       return;

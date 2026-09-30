@@ -238,7 +238,7 @@ describe('useScenarioQueries', () => {
     ).rejects.toThrow('scenario id is required');
   });
   it('useScenariosListQuery fetches when enabled', async () => {
-    listAllMock.mockResolvedValue({ scenarios: [{ id: '1' }] });
+    listAllMock.mockResolvedValue({ items: [{ id: '1' }] });
     const queryClient = new QueryClient();
     const { result } = renderHook(() => useScenariosListQuery(true), {
       wrapper: makeWrapper(queryClient),

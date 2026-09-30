@@ -1,6 +1,7 @@
 const XODR_EXT = '.xodr';
 import { CACHE_KEY } from '../../../constants/openDriveConstants';
 const MAP_NAME_KEY = 'cached_xodr_name';
+const LEGACY_CONTENT_CACHE_KEY = 'cached_xodr_content';
 export const DEFAULT_XODR = 'data.xodr';
 
 const CARLA_MAPS = [
@@ -193,7 +194,9 @@ export async function fetchXodrText(mapName: string): Promise<string> {
 export function getCachedXodrContent(): string | null {
   if (cachedXodrContent) return cachedXodrContent;
 
-  const stored = localStorage.getItem(CACHE_KEY);
+  const stored =
+    localStorage.getItem(CACHE_KEY) ??
+    localStorage.getItem(LEGACY_CONTENT_CACHE_KEY);
   if (stored && isOpenDrive(stored)) return stored;
 
   return null;

@@ -70,6 +70,13 @@ const createStoreState = () => {
     selectedIds: [] as string[],
     sceneExplicitlyCleared: false,
     simConfig: undefined as unknown,
+    simulationSession: {
+      phase: 'idle',
+      runId: null,
+      status: null,
+      error: null,
+      startedAt: null,
+    },
     addCar: vi.fn(),
     updateCar: vi.fn(),
     addPoint: vi.fn(),
@@ -98,6 +105,7 @@ const createStoreState = () => {
     addPointsBatch: vi.fn(),
     addLidarsBatch: vi.fn(),
     setSceneExplicitlyCleared: vi.fn(),
+    updateSimulationSession: vi.fn(),
   };
 
   state.addCarsBatch.mockImplementation((carsToAdd: Array<unknown>) => {
