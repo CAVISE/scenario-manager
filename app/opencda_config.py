@@ -11,6 +11,16 @@ import yaml
 from omegaconf import DictConfig, OmegaConf
 
 from app.config import Settings
+from app.integrations.opencda.environment import (
+    _DEFAULT_DETECTION_RANGE_M,
+    _MAX_GNSS_NOISE_MULTIPLIER,
+    _MIN_DETECTION_RANGE_FRACTION,
+    _MIN_DETECTION_RANGE_M,
+    _set_override,
+    _weather_severity,
+    apply_environment_overrides,
+    weather_report as _weather_report,
+)
 from app import utils
 
 
@@ -19,14 +29,11 @@ _ALLOWED_INTERPOLATIONS = {"${world.fixed_delta_seconds}"}
 _INTERPOLATION_RE = re.compile(r"\$\{[^{}]+}")
 
 
-_DEFAULT_DETECTION_RANGE_M = 50.0
-_MIN_DETECTION_RANGE_M = 15.0
-_MIN_DETECTION_RANGE_FRACTION = 0.4
-_MAX_GNSS_NOISE_MULTIPLIER = 3.0
-
-
 class OpenCDAConfigError(ValueError):
     pass
+
+
+weather_report = _weather_report
 
 
 def _validate_interpolations(value: Any, path: str = "") -> None:
@@ -89,6 +96,7 @@ def _validate_attack_numbers(value: Any, path: str) -> None:
         for index, child in enumerate(value):
             _validate_attack_numbers(child, f"{path}[{index}]")
 
+
 def _validate_attacks(config: dict[str, Any]) -> None:
     attacks = config.get("attacks")
     if attacks is None:
@@ -105,14 +113,21 @@ def _validate_attacks(config: dict[str, Any]) -> None:
             )
         _validate_attack_numbers(item, f"attacks[{index}]")
 
+
 def _validate_coordinates(value: Any, path: str, minimum: int) -> None:
     if not isinstance(value, list) or len(value) < minimum:
-        raise OpenCDAConfigError(f"OpenCDA YAML '{path}' must contain at least {minimum} coordinates")
+        raise OpenCDAConfigError(
+            f"OpenCDA YAML '{path}' must contain at least {minimum} coordinates"
+        )
     for item in value[:minimum]:
         if not isinstance(item, (int, float)) or isinstance(item, bool):
-            raise OpenCDAConfigError(f"OpenCDA YAML '{path}' coordinates must be numeric")
+            raise OpenCDAConfigError(
+                f"OpenCDA YAML '{path}' coordinates must be numeric"
+            )
         if not math.isfinite(item):
-            raise OpenCDAConfigError(f"OpenCDA YAML '{path}' coordinates must be finite")
+            raise OpenCDAConfigError(
+                f"OpenCDA YAML '{path}' coordinates must be finite"
+            )
     if any(not isinstance(item, (int, float)) for item in value[:minimum]):
         raise OpenCDAConfigError(f"OpenCDA YAML '{path}' coordinates must be numeric")
 
@@ -332,12 +347,13 @@ def _validate_complete_config(config: dict[str, Any]) -> None:
         raise OpenCDAConfigError(
             "world.fixed_delta_seconds must be a finite, positive number"
         )
-    gnss_config = _mapping_at(
-        config, "vehicle_base.sensing.localization.gnss"
-    )
+    gnss_config = _mapping_at(config, "vehicle_base.sensing.localization.gnss")
     for stddev_key in (
-        "noise_alt_stddev", "noise_lat_stddev", "noise_lon_stddev",
-        "heading_direction_stddev", "speed_stddev",
+        "noise_alt_stddev",
+        "noise_lat_stddev",
+        "noise_lon_stddev",
+        "heading_direction_stddev",
+        "speed_stddev",
     ):
         stddev_value = gnss_config[stddev_key]
         if (
@@ -363,8 +379,7 @@ def _validate_complete_config(config: dict[str, Any]) -> None:
     position_source = config["vehicle_base"]["v2x"]["position_source"]
     if position_source not in {"estimated", "ground_truth"}:
         raise OpenCDAConfigError(
-            "vehicle_base.v2x.position_source must be "
-            "'estimated' or 'ground_truth'"
+            "vehicle_base.v2x.position_source must be 'estimated' or 'ground_truth'"
         )
 
     for camera_path in (
@@ -496,48 +511,7 @@ def validate_config_object_counts(
         )
 
 
-def _set_override(
-    config: DictConfig,
-    path: str,
-    value: Any,
-    reason: str,
-    overrides: list[dict[str, Any]],
-) -> None:
-    previous = OmegaConf.select(config, path, default=None)
-    if previous == value:
-        return
-    OmegaConf.update(config, path, value, merge=False, force_add=True)
-    overrides.append(
-        {
-            "path": path,
-            "source": previous,
-            "effective": value,
-            "reason": reason,
-        }
-    )
-
-
-def _weather_severity(config: DictConfig) -> float:
-    """Combine world.weather into a single 0..1 severity scalar.
-
-    Averages precipitation, wetness, and fog_density (each on their
-    native 0-100 scale) rather than picking one, since a scenario
-    could set any subset of them (weather_override lets a user raise
-    fog_density on its own, independent of the selected preset).
-    Returns 0.0 for a clear/dry world.weather block -- callers use
-    that to skip the override entirely via _set_override's no-op
-    check, keeping config_overrides.json free of a weather section
-    on non-adverse runs.
-    """
-    weather = OmegaConf.select(config, "world.weather", default={})
-    precipitation = float(OmegaConf.select(weather, "precipitation", default=0) or 0)
-    wetness = float(OmegaConf.select(weather, "wetness", default=0) or 0)
-    fog_density = float(OmegaConf.select(weather, "fog_density", default=0) or 0)
-    severity = (precipitation + wetness + fog_density) / 3.0 / 100.0
-    return min(max(severity, 0.0), 1.0)
-
-
-def _apply_weather_perception_effects(
+def _legacy_apply_weather_perception_effects(
     config: DictConfig,
     overrides: list[dict[str, Any]],
 ) -> None:
@@ -587,9 +561,7 @@ def _apply_weather_perception_effects(
         current_range = OmegaConf.select(
             config, detection_range_path, default=_DEFAULT_DETECTION_RANGE_M
         )
-        scaled_range = max(
-            current_range * range_scale, _MIN_DETECTION_RANGE_M
-        )
+        scaled_range = max(current_range * range_scale, _MIN_DETECTION_RANGE_M)
         _set_override(
             config,
             detection_range_path,
@@ -617,7 +589,7 @@ def _apply_weather_perception_effects(
             )
 
 
-def weather_report(config: DictConfig) -> dict[str, Any]:
+def _legacy_weather_report(config: DictConfig) -> dict[str, Any]:
     """Summarize world.weather and its effect on this run, for
     metrics.json (see EvaluationManager.weather_eval).
 
@@ -642,11 +614,20 @@ def weather_report(config: DictConfig) -> dict[str, Any]:
     severity = _weather_severity(config)
     active = severity > 0.0
     return {
-        "raw": {k: OmegaConf.select(weather, k, default=None) for k in (
-            "cloudiness", "precipitation", "precipitation_deposits",
-            "wind_intensity", "sun_altitude_angle", "fog_density",
-            "fog_distance", "fog_falloff", "wetness",
-        )},
+        "raw": {
+            k: OmegaConf.select(weather, k, default=None)
+            for k in (
+                "cloudiness",
+                "precipitation",
+                "precipitation_deposits",
+                "wind_intensity",
+                "sun_altitude_angle",
+                "fog_density",
+                "fog_distance",
+                "fog_falloff",
+                "wetness",
+            )
+        },
         "severity": round(severity, 4),
         "active": active,
         "effect": {
@@ -656,13 +637,15 @@ def weather_report(config: DictConfig) -> dict[str, Any]:
             "gnss_noise_scale": round(
                 1.0 + severity * (_MAX_GNSS_NOISE_MULTIPLIER - 1.0), 4
             ),
-        } if active else None,
+        }
+        if active
+        else None,
         "note": (
             "precipitation/wetness/fog_density are 0, so weather had no "
             "effect this run beyond the CARLA render -- perception "
             "detection_range and GNSS noise were unchanged."
-            if not active else
-            "precipitation/wetness/fog_density combined into a nonzero "
+            if not active
+            else "precipitation/wetness/fog_density combined into a nonzero "
             "severity, which shrank sensing.perception.detection_range "
             "and scaled up sensing.localization.gnss noise_*_stddev for "
             "every CAV and RSU (see effect above and "
@@ -671,7 +654,7 @@ def weather_report(config: DictConfig) -> dict[str, Any]:
     }
 
 
-def apply_environment_overrides(
+def _legacy_apply_environment_overrides(
     config: DictConfig,
     settings: Settings,
     map_name: str,
@@ -746,7 +729,7 @@ def apply_environment_overrides(
                 overrides,
             )
 
-    _apply_weather_perception_effects(config, overrides)
+    _legacy_apply_weather_perception_effects(config, overrides)
 
     return overrides
 

@@ -1,6 +1,4 @@
-import math
 import os
-import random
 import threading
 from typing import TYPE_CHECKING
 
@@ -8,10 +6,29 @@ import carla
 from omegaconf import OmegaConf
 
 from app.config import get_settings
+from app.integrations.opencda.runtime import (
+    reset_stale_sync_mode as _reset_stale_sync_mode,
+    run_with_timeout as _run_with_timeout,
+)
+from app.integrations.opencda.preflight import (
+    check_perception_requires_apply_ml as _check_perception_requires_apply_ml,
+    check_scenario_matches_map,
+)
+from app.integrations.opencda.pedestrians import (
+    destroy_pedestrians as _destroy_pedestrians,
+    spawn_pedestrians as _spawn_pedestrians,
+)
+from app.integrations.opencda.telemetry import (
+    log_cav_forensic,
+    log_rsu_forensic,
+)
 from app.log_config import add_run_file_handler, get_logger, remove_run_file_handler
-from app.opencda_config import compile_open_cda_config, weather_report, write_open_cda_artifacts
+from app.integrations.opencda.config import (
+    compile_open_cda_config,
+    weather_report,
+    write_open_cda_artifacts,
+)
 from opencda.core.common.cav_world import CavWorld
-from opencda.core.common.pedestrian_manager import PedestrianManager
 from opencda.scenario_testing.evaluations.evaluate_manager import EvaluationManager
 from opencda.scenario_testing.utils import customized_map_api as map_api
 
@@ -25,8 +42,16 @@ _stop_event = threading.Event()
 log = get_logger(__name__)
 
 STANDARD_MAPS = {
-    'Town01', 'Town02', 'Town03', 'Town04', 'Town05',
-    'Town06', 'Town07', 'Town10HD', 'Town11', 'Town12',
+    "Town01",
+    "Town02",
+    "Town03",
+    "Town04",
+    "Town05",
+    "Town06",
+    "Town07",
+    "Town10HD",
+    "Town11",
+    "Town12",
 }
 
 
@@ -44,91 +69,13 @@ def _build_scene_dict(scenario_raw: dict, carla_map=None) -> tuple:
 
 
 def _check_scenario_matches_map(scene_dict, carla_map) -> None:
-    """Reject vehicle coordinates implausibly far from driving lanes.
-
-    This pre-spawn heuristic catches vehicles authored for a different map
-    before road snapping produces unrelated routes. RSUs are stationary
-    infrastructure: distance to a driving lane is advisory, not evidence
-    that their coordinates are invalid. Never move them onto a road here.
-    """
-    MAX_SNAP_DISTANCE_M = 40.0
-    def _snap_distance(x: float, y: float, z: float) -> float:
-        wp = carla_map.get_waypoint(
-            carla.Location(x=x, y=y, z=z),
-            project_to_road=True,
-            lane_type=carla.LaneType.Driving,
-        )
-        if wp is None:
-            return math.inf
-        loc = wp.transform.location
-        return math.dist((x, y), (loc.x, loc.y))
-
-    offenders = []
-    for cav in scene_dict.scenario.get("single_cav_list", []):
-        for field in ("spawn_position", "destination"):
-            pos = cav.get(field)
-            if not pos:
-                continue
-            dist = _snap_distance(pos[0], pos[1], pos[2] if len(pos) > 2 else 0.0)
-            if dist > MAX_SNAP_DISTANCE_M:
-                offenders.append(f"{cav.get('name', '?')}.{field} ({dist:.0f}m off-road)")
-    for rsu in scene_dict.scenario.get("rsu_list", []):
-        pos = rsu.get("spawn_position")
-        if not pos:
-            continue
-        dist = _snap_distance(pos[0], pos[1], pos[2] if len(pos) > 2 else 0.0)
-        if dist > MAX_SNAP_DISTANCE_M:
-            log.warning(
-                "RSU %s.spawn_position is %.0fm from the nearest driving lane "
-                "on map '%s'. Continuing with its configured position; "
-                "verify placement and communication coverage if unexpected.",
-                rsu.get('name', '?'), dist, carla_map.name,
-            )
-
-    if offenders:
-        raise RuntimeError(
-            f"Scenario coordinates don't match map '{carla_map.name}' -- "
-            f"{len(offenders)} vehicle point(s) are implausibly far from a driving lane "
-            f"(>{MAX_SNAP_DISTANCE_M:.0f}m): {', '.join(offenders)}. This "
-            f"usually means the scenario was authored for a different map "
-            f"and the map was changed afterward without recomputing "
-            f"positions. Re-place these entities on the current map "
-            f"before running."
-        )
+    """Compatibility facade for the OpenCDA map-placement preflight check."""
+    check_scenario_matches_map(scene_dict, carla_map, logger=log)
 
 
-def _check_perception_requires_apply_ml(scene_dict, apply_ml: bool) -> None:
-    """Reject any CAV/RSU with perception.activate=true when apply_ml=false.
-
-    OpenCDA's PerceptionManager calls sys.exit() (a BaseException, not
-    Exception) deep inside VehicleManager.__init__ when this combination is
-    hit, which aborts the run for every already-spawned CAV with no chance
-    to skip just the offender. Catching it here, before any actor spawns,
-    turns a hard crash after CARLA spawning has started into a clean
-    pre-flight error.
-    """
-    if apply_ml:
-        return
-
-    offenders = []
-    for cav in scene_dict.scenario.get("single_cav_list", []):
-        if cav.get("sensing", {}).get("perception", {}).get("activate"):
-            offenders.append(cav.get("name", "?"))
-    for rsu in scene_dict.scenario.get("rsu_list", []):
-        if rsu.get("sensing", {}).get("perception", {}).get("activate"):
-            offenders.append(rsu.get("name", "?"))
-
-    if offenders:
-        raise RuntimeError(
-            f"{len(offenders)} entity(ies) have perception.activate=true "
-            f"but apply_ml is false for this run: {', '.join(offenders)}. "
-            f"Either enable 'apply_ml' for the run, or turn off the "
-            f"perception/detection toggle for these entities."
-        )
-
-
-def _make_scenario_manager(scene_dict, apply_ml: bool, xodr_path, map_name: str,
-                            cav_world: CavWorld) -> "sim_api.ScenarioManager":
+def _make_scenario_manager(
+    scene_dict, apply_ml: bool, xodr_path, map_name: str, cav_world: CavWorld
+) -> "sim_api.ScenarioManager":
     from opencda.scenario_testing.utils import sim_api
 
     return sim_api.ScenarioManager(
@@ -141,261 +88,16 @@ def _make_scenario_manager(scene_dict, apply_ml: bool, xodr_path, map_name: str,
     )
 
 
-def _reset_stale_sync_mode(client: "carla.Client") -> None:
-    """Guard against a CARLA server left wedged in synchronous_mode by a
-    previous run that hung or was killed before its `finally` cleanup
-    (scenario_manager.close()) could restore origin_settings.
-
-    A server stuck this way blocks on the next tick that never arrives,
-    which can freeze this run's own load_world()/apply_settings() before
-    ScenarioManager even exists to fix it. Nothing legitimate should have
-    synchronous_mode already on this early, so if we see it, force it off.
-    """
-    try:
-        world = client.get_world()
-        current = world.get_settings()
-    except Exception as e:
-        log.warning("Preflight sync-mode check failed (continuing anyway): %s", e)
-        return
-
-    if current.synchronous_mode:
-        log.warning(
-            "CARLA server was already in synchronous_mode before this run "
-            "started (likely left over from a hung/killed prior run) — "
-            "forcing it back to asynchronous mode before proceeding."
-        )
-        try:
-            current.synchronous_mode = False
-            current.fixed_delta_seconds = None
-            world.apply_settings(current)
-            log.info("Stale synchronous_mode cleared.")
-        except Exception as e:
-            log.error(
-                "Failed to clear stale synchronous_mode — the upcoming "
-                "load_world()/ScenarioManager setup may hang: %s", e
-            )
-
-
-class _SetupTimeout(Exception):
-    """Raised when the CARLA setup phase (map load through actor spawning)
-    does not complete within carla_setup_timeout_seconds. Unlike the tick
-    loop, this phase has no _stop_event checkpoints to interrupt a blocked
-    RPC call, so a plain timeout is the only way to keep a wedged CARLA
-    connection from hanging run_scenario forever."""
-
-
-def _run_with_timeout(fn, timeout_seconds: float, description: str):
-    """Run fn() on a background thread and wait up to timeout_seconds.
-
-    If fn raises, that exception is re-raised here. If it doesn't finish in
-    time, raises _SetupTimeout — the background thread is a daemon and is
-    left to die with the process/CARLA call it's stuck on; we don't attempt
-    to cancel the blocking RPC itself, only to stop waiting on it so the
-    normal except/finally cleanup path in run_scenario can still run.
-    """
-    result: dict = {}
-
-    def _target():
-        try:
-            result["value"] = fn()
-        except BaseException as e:
-            result["error"] = e
-
-    thread = threading.Thread(target=_target, daemon=True, name=f"setup-{description}")
-    thread.start()
-    thread.join(timeout_seconds)
-
-    if thread.is_alive():
-        raise _SetupTimeout(
-            f"{description} did not complete within {timeout_seconds:.0f}s "
-            f"— CARLA connection is likely wedged (see preflight sync-mode "
-            f"check / a previous run that never cleaned up)."
-        )
-    if "error" in result:
-        raise result["error"]
-    return result["value"]
-
-
-def _spawn_pedestrians(world, pedestrian_list: list, cav_world) -> list:
-    """Spawn walkers, wrap each in a PedestrianManager for V2X, and
-    return the managers for the tick loop and cleanup."""
-    if not pedestrian_list:
-        return []
-
-    bp_lib = world.get_blueprint_library()
-    walker_bps = bp_lib.filter("walker.pedestrian.*")
-    controller_bp = bp_lib.find("controller.ai.walker")
-    spawned = []
-
-    for i, ped in enumerate(pedestrian_list, 1):
-        px, py, pz = ped["spawn"]
-        bp = random.choice(walker_bps)
-        if bp.has_attribute("is_invincible"):
-            bp.set_attribute("is_invincible", "true" if ped["is_invincible"] else "false")
-
-        spawn_tf = carla.Transform(carla.Location(x=px, y=py, z=pz + 0.5))
-        walker = world.try_spawn_actor(bp, spawn_tf)
-        if walker is None:
-            log.warning("PED%d: spawn failed at (%.1f, %.1f, %.1f) — skipping", i, px, py, pz)
-            continue
-
-        try:
-
-            ctrl = world.spawn_actor(controller_bp, carla.Transform(), attach_to=walker)
-            world.tick()
-            ctrl.start()
-            ctrl.go_to_location(world.get_random_location_from_navigation())
-            ctrl.set_max_speed(ped["speed"])
-
-            manager = PedestrianManager(walker, ctrl, ped, cav_world)
-            spawned.append(manager)
-            log.info("PED%d spawned id=%d speed=%.1f m/s", i, walker.id, ped["speed"])
-        except Exception as e:
-            log.warning(
-                "PED%d: controller setup failed (%s) — destroying orphaned "
-                "walker, skipping this pedestrian", i, e,
-            )
-            try:
-                walker.destroy()
-            except Exception as destroy_err:
-                log.warning("PED%d: also failed to destroy orphaned walker: %s",i, destroy_err,)
-
-    log.info("Spawned %d/%d pedestrian(s)", len(spawned), len(pedestrian_list))
-    return spawned
-
-
-def _destroy_pedestrians(spawned_pedestrians: list) -> None:
-    for pedestrian in spawned_pedestrians:
-        try:
-            pedestrian.controller.stop()
-            pedestrian.controller.destroy()
-        except Exception as e:
-            log.warning("Failed to stop/destroy walker controller: %s", e)
-        try:
-            pedestrian.walker.destroy()
-        except Exception as e:
-            log.warning("Failed to destroy walker: %s", e)
-
-
 def _run_output_dir(map_name: str, current_time: str) -> str:
-    return os.path.abspath(os.path.join(
-        _BASE_DIR, "..", "evaluation_outputs", f"{map_name}_{current_time}"))
-
-
-def _fmt_loc(loc) -> str:
-    if loc is None:
-        return "None"
-    return f"({loc.x:.2f},{loc.y:.2f},{loc.z:.2f})"
-
-
-def _speed_kmh(vehicle) -> float:
-    v = vehicle.get_velocity()
-    return (v.x**2 + v.y**2 + v.z**2) ** 0.5 * 3.6
-
-
-def _latest_safety_status(cav):
-    status_queue = getattr(cav.safety_manager, "status_queue", None)
-    if not status_queue:
-        return None, {}
-    tick, status = status_queue[-1]
-    return tick, status
-
-
-def _destination_distance(cav) -> float | None:
-    try:
-        dest = cav.agent.end_waypoint.transform.location
-        return cav.vehicle.get_location().distance(dest)
-    except Exception:
-        return None
-
-
-def _log_cav_forensic(tick_count: int, cav, control=None, note: str = "") -> None:
-    gt_transform = cav.vehicle.get_transform()
-    gt_loc = gt_transform.location
-    estimated_transform = cav.localizer.get_estimated_ego_pos()
-    estimated_loc = (
-        estimated_transform.location if estimated_transform is not None
-        else None
-    )
-    navigation_pose = getattr(cav, "navigation_pose", None)
-    navigation_loc = (
-        navigation_pose.location if navigation_pose is not None else None
-    )
-    transmitted_pose = getattr(cav, "transmitted_pose", None)
-    transmitted_loc = (
-        transmitted_pose.location if transmitted_pose is not None else None
-    )
-
-    if estimated_loc is not None:
-        dx = estimated_loc.x - gt_loc.x
-        dy = estimated_loc.y - gt_loc.y
-        dz = estimated_loc.z - gt_loc.z
-        loc_err = (dx**2 + dy**2 + dz**2) ** 0.5
-        loc_error_text = f"dx={dx:.2f} dy={dy:.2f} dz={dz:.2f} norm={loc_err:.2f}"
-    else:
-        loc_error_text = "unknown"
-
-    safety_tick, status = _latest_safety_status(cav)
-    hazards = [
-        key for key in ("collision", "offroad", "stuck", "ran_light")
-        if status.get(key)
-    ]
-    hazard_text = ",".join(hazards) if hazards else "none"
-    ctrl_text = (
-        f"thr={control.throttle:.3f} brake={control.brake:.3f} "
-        f"steer={control.steer:.3f}"
-        if control is not None else "None"
-    )
-    dest_dist = _destination_distance(cav)
-    rs = cav.rsu_merge_stats
-
-    log.debug(
-        "[forensic] tick=%d cav=%d note=%s gt_pos=%s gt_yaw=%.2f "
-        "estimated_pos=%s navigation_pos=%s transmitted_pos=%s "
-        "loc_error=(%s) gt_speed=%.2f loc_speed=%.2f "
-        "control=(%s) dest_dist=%s safety_tick=%s hazards=%s "
-        "rsu_nearby=%d rsu_ticks=%d/%d rsu_merged_total=%d",
-        tick_count,
-        cav.vehicle.id,
-        note or "-",
-        _fmt_loc(gt_loc),
-        gt_transform.rotation.yaw,
-        _fmt_loc(estimated_loc),
-        _fmt_loc(navigation_loc),
-        _fmt_loc(transmitted_loc),
-        loc_error_text,
-        _speed_kmh(cav.vehicle),
-        cav.localizer.get_ego_spd(),
-        ctrl_text,
-        f"{dest_dist:.2f}" if dest_dist is not None else "unknown",
-        safety_tick,
-        hazard_text,
-        len(cav.v2x_manager.rsu_nearby),
-        rs["ticks_rsu_in_range"],
-        rs["ticks_total"],
-        rs["objects_merged_total"],
-    )
-
-
-def _log_rsu_forensic(tick_count: int, rsu) -> None:
-    objects = rsu.get_detected_objects()
-    counts = {key: len(value) for key, value in objects.items()
-              if isinstance(value, list)}
-    ego_pos = rsu.localizer.get_ego_pos()
-    loc = ego_pos.location if ego_pos is not None else None
-    log.debug(
-        "[forensic] tick=%d rsu=%s pos=%s range=%.2f detected=%s",
-        tick_count,
-        rsu.rid,
-        _fmt_loc(loc),
-        rsu.communication_range,
-        counts,
+    return os.path.abspath(
+        os.path.join(
+            _BASE_DIR, "..", "evaluation_outputs", f"{map_name}_{current_time}"
+        )
     )
 
 
 def run_scenario(scenario_raw: dict, params: dict):
     settings = get_settings()
-
 
     forensic_log_handler = None
     forensic_log_file = "<unknown>"
@@ -410,17 +112,22 @@ def run_scenario(scenario_raw: dict, params: dict):
     record = False
 
     try:
-        apply_ml  = params["apply_ml"]
-        record    = params["record"]
-        map_name  = params["map_name"]
+        apply_ml = params["apply_ml"]
+        record = params["record"]
+        map_name = params["map_name"]
         max_ticks = params.get("max_ticks", 3000)
         current_time = params["current_time"]
         run_output_dir = _run_output_dir(map_name, current_time)
         forensic_log_file = os.path.join(run_output_dir, "forensic.log")
         forensic_log_handler = add_run_file_handler(forensic_log_file)
 
-        log.info("=== run_scenario START | map=%s max_ticks=%d carla=%s:%d ===",
-                 map_name, max_ticks, settings.carla_host, settings.carla_port)
+        log.info(
+            "=== run_scenario START | map=%s max_ticks=%d carla=%s:%d ===",
+            map_name,
+            max_ticks,
+            settings.carla_host,
+            settings.carla_port,
+        )
         log.info("Per-run forensic log: %s", forensic_log_file)
         log.debug(
             "[forensic] run_config params=%s scenario_items=%d attacks=%s "
@@ -432,19 +139,25 @@ def run_scenario(scenario_raw: dict, params: dict):
             len(scenario_raw.get("xodr") or ""),
         )
 
-        xodr_path = os.path.join(XODR_PATH, f"{map_name}.xodr")
-        if not os.path.exists(xodr_path) or map_name in STANDARD_MAPS:
+        xodr_path = params.get("xodr_path") or os.path.join(
+            XODR_PATH, f"{map_name}.xodr"
+        )
+        if not os.path.exists(xodr_path) or (
+            not params.get("xodr_path") and map_name in STANDARD_MAPS
+        ):
             xodr_path = None
         log.debug("xodr_path=%s", xodr_path)
 
         _stop_event.clear()
 
-        log.info("Connecting to CARLA %s:%d ...", settings.carla_host, settings.carla_port)
+        log.info(
+            "Connecting to CARLA %s:%d ...", settings.carla_host, settings.carla_port
+        )
         client = carla.Client(settings.carla_host, settings.carla_port)
         client.set_timeout(settings.carla_timeout_seconds)
         log.info("CARLA server version: %s", client.get_server_version())
 
-        _reset_stale_sync_mode(client)
+        _reset_stale_sync_mode(client, log)
 
         def _load_map():
             log.info("Loading map once via client: %s ...", map_name)
@@ -469,12 +182,14 @@ def run_scenario(scenario_raw: dict, params: dict):
         _check_scenario_matches_map(scene_dict, carla_map)
         _check_perception_requires_apply_ml(scene_dict, apply_ml)
         OmegaConf.update(scene_dict, "current_time", current_time, merge=False)
-        config_overrides.append({
-            "path": "current_time",
-            "source": None,
-            "effective": current_time,
-            "reason": "identify artifacts produced by this simulation run",
-        })
+        config_overrides.append(
+            {
+                "path": "current_time",
+                "source": None,
+                "effective": current_time,
+                "reason": "identify artifacts produced by this simulation run",
+            }
+        )
         write_open_cda_artifacts(
             run_output_dir,
             scenario_raw["opencda_config_yaml"],
@@ -488,14 +203,16 @@ def run_scenario(scenario_raw: dict, params: dict):
             log.info(
                 "Weather severity %.2f (raw=%s) -> detection_range x%.2f, "
                 "GNSS noise x%.2f for every CAV/RSU",
-                wr["severity"], wr["raw"],
+                wr["severity"],
+                wr["raw"],
                 wr["effect"]["detection_range_scale"],
                 wr["effect"]["gnss_noise_scale"],
             )
         else:
             log.info(
                 "Weather (raw=%s) has no perception/localization effect "
-                "this run (severity 0.0 — cosmetic only)", wr["raw"],
+                "this run (severity 0.0 — cosmetic only)",
+                wr["raw"],
             )
 
         scenario_manager = _run_with_timeout(
@@ -519,28 +236,42 @@ def run_scenario(scenario_raw: dict, params: dict):
         log.info("Spawned %d CAV(s)", len(single_cav_list))
         for i, cav in enumerate(single_cav_list):
             if not cav.vehicle.is_alive:
-                log.error("CAV[%d] id=%d actor is not alive right after spawn "
-                          "(destroyed by collision/physics before first tick?)",
-                          i, cav.vehicle.id)
+                log.error(
+                    "CAV[%d] id=%d actor is not alive right after spawn "
+                    "(destroyed by collision/physics before first tick?)",
+                    i,
+                    cav.vehicle.id,
+                )
                 continue
-            loc  = cav.vehicle.get_location()
-            dest = (cav.agent.end_waypoint.transform.location
-                    if hasattr(cav, "agent") and cav.agent
-                       and hasattr(cav.agent, "end_waypoint")
-                    else None)
-            log.info("  CAV[%d] id=%d spawn=(%.1f, %.1f, %.1f) dest=%s",
-                     i, cav.vehicle.id, loc.x, loc.y, loc.z,
-                     f"({dest.x:.1f}, {dest.y:.1f})" if dest else "unknown")
+            loc = cav.vehicle.get_location()
+            dest = (
+                cav.agent.end_waypoint.transform.location
+                if hasattr(cav, "agent")
+                and cav.agent
+                and hasattr(cav.agent, "end_waypoint")
+                else None
+            )
+            log.info(
+                "  CAV[%d] id=%d spawn=(%.1f, %.1f, %.1f) dest=%s",
+                i,
+                cav.vehicle.id,
+                loc.x,
+                loc.y,
+                loc.z,
+                f"({dest.x:.1f}, {dest.y:.1f})" if dest else "unknown",
+            )
 
         if single_cav_list:
-            locs     = [cav.vehicle.get_location() for cav in single_cav_list]
+            locs = [cav.vehicle.get_location() for cav in single_cav_list]
             center_x = sum(location.x for location in locs) / len(locs)
             center_y = sum(location.y for location in locs) / len(locs)
             spectator = scenario_manager.world.get_spectator()
-            spectator.set_transform(carla.Transform(
-                carla.Location(x=center_x, y=center_y, z=500),
-                carla.Rotation(pitch=-90)
-            ))
+            spectator.set_transform(
+                carla.Transform(
+                    carla.Location(x=center_x, y=center_y, z=500),
+                    carla.Rotation(pitch=-90),
+                )
+            )
             log.debug("Spectator set to center (%.1f, %.1f, z=500)", center_x, center_y)
 
         scene_container = OmegaConf.to_container(scene_dict, resolve=True)
@@ -552,7 +283,9 @@ def run_scenario(scenario_raw: dict, params: dict):
         traffic_manager, bg_veh_list = scenario_manager.create_traffic_carla()
         log.info("Background vehicles: %d", len(bg_veh_list))
 
-        spawned_pedestrians = _spawn_pedestrians(scenario_manager.world, pedestrian_list, cav_world)
+        spawned_pedestrians = _spawn_pedestrians(
+            scenario_manager.world, pedestrian_list, cav_world
+        )
 
         eval_manager = EvaluationManager(
             scenario_manager.cav_world,
@@ -573,27 +306,31 @@ def run_scenario(scenario_raw: dict, params: dict):
         while tick_count < max_ticks and not _stop_event.is_set():
             scenario_manager.tick()
 
-            active_cavs = [c for c in single_cav_list if c.vehicle.id not in finished_ids]
+            active_cavs = [
+                c for c in single_cav_list if c.vehicle.id not in finished_ids
+            ]
 
             for rsu in rsu_list:
                 try:
                     rsu.update_info()
-                    _log_rsu_forensic(tick_count, rsu)
+                    log_rsu_forensic(tick_count, rsu, logger=log)
                 except Exception as _rsu_err:
                     log.warning("RSU id=%d update_info failed: %s", rsu.rid, _rsu_err)
-
 
             for pedestrian in spawned_pedestrians:
                 try:
                     pedestrian.update_info()
                 except Exception as _ped_err:
-                    log.warning("Pedestrian id=%d update_info failed: %s",
-                               pedestrian.pid, _ped_err)
+                    log.warning(
+                        "Pedestrian id=%d update_info failed: %s",
+                        pedestrian.pid,
+                        _ped_err,
+                    )
 
             if active_cavs:
-                locs   = [cav.vehicle.get_location() for cav in active_cavs]
-                cx     = sum(location.x for location in locs) / len(locs)
-                cy     = sum(location.y for location in locs) / len(locs)
+                locs = [cav.vehicle.get_location() for cav in active_cavs]
+                cx = sum(location.x for location in locs) / len(locs)
+                cy = sum(location.y for location in locs) / len(locs)
                 spread = max(
                     max(location.x for location in locs)
                     - min(location.x for location in locs),
@@ -601,10 +338,11 @@ def run_scenario(scenario_raw: dict, params: dict):
                     - min(location.y for location in locs),
                 )
                 z = max(80, spread * 1.2)
-                spectator.set_transform(carla.Transform(
-                    carla.Location(x=cx, y=cy, z=z),
-                    carla.Rotation(pitch=-90)
-                ))
+                spectator.set_transform(
+                    carla.Transform(
+                        carla.Location(x=cx, y=cy, z=z), carla.Rotation(pitch=-90)
+                    )
+                )
 
             for cav in active_cavs:
                 loc = cav.vehicle.get_location()
@@ -614,21 +352,29 @@ def run_scenario(scenario_raw: dict, params: dict):
                     project_to_road=True,
                     lane_type=carla.LaneType.Driving,
                 )
-                road_distance = (_wp.transform.location.distance(loc)
-                                 if _wp is not None else None)
+                road_distance = (
+                    _wp.transform.location.distance(loc) if _wp is not None else None
+                )
                 if _wp is None or road_distance > 4.0:
-                    log.warning("CAV id=%d off-road at (%.1f, %.1f) — stopped",
-                                cav.vehicle.id, loc.x, loc.y)
-                    log.warning("CAV id=%d off-road road_distance=%s",
-                                cav.vehicle.id,
-                                f"{road_distance:.2f}" if road_distance is not None else "None")
+                    log.warning(
+                        "CAV id=%d off-road at (%.1f, %.1f) — stopped",
+                        cav.vehicle.id,
+                        loc.x,
+                        loc.y,
+                    )
+                    log.warning(
+                        "CAV id=%d off-road road_distance=%s",
+                        cav.vehicle.id,
+                        f"{road_distance:.2f}" if road_distance is not None else "None",
+                    )
                     stop_control = carla.VehicleControl(throttle=0.0, brake=1.0)
                     cav.vehicle.apply_control(stop_control)
-                    _log_cav_forensic(
+                    log_cav_forensic(
                         tick_count,
                         cav,
                         stop_control,
                         note="runner_offroad_stop",
+                        logger=log,
                     )
                     finished_ids.add(cav.vehicle.id)
                     continue
@@ -637,30 +383,49 @@ def run_scenario(scenario_raw: dict, params: dict):
                     cav.update_info()
                     ctrl = cav.run_step()
                     cav.vehicle.apply_control(ctrl)
-                    _log_cav_forensic(tick_count, cav, ctrl, note="post_control")
+                    log_cav_forensic(
+                        tick_count,
+                        cav,
+                        ctrl,
+                        note="post_control",
+                        logger=log,
+                    )
 
                     if tick_count % log_interval == 0:
-                        v   = cav.vehicle.get_velocity()
+                        v = cav.vehicle.get_velocity()
                         spd = (v.x**2 + v.y**2 + v.z**2) ** 0.5 * 3.6
                         log.debug(
                             "tick=%d CAV id=%d pos=(%.1f,%.1f,%.1f) speed=%.1f km/h "
                             "throttle=%.2f brake=%.2f steer=%.2f",
-                            tick_count, cav.vehicle.id,
-                            loc.x, loc.y, loc.z, spd,
-                            ctrl.throttle, ctrl.brake, ctrl.steer,
+                            tick_count,
+                            cav.vehicle.id,
+                            loc.x,
+                            loc.y,
+                            loc.z,
+                            spd,
+                            ctrl.throttle,
+                            ctrl.brake,
+                            ctrl.steer,
                         )
 
                 except StopIteration:
-                    log.info("CAV id=%d reached destination at tick %d",
-                             cav.vehicle.id, tick_count)
-                    cav.vehicle.apply_control(carla.VehicleControl(throttle=0.0, brake=1.0))
+                    log.info(
+                        "CAV id=%d reached destination at tick %d",
+                        cav.vehicle.id,
+                        tick_count,
+                    )
+                    cav.vehicle.apply_control(
+                        carla.VehicleControl(throttle=0.0, brake=1.0)
+                    )
                     finished_ids.add(cav.vehicle.id)
 
                 except Exception as _cav_err:
                     log.warning(
                         "CAV id=%d update/control step failed at tick %d: %s "
                         "— stopping this CAV, run continues",
-                        cav.vehicle.id, tick_count, _cav_err,
+                        cav.vehicle.id,
+                        tick_count,
+                        _cav_err,
                     )
                     try:
                         cav.vehicle.apply_control(
@@ -668,14 +433,17 @@ def run_scenario(scenario_raw: dict, params: dict):
                         )
                     except Exception as _stop_err:
                         log.warning(
-                            "CAV id=%d could not be safe-stopped after "
-                            "failure: %s", cav.vehicle.id, _stop_err,
+                            "CAV id=%d could not be safe-stopped after failure: %s",
+                            cav.vehicle.id,
+                            _stop_err,
                         )
                     finished_ids.add(cav.vehicle.id)
 
             if single_cav_list and len(finished_ids) >= len(single_cav_list):
                 stop_reason = "destination_reached"
-                log.info("All %d CAVs finished at tick %d", len(single_cav_list), tick_count)
+                log.info(
+                    "All %d CAVs finished at tick %d", len(single_cav_list), tick_count
+                )
                 break
 
             tick_count += 1
@@ -684,21 +452,29 @@ def run_scenario(scenario_raw: dict, params: dict):
                 progress = params.get("on_progress")
                 if callable(progress):
                     progress(tick_count, max_ticks)
-                log.info("Progress: tick %d / %d (%.0f%%) | finished %d/%d",
-                         tick_count, max_ticks,
-                         100 * tick_count / max_ticks,
-                         len(finished_ids), len(single_cav_list))
+                log.info(
+                    "Progress: tick %d / %d (%.0f%%) | finished %d/%d",
+                    tick_count,
+                    max_ticks,
+                    100 * tick_count / max_ticks,
+                    len(finished_ids),
+                    len(single_cav_list),
+                )
                 if rsu_list:
                     covered = sum(
-                        1 for cav in active_cavs
-                        if cav.v2x_manager.rsu_nearby
+                        1 for cav in active_cavs if cav.v2x_manager.rsu_nearby
                     )
-                    log.info("RSU coverage: %d/%d active CAVs in communication range",
-                             covered, len(active_cavs))
+                    log.info(
+                        "RSU coverage: %d/%d active CAVs in communication range",
+                        covered,
+                        len(active_cavs),
+                    )
 
         if stop_reason == "max_ticks" and _stop_event.is_set():
             stop_reason = "stop_event"
-        log.info("Simulation loop ended after %d ticks (reason: %s)", tick_count, stop_reason)
+        log.info(
+            "Simulation loop ended after %d ticks (reason: %s)", tick_count, stop_reason
+        )
 
     except BaseException as e:
         log.exception("Exception in simulation loop at tick %d: %s", tick_count, e)
@@ -746,4 +522,8 @@ def run_scenario(scenario_raw: dict, params: dict):
         log.info("Per-run forensic log saved at: %s", forensic_log_file)
         remove_run_file_handler(forensic_log_handler)
 
-    return {"tick": tick_count, "max_ticks": max_ticks, "partial": stop_reason == "stop_event"}
+    return {
+        "tick": tick_count,
+        "max_ticks": max_ticks,
+        "partial": stop_reason == "stop_event",
+    }

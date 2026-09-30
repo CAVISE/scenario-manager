@@ -1,3 +1,4 @@
+import json
 import sys
 import types
 import pytest
@@ -5,16 +6,52 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+
+@pytest.fixture
+def worker_environment(monkeypatch, tmp_path):
+    from app.routers import simulation
+
+    settings = types.SimpleNamespace(
+        eval_dir=tmp_path,
+        base_dir=tmp_path,
+        simulation_max_runtime_seconds=1,
+    )
+    monkeypatch.setattr(simulation, "get_settings", lambda: settings)
+    monkeypatch.setattr("app.run_results.get_settings", lambda: settings)
+    monkeypatch.setattr(simulation, "_update_run_record", MagicMock())
+    monkeypatch.setattr(simulation, "_schedule_next_run", MagicMock())
+
+    def install(payload):
+        class CompletedWorker:
+            pid = 123
+            returncode = 0
+
+            def poll(self):
+                return 0
+
+        def launch(_input_path, result_path, _progress_path):
+            result_path.write_text(json.dumps(payload))
+            return CompletedWorker()
+
+        monkeypatch.setattr(simulation, "_launch_worker", launch)
+
+    return install
+
+
 def test_normalize_known_map_case_insensitive():
     from app.routers.simulation import _normalize_map_name
+
     assert _normalize_map_name("town01") == "Town01"
     assert _normalize_map_name("TOWN10HD") == "Town10HD"
     assert _normalize_map_name("Town05") == "Town05"
 
+
 def test_normalize_unknown_map_returns_as_is():
     from app.routers.simulation import _normalize_map_name
+
     assert _normalize_map_name("MyCustomMap") == "MyCustomMap"
     assert _normalize_map_name("town99") == "town99"
+
 
 def test_cleanup_removes_old_directories(tmp_path):
     from app.routers.simulation import cleanup_old_results
@@ -26,6 +63,7 @@ def test_cleanup_removes_old_directories(tmp_path):
 
     old_time = (datetime.now() - timedelta(days=10)).timestamp()
     import os
+
     os.utime(old_dir, (old_time, old_time))
 
     with patch("app.routers.simulation.get_settings") as mock_settings:
@@ -36,6 +74,7 @@ def test_cleanup_removes_old_directories(tmp_path):
     assert not old_dir.exists()
     assert new_dir.exists()
 
+
 def test_cleanup_skips_when_eval_dir_missing():
     from app.routers.simulation import cleanup_old_results
 
@@ -43,6 +82,7 @@ def test_cleanup_skips_when_eval_dir_missing():
         mock_settings.return_value.eval_dir = Path("/nonexistent/path")
         mock_settings.return_value.eval_retention_days = 7
         cleanup_old_results()
+
 
 def test_cleanup_ignores_files_not_dirs(tmp_path):
     from app.routers.simulation import cleanup_old_results
@@ -52,6 +92,7 @@ def test_cleanup_ignores_files_not_dirs(tmp_path):
 
     old_time = (datetime.now() - timedelta(days=10)).timestamp()
     import os
+
     os.utime(old_file, (old_time, old_time))
 
     with patch("app.routers.simulation.get_settings") as mock_settings:
@@ -61,78 +102,79 @@ def test_cleanup_ignores_files_not_dirs(tmp_path):
 
     assert old_file.exists()
 
+
 @pytest.fixture(autouse=True)
 def reset_state():
     from app.routers.simulation import simulation_state, _ws_clients
-    simulation_state.update({
-        "running": True,
-        "status": "running",
-        "error": None,
-        "map": "Town01",
-        "run_id": "Town01_123",
-    })
+
+    simulation_state.update(
+        {
+            "running": True,
+            "status": "running",
+            "error": None,
+            "map": "Town01",
+            "run_id": "Town01_123",
+        }
+    )
     _ws_clients.clear()
     yield
-    simulation_state.update({
-        "running": False,
-        "status": "idle",
-        "error": None,
-        "map": None,
-        "run_id": None,
-    })
+    simulation_state.update(
+        {
+            "running": False,
+            "status": "idle",
+            "error": None,
+            "map": None,
+            "run_id": None,
+        }
+    )
 
-def test_run_with_state_sets_finished_on_success():
+
+def test_run_with_state_sets_finished_on_success(worker_environment):
     from app.routers.simulation import _run_with_state, simulation_state
 
-    fake_runner = types.ModuleType("app.runner")
-    fake_runner.run_scenario = MagicMock()
+    worker_environment({"result": {"tick": 100, "max_ticks": 100}})
 
-    with patch.dict(sys.modules, {"app.runner": fake_runner}), \
-         patch("app.routers.simulation._broadcast_state"):
+    with patch("app.routers.simulation._broadcast_state"):
         _run_with_state({}, {"map_name": "Town01", "max_ticks": 100})
 
     assert simulation_state["status"] == "finished"
     assert simulation_state["running"] is False
 
 
-def test_run_with_state_sets_error_on_exception():
+def test_run_with_state_sets_error_on_exception(worker_environment):
     from app.routers.simulation import _run_with_state, simulation_state
 
-    fake_runner = types.ModuleType("app.runner")
-    fake_runner.run_scenario = MagicMock(side_effect=RuntimeError("CARLA crashed"))
+    worker_environment({"error": "CARLA crashed"})
 
-    with patch.dict(sys.modules, {"app.runner": fake_runner}), \
-         patch("app.routers.simulation._broadcast_state"):
+    with patch("app.routers.simulation._broadcast_state"):
         _run_with_state({}, {"map_name": "Town01", "max_ticks": 100})
 
     assert simulation_state["status"] == "error"
     assert simulation_state["error"] == "CARLA crashed"
     assert simulation_state["running"] is False
 
-def test_run_with_state_status_is_error_even_when_was_stopping():
+
+def test_run_with_state_marks_stopped_worker_as_partial(worker_environment):
     from app.routers.simulation import _run_with_state, simulation_state
 
     simulation_state["status"] = "stopping"
 
-    fake_runner = types.ModuleType("app.runner")
-    fake_runner.run_scenario = MagicMock(side_effect=RuntimeError("stopped"))
+    worker_environment({"error": "stopped"})
 
-    with patch.dict(sys.modules, {"app.runner": fake_runner}), \
-         patch("app.routers.simulation._broadcast_state"):
+    with patch("app.routers.simulation._broadcast_state"):
         _run_with_state({}, {"map_name": "Town01", "max_ticks": 100})
 
-    assert simulation_state["status"] == "error"
-    assert simulation_state["error"] == "stopped"
+    assert simulation_state["status"] == "finished"
+    assert simulation_state["partial"] is True
     assert simulation_state["running"] is False
 
-def test_run_with_state_calls_broadcast():
+
+def test_run_with_state_calls_broadcast(worker_environment):
     from app.routers.simulation import _run_with_state
 
-    fake_runner = types.ModuleType("app.runner")
-    fake_runner.run_scenario = MagicMock()
+    worker_environment({"result": {}})
 
-    with patch.dict(sys.modules, {"app.runner": fake_runner}), \
-         patch("app.routers.simulation._broadcast_state") as mock_broadcast:
+    with patch("app.routers.simulation._broadcast_state") as mock_broadcast:
         _run_with_state({}, {})
 
     mock_broadcast.assert_called_once()
@@ -164,8 +206,7 @@ def test_v2x_search_uses_true_positions_and_rebuilds_nearby():
                 return self.managers
 
         def transform(x, y):
-            return carla.Transform(carla.Location(x=x, y=y, z=0),
-                                   carla.Rotation(yaw=0))
+            return carla.Transform(carla.Location(x=x, y=y, z=0), carla.Rotation(yaw=0))
 
         cav_world = FakeCavWorld()
         cfg = {"enabled": True, "communication_range": 10}
@@ -198,9 +239,11 @@ def _make_rsu_manager_class():
     import/construction time that the repo's shared fake carla module
     (built for the app/-layer tests) doesn't provide.
     """
+
     class FakeRsuPerceptionManager:
-        def __init__(self, vehicle, config_yaml, cav_world, carla_world,
-                     data_dump, infra_id):
+        def __init__(
+            self, vehicle, config_yaml, cav_world, carla_world, data_dump, infra_id
+        ):
             self.infra_id = infra_id
 
         def detect(self, ego_pos):
@@ -222,8 +265,8 @@ def _make_rsu_manager_class():
 
         def get_ego_pos(self):
             import carla
-            return carla.Transform(
-                carla.Location(x=self._n, y=self._n, z=0))
+
+            return carla.Transform(carla.Location(x=self._n, y=self._n, z=0))
 
         def get_ego_spd(self):
             return 0.0
@@ -232,11 +275,13 @@ def _make_rsu_manager_class():
             pass
 
     fake_perception_mod = types.ModuleType(
-        "opencda.core.sensing.perception.perception_manager")
+        "opencda.core.sensing.perception.perception_manager"
+    )
     fake_perception_mod.PerceptionManager = FakeRsuPerceptionManager
 
     fake_loc_mod = types.ModuleType(
-        "opencda.core.sensing.localization.rsu_localization_manager")
+        "opencda.core.sensing.localization.rsu_localization_manager"
+    )
     fake_loc_mod.LocalizationManager = FakeRsuLocalizationManager
 
     # data_dumper.py module-level-imports cv2/open3d regardless of
@@ -244,8 +289,7 @@ def _make_rsu_manager_class():
     # data_dumping=True, so DataDumper itself is never touched -- fake
     # the whole module rather than fighting cv2/open3d's own import
     # chain (neither package is installed in this test environment).
-    fake_data_dumper_mod = types.ModuleType(
-        "opencda.core.common.data_dumper")
+    fake_data_dumper_mod = types.ModuleType("opencda.core.common.data_dumper")
 
     class FakeDataDumper:
         def __init__(self, *args, **kwargs):
@@ -275,25 +319,29 @@ def _make_rsu_manager_class():
     # this fake numpy is what it will import against.
     fake_numpy = types.SimpleNamespace(
         random=types.SimpleNamespace(
-            normal=lambda *a, **k: 0, randint=lambda *a, **k: 0),
+            normal=lambda *a, **k: 0, randint=lambda *a, **k: 0
+        ),
         linalg=types.SimpleNamespace(
-            norm=lambda values: sum(v * v for v in values) ** 0.5),
+            norm=lambda values: sum(v * v for v in values) ** 0.5
+        ),
         finfo=lambda _: types.SimpleNamespace(eps=0.0),
     )
 
-    with patch.dict(sys.modules, {
-        "numpy": fake_numpy,
-        "opencda.core.sensing.perception.perception_manager":
-            fake_perception_mod,
-        "opencda.core.sensing.localization.rsu_localization_manager":
-            fake_loc_mod,
-        "opencda.core.common.data_dumper": fake_data_dumper_mod,
-    }):
+    with patch.dict(
+        sys.modules,
+        {
+            "numpy": fake_numpy,
+            "opencda.core.sensing.perception.perception_manager": fake_perception_mod,
+            "opencda.core.sensing.localization.rsu_localization_manager": fake_loc_mod,
+            "opencda.core.common.data_dumper": fake_data_dumper_mod,
+        },
+    ):
         # Only rsu_manager needs a fresh import each call, to bind to
         # this call's fake perception/localization/data_dumper classes
         # above rather than a copy cached from an earlier call.
         sys.modules.pop("opencda.core.common.rsu_manager", None)
         import opencda.core.common.rsu_manager as rsu_manager_mod
+
         return rsu_manager_mod.RSUManager
 
 
@@ -349,8 +397,12 @@ def test_rsu_manager_v2x_integration():
     #    and lag must default to 0 rather than inheriting V2XManager's
     #    CAV-oriented per-key defaults.
     cav_world = _FakeCavWorldForRsu()
-    rsu_legacy = RSUManager(carla_world=None, config_yaml=_base_rsu_config(),
-                            carla_map=None, cav_world=cav_world)
+    rsu_legacy = RSUManager(
+        carla_world=None,
+        config_yaml=_base_rsu_config(),
+        carla_map=None,
+        cav_world=cav_world,
+    )
     assert rsu_legacy.communication_range == 45
     assert rsu_legacy.v2x_manager.cda_enabled is True
     assert rsu_legacy.v2x_manager.communication_range == 45
@@ -364,16 +416,21 @@ def test_rsu_manager_v2x_integration():
     #    protocol/beacon_interval, but no 'enabled'). Must not KeyError
     #    and must still enable V2X by default.
     cav_world2 = _FakeCavWorldForRsu()
-    frontend_shaped_config = _base_rsu_config(v2x={
-        "communication_range": 60,
-        "tx_power": 20,
-        "frequency": 5.9,
-        "protocol": "DSRC",
-        "beacon_interval": 100,
-    })
-    rsu_frontend = RSUManager(carla_world=None,
-                              config_yaml=frontend_shaped_config,
-                              carla_map=None, cav_world=cav_world2)
+    frontend_shaped_config = _base_rsu_config(
+        v2x={
+            "communication_range": 60,
+            "tx_power": 20,
+            "frequency": 5.9,
+            "protocol": "DSRC",
+            "beacon_interval": 100,
+        }
+    )
+    rsu_frontend = RSUManager(
+        carla_world=None,
+        config_yaml=frontend_shaped_config,
+        carla_map=None,
+        cav_world=cav_world2,
+    )
     assert rsu_frontend.communication_range == 60
     assert rsu_frontend.v2x_manager.cda_enabled is True
     assert rsu_frontend.v2x_manager.communication_range == 60
@@ -396,22 +453,29 @@ def test_rsu_manager_v2x_integration():
     from opencda.core.common.v2x_manager import V2XManager
 
     cav_world3 = _FakeCavWorldForRsu()
-    rsu_a = RSUManager(carla_world=None,
-                       config_yaml=_base_rsu_config(
-                           rsu_id=1, v2x={"communication_range": 50}),
-                       carla_map=None, cav_world=cav_world3)
+    rsu_a = RSUManager(
+        carla_world=None,
+        config_yaml=_base_rsu_config(rsu_id=1, v2x={"communication_range": 50}),
+        carla_map=None,
+        cav_world=cav_world3,
+    )
     rsu_a.update_info()
-    rsu_b = RSUManager(carla_world=None,
-                       config_yaml=_base_rsu_config(
-                           rsu_id=2, v2x={"communication_range": 50}),
-                       carla_map=None, cav_world=cav_world3)
+    rsu_b = RSUManager(
+        carla_world=None,
+        config_yaml=_base_rsu_config(rsu_id=2, v2x={"communication_range": 50}),
+        carla_map=None,
+        cav_world=cav_world3,
+    )
     rsu_b.update_info()
 
-    cav_v2x = V2XManager(cav_world3, {"enabled": True,
-                                      "communication_range": 100}, "cav-1")
+    cav_v2x = V2XManager(
+        cav_world3, {"enabled": True, "communication_range": 100}, "cav-1"
+    )
     cav_v2x.update_info(
-        carla.Transform(carla.Location(x=0, y=0, z=0)), 0,
-        true_pos=carla.Transform(carla.Location(x=0, y=0, z=0)))
+        carla.Transform(carla.Location(x=0, y=0, z=0)),
+        0,
+        true_pos=carla.Transform(carla.Location(x=0, y=0, z=0)),
+    )
     assert rsu_a.rid in cav_v2x.rsu_nearby
     assert rsu_b.rid in cav_v2x.rsu_nearby
 
@@ -428,6 +492,7 @@ class _FakeWalker:
 
     def __init__(self, actor_id, x=0, y=0, z=0, vx=0.0, vy=0.0, vz=0.0):
         import carla
+
         self.id = actor_id
         self.is_alive = True
         self._transform = carla.Transform(carla.Location(x=x, y=y, z=z))
@@ -441,8 +506,12 @@ class _FakeWalker:
 
 
 def _pedestrian_config(v2x=None):
-    config = {"spawn": [0, 0, 0], "speed": 1.2, "cross_factor": 0.5,
-             "is_invincible": False}
+    config = {
+        "spawn": [0, 0, 0],
+        "speed": 1.2,
+        "cross_factor": 0.5,
+        "is_invincible": False,
+    }
     if v2x is not None:
         config["v2x"] = v2x
     return config
@@ -460,9 +529,11 @@ def test_pedestrian_manager_v2x_integration():
 
     fake_numpy = types.SimpleNamespace(
         random=types.SimpleNamespace(
-            normal=lambda *a, **k: 0, randint=lambda *a, **k: 0),
+            normal=lambda *a, **k: 0, randint=lambda *a, **k: 0
+        ),
         linalg=types.SimpleNamespace(
-            norm=lambda values: sum(v * v for v in values) ** 0.5),
+            norm=lambda values: sum(v * v for v in values) ** 0.5
+        ),
         finfo=lambda _: types.SimpleNamespace(eps=0.0),
     )
     with patch.dict(sys.modules, {"numpy": fake_numpy}):
@@ -477,8 +548,11 @@ def test_pedestrian_manager_v2x_integration():
         cav_world = _FakeCavWorldForRsu()
         walker = _FakeWalker(actor_id=101, x=5, y=5, z=0)
         ped_legacy = PedestrianManager(
-            walker, controller=types.SimpleNamespace(),
-            config_yaml=_pedestrian_config(), cav_world=cav_world)
+            walker,
+            controller=types.SimpleNamespace(),
+            config_yaml=_pedestrian_config(),
+            cav_world=cav_world,
+        )
         assert ped_legacy.pid == 101
         assert ped_legacy.communication_range == 45
         assert ped_legacy.v2x_manager.cda_enabled is True
@@ -497,23 +571,34 @@ def test_pedestrian_manager_v2x_integration():
         cav_world2 = _FakeCavWorldForRsu()
         walker2 = _FakeWalker(actor_id=102, x=0, y=0, z=0)
         ped_frontend = PedestrianManager(
-            walker2, controller=types.SimpleNamespace(),
-            config_yaml=_pedestrian_config(v2x={
-                "communication_range": 60, "tx_power": 10,
-                "frequency": 5.9e9, "protocol": "DSRC",
-                "beacon_interval": 1000}),
-            cav_world=cav_world2)
+            walker2,
+            controller=types.SimpleNamespace(),
+            config_yaml=_pedestrian_config(
+                v2x={
+                    "communication_range": 60,
+                    "tx_power": 10,
+                    "frequency": 5.9e9,
+                    "protocol": "DSRC",
+                    "beacon_interval": 1000,
+                }
+            ),
+            cav_world=cav_world2,
+        )
         assert ped_frontend.communication_range == 60
         assert ped_frontend.v2x_manager.cda_enabled is True
 
         # 3. get_ego_pos()/get_ego_spd() read straight from the walker
         #    actor -- position from get_transform(), speed converted
         #    m/s -> km/h from get_velocity()'s magnitude.
-        walker3 = _FakeWalker(actor_id=103, x=1, y=2, z=0,
-                              vx=3.0, vy=4.0, vz=0.0)  # |v| = 5 m/s
+        walker3 = _FakeWalker(
+            actor_id=103, x=1, y=2, z=0, vx=3.0, vy=4.0, vz=0.0
+        )  # |v| = 5 m/s
         ped3 = PedestrianManager(
-            walker3, controller=types.SimpleNamespace(),
-            config_yaml=_pedestrian_config(), cav_world=_FakeCavWorldForRsu())
+            walker3,
+            controller=types.SimpleNamespace(),
+            config_yaml=_pedestrian_config(),
+            cav_world=_FakeCavWorldForRsu(),
+        )
         pos = ped3.get_ego_pos()
         assert pos.location.x == 1 and pos.location.y == 2
         # |v|=5 m/s -> 18 km/h. Not pytest.approx() here: approx()
@@ -550,16 +635,21 @@ def test_pedestrian_manager_v2x_integration():
         cav_world5 = _FakeCavWorldForRsu()
         walker5 = _FakeWalker(actor_id=105, x=0, y=0, z=0)
         ped5 = PedestrianManager(
-            walker5, controller=types.SimpleNamespace(),
+            walker5,
+            controller=types.SimpleNamespace(),
             config_yaml=_pedestrian_config(v2x={"communication_range": 50}),
-            cav_world=cav_world5)
+            cav_world=cav_world5,
+        )
         ped5.update_info()
 
-        cav_v2x = V2XManager(cav_world5, {"enabled": True,
-                                          "communication_range": 100}, "cav-1")
+        cav_v2x = V2XManager(
+            cav_world5, {"enabled": True, "communication_range": 100}, "cav-1"
+        )
         cav_v2x.update_info(
-            carla.Transform(carla.Location(x=0, y=0, z=0)), 0,
-            true_pos=carla.Transform(carla.Location(x=0, y=0, z=0)))
+            carla.Transform(carla.Location(x=0, y=0, z=0)),
+            0,
+            true_pos=carla.Transform(carla.Location(x=0, y=0, z=0)),
+        )
         assert ped5.pid in cav_v2x.pedestrian_nearby
         assert cav_v2x.pedestrian_nearby[ped5.pid] is ped5
 
@@ -567,15 +657,20 @@ def test_pedestrian_manager_v2x_integration():
         cav_world6 = _FakeCavWorldForRsu()
         walker6 = _FakeWalker(actor_id=106, x=1000, y=0, z=0)
         ped6 = PedestrianManager(
-            walker6, controller=types.SimpleNamespace(),
+            walker6,
+            controller=types.SimpleNamespace(),
             config_yaml=_pedestrian_config(v2x={"communication_range": 50}),
-            cav_world=cav_world6)
+            cav_world=cav_world6,
+        )
         ped6.update_info()
-        cav_v2x6 = V2XManager(cav_world6, {"enabled": True,
-                                           "communication_range": 100}, "cav-1")
+        cav_v2x6 = V2XManager(
+            cav_world6, {"enabled": True, "communication_range": 100}, "cav-1"
+        )
         cav_v2x6.update_info(
-            carla.Transform(carla.Location(x=0, y=0, z=0)), 0,
-            true_pos=carla.Transform(carla.Location(x=0, y=0, z=0)))
+            carla.Transform(carla.Location(x=0, y=0, z=0)),
+            0,
+            true_pos=carla.Transform(carla.Location(x=0, y=0, z=0)),
+        )
         assert ped6.pid not in cav_v2x6.pedestrian_nearby
 
         # 6. destroy() is a documented no-op (app/runner.py's
@@ -615,23 +710,28 @@ def _fake_carla_map(name="Town01", road_x_range=(0.0, 200.0)):
 
 def _scene_with(cavs=None, rsus=None):
     from omegaconf import OmegaConf
-    return OmegaConf.create({
-        "scenario": {
-            "single_cav_list": cavs or [],
-            "rsu_list": rsus or [],
+
+    return OmegaConf.create(
+        {
+            "scenario": {
+                "single_cav_list": cavs or [],
+                "rsu_list": rsus or [],
+            }
         }
-    })
+    )
 
 
 def test_check_scenario_matches_map_passes_for_onroad_points():
     from app.runner import _check_scenario_matches_map
 
     scene = _scene_with(
-        cavs=[{
-            "name": "cav1",
-            "spawn_position": [50.0, 2.0, 0.3],
-            "destination": [150.0, 1.0, 0.0],
-        }],
+        cavs=[
+            {
+                "name": "cav1",
+                "spawn_position": [50.0, 2.0, 0.3],
+                "destination": [150.0, 1.0, 0.0],
+            }
+        ],
         rsus=[{"name": "rsu1", "spawn_position": [100.0, 3.0, 0.3]}],
     )
     # Should not raise -- every point is a few meters of an actual road.
@@ -642,11 +742,13 @@ def test_check_scenario_matches_map_raises_for_offmap_cav():
     from app.runner import _check_scenario_matches_map
 
     scene = _scene_with(
-        cavs=[{
-            "name": "cav_wrong_town",
-            "spawn_position": [900.0, 500.0, 0.3],
-            "destination": [150.0, 1.0, 0.0],
-        }],
+        cavs=[
+            {
+                "name": "cav_wrong_town",
+                "spawn_position": [900.0, 500.0, 0.3],
+                "destination": [150.0, 1.0, 0.0],
+            }
+        ],
     )
     with pytest.raises(RuntimeError) as excinfo:
         _check_scenario_matches_map(scene, _fake_carla_map())
@@ -654,7 +756,9 @@ def test_check_scenario_matches_map_raises_for_offmap_cav():
 
 
 @pytest.mark.parametrize("distance", [43.0, 400.0])
-def test_check_scenario_matches_map_warns_for_offroad_rsu_without_moving_it(distance, monkeypatch):
+def test_check_scenario_matches_map_warns_for_offroad_rsu_without_moving_it(
+    distance, monkeypatch
+):
     from app.runner import _check_scenario_matches_map
     from app import runner
     from unittest.mock import Mock
@@ -674,11 +778,13 @@ def test_check_scenario_matches_map_reports_all_offenders_together():
     from app.runner import _check_scenario_matches_map
 
     scene = _scene_with(
-        cavs=[{
-            "name": "cav_bad",
-            "spawn_position": [900.0, 500.0, 0.3],
-            "destination": [150.0, 100.0, 0.0],
-        }],
+        cavs=[
+            {
+                "name": "cav_bad",
+                "spawn_position": [900.0, 500.0, 0.3],
+                "destination": [150.0, 100.0, 0.0],
+            }
+        ],
         rsus=[{"name": "rsu_bad", "spawn_position": [-900.0, 400.0, 0.3]}],
     )
     with pytest.raises(RuntimeError) as excinfo:

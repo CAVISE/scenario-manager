@@ -90,14 +90,14 @@ class VehicleManager(object):
         self.vehicle = vehicle
         self.name = config_yaml.get('name') or f'Vehicle {vehicle.id}'
         self.carla_map = carla_map
-        # Weak ref, same pattern as V2XManager/SafetyManager/PerceptionManager/
+        # Weak proxy, same pattern as V2XManager/SafetyManager/PerceptionManager/
         # PlatooningManager below -- avoids a reference cycle with CavWorld,
         # which holds a strong reference back to this VehicleManager via
         # update_vehicle_manager() at the end of this __init__. Needed here
         # (not just on the sub-managers) because rsu_merge_history below
         # timestamps its per-tick entries against cav_world.global_clock
         # directly from VehicleManager.update_info().
-        self.cav_world = weakref.ref(cav_world)()
+        self.cav_world = weakref.proxy(cav_world)
 
         # retrieve the configure for different modules
         sensing_config = config_yaml['sensing']

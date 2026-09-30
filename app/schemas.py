@@ -1,10 +1,10 @@
-from typing import Any, Optional, Union
+from typing import Any, Literal, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.chart_schema import ChartDocument
 
-from app.opencda_config import (
+from app.integrations.opencda.config import (
     MAX_OPEN_CDA_CONFIG_LENGTH,
     parse_open_cda_yaml,
     validate_config_object_counts,
@@ -108,11 +108,55 @@ class SimulationStatusResponse(BaseModel):
 
 class StopSimulationResponse(BaseModel):
     status: str
+    run_id: Optional[str] = None
+
+
+class LoginRequest(BaseModel):
+    email: str = Field(..., min_length=3, max_length=320)
+    password: str = Field(..., min_length=1, max_length=256)
+
+
+class CreateUserRequest(LoginRequest):
+    password: str = Field(..., min_length=12, max_length=256)
+    role: Literal["admin", "operator", "viewer"] = "viewer"
+
+
+class AccessTokenResponse(BaseModel):
+    access_token: str
+    token_type: Literal["bearer"] = "bearer"
+    expires_in: int
+
+
+class CurrentUserResponse(BaseModel):
+    email: str
+    role: Literal["admin", "operator", "viewer"]
+    authentication_enabled: bool
 
 
 class StartSimulationResponse(BaseModel):
-    status: str
+    status: Literal["started", "queued"]
     map: str
+    run_id: str
+
+
+class ScenarioValidationIssue(BaseModel):
+    code: str
+    message: str
+    path: list[str | int] = Field(default_factory=list)
+    severity: Literal["error", "warning"] = "error"
+    entity_id: Optional[str] = None
+
+
+class ScenarioValidationResponse(BaseModel):
+    valid: bool
+    issues: list[ScenarioValidationIssue] = Field(default_factory=list)
+
+
+class SimulationRunResponse(SimulationStatusResponse):
+    scenario_id: Optional[str] = None
+    scenario_name: Optional[str] = None
+    modified_at: Optional[float] = None
+    queue_position: Optional[int] = None
 
 
 class ResultFile(BaseModel):
@@ -149,6 +193,7 @@ class ScenarioSummary(BaseModel):
 
 class ScenarioDetail(BaseModel):
     id: int
+    revision: int
     scenario_id: str
     name_of_scenario: str
     scenario_text: Optional[Any]
@@ -158,15 +203,11 @@ class ScenarioDetail(BaseModel):
     map: Optional[str]
 
 
-class LoadAllScenariosResponse(BaseModel):
-    status: str
-    count: int
-    scenarios: list[ScenarioSummary]
-
-
-class LoadScenarioResponse(BaseModel):
-    status: str
-    scenario: ScenarioDetail
+class ScenarioPage(BaseModel):
+    items: list[ScenarioSummary]
+    total: int
+    offset: int
+    limit: int
 
 
 class UploadScenarioRequest(BaseModel):
@@ -217,6 +258,7 @@ class UploadScenarioRequest(BaseModel):
 
 class UpdateScenarioRequest(BaseModel):
     scenario_id: str = Field(..., min_length=1, max_length=128)
+    expected_revision: int | None = Field(default=None, ge=1)
     scenario_name: Optional[str] = Field(default=None, max_length=200)
     scenario: Optional[Union[dict, list]] = None
     preview: Optional[str] = None
@@ -270,19 +312,9 @@ class UpdateScenarioRequest(BaseModel):
         return value
 
 
-class DeleteScenarioRequest(BaseModel):
-    scenario_id: str = Field(..., min_length=1, max_length=128)
-
-    @field_validator("scenario_id", mode="before")
-    @classmethod
-    def validate_required_id(cls, value: Any) -> str:
-        result = validate_scenario_id(value, required=True)
-        assert result is not None
-        return result
-
-
 class ScenarioMutationResponse(BaseModel):
     status: str
     message: str
     scenario_id: Optional[str] = None
+    revision: Optional[int] = None
     warning: Optional[str] = None
