@@ -72,8 +72,15 @@ export const EditorScenarioBootstrap = () => {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scenarioId]);
+  }, [
+    scenarioId,
+    setSearchParams,
+    sceneRef,
+    toast,
+    updateSceneGraph,
+    loadFile,
+    setStep,
+  ]);
 
   return null;
 };

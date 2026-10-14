@@ -49,14 +49,21 @@ export function useThreeScene({
   });
 
   const [threeReady, setThreeReady] = useState(false);
-  /* eslint-disable react-hooks/exhaustive-deps */
+  const initializationCallbacksRef = useRef({
+    setStep,
+    setError,
+    updateSceneGraph,
+  });
+  initializationCallbacksRef.current = { setStep, setError, updateSceneGraph };
+
   useEffect(() => {
+    const callbacks = initializationCallbacksRef.current;
     let result: ReturnType<typeof createThreeSetup>;
     try {
       result = createThreeSetup('ThreeJS', () => {});
     } catch (err) {
-      setStep('done');
-      setError?.(
+      callbacks.setStep('done');
+      callbacks.setError?.(
         err instanceof Error ? err : new Error('WebGL initialization failed')
       );
       return;
@@ -67,7 +74,7 @@ export function useThreeScene({
     cameraRef.current = result.setup.camera;
     transformControlsRef.current = result.setup.transformControls;
 
-    updateSceneGraph();
+    callbacks.updateSceneGraph();
     setThreeReady(true);
 
     return () => {
@@ -78,7 +85,7 @@ export function useThreeScene({
       transformControlsRef.current = null;
       setThreeReady(false);
     };
-  }, []);
+  }, [threeRef, sceneRef, cameraRef, transformControlsRef]);
 
   const { getIsDragging } = useTransformSetup({
     transformControls: threeRef.current?.transformControls,
@@ -115,7 +122,6 @@ export function useThreeScene({
     getOpenDriveMap: () => setMapRef.current,
     spotlightEnabled: () => true,
   });
-  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     if (!threeReady) return;
     return createStoreSubscriptions({
@@ -136,6 +142,7 @@ export function useThreeScene({
     });
   }, [
     threeReady,
+    threeRef,
     sceneRef,
     carMeshesRef,
     routePointMeshesRef,
@@ -175,6 +182,7 @@ export function useThreeScene({
     actionsRef.current.addPedestrian = ACTIONS.addPedestrian;
   }, [
     threeReady,
+    threeRef,
     modeRef,
     carMeshesRef,
     routePointMeshesRef,

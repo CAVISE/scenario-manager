@@ -15,8 +15,13 @@ export function useSceneAnimator({
   const { threeRef } = useEditorRefs();
 
   const spotlightStateRef = useRef(createSpotlightState());
+  const callbacksRef = useRef({
+    getOdrMeshes,
+    getOpenDriveMap,
+    spotlightEnabled,
+  });
+  callbacksRef.current = { getOdrMeshes, getOpenDriveMap, spotlightEnabled };
 
-  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     const three = threeRef.current;
     if (!three) return;
@@ -31,16 +36,17 @@ export function useSceneAnimator({
       controls,
       mouse,
       picking,
-      spotlightEnabled,
+      spotlightEnabled: () => callbacksRef.current.spotlightEnabled(),
       spotlightState: spotlightStateRef.current,
-      getOpenDriveMap,
-      getRoadMesh: () => getOdrMeshes().road_network_mesh,
-      getRoadmarksMesh: () => getOdrMeshes().roadmarks_mesh,
+      getOpenDriveMap: () => callbacksRef.current.getOpenDriveMap(),
+      getRoadMesh: () => callbacksRef.current.getOdrMeshes().road_network_mesh,
+      getRoadmarksMesh: () =>
+        callbacksRef.current.getOdrMeshes().roadmarks_mesh,
       spotlightInfo: document.getElementById('spotlight_info'),
     });
 
     return () => {
       handle.running = false;
     };
-  }, []);
+  }, [threeRef]);
 }

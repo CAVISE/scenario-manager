@@ -1,7 +1,7 @@
 import { OpenDriveModule } from '@editor/hooks/useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
 import { libOpenDrive } from '@editor/utils/libOpenDrive';
 import { useEditorStore } from '@/store';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { UseOdrLoaderProps } from '../types/useOdrLoaderTypes';
 import {
   MAP_PATH,
@@ -25,6 +25,9 @@ export function useOdrLoader({
   mapRef,
   loadOdrMapRef,
 }: UseOdrLoaderProps) {
+  const callbacksRef = useRef({ setStep, setError });
+  callbacksRef.current = { setStep, setError };
+
   useEffect(() => {
     let cancelled = false;
     function processFile(fileText: string, clearMap: boolean) {
@@ -51,13 +54,13 @@ export function useOdrLoader({
         mapRef.current?.delete();
         mapRef.current = new Module.OpenDriveMap(MAP_PATH, ODR_MAP_OPTIONS);
 
-        setStep('scene');
+        callbacksRef.current.setStep('scene');
 
         loadOdrMapRef.current(clearMap);
       } catch (err) {
         console.error(err);
-        setStep('done');
-        setError?.(
+        callbacksRef.current.setStep('done');
+        callbacksRef.current.setError?.(
           err instanceof Error ? err : new Error('Failed to process map file')
         );
       }
@@ -84,15 +87,15 @@ export function useOdrLoader({
       } catch (err) {
         if (cancelled) return;
         console.error(err);
-        setStep('done');
-        setError?.(
+        callbacksRef.current.setStep('done');
+        callbacksRef.current.setError?.(
           err instanceof Error ? err : new Error('Failed to load map')
         );
       }
     }
 
     async function init() {
-      setStep('wasm');
+      callbacksRef.current.setStep('wasm');
 
       await initXodrCacheFromIndexedDb();
       try {
@@ -101,14 +104,14 @@ export function useOdrLoader({
         if (cancelled) return;
 
         moduleRef.current = Module as OpenDriveModule;
-        setStep('map');
+        callbacksRef.current.setStep('map');
 
         await fetchAndLoad();
       } catch (err) {
         if (cancelled) return;
         console.error(err);
-        setStep('done');
-        setError?.(
+        callbacksRef.current.setStep('done');
+        callbacksRef.current.setError?.(
           err instanceof Error
             ? err
             : new Error('WebAssembly initialization error')
@@ -121,8 +124,7 @@ export function useOdrLoader({
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [moduleRef, mapRef, loadOdrMapRef]);
 
   function loadFile(fileText: string, clearMap: boolean, sourceName?: string) {
     if (!moduleRef.current) {
