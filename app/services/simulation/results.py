@@ -1,18 +1,30 @@
 from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+import mimetypes
 from pathlib import Path
+import shutil
 from urllib.parse import quote
 
 from pydantic import ValidationError
 
 from app.chart_schema import CHARTS_NAME, ChartDocument
 from app.run_results import MANIFEST_NAME, read_run_metadata
-from app.schemas import ResultRun
+from app.schemas import ResultFile, ResultRun
 
 INTERNAL_RUN_FILES = frozenset(
     {"worker_input.json", "worker_result.json", "worker_progress.json"}
 )
 AVAILABLE_RESULT_SUFFIXES = frozenset({".png", ".txt", ".log", ".yaml", ".json"})
 COMPLETED_OUTCOMES = frozenset({"complete", "partial", "legacy"})
+
+
+@dataclass(frozen=True)
+class RetentionCleanupReport:
+    """Outcome of a best-effort artifact retention pass."""
+
+    deleted_run_ids: tuple[str, ...] = ()
+    inaccessible_run_ids: tuple[str, ...] = ()
 
 
 class ResultAccessError(Exception):
@@ -67,6 +79,37 @@ def public_result_files(directory: Path) -> list[str]:
         and item.name not in INTERNAL_RUN_FILES
         and item.suffix.lower() in AVAILABLE_RESULT_SUFFIXES
     )
+
+
+def artifact_kind(filename: str) -> str:
+    suffix = Path(filename).suffix.lower()
+    if suffix == ".png":
+        return "image"
+    if suffix in {".log", ".txt"}:
+        return "log"
+    if suffix in {".yaml", ".yml"}:
+        return "configuration"
+    if suffix == ".json":
+        return "data"
+    return "file"
+
+
+def public_result_artifacts(directory: Path, run_id: str) -> list[ResultFile]:
+    artifacts: list[ResultFile] = []
+    for filename in public_result_files(directory):
+        path = directory / filename
+        content_type, _ = mimetypes.guess_type(filename)
+        artifacts.append(
+            ResultFile(
+                filename=filename,
+                url=result_file_url(run_id, filename),
+                size_bytes=path.stat().st_size,
+                content_type=content_type,
+                kind=artifact_kind(filename),
+                modified_at=path.stat().st_mtime,
+            )
+        )
+    return artifacts
 
 
 def list_completed_runs(
@@ -128,3 +171,55 @@ def read_chart_data(
             None,
             "Chart data could not be read. Other result files can still be downloaded.",
         )
+
+
+def cleanup_expired_result_directories(
+    eval_dir: Path,
+    retention_days: int,
+    *,
+    protected_run_ids: frozenset[str] = frozenset(),
+    now: datetime | None = None,
+) -> RetentionCleanupReport:
+    """Remove expired result directories without letting one bad mount stop cleanup.
+
+    Result artifacts can be created by an older container or copied from another
+    machine. Such directories may not be removable by the current process, so a
+    retention pass is intentionally best-effort and reports skipped directories
+    to its caller.
+    """
+    if not eval_dir.exists():
+        return RetentionCleanupReport()
+
+    cutoff = (now or datetime.now()) - timedelta(days=retention_days)
+    deleted: list[str] = []
+    inaccessible: list[str] = []
+    try:
+        entries = list(eval_dir.iterdir())
+    except OSError:
+        return RetentionCleanupReport(inaccessible_run_ids=(str(eval_dir),))
+
+    for entry in entries:
+        try:
+            is_expired_directory = (
+                entry.is_dir()
+                and not entry.is_symlink()
+                and entry.name not in protected_run_ids
+                and datetime.fromtimestamp(entry.stat().st_mtime) < cutoff
+            )
+        except OSError:
+            inaccessible.append(entry.name)
+            continue
+        if not is_expired_directory:
+            continue
+
+        try:
+            shutil.rmtree(entry)
+        except OSError:
+            inaccessible.append(entry.name)
+        else:
+            deleted.append(entry.name)
+
+    return RetentionCleanupReport(
+        deleted_run_ids=tuple(deleted),
+        inaccessible_run_ids=tuple(inaccessible),
+    )

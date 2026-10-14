@@ -22,6 +22,22 @@ export interface SimulationRun {
   queue_position?: number | null;
 }
 
+export interface RunArtifact {
+  filename: string;
+  url: string;
+  size_bytes: number;
+  content_type?: string | null;
+  kind: 'image' | 'log' | 'configuration' | 'data' | 'file';
+  modified_at?: number | null;
+}
+
+export interface SimulationRunDetail extends SimulationRun {
+  created_at?: number | null;
+  configuration: Record<string, unknown>;
+  artifacts: RunArtifact[];
+  has_results: boolean;
+}
+
 export interface StopRunResponse {
   status: 'stopping' | 'cancelled';
   run_id?: string | null;

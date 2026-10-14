@@ -1,0 +1,2 @@
+# Linux entrypoints must not acquire Windows CRLF line endings.
+entrypoint.sh text eol=lf

@@ -154,6 +154,191 @@
   text-decoration: none;
 }
 
+.workspace-run-card__details {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.workspace-run-details {
+  display: grid;
+  gap: 26px;
+}
+
+.workspace-run-detail-actions {
+  display: flex;
+  gap: 10px;
+
+  > * {
+    min-height: 42px;
+    box-sizing: border-box;
+    padding: 9px 14px;
+    border: 1px solid var(--workspace-border);
+    border-radius: 7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    text-decoration: none;
+  }
+
+  .workspace-primary {
+    border-color: var(--workspace-primary-action);
+  }
+}
+
+.workspace-run-detail-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+
+  > div {
+    display: grid;
+    align-content: start;
+    gap: 7px;
+    min-height: 88px;
+    padding: 17px;
+    border: 1px solid var(--workspace-border);
+    border-radius: 12px;
+    background: var(--workspace-surface);
+    box-shadow: 0 3px 14px rgb(13 66 60 / 6%);
+  }
+
+  strong {
+    overflow: hidden;
+    font-size: 16px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  small {
+    color: var(--workspace-muted);
+  }
+}
+
+.workspace-run-error {
+  display: grid;
+  gap: 4px;
+  padding: 16px 18px;
+  border: 1px solid var(--workspace-danger-border);
+  border-radius: 10px;
+  background: var(--workspace-danger-soft);
+  color: var(--workspace-danger);
+}
+
+.workspace-run-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.workspace-detail-panel {
+  padding: 20px;
+  border: 1px solid var(--workspace-border);
+  border-radius: 12px;
+  background: var(--workspace-surface);
+  box-shadow: 0 3px 14px rgb(13 66 60 / 6%);
+}
+
+.workspace-detail-panel__heading h2 {
+  margin: 4px 0 0;
+  font-size: 18px;
+}
+
+.workspace-run-config {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 20px 0 0;
+
+  div {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  dt {
+    color: var(--workspace-muted);
+    font-size: 12px;
+    text-transform: capitalize;
+  }
+
+  dd {
+    overflow: hidden;
+    margin: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  p {
+    grid-column: 1 / -1;
+    margin: 0;
+    color: var(--workspace-muted);
+  }
+}
+
+.workspace-artifact-explorer {
+  display: grid;
+  gap: 14px;
+}
+
+.workspace-artifact-list {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid var(--workspace-border);
+  border-radius: 12px;
+  background: var(--workspace-surface);
+  box-shadow: 0 3px 14px rgb(13 66 60 / 6%);
+
+  article {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 14px;
+    align-items: center;
+    padding: 14px 18px;
+  }
+
+  article + article {
+    border-top: 1px solid var(--workspace-border);
+  }
+
+  article > div {
+    display: grid;
+    min-width: 0;
+    gap: 3px;
+  }
+
+  strong,
+  span:not(.workspace-artifact-icon) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  span:not(.workspace-artifact-icon) {
+    color: var(--workspace-muted);
+    font-size: 12px;
+  }
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+  }
+}
+
+.workspace-artifact-icon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--workspace-accent-soft);
+  color: var(--workspace-accent);
+}
+
 @media (width <= 700px) {
   .workspace-run-summary {
     gap: 8px;
@@ -174,5 +359,31 @@
     > * {
       width: 100%;
     }
+  }
+
+  .workspace-run-detail-actions,
+  .workspace-run-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .workspace-run-detail-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .workspace-run-detail-actions {
+    flex-direction: column;
+  }
+
+  .workspace-run-detail-actions > * {
+    justify-content: center;
+  }
+
+  .workspace-artifact-list article {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .workspace-artifact-list a {
+    grid-column: 1 / -1;
+    justify-content: center;
   }
 }

@@ -8,7 +8,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./evaluation_outputs:/app/evaluation_outputs
+      - simulation_results:/app/evaluation_outputs
     env_file:
       - ./.env
     environment:
@@ -25,6 +25,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      artifact-init:
+        condition: service_completed_successfully
     healthcheck:
       test:
         - CMD
@@ -37,6 +39,63 @@ services:
       timeout: 10s
       retries: 3
       start_period: 20s
+
+  simulation-worker:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    command: ["python", "-m", "app.run_worker"]
+    volumes:
+      - simulation_results:/app/evaluation_outputs
+    env_file:
+      - ./.env
+    environment:
+      RUN_MIGRATIONS: "0"
+      APP_ENVIRONMENT: ${APP_ENVIRONMENT:-development}
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:-}
+      AUTH_BOOTSTRAP_ADMIN_EMAIL: ${AUTH_BOOTSTRAP_ADMIN_EMAIL:-}
+      AUTH_BOOTSTRAP_ADMIN_PASSWORD: ${AUTH_BOOTSTRAP_ADMIN_PASSWORD:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - cavise
+    # A second worker must never share the one configured CARLA endpoint.
+    # The PostgreSQL advisory lock provides the runtime enforcement.
+    restart: on-failure
+    deploy:
+      replicas: 1
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  artifact-init:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    user: "0:0"
+    command:
+      - sh
+      - -ec
+      - |
+        mkdir -p /app/evaluation_outputs
+        marker=/app/evaluation_outputs/.legacy-imported
+        if [ ! -e "$$marker" ]; then
+          for source in /legacy-results/*; do
+            [ -d "$$source" ] || continue
+            target="/app/evaluation_outputs/$$(basename "$$source")"
+            [ -e "$$target" ] || cp -a "$$source" "$$target"
+          done
+          chown -R 10001:10001 /app/evaluation_outputs
+          touch "$$marker"
+        fi
+    volumes:
+      - simulation_results:/app/evaluation_outputs
+      - ./evaluation_outputs:/legacy-results:ro
+    restart: "no"
 
   frontend-prod:
     profiles: [prod]
@@ -75,6 +134,7 @@ services:
 
 volumes:
   postgres_data:
+  simulation_results:
 
 networks:
   cavise:

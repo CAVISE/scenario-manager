@@ -28,9 +28,11 @@ export default function StartPage() {
     <section>
       <div className="workspace-page-heading">
         <div>
-          <span className="workspace-kicker">SCENARIO WORKSPACE</span>
-          <h1>Welcome to Scenario Manager</h1>
-          <p>Create, edit and run V2X scenarios.</p>
+          <span className="workspace-kicker">RESEARCH WORKSPACE</span>
+          <h1>Dashboard</h1>
+          <p>
+            Track scenarios, simulation capacity and evidence from every run.
+          </p>
         </div>
       </div>
       <WorkspaceDashboard

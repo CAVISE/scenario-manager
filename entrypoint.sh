@@ -1,4 +1,5 @@
 #!/bin/bash
+# Keep this script LF-terminated: it is executed by Linux containers.
 set -eu
 umask 027
 

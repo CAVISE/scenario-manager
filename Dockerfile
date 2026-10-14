@@ -60,6 +60,7 @@ COPY opencda ./opencda
 COPY alembic.ini ./
 COPY main.py ./
 COPY tests ./tests
+COPY contracts ./contracts
 
 RUN mkdir -p evaluation_outputs logs assets/xodrs \
     && chown -R appuser:appuser evaluation_outputs logs assets

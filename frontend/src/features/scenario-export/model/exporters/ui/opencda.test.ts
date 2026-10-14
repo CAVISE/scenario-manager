@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, it, expect } from 'vitest';
 import { useGenerateOpenCDAConfig } from './opencda';
 import { defaultSimConfig } from '../../simulationConfig';
@@ -67,6 +69,15 @@ const makePoint = (overrides: Partial<Point> = {}): Point =>
     z: 0,
     ...overrides,
   }) as Point;
+
+const representativeRuntimeConfig = () =>
+  readFileSync(
+    resolve(
+      process.cwd(),
+      '../contracts/opencda/representative-runtime-config.yaml'
+    ),
+    'utf8'
+  ).trimEnd();
 
 describe('useGenerateOpenCDAConfig: additional coverage', () => {
   it('handles points for destination', () => {
@@ -617,5 +628,18 @@ describe('useGenerateOpenCDAConfig: specific line coverage', () => {
     const yaml = useGenerateOpenCDAConfig(defaultSimConfig, [car], [], []);
 
     expect(yaml).toContain('model: vehicle.tesla.model3');
+  });
+});
+
+describe('OpenCDA frontend/backend contract', () => {
+  it('keeps the representative runtime configuration stable', () => {
+    const yaml = useGenerateOpenCDAConfig(
+      defaultSimConfig,
+      [makeCar()],
+      [makeRSU()],
+      [makePoint({ x: 10, y: 20, z: 0 })]
+    );
+
+    expect(yaml).toBe(representativeRuntimeConfig());
   });
 });

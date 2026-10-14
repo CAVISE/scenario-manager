@@ -177,7 +177,7 @@
 
     &--primary {
       color: var(--workspace-on-accent) !important;
-      background: var(--workspace-accent) !important;
+      background: var(--workspace-primary-action) !important;
 
       &:hover {
         background: var(--workspace-selected) !important;

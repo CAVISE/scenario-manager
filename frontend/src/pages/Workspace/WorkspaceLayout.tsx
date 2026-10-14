@@ -1,9 +1,11 @@
 import { NavLink, Outlet, Link } from 'react-router-dom';
 import {
-  HomeOutlined,
+  DashboardOutlined,
+  HistoryOutlined,
   FolderOutlined,
   SettingsOutlined,
   PlayCircleOutline,
+  ScienceOutlined,
   ViewInArOutlined,
 } from '@mui/icons-material';
 import { useEditorStore } from '@/store';
@@ -46,23 +48,35 @@ export default function WorkspaceLayout() {
       <aside className="workspace-sidebar">
         <nav aria-label="Main navigation">
           <NavLink to="/" end>
-            <HomeOutlined />
-            Home
+            <DashboardOutlined />
+            Dashboard
           </NavLink>
           <NavLink to="/scenarios">
             <FolderOutlined />
             Scenarios
           </NavLink>
-          <NavLink to="/settings">
-            <SettingsOutlined />
-            Settings
+          <NavLink to="/experiments">
+            <ScienceOutlined />
+            Experiments
           </NavLink>
           <NavLink to="/runs">
             <PlayCircleOutline />
             Runs
           </NavLink>
+          <NavLink to="/replay">
+            <HistoryOutlined />
+            Replay
+          </NavLink>
+          <NavLink to="/settings">
+            <SettingsOutlined />
+            Settings
+          </NavLink>
         </nav>
-        <span className="workspace-sidebar-footer">V2X scenario workspace</span>
+        <div className="workspace-sidebar-footer">
+          <span>RESEARCH WORKSPACE</span>
+          <strong>Urban V2X resilience</strong>
+          <small>Scenario · Run · Evidence</small>
+        </div>
       </aside>
       <div className="workspace-content">
         <Outlet />
