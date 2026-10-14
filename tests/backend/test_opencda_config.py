@@ -10,7 +10,16 @@ from app.opencda_config import (
     OpenCDAConfigError,
     compile_open_cda_config,
     parse_open_cda_yaml,
+    validate_config_object_counts,
     write_open_cda_artifacts,
+)
+
+
+REPRESENTATIVE_RUNTIME_CONFIG = (
+    Path(__file__).parents[2]
+    / "contracts"
+    / "opencda"
+    / "representative-runtime-config.yaml"
 )
 
 
@@ -148,3 +157,47 @@ def test_config_artifacts_preserve_exact_source(open_cda_yaml, tmp_path):
     assert metadata["overrides"] == overrides
     effective = yaml.safe_load((tmp_path / "effective_config.yaml").read_text("utf-8"))
     assert effective["vehicle_base"]["behavior"]["max_speed"] == 45
+
+
+def test_frontend_representative_config_is_accepted_by_runtime_contract():
+    """The fixture is byte-for-byte asserted by the frontend generator test."""
+    config_yaml = REPRESENTATIVE_RUNTIME_CONFIG.read_text(encoding="utf-8")
+    config = parse_open_cda_yaml(config_yaml)
+    scenario_groups = [
+        {
+            "vehicle": "car",
+            "path": [
+                {
+                    "x": 1,
+                    "y": 2,
+                    "z": 0,
+                    "points": [{"x": 10, "y": 20, "z": 0}],
+                }
+            ],
+        },
+        {
+            "vehicle": "RSU",
+            "path": [{"x": 1, "y": 2, "z": 3}],
+        },
+    ]
+
+    validate_config_object_counts(config, scenario_groups)
+    scene, pedestrians, _ = compile_open_cda_config(
+        {
+            "map": "Town03",
+            "map_offsets": {"x": 0, "y": 0},
+            "scenario_name": "Frontend runtime contract",
+            "opencda_config_yaml": config_yaml,
+            "scenario": scenario_groups,
+        },
+        SimpleNamespace(
+            carla_port=2000,
+            carla_traffic_manager_port=8001,
+            base_dir=Path.cwd(),
+        ),
+    )
+
+    assert pedestrians == []
+    assert scene.world.town == "Town03"
+    assert len(scene.scenario.single_cav_list) == 1
+    assert len(scene.scenario.rsu_list) == 1

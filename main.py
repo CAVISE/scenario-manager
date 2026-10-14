@@ -16,7 +16,7 @@ from app.database import (
 from app.log_config import get_logger
 from app.rate_limit import limiter
 from app.routers import auth_router, scenarios_router, simulation_router
-from app.routers.simulation import cleanup_old_results, recover_persisted_queue
+from app.routers.simulation import cleanup_old_results
 
 log = get_logger(__name__)
 
@@ -37,8 +37,6 @@ async def lifespan(app: FastAPI):
         cleanup_old_results()
     except Exception as e:
         log.warning("Cleanup failed: %s", e)
-
-    recover_persisted_queue()
 
     yield
 

@@ -162,6 +162,17 @@ class SimulationRunResponse(SimulationStatusResponse):
 class ResultFile(BaseModel):
     filename: str
     url: str
+    size_bytes: int = 0
+    content_type: Optional[str] = None
+    kind: str = "file"
+    modified_at: Optional[float] = None
+
+
+class RunDetailResponse(SimulationRunResponse):
+    created_at: Optional[float] = None
+    configuration: dict[str, Any] = Field(default_factory=dict)
+    artifacts: list[ResultFile] = Field(default_factory=list)
+    has_results: bool = False
 
 
 class ResultsResponse(BaseModel):

@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     eval_retention_days: int = 30
     simulation_max_runtime_seconds: float = Field(default=7200.0, gt=0)
     simulation_stop_grace_seconds: float = Field(default=20.0, gt=0)
+    simulation_worker_poll_seconds: float = Field(default=1.0, gt=0, le=60)
 
     cors_origins: str = "http://localhost:5173"
 

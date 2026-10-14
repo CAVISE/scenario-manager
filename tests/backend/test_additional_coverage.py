@@ -97,15 +97,15 @@ def test_broadcast_state_skips_when_no_loop(caplog):
     import logging
     from app.routers import simulation as sim_module
 
-    original_loop = sim_module._main_loop
-    sim_module._main_loop = None
+    original_loop = sim_module._notifier._loop
+    sim_module._notifier._loop = None
 
     try:
         with caplog.at_level(logging.WARNING, logger="app.routers.simulation"):
             sim_module._broadcast_state()
         assert "no event loop" in caplog.text
     finally:
-        sim_module._main_loop = original_loop
+        sim_module._notifier._loop = original_loop
 
 
 def test_broadcast_state_skips_when_loop_closed(caplog):
@@ -115,15 +115,15 @@ def test_broadcast_state_skips_when_loop_closed(caplog):
     closed_loop = asyncio.new_event_loop()
     closed_loop.close()
 
-    original_loop = sim_module._main_loop
-    sim_module._main_loop = closed_loop
+    original_loop = sim_module._notifier._loop
+    sim_module._notifier._loop = closed_loop
 
     try:
         with caplog.at_level(logging.WARNING, logger="app.routers.simulation"):
             sim_module._broadcast_state()
         assert "no event loop" in caplog.text
     finally:
-        sim_module._main_loop = original_loop
+        sim_module._notifier._loop = original_loop
 
 
 def test_broadcast_state_removes_dead_client():
@@ -138,15 +138,15 @@ def test_broadcast_state_removes_dead_client():
 
     dead_ws.send_json = failing_send
 
-    original_loop = sim_module._main_loop
-    sim_module._main_loop = loop
-    sim_module._ws_clients.append(dead_ws)
+    original_loop = sim_module._notifier._loop
+    sim_module._notifier._loop = loop
+    sim_module._notifier.subscribe_state(dead_ws)
 
     try:
         sim_module._broadcast_state()
         loop.run_until_complete(asyncio.sleep(0.05))
-        assert dead_ws not in sim_module._ws_clients
+        assert dead_ws not in sim_module._notifier._state_clients
     finally:
-        sim_module._main_loop = original_loop
-        sim_module._ws_clients.clear()
+        sim_module._notifier._loop = original_loop
+        sim_module._notifier.clear()
         loop.close()

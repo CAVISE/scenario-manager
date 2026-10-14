@@ -34,7 +34,6 @@ def result_environment(monkeypatch, tmp_path):
     )
     monkeypatch.setattr(simulation, "_broadcast_state", MagicMock())
     monkeypatch.setattr(simulation, "_update_run_record", MagicMock())
-    monkeypatch.setattr(simulation, "_schedule_next_run", MagicMock())
 
 
 def install_worker_response(monkeypatch, payload):

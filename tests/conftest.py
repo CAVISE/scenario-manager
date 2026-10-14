@@ -1,6 +1,7 @@
 import os
 import sys
 import types
+from unittest.mock import MagicMock
 
 import pytest
 import yaml
@@ -122,13 +123,21 @@ def db_session():
 
 
 @pytest.fixture
-def scenario_client(db_session):
+def scenario_client(db_session, monkeypatch):
     from app.database import get_session
+    from app.routers import simulation
     from main import app
 
     def override_session():
         yield db_session
 
+    # Simulation queue access is intentionally outside FastAPI's request
+    # session dependency.  Route tests using the shared client do not need a
+    # PostgreSQL queue, so keep them isolated from the configured runtime DB.
+    run_repository = MagicMock()
+    run_repository.get.return_value = None
+    run_repository.list_all.return_value = []
+    monkeypatch.setattr(simulation, "_run_repository", run_repository)
     app.dependency_overrides[get_session] = override_session
     client = TestClient(app)
     yield client

@@ -1,10 +1,6 @@
-import asyncio
 import json
-import shutil
 import threading
-import time
-from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -14,10 +10,9 @@ from fastapi import (
     HTTPException,
     Request,
     WebSocket,
-    WebSocketDisconnect,
 )
-from fastapi.responses import FileResponse
 from pydantic import ValidationError
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.auth import require_roles
 from app.config import get_settings
@@ -26,23 +21,24 @@ from app.log_config import get_logger
 from app.rate_limit import limiter
 from app.run_results import read_run_metadata, write_run_metadata
 from app.services.simulation.contracts import QueuedSimulation
+from app.services.simulation.legacy_execution import LegacySimulationExecutor
+from app.services.simulation.lifecycle import RunLifecycleService
+from app.services.simulation.notifications import SimulationNotifier
 from app.services.simulation.repository import SimulationRunRepository
 from app.services.simulation.results import (
-    COMPLETED_OUTCOMES,
     ResultAccessError,
+    cleanup_expired_result_directories,
     list_completed_runs,
-    public_result_files,
-    read_chart_data,
+    public_result_artifacts,
     result_directory,
     result_file_path,
-    result_file_url,
 )
 from app.services.simulation.validation import preflight_entity_issues
 from app.services.simulation.worker import launch_worker, stop_worker
+from app.routers.simulation_results import add_result_routes
 from app.schemas import (
-    ResultFile,
     ResultRun,
-    ResultsResponse,
+    RunDetailResponse,
     ScenarioValidationIssue,
     ScenarioValidationResponse,
     SimulationRunResponse,
@@ -70,52 +66,39 @@ simulation_state: dict = {
     "partial": False,
 }
 
-_executor = ThreadPoolExecutor(max_workers=1)
-
-
-_run_queue: list[QueuedSimulation] = []
 _run_repository = SimulationRunRepository(SessionLocal)
-
-_ws_clients: list[WebSocket] = []
-_ws_lock = threading.Lock()
-_run_ws_clients: dict[str, list[WebSocket]] = {}
-
-_main_loop: asyncio.AbstractEventLoop | None = None
-_active_worker: Any | None = None
-_active_worker_lock = threading.Lock()
+_notifier = SimulationNotifier(log)
 
 
-def _request_active_worker_stop() -> None:
-    with _active_worker_lock:
-        worker = _active_worker
-    if worker is None or worker.poll() is not None:
-        return
-
-    grace_seconds = get_settings().simulation_stop_grace_seconds
-    threading.Thread(
-        target=stop_worker,
-        args=(worker, grace_seconds),
-        name="simulation-stop",
-        daemon=True,
-    ).start()
+def _run_lifecycle_service() -> RunLifecycleService:
+    """Return a facade bound to the current repository configuration."""
+    return RunLifecycleService(_run_repository)
 
 
 def _save_run_record(queued_run: QueuedSimulation, status: str = "queued") -> None:
-    _run_repository.save(queued_run, status)
+    if status != "queued":
+        raise ValueError("New simulation runs must be created in the queued state")
+    _run_lifecycle_service().enqueue(queued_run)
 
 
 def _update_run_record(run_id: str, status: str, error: str | None = None) -> None:
-    _run_repository.update(run_id, status, error)
-
-
-def recover_persisted_queue() -> None:
-    """Rebuild the in-process worker queue after a backend restart."""
-    queued_runs = _run_repository.recover_queue()
-
-    with _sim_lock:
-        known_run_ids = {item.run_id for item in _run_queue}
-        _run_queue.extend(run for run in queued_runs if run.run_id not in known_run_ids)
-    _schedule_next_run()
+    transitions = {
+        "running": lambda: _run_lifecycle_service().mark_running(run_id),
+        "stopping": lambda: _run_lifecycle_service().mark_stopping(run_id),
+        "cancelled": lambda: _run_lifecycle_service().mark_cancelled(run_id),
+        "complete": lambda: _run_lifecycle_service().mark_complete(run_id),
+        "partial": lambda: _run_lifecycle_service().mark_partial(run_id),
+        "failed": lambda: _run_lifecycle_service().mark_failed(
+            run_id, error or "Unknown error"
+        ),
+    }
+    transition = transitions.get(status)
+    if transition is None:
+        raise ValueError(f"Unsupported simulation run status: {status}")
+    if not transition():
+        log.warning(
+            "Ignored invalid run status transition run_id=%s status=%s", run_id, status
+        )
 
 
 def _result_directory(run_id: str) -> Path:
@@ -127,10 +110,6 @@ def _result_directory(run_id: str) -> Path:
         ) from error
 
 
-def _result_file_url(run_id: str, filename: str) -> str:
-    return result_file_url(run_id, filename)
-
-
 def _result_file_path(run_id: str, filename: str) -> Path:
     try:
         return result_file_path(get_settings().eval_dir, run_id, filename)
@@ -138,6 +117,20 @@ def _result_file_path(run_id: str, filename: str) -> Path:
         raise HTTPException(
             status_code=error.status_code, detail=error.detail
         ) from error
+
+
+def _is_legacy_run_active(run_id: str) -> bool:
+    with _sim_lock:
+        return simulation_state["running"] and simulation_state["run_id"] == run_id
+
+
+add_result_routes(
+    router,
+    result_directory=_result_directory,
+    result_file_path=_result_file_path,
+    get_run=lambda run_id: _run_lifecycle_service().get(run_id),
+    is_legacy_run_active=_is_legacy_run_active,
+)
 
 
 def _status_from_outcome(outcome: str | None) -> str:
@@ -155,17 +148,34 @@ def _status_from_outcome(outcome: str | None) -> str:
 def _run_response(run_id: str) -> SimulationRunResponse:
     with _sim_lock:
         current = dict(simulation_state)
-        queue_position = next(
-            (
-                index
-                for index, queued_run in enumerate(_run_queue, start=1)
-                if queued_run.run_id == run_id
-            ),
-            None,
-        )
+    queue_position = None
 
     if current.get("run_id") == run_id:
         return SimulationRunResponse(**current)
+
+    record = _run_lifecycle_service().get(run_id)
+    if record is not None:
+        status = _status_from_outcome(record.status)
+        queue_position = _run_lifecycle_service().queue_position(run_id)
+        metadata = read_run_metadata(_result_directory(run_id))
+        try:
+            max_ticks = int(json.loads(record.params).get("max_ticks", 0))
+        except (TypeError, ValueError, json.JSONDecodeError):
+            max_ticks = 0
+        return SimulationRunResponse(
+            running=status in {"running", "stopping"},
+            status=status,
+            error=record.error,
+            map=record.map_name,
+            run_id=record.run_id,
+            tick=int(metadata.get("tick", 0)),
+            max_ticks=int(metadata.get("max_ticks", max_ticks)),
+            partial=record.status == "partial",
+            scenario_id=record.scenario_id,
+            scenario_name=record.scenario_name,
+            modified_at=record.updated_at.timestamp(),
+            queue_position=queue_position,
+        )
 
     path = _result_directory(run_id)
     if not path.is_dir():
@@ -204,102 +214,45 @@ def _run_response(run_id: str) -> SimulationRunResponse:
     )
 
 
+def _current_status_response() -> SimulationStatusResponse:
+    """Read current state from the durable queue, with legacy fallback."""
+    try:
+        active = next(
+            (
+                record
+                for record in _run_lifecycle_service().list_all()
+                if record.status in {"running", "stopping"}
+            ),
+            None,
+        )
+    except SQLAlchemyError:
+        active = None
+    if active is None:
+        return SimulationStatusResponse(**simulation_state)
+    return SimulationStatusResponse(**_run_response(active.run_id).model_dump())
+
+
 @router.get("/results", response_model=list[ResultRun])
 @limiter.limit("30/minute")
 async def list_result_runs(request: Request):
-    active_run_id = simulation_state["run_id"] if simulation_state["running"] else None
+    active_run_id = next(
+        (
+            record.run_id
+            for record in _run_lifecycle_service().list_all()
+            if record.status in {"running", "stopping"}
+        ),
+        None,
+    )
+    if active_run_id is None and simulation_state["running"]:
+        active_run_id = simulation_state["run_id"]
     return list_completed_runs(get_settings().eval_dir, active_run_id=active_run_id)
 
 
-async def _send_state(ws: WebSocket) -> None:
-    try:
-        await ws.send_json(simulation_state)
-    except Exception:
-        with _ws_lock:
-            if ws in _ws_clients:
-                _ws_clients.remove(ws)
-
-
-async def _send_run_state(ws: WebSocket, run_id: str) -> None:
-    try:
-        await ws.send_json(_run_response(run_id).model_dump())
-    except Exception:
-        with _ws_lock:
-            clients = _run_ws_clients.get(run_id, [])
-            if ws in clients:
-                clients.remove(ws)
-
-
 def _broadcast_state() -> None:
-    global _main_loop
-    loop = _main_loop
-    if loop is None or loop.is_closed():
-        log.warning("_broadcast_state: no event loop available, skipping")
-        return
-
-    with _ws_lock:
-        clients = list(_ws_clients)
-        run_clients = {run_id: list(items) for run_id, items in _run_ws_clients.items()}
-
-    for ws in clients:
-        asyncio.run_coroutine_threadsafe(_send_state(ws), loop)
-    for run_id, subscribers in run_clients.items():
-        for ws in subscribers:
-            asyncio.run_coroutine_threadsafe(_send_run_state(ws, run_id), loop)
-
-
-def _schedule_next_run() -> None:
-    """Reserve CARLA for the next queued run and submit exactly one worker."""
-    with _sim_lock:
-        if simulation_state["running"] or not _run_queue:
-            return
-
-        queued_run = _run_queue.pop(0)
-        simulation_state.update(
-            running=True,
-            status="running",
-            error=None,
-            map=queued_run.map_name,
-            run_id=queued_run.run_id,
-            tick=0,
-            max_ticks=queued_run.params["max_ticks"],
-            partial=False,
-        )
-        _update_run_record(queued_run.run_id, "running")
-
-    try:
-        _executor.submit(
-            _run_with_state,
-            queued_run.scenario_raw,
-            queued_run.params,
-        )
-    except Exception as error:
-        log.exception("Could not submit queued simulation run=%s", queued_run.run_id)
-        _update_run_record(queued_run.run_id, "failed", str(error))
-        write_run_metadata(
-            queued_run.run_id,
-            {
-                "outcome": "failed",
-                "map": queued_run.map_name,
-                "scenario_id": queued_run.scenario_raw.get("scenario_id"),
-                "scenario_name": queued_run.scenario_raw.get("scenario_name"),
-                "max_ticks": queued_run.params["max_ticks"],
-                "tick": 0,
-                "error": str(error),
-            },
-        )
-        with _sim_lock:
-            simulation_state.update(
-                running=False,
-                status="error",
-                error=str(error),
-                partial=False,
-            )
-        _broadcast_state()
-        _schedule_next_run()
-        return
-
-    _broadcast_state()
+    _notifier.broadcast(
+        lambda: _current_status_response().model_dump(),
+        lambda run_id: _run_response(run_id).model_dump(),
+    )
 
 
 def _start_simulation(
@@ -307,8 +260,18 @@ def _start_simulation(
 ) -> StartSimulationResponse:
     settings = get_settings()
 
-    with _sim_lock:
-        if (simulation_state["running"] or _run_queue) and not allow_queue:
+    if not allow_queue:
+        active = next(
+            (
+                record
+                for record in _run_lifecycle_service().list_all()
+                if record.status in {"queued", "running", "stopping"}
+            ),
+            None,
+        )
+        with _sim_lock:
+            legacy_running = simulation_state["running"]
+        if active is not None or legacy_running:
             raise HTTPException(status_code=409, detail="Simulation already running")
 
     try:
@@ -375,13 +338,7 @@ def _start_simulation(
             params=params,
         )
 
-        with _sim_lock:
-            if (simulation_state["running"] or _run_queue) and not allow_queue:
-                raise HTTPException(
-                    status_code=409, detail="Simulation already running"
-                )
-            _save_run_record(queued_run)
-            _run_queue.append(queued_run)
+        _save_run_record(queued_run)
     except HTTPException:
         raise
     except Exception:
@@ -391,11 +348,8 @@ def _start_simulation(
             detail="Failed to start simulation; see server logs for details",
         )
 
-    _schedule_next_run()
-    with _sim_lock:
-        was_started = simulation_state["run_id"] == run_id
     return StartSimulationResponse(
-        status="started" if was_started else "queued",
+        status="queued",
         map=map_name,
         run_id=run_id,
     )
@@ -458,12 +412,17 @@ async def validate_scenario(request: Request, body: dict[str, Any]):
 
 @router.get("/status", response_model=SimulationStatusResponse)
 async def get_status():
-    return SimulationStatusResponse(**simulation_state)
+    return _current_status_response()
 
 
 @router.get("/v1/runs", response_model=list[SimulationRunResponse])
 @limiter.limit("30/minute")
 async def list_runs(request: Request):
+    records = _run_lifecycle_service().list_all()
+    if records:
+        return [_run_response(record.run_id) for record in records]
+
+    # Legacy directories created before durable queue records remain readable.
     settings = get_settings()
     if not settings.eval_dir.exists():
         return []
@@ -490,35 +449,68 @@ async def get_run(request: Request, run_id: str):
     return _run_response(run_id)
 
 
-def _stop_simulation(run_id: str | None = None) -> StopSimulationResponse:
-    with _sim_lock:
-        active_run_id = simulation_state["run_id"]
-        if not simulation_state["running"]:
-            raise HTTPException(status_code=400, detail="No simulation running")
-        if run_id is not None and run_id != active_run_id:
-            raise HTTPException(status_code=409, detail="Run is not active")
-        simulation_state["status"] = "stopping"
-
-    if active_run_id:
+@router.get("/v1/runs/{run_id}/details", response_model=RunDetailResponse)
+@limiter.limit("30/minute")
+async def get_run_details(request: Request, run_id: str):
+    run = _run_response(run_id)
+    record = _run_lifecycle_service().get(run_id)
+    configuration: dict[str, Any] = {}
+    created_at = None
+    if record is not None:
         try:
-            existing = read_run_metadata(_result_directory(active_run_id))
-            write_run_metadata(active_run_id, {**existing, "outcome": "stopping"})
-        except (HTTPException, OSError, ValueError):
-            log.warning("Could not persist stopping state for run=%s", active_run_id)
+            configuration = json.loads(record.params)
+        except json.JSONDecodeError:
+            log.warning("Invalid stored run params for run_id=%s", run_id)
+        created_at = record.created_at.timestamp()
 
-    _request_active_worker_stop()
-    _broadcast_state()
-    return StopSimulationResponse(status="stopping", run_id=active_run_id)
+    path = _result_directory(run_id)
+    artifacts = public_result_artifacts(path, run_id) if path.is_dir() else []
+    return RunDetailResponse(
+        **run.model_dump(),
+        created_at=created_at,
+        configuration=configuration,
+        artifacts=artifacts,
+        has_results=path.is_dir(),
+    )
+
+
+def _stop_simulation(run_id: str | None = None) -> StopSimulationResponse:
+    active = next(
+        (
+            record
+            for record in _run_lifecycle_service().list_all()
+            if record.status in {"running", "stopping"}
+        ),
+        None,
+    )
+    if active is None:
+        # Compatibility for the legacy in-process runner during a rolling
+        # deployment; normal production operation is database-backed.
+        with _sim_lock:
+            legacy_run_id = simulation_state["run_id"]
+            legacy_running = simulation_state["running"]
+            if legacy_running:
+                simulation_state["status"] = "stopping"
+        if not legacy_running:
+            raise HTTPException(status_code=400, detail="No simulation running")
+        return StopSimulationResponse(status="stopping", run_id=legacy_run_id)
+    if run_id is not None and run_id != active.run_id:
+        raise HTTPException(status_code=409, detail="Run is not active")
+    if active.status == "running":
+        _update_run_record(active.run_id, "stopping")
+    try:
+        existing = read_run_metadata(_result_directory(active.run_id))
+        write_run_metadata(active.run_id, {**existing, "outcome": "stopping"})
+    except (HTTPException, OSError, ValueError):
+        log.warning("Could not persist stopping state for run=%s", active.run_id)
+    return StopSimulationResponse(status="stopping", run_id=active.run_id)
 
 
 def _cancel_queued_simulation(run_id: str) -> StopSimulationResponse:
     """Remove a waiting run without affecting the CARLA process in progress."""
-    with _sim_lock:
-        queued_run = next((item for item in _run_queue if item.run_id == run_id), None)
-        if queued_run is None:
-            raise HTTPException(status_code=409, detail="Run is not active or queued")
-        _run_queue.remove(queued_run)
-
+    queued_run = _run_lifecycle_service().get(run_id)
+    if queued_run is None or queued_run.status != "queued":
+        raise HTTPException(status_code=409, detail="Run is not active or queued")
     _update_run_record(run_id, "cancelled")
 
     try:
@@ -548,113 +540,31 @@ async def stop_simulation(request: Request):
 )
 @limiter.limit("10/minute")
 async def cancel_run(request: Request, run_id: str):
+    run = _run_lifecycle_service().get(run_id)
+    if run is not None and run.status in {"running", "stopping"}:
+        return _stop_simulation(run_id)
     with _sim_lock:
-        is_active = simulation_state["running"] and simulation_state["run_id"] == run_id
-    return _stop_simulation(run_id) if is_active else _cancel_queued_simulation(run_id)
+        is_legacy_active = (
+            simulation_state["running"] and simulation_state["run_id"] == run_id
+        )
+    if is_legacy_active:
+        return _stop_simulation(run_id)
+    return _cancel_queued_simulation(run_id)
 
 
 @router.websocket("/v1/ws/runs/{run_id}")
 async def ws_run(websocket: WebSocket, run_id: str):
     """Subscribe to the active run using the same payload as /v1/runs/{id}."""
-    global _main_loop
-
-    await websocket.accept()
-    if _main_loop is None:
-        _main_loop = asyncio.get_event_loop()
-    with _ws_lock:
-        _run_ws_clients.setdefault(run_id, []).append(websocket)
-    try:
-        await websocket.send_json(_run_response(run_id).model_dump())
-        while True:
-            await websocket.receive_text()
-    except WebSocketDisconnect:
-        pass
-    finally:
-        with _ws_lock:
-            clients = _run_ws_clients.get(run_id, [])
-            if websocket in clients:
-                clients.remove(websocket)
-            if not clients:
-                _run_ws_clients.pop(run_id, None)
-
-
-@router.get("/results/{run_id}", response_model=ResultsResponse)
-@limiter.limit("30/minute")
-async def list_results(request: Request, run_id: str):
-    path = _result_directory(run_id)
-    if not path.exists() or not path.is_dir():
-        raise HTTPException(status_code=404, detail="Results not found")
-    if simulation_state["running"] and run_id == simulation_state["run_id"]:
-        raise HTTPException(status_code=409, detail="Simulation is still running")
-    if read_run_metadata(path).get("outcome") not in COMPLETED_OUTCOMES:
-        raise HTTPException(status_code=404, detail="No completed results for this run")
-
-    files = [
-        ResultFile(filename=filename, url=_result_file_url(run_id, filename))
-        for filename in public_result_files(path)
-    ]
-    data, data_error = read_chart_data(
-        path,
-        run_id,
-        on_error=lambda: log.warning(
-            "Cannot read chart data for run_id=%s", run_id, exc_info=True
-        ),
+    await _notifier.serve_run(
+        websocket, run_id, lambda: _run_response(run_id).model_dump()
     )
-    return ResultsResponse(files=files, run_id=run_id, data=data, data_error=data_error)
-
-
-@router.get("/results/{run_id}/files/{filename}")
-@limiter.limit("30/minute")
-async def get_result_file(request: Request, run_id: str, filename: str):
-    """Serve one allowlisted artifact after the same access check as the API."""
-    return FileResponse(_result_file_path(run_id, filename))
-
-
-@router.delete(
-    "/results/{run_id}",
-    dependencies=[Depends(require_roles("admin", "operator"))],
-)
-@limiter.limit("10/minute")
-async def delete_results(request: Request, run_id: str):
-    path = _result_directory(run_id)
-    with _sim_lock:
-        if simulation_state["running"] and run_id == simulation_state["run_id"]:
-            raise HTTPException(
-                status_code=409, detail="Cannot delete results of a running simulation"
-            )
-        if any(queued_run.run_id == run_id for queued_run in _run_queue):
-            raise HTTPException(
-                status_code=409, detail="Cannot delete results of a queued simulation"
-            )
-        if not path.is_dir():
-            raise HTTPException(status_code=404, detail="Results not found")
-        shutil.rmtree(path)
-    log.info("Deleted results for run_id=%s", run_id)
-    return {"deleted": run_id}
 
 
 @router.websocket("/ws/simulation")
 async def ws_simulation(websocket: WebSocket):
-    global _main_loop
-
-    await websocket.accept()
-
-    if _main_loop is None:
-        _main_loop = asyncio.get_event_loop()
-
-    with _ws_lock:
-        _ws_clients.append(websocket)
-
-    try:
-        await websocket.send_json(simulation_state)
-        while True:
-            await websocket.receive_text()
-    except WebSocketDisconnect:
-        pass
-    finally:
-        with _ws_lock:
-            if websocket in _ws_clients:
-                _ws_clients.remove(websocket)
+    await _notifier.serve_state(
+        websocket, lambda: _current_status_response().model_dump()
+    )
 
 
 _KNOWN_MAPS = {
@@ -688,161 +598,38 @@ def _launch_worker(input_path: Path, result_path: Path, progress_path: Path) -> 
 
 
 def _run_with_state(scenario_raw: dict, params: dict) -> None:
-    import traceback
-
-    run_id = (
-        params.get("run_id")
-        or (
-            f"{params['map_name']}_{params['current_time']}"
-            if params.get("map_name") and params.get("current_time")
-            else None
-        )
-        or simulation_state.get("run_id")
-    )
-    if not isinstance(run_id, str) or not run_id:
-        raise ValueError("Simulation run ID is required")
-    metadata = {
-        "outcome": "running",
-        "map": params.get("map_name"),
-        "scenario_id": scenario_raw.get("scenario_id"),
-        "scenario_name": scenario_raw.get("scenario_name"),
-        "max_ticks": params.get("max_ticks", 0),
-        "tick": 0,
-    }
-
-    def progress(tick: int, maximum: int) -> None:
-        with _sim_lock:
-            simulation_state.update(tick=tick, max_ticks=maximum)
-        _broadcast_state()
-
-    worker_input: Path | None = None
-    worker_result: Path | None = None
-    worker_progress: Path | None = None
-    try:
-        write_run_metadata(run_id, metadata)
-        run_directory = _result_directory(run_id)
-        worker_input = run_directory / "worker_input.json"
-        worker_result = run_directory / "worker_result.json"
-        worker_progress = run_directory / "worker_progress.json"
-        worker_input.write_text(
-            json.dumps({"scenario_raw": scenario_raw, "params": params}),
-            encoding="utf-8",
-        )
-        worker = _launch_worker(worker_input, worker_result, worker_progress)
-        write_run_metadata(run_id, {**metadata, "worker_pid": worker.pid})
-        global _active_worker
-        with _active_worker_lock:
-            _active_worker = worker
-        worker_started_at = time.monotonic()
-        settings = get_settings()
-        while worker.poll() is None:
-            if (
-                time.monotonic() - worker_started_at
-                > settings.simulation_max_runtime_seconds
-            ):
-                log.error(
-                    "Worker pid=%s exceeded %.0fs runtime limit",
-                    worker.pid,
-                    settings.simulation_max_runtime_seconds,
-                )
-                stop_worker(worker, grace_seconds=0)
-                raise RuntimeError("Simulation exceeded the configured maximum runtime")
-            if worker_progress.exists():
-                try:
-                    latest_progress = json.loads(
-                        worker_progress.read_text(encoding="utf-8")
-                    )
-                    progress(latest_progress["tick"], latest_progress["max_ticks"])
-                except (OSError, ValueError, KeyError, TypeError):
-                    pass
-            time.sleep(0.25)
-        with _active_worker_lock:
-            _active_worker = None
-        if not worker_result.exists():
-            raise RuntimeError(
-                f"Simulation worker exited with code {worker.returncode}"
-            )
-        worker_payload = json.loads(worker_result.read_text(encoding="utf-8"))
-        if "error" in worker_payload:
-            with _sim_lock:
-                was_stopped = simulation_state["status"] == "stopping"
-                stopped_tick = simulation_state["tick"]
-            if not was_stopped:
-                raise RuntimeError(worker_payload["error"])
-            result = {
-                "tick": stopped_tick,
-                "max_ticks": params.get("max_ticks", 0),
-                "partial": True,
-            }
-        else:
-            result = worker_payload.get("result")
-        outcome = result if isinstance(result, dict) else {}
-        with _sim_lock:
-            partial = outcome.get("partial", simulation_state["status"] == "stopping")
-            simulation_state.update(
-                tick=outcome.get("tick", simulation_state.get("tick", 0)),
-                max_ticks=outcome.get("max_ticks", params.get("max_ticks", 0)),
-                partial=partial,
-            )
-            simulation_state["status"] = "finished"
-        write_run_metadata(
-            run_id,
-            {
-                **metadata,
-                "outcome": "partial" if partial else "complete",
-                "tick": simulation_state["tick"],
-            },
-        )
-        _update_run_record(run_id, "partial" if partial else "complete")
-    except Exception as e:
-        _update_run_record(run_id, "failed", str(e))
-        try:
-            write_run_metadata(
-                run_id, {**metadata, "outcome": "failed", "error": str(e)}
-            )
-        except OSError:
-            log.exception("Failed to persist run failure")
-        with _sim_lock:
-            simulation_state["status"] = "error"
-            simulation_state["error"] = str(e)
-            simulation_state["run_id"] = None
-            simulation_state["partial"] = False
-        log.error("SIMULATION ERROR:\n%s", traceback.format_exc())
-    finally:
-        for internal_file in (worker_input, worker_result, worker_progress):
-            if internal_file is None:
-                continue
-            try:
-                internal_file.unlink(missing_ok=True)
-            except OSError:
-                log.warning("Could not remove internal worker file: %s", internal_file)
-        with _active_worker_lock:
-            _active_worker = None
-        with _sim_lock:
-            simulation_state["running"] = False
-            if simulation_state["status"] == "stopping":
-                simulation_state["status"] = "idle"
-        _broadcast_state()
-        _schedule_next_run()
+    """Compatibility wrapper; new runs execute only in app.run_worker."""
+    LegacySimulationExecutor(
+        state=simulation_state,
+        state_lock=_sim_lock,
+        run_directory=_result_directory,
+        launch=_launch_worker,
+        stop=stop_worker,
+        max_runtime_seconds=lambda: get_settings().simulation_max_runtime_seconds,
+        write_metadata=write_run_metadata,
+        update_run_record=_update_run_record,
+        broadcast=_broadcast_state,
+        logger=log,
+    ).execute(scenario_raw, params)
 
 
 def cleanup_old_results() -> None:
     settings = get_settings()
-    cutoff = datetime.now() - timedelta(days=settings.eval_retention_days)
-    eval_dir = settings.eval_dir
-    if not eval_dir.exists():
-        return
-    for entry in eval_dir.iterdir():
-        if entry.is_dir() and not entry.is_symlink():
-            mtime = datetime.fromtimestamp(entry.stat().st_mtime)
-            if mtime < cutoff:
-                with _sim_lock:
-                    if (
-                        simulation_state["running"]
-                        and entry.name == simulation_state["run_id"]
-                    ) or any(
-                        queued_run.run_id == entry.name for queued_run in _run_queue
-                    ):
-                        continue
-                    shutil.rmtree(entry)
-                    log.info("Auto-cleaned old results: %s", entry.name)
+    with _sim_lock:
+        protected_run_ids = (
+            frozenset({simulation_state["run_id"]})
+            if simulation_state["running"] and simulation_state["run_id"]
+            else frozenset()
+        )
+    report = cleanup_expired_result_directories(
+        settings.eval_dir,
+        settings.eval_retention_days,
+        protected_run_ids=protected_run_ids,
+    )
+    for run_id in report.deleted_run_ids:
+        log.info("Auto-cleaned old results: %s", run_id)
+    if report.inaccessible_run_ids:
+        log.warning(
+            "Skipped retention cleanup for %d result directories with inaccessible files",
+            len(report.inaccessible_run_ids),
+        )

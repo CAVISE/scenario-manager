@@ -1,10 +1,14 @@
 import json
+import os
+import shutil
 import sys
 import types
 import pytest
 from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import MagicMock, patch
+
+from app.services.simulation.results import cleanup_expired_result_directories
 
 
 @pytest.fixture
@@ -19,7 +23,6 @@ def worker_environment(monkeypatch, tmp_path):
     monkeypatch.setattr(simulation, "get_settings", lambda: settings)
     monkeypatch.setattr("app.run_results.get_settings", lambda: settings)
     monkeypatch.setattr(simulation, "_update_run_record", MagicMock())
-    monkeypatch.setattr(simulation, "_schedule_next_run", MagicMock())
 
     def install(payload):
         class CompletedWorker:
@@ -103,9 +106,39 @@ def test_cleanup_ignores_files_not_dirs(tmp_path):
     assert old_file.exists()
 
 
+def test_retention_reports_an_inaccessible_directory_and_keeps_cleaning(
+    monkeypatch, tmp_path
+):
+    old_blocked = tmp_path / "blocked"
+    old_blocked.mkdir()
+    old_deleted = tmp_path / "deleted"
+    old_deleted.mkdir()
+    old_time = (datetime.now() - timedelta(days=10)).timestamp()
+    os.utime(old_blocked, (old_time, old_time))
+    os.utime(old_deleted, (old_time, old_time))
+
+    original_rmtree = shutil.rmtree
+
+    def remove_directory(path, *args, **kwargs):
+        if Path(path) == old_blocked:
+            raise PermissionError("owned by another user")
+        return original_rmtree(path, *args, **kwargs)
+
+    monkeypatch.setattr(
+        "app.services.simulation.results.shutil.rmtree", remove_directory
+    )
+
+    report = cleanup_expired_result_directories(tmp_path, retention_days=7)
+
+    assert set(report.deleted_run_ids) == {"deleted"}
+    assert set(report.inaccessible_run_ids) == {"blocked"}
+    assert old_blocked.exists()
+    assert not old_deleted.exists()
+
+
 @pytest.fixture(autouse=True)
 def reset_state():
-    from app.routers.simulation import simulation_state, _ws_clients
+    from app.routers.simulation import _notifier, simulation_state
 
     simulation_state.update(
         {
@@ -116,7 +149,7 @@ def reset_state():
             "run_id": "Town01_123",
         }
     )
-    _ws_clients.clear()
+    _notifier.clear()
     yield
     simulation_state.update(
         {
