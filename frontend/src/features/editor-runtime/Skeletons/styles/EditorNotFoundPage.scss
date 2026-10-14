@@ -15,8 +15,8 @@
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgb(147 242 200 / 3.5%) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(147 242 200 / 3.5%) 1px, transparent 1px);
+    linear-gradient(rgb(8 123 104 / 3.5%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(8 123 104 / 3.5%) 1px, transparent 1px);
   background-size: 64px 64px;
   animation: nf-grid-scroll 10s linear infinite;
   pointer-events: none;
@@ -30,7 +30,7 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgb(147 242 200 / 55%) 50%,
+    rgb(8 123 104 / 55%) 50%,
     transparent 100%
   );
   animation: nf-scan 4s ease-in-out infinite;
@@ -46,29 +46,29 @@
 .nf-corner-tl {
   top: 28px;
   left: 28px;
-  border-top: 1px solid rgb(147 242 200 / 30%);
-  border-left: 1px solid rgb(147 242 200 / 30%);
+  border-top: 1px solid rgb(8 123 104 / 30%);
+  border-left: 1px solid rgb(8 123 104 / 30%);
 }
 
 .nf-corner-tr {
   top: 28px;
   right: 28px;
-  border-top: 1px solid rgb(147 242 200 / 30%);
-  border-right: 1px solid rgb(147 242 200 / 30%);
+  border-top: 1px solid rgb(8 123 104 / 30%);
+  border-right: 1px solid rgb(8 123 104 / 30%);
 }
 
 .nf-corner-bl {
   bottom: 28px;
   left: 28px;
-  border-bottom: 1px solid rgb(147 242 200 / 30%);
-  border-left: 1px solid rgb(147 242 200 / 30%);
+  border-bottom: 1px solid rgb(8 123 104 / 30%);
+  border-left: 1px solid rgb(8 123 104 / 30%);
 }
 
 .nf-corner-br {
   bottom: 28px;
   right: 28px;
-  border-bottom: 1px solid rgb(147 242 200 / 30%);
-  border-right: 1px solid rgb(147 242 200 / 30%);
+  border-bottom: 1px solid rgb(8 123 104 / 30%);
+  border-right: 1px solid rgb(8 123 104 / 30%);
 }
 
 .nf-card {
@@ -97,7 +97,7 @@
 .nf-subtitle {
   font-size: 10px;
   letter-spacing: 0.42em;
-  color: rgb(147 242 200 / 45%);
+  color: rgb(8 123 104 / 45%);
   text-transform: uppercase;
 }
 
@@ -109,8 +109,8 @@
   line-height: 1;
   position: relative;
   text-shadow:
-    0 0 18px rgb(147 242 200 / 25%),
-    0 0 42px rgb(147 242 200 / 10%);
+    0 0 18px rgb(8 123 104 / 25%),
+    0 0 42px rgb(8 123 104 / 10%);
   animation: nf-glitch 6s steps(1) infinite;
 }
 
@@ -123,13 +123,13 @@
 }
 
 .nf-code::before {
-  color: rgb(147 242 200 / 55%);
+  color: rgb(8 123 104 / 55%);
   clip-path: polygon(0 20%, 100% 20%, 100% 40%, 0 40%);
   animation: nf-glitch-a 6s steps(1) infinite;
 }
 
 .nf-code::after {
-  color: rgb(147 242 200 / 45%);
+  color: rgb(8 123 104 / 45%);
   clip-path: polygon(0 60%, 100% 60%, 100% 80%, 0 80%);
   animation: nf-glitch-b 6s steps(1) infinite;
 }
@@ -140,7 +140,7 @@
   background: linear-gradient(
     90deg,
     transparent,
-    rgb(147 242 200 / 20%),
+    rgb(8 123 104 / 20%),
     transparent
   );
 }
@@ -159,14 +159,14 @@
   gap: 8px;
   margin-bottom: 4px;
   padding-bottom: 6px;
-  border-bottom: 1px solid rgb(147 242 200 / 10%);
+  border-bottom: 1px solid rgb(8 123 104 / 10%);
 }
 
 .nf-terminal-dot {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #93f2c8;
+  background: #087b68;
   animation: nf-pulse 1.3s ease-in-out infinite;
   flex-shrink: 0;
 }
@@ -174,7 +174,7 @@
 .nf-terminal-label {
   font-size: 9px;
   letter-spacing: 0.3em;
-  color: rgb(147 242 200 / 50%);
+  color: rgb(8 123 104 / 50%);
   text-transform: uppercase;
 }
 
@@ -198,12 +198,12 @@
 }
 
 .nf-log-prefix {
-  color: rgb(147 242 200 / 35%);
+  color: rgb(8 123 104 / 35%);
   flex-shrink: 0;
   min-width: 66px;
 
   &--placeholder {
-    color: rgb(147 242 200 / 10%);
+    color: rgb(8 123 104 / 10%);
   }
 }
 
@@ -220,7 +220,7 @@
 }
 
 .nf-log-text.ok {
-  color: rgb(147 242 200 / 70%);
+  color: rgb(8 123 104 / 70%);
 }
 
 .nf-actions {
@@ -245,15 +245,15 @@
 }
 
 .nf-btn-primary {
-  background: rgb(147 242 200 / 10%);
-  color: #93f2c8;
-  outline: 1px solid rgb(147 242 200 / 30%);
+  background: rgb(8 123 104 / 10%);
+  color: #087b68;
+  outline: 1px solid rgb(8 123 104 / 30%);
 }
 
 .nf-btn-primary:hover {
-  background: rgb(147 242 200 / 18%);
-  outline-color: rgb(147 242 200 / 70%);
-  text-shadow: 0 0 8px rgb(147 242 200 / 60%);
+  background: rgb(8 123 104 / 18%);
+  outline-color: rgb(8 123 104 / 70%);
+  text-shadow: 0 0 8px rgb(8 123 104 / 60%);
 }
 
 .nf-btn-secondary {
@@ -313,7 +313,7 @@
   background: linear-gradient(
     90deg,
     transparent,
-    rgb(147 242 200 / 8%),
+    rgb(8 123 104 / 8%),
     transparent
   );
   animation: nf-skel-shimmer 2s ease-in-out infinite;

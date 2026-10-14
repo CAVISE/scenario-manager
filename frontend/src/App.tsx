@@ -9,6 +9,9 @@ import WorkspaceLayout from './pages/Workspace/WorkspaceLayout';
 import ScenariosPage from './pages/Workspace/ScenariosPage';
 import SettingsPage from './pages/Workspace/SettingsPage';
 import RunsPage from './pages/Workspace/RunsPage';
+import ExperimentCenterPage from './pages/Workspace/ExperimentCenterPage';
+import ReplayPage from './pages/Workspace/ReplayPage';
+import RunDetailsPage from './pages/Workspace/RunDetailsPage';
 import { AuthGate } from './features/auth';
 const Editor = lazy(() => import('./pages/Editor.tsx'));
 function App() {
@@ -21,6 +24,9 @@ function App() {
             <Route path="/scenarios" element={<ScenariosPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/runs" element={<RunsPage />} />
+            <Route path="/runs/:runId" element={<RunDetailsPage />} />
+            <Route path="/experiments" element={<ExperimentCenterPage />} />
+            <Route path="/replay" element={<ReplayPage />} />
           </Route>
           <Route
             path="/editor"

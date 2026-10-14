@@ -28,8 +28,8 @@
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgb(147 242 200 / 3.5%) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(147 242 200 / 3.5%) 1px, transparent 1px);
+    linear-gradient(rgb(8 123 104 / 3.5%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(8 123 104 / 3.5%) 1px, transparent 1px);
   background-size: 64px 64px;
   animation: sm-grid-scroll 10s linear infinite;
   pointer-events: none;
@@ -43,7 +43,7 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgb(147 242 200 / 55%) 50%,
+    rgb(8 123 104 / 55%) 50%,
     transparent 100%
   );
   animation: sm-scan 4s ease-in-out infinite;
@@ -59,29 +59,29 @@
 .sm-corner-tl {
   top: 28px;
   left: 28px;
-  border-top: 1px solid rgb(147 242 200 / 30%);
-  border-left: 1px solid rgb(147 242 200 / 30%);
+  border-top: 1px solid rgb(8 123 104 / 30%);
+  border-left: 1px solid rgb(8 123 104 / 30%);
 }
 
 .sm-corner-tr {
   top: 28px;
   right: 28px;
-  border-top: 1px solid rgb(147 242 200 / 30%);
-  border-right: 1px solid rgb(147 242 200 / 30%);
+  border-top: 1px solid rgb(8 123 104 / 30%);
+  border-right: 1px solid rgb(8 123 104 / 30%);
 }
 
 .sm-corner-bl {
   bottom: 28px;
   left: 28px;
-  border-bottom: 1px solid rgb(147 242 200 / 30%);
-  border-left: 1px solid rgb(147 242 200 / 30%);
+  border-bottom: 1px solid rgb(8 123 104 / 30%);
+  border-left: 1px solid rgb(8 123 104 / 30%);
 }
 
 .sm-corner-br {
   bottom: 28px;
   right: 28px;
-  border-bottom: 1px solid rgb(147 242 200 / 30%);
-  border-right: 1px solid rgb(147 242 200 / 30%);
+  border-bottom: 1px solid rgb(8 123 104 / 30%);
+  border-right: 1px solid rgb(8 123 104 / 30%);
 }
 
 .sm-loader-card {
@@ -110,7 +110,7 @@
 .sm-loader-subtitle {
   font-size: 10px;
   letter-spacing: 0.42em;
-  color: rgb(147 242 200 / 45%);
+  color: rgb(8 123 104 / 45%);
   text-transform: uppercase;
 }
 
@@ -128,7 +128,7 @@
   background: linear-gradient(
     90deg,
     transparent,
-    rgb(147 242 200 / 20%),
+    rgb(8 123 104 / 20%),
     transparent
   );
 }
@@ -161,13 +161,13 @@
   }
 
   &::-webkit-progress-value {
-    background: linear-gradient(90deg, #087b68, #93f2c8);
-    box-shadow: 0 0 8px rgb(147 242 200 / 50%);
+    background: linear-gradient(90deg, #087b68, #087b68);
+    box-shadow: 0 0 8px rgb(8 123 104 / 50%);
   }
 
   &::-moz-progress-bar {
-    background: linear-gradient(90deg, #087b68, #93f2c8);
-    box-shadow: 0 0 8px rgb(147 242 200 / 50%);
+    background: linear-gradient(90deg, #087b68, #087b68);
+    box-shadow: 0 0 8px rgb(8 123 104 / 50%);
   }
 }
 
@@ -192,7 +192,7 @@
 
 .sm-loader-status-text {
   font-size: 10px;
-  color: rgb(147 242 200 / 70%);
+  color: rgb(8 123 104 / 70%);
   letter-spacing: 0.07em;
   display: flex;
   align-items: center;
@@ -204,7 +204,7 @@
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #93f2c8;
+  background: #087b68;
   animation: sm-pulse 1.3s ease-in-out infinite;
   flex-shrink: 0;
 }
@@ -248,7 +248,7 @@
 
 .sm-loader-sys-icon {
   font-size: 9px;
-  color: #93f2c8;
+  color: #087b68;
   width: 10px;
   text-align: center;
 }

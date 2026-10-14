@@ -150,7 +150,11 @@ export default function RunsPage() {
                     {statusLabel[run.status]}
                   </span>
                   <div>
-                    <h2>{run.scenario_name || 'Untitled scenario'}</h2>
+                    <h2>
+                      <Link to={`/runs/${encodeURIComponent(run.run_id)}`}>
+                        {run.scenario_name || 'Untitled scenario'}
+                      </Link>
+                    </h2>
                     <p>
                       {run.map || 'Map not specified'} ·{' '}
                       {dateTime(run.modified_at)}
@@ -180,6 +184,12 @@ export default function RunsPage() {
                   ) : null}
                 </div>
                 <div className="workspace-run-card__actions">
+                  <Link
+                    className="workspace-secondary workspace-run-card__details"
+                    to={`/runs/${encodeURIComponent(run.run_id)}`}
+                  >
+                    Details
+                  </Link>
                   {cancellable ? (
                     <button
                       type="button"

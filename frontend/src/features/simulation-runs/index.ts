@@ -1,2 +1,7 @@
 export { useSimulationRuns } from './model/useSimulationRuns';
-export type { SimulationRun } from './types/simulationRunTypes';
+export type {
+  RunArtifact,
+  SimulationRun,
+  SimulationRunDetail,
+  SimulationRunStatus,
+} from './types/simulationRunTypes';

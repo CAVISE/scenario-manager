@@ -720,20 +720,20 @@
 }
 
 .rp-btn-primary {
-  background: var(--workspace-accent);
-  color: var(--workspace-surface);
-  border-color: var(--workspace-accent);
+  background: var(--workspace-primary-action);
+  color: var(--workspace-on-accent);
+  border-color: var(--workspace-primary-action);
 }
 
 .rp-btn-primary:hover {
-  background: var(--workspace-accent);
+  background: var(--workspace-primary-action-hover);
   filter: brightness(0.94);
 }
 
 .rp-btn-run {
   color: var(--workspace-on-accent);
-  background: var(--workspace-accent);
-  border-color: var(--workspace-accent);
+  background: var(--workspace-primary-action);
+  border-color: var(--workspace-primary-action);
 }
 
 .rp-btn-run:hover {

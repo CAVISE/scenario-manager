@@ -316,3 +316,149 @@
     display: none;
   }
 }
+
+.workspace-research-page {
+  display: grid;
+  gap: 24px;
+}
+
+.workspace-research-page .workspace-page-heading {
+  margin-bottom: 0;
+}
+
+.workspace-research-intro,
+.workspace-replay-stage {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+  padding: 24px;
+  border: 1px solid var(--workspace-border);
+  border-radius: 12px;
+  background: var(--workspace-surface);
+  box-shadow: var(--workspace-shadow);
+
+  > svg {
+    width: 40px;
+    height: 40px;
+    padding: 10px;
+    border-radius: 10px;
+    background: var(--workspace-accent-soft);
+    color: var(--workspace-accent);
+  }
+
+  strong,
+  h2,
+  p {
+    margin: 0;
+  }
+
+  strong,
+  h2 {
+    display: block;
+    font-size: 18px;
+  }
+
+  p {
+    max-width: 720px;
+    margin-top: 6px;
+    color: var(--workspace-muted);
+  }
+}
+
+.workspace-replay-stage {
+  min-height: 176px;
+  align-items: center;
+  background:
+    linear-gradient(115deg, var(--workspace-accent-soft), transparent 68%),
+    var(--workspace-surface);
+}
+
+.workspace-experiment-list,
+.workspace-replay-list {
+  display: grid;
+  gap: 12px;
+}
+
+.workspace-experiment-card,
+.workspace-replay-list article {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 24px;
+  padding: 20px;
+  border: 1px solid var(--workspace-border);
+  border-radius: 12px;
+  background: var(--workspace-surface);
+  box-shadow: 0 3px 14px rgb(13 66 60 / 6%);
+
+  h2,
+  p {
+    margin: 0;
+  }
+
+  h2 {
+    margin-top: 5px;
+    font-size: 17px;
+  }
+
+  p,
+  span {
+    margin-top: 4px;
+    color: var(--workspace-muted);
+    font-size: 13px;
+  }
+}
+
+.workspace-experiment-card dl {
+  display: flex;
+  gap: 22px;
+  margin: 0;
+
+  div {
+    display: grid;
+    gap: 1px;
+  }
+
+  dt {
+    color: var(--workspace-muted);
+    font-size: 12px;
+  }
+
+  dd {
+    margin: 0;
+    color: var(--workspace-accent);
+    font-size: 20px;
+    font-weight: 700;
+  }
+}
+
+.workspace-replay-list article {
+  grid-template-columns: minmax(0, 1fr) auto;
+
+  > div {
+    display: grid;
+    min-width: 0;
+  }
+
+  strong,
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@media (width <= 700px) {
+  .workspace-research-intro,
+  .workspace-replay-stage,
+  .workspace-experiment-card,
+  .workspace-replay-list article {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .workspace-experiment-card dl {
+    gap: 34px;
+  }
+}
