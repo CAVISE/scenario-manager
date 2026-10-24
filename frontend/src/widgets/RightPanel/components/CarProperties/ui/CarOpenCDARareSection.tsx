@@ -15,6 +15,7 @@ import { OpenCDACollapsibleSection } from '@/features/simulation-config';
 import { parseNumberInputChange } from '@/shared/utils/numberInputUtils';
 import { numInputSlot } from '@/shared/utils/numberInputUtils';
 import type { CarSectionProps } from '../types/CarPropertiesTypes';
+import { CarOpenCDASensingFields } from './CarOpenCDASensingFields';
 import '../styles/CarPropertiesSections.scss';
 export default function CarOpenCDARareSection({ car }: CarSectionProps) {
   const updateCar = useEditorStore((s) => s.updateCar);
@@ -23,7 +24,7 @@ export default function CarOpenCDARareSection({ car }: CarSectionProps) {
   );
   const sensing = car.opencda_sensing ?? {};
 
-  const setSensing = (patch: NonNullable<Car['opencda_sensing']>) => {
+  const setSensing = (patch: Partial<NonNullable<Car['opencda_sensing']>>) => {
     updateCar(car.id, {
       opencda_sensing: { ...sensing, ...patch },
     });
@@ -114,111 +115,10 @@ export default function CarOpenCDARareSection({ car }: CarSectionProps) {
             />
 
             {car.opencda_sensing != null && (
-              <Stack
-                spacing={1}
-                className="car-properties-section__nested-compact"
-              >
-                <FormControlLabel
-                  control={
-                    <Switch
-                      size="small"
-                      checked={sensing.perception_activate ?? false}
-                      onChange={(e) =>
-                        setSensing({ perception_activate: e.target.checked })
-                      }
-                    />
-                  }
-                  label="perception.activate"
-                />
-                <FormControl>
-                  <FormLabel className="car-properties-section__label">
-                    camera.visualize
-                  </FormLabel>
-                  <Input
-                    size="small"
-                    type="number"
-                    slotProps={numInputSlot}
-                    value={sensing.camera_visualize ?? ''}
-                    placeholder="default"
-                    onChange={(e) =>
-                      setSensing({
-                        camera_visualize: e.target.value
-                          ? parseNumberInputChange(e.target)
-                          : undefined,
-                      })
-                    }
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel className="car-properties-section__label">
-                    camera.num
-                  </FormLabel>
-                  <Input
-                    size="small"
-                    type="number"
-                    slotProps={numInputSlot}
-                    value={sensing.camera_num ?? ''}
-                    placeholder="default"
-                    onChange={(e) =>
-                      setSensing({
-                        camera_num: e.target.value
-                          ? parseNumberInputChange(e.target)
-                          : undefined,
-                      })
-                    }
-                  />
-                </FormControl>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      size="small"
-                      checked={sensing.lidar_visualize ?? false}
-                      onChange={(e) =>
-                        setSensing({ lidar_visualize: e.target.checked })
-                      }
-                    />
-                  }
-                  label="lidar.visualize"
-                />
-                <FormControl>
-                  <FormLabel className="car-properties-section__label">
-                    lidar.channels
-                  </FormLabel>
-                  <Input
-                    size="small"
-                    type="number"
-                    slotProps={numInputSlot}
-                    value={sensing.lidar_channels ?? ''}
-                    placeholder="default"
-                    onChange={(e) =>
-                      setSensing({
-                        lidar_channels: e.target.value
-                          ? parseNumberInputChange(e.target)
-                          : undefined,
-                      })
-                    }
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel className="car-properties-section__label">
-                    lidar.range (m)
-                  </FormLabel>
-                  <Input
-                    size="small"
-                    type="number"
-                    slotProps={numInputSlot}
-                    value={sensing.lidar_range ?? ''}
-                    placeholder="default"
-                    onChange={(e) =>
-                      setSensing({
-                        lidar_range: e.target.value
-                          ? parseNumberInputChange(e.target)
-                          : undefined,
-                      })
-                    }
-                  />
-                </FormControl>
-              </Stack>
+              <CarOpenCDASensingFields
+                sensing={sensing}
+                onUpdate={setSensing}
+              />
             )}
           </>
         )}

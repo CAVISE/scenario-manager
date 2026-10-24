@@ -18,6 +18,7 @@ import { createTransformListener } from '../../createEvents/createTransformListe
 import { createHistoryTracker } from '../../createEvents/createHistoryTracker';
 import { createThreeSetup } from '../../useOpenDriveUtils/useThreeSetup';
 import { useEditorRefs } from '@editor/context';
+import { isLargeXodrSelected } from '../hooks/useOdrLoader/utils/xodrRepository';
 
 export function useThreeScene({
   updateSceneGraph,
@@ -120,7 +121,10 @@ export function useThreeScene({
   useSceneAnimator({
     getOdrMeshes,
     getOpenDriveMap: () => setMapRef.current,
-    spotlightEnabled: () => true,
+    // The picking pass renders the full road geometry three more times after
+    // every mouse move. It makes the large OSM map unresponsive, while the
+    // normal map rendering and editor controls remain available.
+    spotlightEnabled: () => !isLargeXodrSelected(),
   });
   useEffect(() => {
     if (!threeReady) return;

@@ -1,11 +1,11 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import CarProperties from '../components/CarProperties';
 import LidarProperties from '../components/LidarProperties';
 import RSUProperties from '../components/RSUProperties';
 import BuildingProperties from '../components/BuildingProperties';
 import RoutePointProperties from '../components/RoutePointProperties';
-import type { RightPanelProps, SectionProps } from '../types/PanelTypes';
+import type { RightPanelProps } from '../types/PanelTypes';
 import '../styles/RightPanel.scss';
 import PedestrianProperties from '../components/PedestrianProperties';
 import { useEditorStore } from '@/store';
@@ -21,40 +21,10 @@ import {
 } from '../context/PropertiesModeContext';
 import { WorkspaceContent } from '../components/WorkspaceContent';
 import { NearMeOutlined } from '@mui/icons-material';
-
-const Section: React.FC<SectionProps> = ({
-  label,
-  children,
-  defaultOpen = true,
-}) => {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-  const sectionId = useId();
-
-  return (
-    <div className="rp-section">
-      <button
-        type="button"
-        className="rp-section-header"
-        aria-expanded={isOpen}
-        aria-controls={sectionId}
-        onClick={() => setIsOpen((v) => !v)}
-      >
-        <span className="rp-section-label">{label}</span>
-        <span
-          aria-hidden="true"
-          className={`rp-section-chevron ${isOpen ? 'open' : ''}`}
-        >
-          ▼
-        </span>
-      </button>
-      {isOpen && (
-        <div id={sectionId} className="rp-section-content">
-          {children}
-        </div>
-      )}
-    </div>
-  );
-};
+import { CollapsibleSection } from '../components/CollapsibleSection';
+import { RightPanelHeader } from '../components/RightPanelHeader';
+import { ObjectQuickActions } from '../components/ObjectQuickActions';
+import { RightPanelFooter } from '../components/RightPanelFooter';
 
 export default function RightPanel({
   activeTab = 'edit',
@@ -91,13 +61,15 @@ export default function RightPanel({
     isPedestrian,
     pedestrian,
   } = useSelectedObject();
+  const selectedObjectId = selectedIds[0];
+  const supportsAdvancedProperties = isCar || isRSU || isLidar || isPedestrian;
+
+  useEffect(() => {
+    setPropertiesMode('basic');
+  }, [selectedIds.length, selectedObjectId]);
 
   const onDeleteSelected = () =>
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete' }));
-  const dispatchObjectAction = (name: string) => {
-    const id = selectedIds[0];
-    if (id) window.dispatchEvent(new CustomEvent(name, { detail: { id } }));
-  };
   return (
     <>
       <button
@@ -118,43 +90,12 @@ export default function RightPanel({
         className={`rp-root ${collapsed ? 'collapsed' : ''}`}
         aria-hidden={collapsed}
       >
-        <div className="rp-header">
-          <div className="rp-header-row">
-            <span className="rp-title">
-              {activeTab === 'edit'
-                ? 'Inspector'
-                : activeTab === 'simulation'
-                  ? 'Simulation'
-                  : 'Results'}
-            </span>
-            <span className="rp-badge">V2X</span>
-          </div>
-          <div className="rp-subtitle">
-            {scenarioName || 'Untitled scenario'}
-          </div>
-          {activeTab === 'edit' && (
-            <div
-              className="rp-panel-switcher"
-              role="group"
-              aria-label="Inspector view"
-            >
-              <button
-                type="button"
-                aria-pressed={panelMode === 'properties'}
-                onClick={() => setPanelMode('properties')}
-              >
-                Properties
-              </button>
-              <button
-                type="button"
-                aria-pressed={panelMode === 'context'}
-                onClick={() => setPanelMode('context')}
-              >
-                Context
-              </button>
-            </div>
-          )}
-        </div>
+        <RightPanelHeader
+          activeTab={activeTab}
+          scenarioName={scenarioName}
+          panelMode={panelMode}
+          onPanelModeChange={setPanelMode}
+        />
 
         <div
           className="rp-body"
@@ -176,12 +117,12 @@ export default function RightPanel({
           ) : activeTab === 'edit' ? (
             <>
               {showSceneGraph && (
-                <Section label="Objects">
+                <CollapsibleSection label="Objects">
                   <SceneTreePanel readOnly={readOnly} />
-                </Section>
+                </CollapsibleSection>
               )}
 
-              <Section label="Properties">
+              <CollapsibleSection label="Properties">
                 {selectedIds.length > 0 && (
                   <div className="rp-properties-toolbar">
                     <div className="rp-properties-heading">
@@ -192,33 +133,46 @@ export default function RightPanel({
                         </span>
                       )}
                     </div>
-                    <div
-                      className="rp-properties-tabs"
-                      role="group"
-                      aria-label="Property detail level"
-                    >
-                      {(['basic', 'advanced'] as PropertiesMode[]).map(
-                        (mode) => (
-                          <button
-                            key={mode}
-                            type="button"
-                            aria-pressed={propertiesMode === mode}
-                            className={propertiesMode === mode ? 'active' : ''}
-                            onClick={() => setPropertiesMode(mode)}
-                          >
-                            {mode === 'basic' ? 'Basic' : 'Advanced'}
-                          </button>
-                        )
-                      )}
-                    </div>
+                    {supportsAdvancedProperties && (
+                      <>
+                        <div
+                          className="rp-properties-tabs"
+                          role="group"
+                          aria-label="Property detail level"
+                        >
+                          {(['basic', 'advanced'] as PropertiesMode[]).map(
+                            (mode) => (
+                              <button
+                                key={mode}
+                                type="button"
+                                aria-pressed={propertiesMode === mode}
+                                className={
+                                  propertiesMode === mode ? 'active' : ''
+                                }
+                                onClick={() => setPropertiesMode(mode)}
+                              >
+                                {mode === 'basic' ? 'Essentials' : 'Advanced'}
+                              </button>
+                            )
+                          )}
+                        </div>
+                        <p className="rp-properties-hint">
+                          {propertiesMode === 'basic'
+                            ? 'Common settings for this object.'
+                            : 'Runtime, sensing, and integration settings.'}
+                        </p>
+                      </>
+                    )}
                   </div>
                 )}
 
-                {propertiesMode === 'advanced' && selectedIds.length === 1 && (
-                  <div className="rp-context-id">
-                    Object ID: {selectedIds[0]}
-                  </div>
-                )}
+                {propertiesMode === 'advanced' &&
+                  supportsAdvancedProperties &&
+                  selectedIds.length === 1 && (
+                    <div className="rp-context-id">
+                      Object ID: {selectedIds[0]}
+                    </div>
+                  )}
                 {selectedIds.length > 1 ? (
                   <MultiSelectionProperties
                     readOnly={readOnly || controls.isBusy}
@@ -278,33 +232,14 @@ export default function RightPanel({
                     </PropertiesModeContext.Provider>
                   </fieldset>
                 )}
-              </Section>
+              </CollapsibleSection>
 
               {hasSelection && selectedIds.length === 1 && (
-                <Section label="Quick Actions" defaultOpen={true}>
-                  <div className="rp-quick-actions">
-                    <button
-                      type="button"
-                      className="rp-quick-action"
-                      onClick={() =>
-                        dispatchObjectAction('editor-focus-object')
-                      }
-                    >
-                      <span aria-hidden="true">⌖</span>
-                      Focus on object
-                    </button>
-                    <button
-                      type="button"
-                      className="rp-quick-action"
-                      onClick={() =>
-                        dispatchObjectAction('editor-show-in-scene-graph')
-                      }
-                    >
-                      <span aria-hidden="true">☷</span>
-                      Show in Scene Graph
-                    </button>
-                  </div>
-                </Section>
+                <CollapsibleSection label="Quick Actions" defaultOpen={true}>
+                  {selectedObjectId && (
+                    <ObjectQuickActions objectId={selectedObjectId} />
+                  )}
+                </CollapsibleSection>
               )}
             </>
           ) : (
@@ -323,22 +258,7 @@ export default function RightPanel({
           )}
         </div>
 
-        <div className="rp-footer">
-          <span>
-            {readOnly ? 'Simulation running · View only' : 'Scenario Manager'}
-          </span>
-          <span
-            className={`rp-connection${connected ? ' connected' : ''}`}
-            title={
-              connected
-                ? 'Live status connected'
-                : 'Reconnecting to status channel'
-            }
-          >
-            <span className="rp-footer-dot" />
-            {connected ? 'Connected' : 'Reconnecting'}
-          </span>
-        </div>
+        <RightPanelFooter readOnly={readOnly} connected={connected} />
       </div>
       <SimConfigModal
         open={simConfigOpen && !readOnly && !controls.isBusy}

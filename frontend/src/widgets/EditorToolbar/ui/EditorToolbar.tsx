@@ -6,8 +6,6 @@ import { Menu as MenuIcon } from '@mui/icons-material';
 import { Settings as SettingsIcon } from '@mui/icons-material';
 import { Download as DownloadIcon } from '@mui/icons-material';
 import { Security as SecurityIcon } from '@mui/icons-material';
-import { Undo as UndoIcon } from '@mui/icons-material';
-import { Redo as RedoIcon } from '@mui/icons-material';
 import { BugReport as BugReportIcon } from '@mui/icons-material';
 import FileMenu from '../menus';
 import ExportMenu from '../menus/ExportMenu';
@@ -18,11 +16,8 @@ import type {
 import { downloadFile } from '@scenario-export';
 import { useHistoryActions } from '@editor/hooks/createEvents/useHistoryActions';
 import { useEditorStore } from '@/store';
-import AttackConfigModal from '@/features/attack-config';
-import UploadScenariosModal from '@/features/scenario-upload';
-import ExportDialog from '../dialogs';
-import ErrorLogModal from '@/features/error-log';
-import SimConfigModal from '@/features/simulation-config';
+import { EditorToolbarDialogs } from './EditorToolbarDialogs';
+import { EditorToolbarHistoryControls } from './EditorToolbarHistoryControls';
 
 function sanitizeDownloadFilename(name: string, fallback: string): string {
   const t = name.trim() || fallback;
@@ -138,32 +133,13 @@ export const EditorToolbar = ({
         />
       </div>
 
-      <div className="editor-toolbar__group editor-toolbar__group--separated">
-        <Tooltip title="Undo (Ctrl+Z)">
-          <span>
-            <IconButton
-              size="small"
-              aria-label="Undo"
-              onClick={() => undo()}
-              disabled={readOnly || !canUndo}
-            >
-              <UndoIcon fontSize="small" />
-            </IconButton>
-          </span>
-        </Tooltip>
-        <Tooltip title="Redo (Ctrl+Shift+Z)">
-          <span>
-            <IconButton
-              size="small"
-              aria-label="Redo"
-              onClick={() => redo()}
-              disabled={readOnly || !canRedo}
-            >
-              <RedoIcon fontSize="small" />
-            </IconButton>
-          </span>
-        </Tooltip>
-      </div>
+      <EditorToolbarHistoryControls
+        readOnly={readOnly}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        onUndo={undo}
+        onRedo={redo}
+      />
 
       <div className="editor-toolbar__group">
         <Tooltip title="Error log">
@@ -215,28 +191,21 @@ export const EditorToolbar = ({
         {isSaving ? 'Saving…' : 'Save'}
       </Button>
 
-      <UploadScenariosModal
-        open={uploadModalOpen && !readOnly}
-        onClose={() => setUploadModalOpen(false)}
-      />
-      <SimConfigModal
-        open={simConfigOpen && !readOnly}
-        onClose={() => setSimConfigOpen(false)}
-      />
-      <AttackConfigModal
-        open={attackConfigOpen && !readOnly}
-        onClose={() => setAttackConfigOpen(false)}
-      />
-      <ErrorLogModal
-        open={errorLogOpen}
-        onClose={() => setErrorLogOpen(false)}
-      />
-      <ExportDialog
-        open={Boolean(pendingExport)}
-        filename={exportFilename}
+      <EditorToolbarDialogs
+        readOnly={readOnly}
+        uploadModalOpen={uploadModalOpen}
+        simConfigOpen={simConfigOpen}
+        attackConfigOpen={attackConfigOpen}
+        errorLogOpen={errorLogOpen}
+        pendingExport={pendingExport}
+        exportFilename={exportFilename}
+        onCloseUpload={() => setUploadModalOpen(false)}
+        onCloseSimConfig={() => setSimConfigOpen(false)}
+        onCloseAttackConfig={() => setAttackConfigOpen(false)}
+        onCloseErrorLog={() => setErrorLogOpen(false)}
         onFilenameChange={setExportFilename}
-        onConfirm={confirmExportDownload}
-        onClose={closeExportDialog}
+        onConfirmExport={confirmExportDownload}
+        onCloseExport={closeExportDialog}
       />
     </div>
   );

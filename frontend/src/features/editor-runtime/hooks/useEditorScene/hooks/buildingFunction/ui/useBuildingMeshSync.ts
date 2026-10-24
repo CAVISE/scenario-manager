@@ -1,9 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { useEditorStore } from '@/store';
 import type { Building } from '@/entities/building';
 import { useHooks, useEditorRefs } from '@editor/context';
 import { disposeMesh } from '@right-panel/components/SceneTreePanel/funcs/sceneUtils';
+import { invalidateEditorScene } from '@editor/lib/invalidateEditorScene';
 
 export function useBuildingMeshSync(): void {
   const buildings = useEditorStore((s) => s.buildings);
@@ -12,15 +13,17 @@ export function useBuildingMeshSync(): void {
     useEditorRefs();
   const lastSyncedBuildingsRef = useRef<Map<string, Building>>(new Map());
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
     const trySync = (attempts = 0) => {
       const scene = sceneRef.current;
       const model = buildingModelRef.current;
 
       if (!scene || !model) {
-        if (attempts < 20) setTimeout(() => trySync(attempts + 1), 100);
+        if (attempts < 20)
+          retryTimer = setTimeout(() => trySync(attempts + 1), 100);
         return;
       }
       if (cancelled) return;
@@ -42,11 +45,15 @@ export function useBuildingMeshSync(): void {
         structuralChange = true;
         return false;
       });
+      const meshesById = new Map(
+        buildingMeshesRef.current.map((mesh) => [
+          mesh.userData.id as string,
+          mesh,
+        ])
+      );
 
       currentBuildings.forEach((building) => {
-        const existing = buildingMeshesRef.current.find(
-          (m) => m.userData.id === building.id
-        );
+        const existing = meshesById.get(building.id);
 
         if (existing) {
           if (lastSyncedBuildingsRef.current.get(building.id) === building)
@@ -69,17 +76,20 @@ export function useBuildingMeshSync(): void {
         scene.add(mesh);
 
         buildingMeshesRef.current.push(mesh);
+        meshesById.set(building.id, mesh);
         lastSyncedBuildingsRef.current.set(building.id, building);
         structuralChange = true;
       });
 
       if (structuralChange) updateSceneGraph();
+      invalidateEditorScene();
     };
 
     trySync();
 
     return () => {
       cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [buildings, updateSceneGraph]);

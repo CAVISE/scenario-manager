@@ -11,17 +11,19 @@ export function useClickHandler(ctx: SharedMouseContext) {
     transformControlsRef,
     cameraRef,
     roadMeshRef,
-    carMeshesRef,
-    routePointMeshesRef,
     modeRef,
     currentCarRef,
     currentColorRef,
-    rsuMeshesRef,
-    pedestrianMeshesRef,
+    pickableObjectsRef,
+    isDraggingRef,
   } = useEditorRefs();
 
   return useCallback((event: MouseEvent) => {
     if (!ctx.insideEditorCanvas(event)) return;
+    // `click` fires after TransformControls' pointer-up. Keep the selected
+    // object intact instead of treating the release over a gizmo as a blank
+    // canvas click and clearing the selection.
+    if (isDraggingRef.current) return;
     const tc = transformControlsRef.current;
     const scene = sceneRef.current;
     const camera = cameraRef.current;
@@ -36,14 +38,11 @@ export function useClickHandler(ctx: SharedMouseContext) {
     const mode = modeRef.current;
 
     if (mode.isAddCarModeActive && !readOnly && road) {
-      const hits = ctx.raycaster.intersectObjects(
-        [...carMeshesRef.current, road],
-        true
-      );
-      if (hits[0]?.object === road) {
+      const [roadHit] = ctx.raycaster.intersectObject(road, true);
+      if (roadHit) {
         if (!currentCarRef.current)
           currentCarRef.current = 'car_' + Math.floor(Math.random() * 1000);
-        const point = hits[0].point;
+        const point = roadHit.point;
         state.addCar(
           point.x,
           point.y,
@@ -82,25 +81,21 @@ export function useClickHandler(ctx: SharedMouseContext) {
       if (!readOnly && selection.length === 1 && selection[0].id === id)
         tc.attach(object);
     };
-    const lidarMeshes: THREE.Object3D[] = [];
-    carMeshesRef.current.forEach((car) =>
-      car.traverse((child) => {
-        if (
-          child.userData.type === 'lidar' &&
-          child.parent?.userData.type !== 'lidar'
-        )
-          lidarMeshes.push(child);
-      })
+    const startedAt = import.meta.env.DEV ? performance.now() : 0;
+    const hits = ctx.raycaster.intersectObjects(
+      pickableObjectsRef.current,
+      true
     );
-    const candidates = [
-      ...lidarMeshes,
-      ...carMeshesRef.current,
-      ...rsuMeshesRef.current,
-      ...routePointMeshesRef.current.flat(),
-      ...pedestrianMeshesRef.current,
-      ...scene.children.filter((object) => object.userData.type === 'building'),
-    ];
-    const hits = ctx.raycaster.intersectObjects(candidates, true);
+    if (import.meta.env.DEV) {
+      const monitor = (
+        window as Window & {
+          __editorPerformanceMetrics?: {
+            recordSelection: (durationMs: number) => void;
+          };
+        }
+      ).__editorPerformanceMetrics;
+      monitor?.recordSelection(performance.now() - startedAt);
+    }
     if (hits.length) {
       let root = hits[0].object;
       while (

@@ -13,6 +13,7 @@ import {
 } from '../utils/opencdaFieldUtils';
 import { SimulationConfig } from '@/store';
 import type { SumoConnectionSectionProps } from '../types/opencdaSectionTypes';
+import { SumoQuickPresets } from './SumoQuickPresets';
 
 export const SUMOSection = ({
   host,
@@ -196,41 +197,12 @@ export const SUMOSection = ({
         {gui ? '✅ Enabled' : '❌ Disabled'}
       </Typography>
 
-      <Stack className="sim-config-quick-presets" direction="row" spacing={1}>
-        <Typography variant="caption" color="text.secondary">
-          Quick presets:
-        </Typography>
-        <Typography
-          variant="caption"
-          className="sim-config-preset"
-          onClick={() => {
-            updateField('sumo_host', 'localhost');
-            updateField('sumo_port', 8813);
-          }}
-        >
-          localhost:8813
-        </Typography>
-        <Typography
-          variant="caption"
-          className="sim-config-preset"
-          onClick={() => {
-            updateField('sumo_host', '127.0.0.1');
-            updateField('sumo_port', 8813);
-          }}
-        >
-          127.0.0.1:8813
-        </Typography>
-        <Typography
-          variant="caption"
-          className="sim-config-preset"
-          onClick={() => {
-            updateField('sumo_host', 'localhost');
-            updateField('sumo_port', 8814);
-          }}
-        >
-          localhost:8814
-        </Typography>
-      </Stack>
+      <SumoQuickPresets
+        onSelect={(presetHost, presetPort) => {
+          updateField('sumo_host', presetHost);
+          updateField('sumo_port', presetPort);
+        }}
+      />
     </Stack>
   );
 };

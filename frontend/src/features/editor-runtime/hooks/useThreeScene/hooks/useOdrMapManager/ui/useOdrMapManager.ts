@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 import * as THREE from 'three';
 
 import { clearScene } from '../utils/clearScene';
@@ -7,6 +7,7 @@ import { restoreLidars } from '@editor/scene/loaders/restoreLidars';
 import {
   UseOdrMapManagerProps,
   UseOdrMapManagerResult,
+  PreparedOdrGeometryCache,
 } from '../types/useOdrMapManagerTypes';
 import {
   EMPTY_ODR_MESHES,
@@ -22,7 +23,20 @@ import {
   OpenDriveModule,
 } from '@editor/hooks/useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
 import { OpenDriveMapInstance } from '@editor/types/editorTypes';
-import { createOdrMaterials } from '@editor/hooks/useOpenDriveUtils/useOdrMap';
+import {
+  createOdrMaterials,
+  disposeOdrMaterials,
+} from '@editor/hooks/useOpenDriveUtils/useOdrMap';
+import {
+  getCachedXodrContent,
+  isLargeXodrSelected,
+} from '../../useOdrLoader/utils/xodrRepository';
+import { prepareOdrGeometryInWorker } from '../utils/prepareOdrGeometryInWorker';
+import type { PreparedOdrGeometry } from '@editor/types/odrGeometryTypes';
+
+// The full-resolution mesh of this OSM export is too large to build on the
+// browser main thread. Keep the normal resolution for every other map.
+const LARGE_XODR_RESOLUTION = 2;
 
 export function useOdrMapManager({
   setStep,
@@ -49,6 +63,24 @@ export function useOdrMapManager({
   const disposableGeometriesRef = useRef<THREE.BufferGeometry[]>([]);
   const moduleRef = useRef<OpenDriveModule | null>(null);
   const mapRef = useRef<OpenDriveMapInstance | null>(null);
+  const mapBuildRequestRef = useRef(0);
+  const preparedGeometryCacheRef = useRef<PreparedOdrGeometryCache | null>(
+    null
+  );
+  const geometryPreparationAbortRef = useRef<AbortController | null>(null);
+  const lidarRestoreTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+
+  useEffect(() => {
+    return () => {
+      mapBuildRequestRef.current += 1;
+      geometryPreparationAbortRef.current?.abort();
+      if (lidarRestoreTimerRef.current)
+        clearTimeout(lidarRestoreTimerRef.current);
+      disposeOdrMaterials(odrMaterials);
+    };
+  }, [odrMaterials]);
 
   const loadOdrMap = useCallback(
     (clearMap = true, fitView = true) => {
@@ -73,53 +105,108 @@ export function useOdrMapManager({
         });
       }
 
-      try {
-        buildMap({
-          three,
-          Module,
-          OdrMap,
-          odrMaterials,
-          disposableGeometries: disposableGeometriesRef.current,
-          odrMeshesRef,
-          carMeshesRef,
-          clearMap,
-          fitView,
-          resolution: ODR_PARAMS.resolution,
-          params: {
-            ref_line: ODR_PARAMS.ref_line,
-            roadmarks: ODR_PARAMS.roadmarks,
-            view_mode: ODR_PARAMS.view_mode,
-          },
-          syncRoutePointMeshes,
-          syncRoadMesh,
-          updateSceneGraph,
-          buildingMeshesRef,
+      const isLargeMap = isLargeXodrSelected();
+      const resolution = isLargeMap
+        ? LARGE_XODR_RESOLUTION
+        : ODR_PARAMS.resolution;
+      const requestId = ++mapBuildRequestRef.current;
+      geometryPreparationAbortRef.current?.abort();
+      geometryPreparationAbortRef.current = null;
+      const buildScene = (preparedGeometry?: PreparedOdrGeometry) => {
+        if (requestId !== mapBuildRequestRef.current) return;
+
+        try {
+          buildMap({
+            three,
+            Module,
+            OdrMap,
+            odrMaterials,
+            disposableGeometries: disposableGeometriesRef.current,
+            odrMeshesRef,
+            carMeshesRef,
+            clearMap,
+            fitView,
+            resolution,
+            params: {
+              ref_line: ODR_PARAMS.ref_line,
+              roadmarks: ODR_PARAMS.roadmarks,
+              view_mode: ODR_PARAMS.view_mode,
+            },
+            syncRoutePointMeshes,
+            syncRoadMesh,
+            updateSceneGraph,
+            buildingMeshesRef,
+            preparedGeometry,
+          });
+        } catch (err) {
+          console.error(err);
+          setStep('done');
+          setError?.(
+            err instanceof Error ? err : new Error('Failed to build map scene')
+          );
+          return;
+        }
+
+        if (lidarRestoreTimerRef.current)
+          clearTimeout(lidarRestoreTimerRef.current);
+        lidarRestoreTimerRef.current = setTimeout(() => {
+          lidarRestoreTimerRef.current = null;
+          if (requestId !== mapBuildRequestRef.current) return;
+          restoreLidars({ carMeshesRef, updateSceneGraph });
+        }, 100);
+        odrMapRef.current = mapRef.current;
+        try {
+          three.renderer.compile(three.scene, three.camera);
+        } catch (err) {
+          console.error('renderer.compile failed:', err);
+        }
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            if (requestId === mapBuildRequestRef.current) setStep('done');
+          });
         });
-      } catch (err) {
-        console.error(err);
-        setStep('done');
-        setError?.(
-          err instanceof Error ? err : new Error('Failed to build map scene')
-        );
+      };
+
+      const xodr = getCachedXodrContent();
+      if (isLargeMap && xodr) {
+        const cachedGeometry = preparedGeometryCacheRef.current;
+        if (
+          cachedGeometry?.xodr === xodr &&
+          cachedGeometry.resolution === resolution
+        ) {
+          buildScene(cachedGeometry.geometry);
+          return;
+        }
+
+        const abortController = new AbortController();
+        geometryPreparationAbortRef.current = abortController;
+        void prepareOdrGeometryInWorker(
+          { xodr, resolution },
+          abortController.signal
+        )
+          .then((geometry) => {
+            if (requestId !== mapBuildRequestRef.current) return;
+            preparedGeometryCacheRef.current = { xodr, resolution, geometry };
+            buildScene(geometry);
+          })
+          .catch((err) => {
+            if (abortController.signal.aborted) return;
+            console.warn(
+              '[OdrMapManager] worker preparation failed; using main-thread fallback',
+              err
+            );
+            buildScene();
+          })
+          .finally(() => {
+            if (geometryPreparationAbortRef.current === abortController) {
+              geometryPreparationAbortRef.current = null;
+            }
+          });
         return;
       }
 
-      setTimeout(() => restoreLidars({ carMeshesRef, updateSceneGraph }), 100);
-      odrMapRef.current = mapRef.current;
-      console.log('[OdrMapManager] loadOdrMap finished, calling setStep done');
-      console.log('X offset: ', mapRef?.current?.x_offs);
-      console.log('Y offset: ', mapRef?.current?.y_offs);
-      try {
-        three.renderer.compile(three.scene, three.camera);
-      } catch (err) {
-        console.error('renderer.compile failed:', err);
-      }
-
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setStep('done');
-        });
-      });
+      buildScene();
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [

@@ -1,37 +1,24 @@
-import { useState, useCallback, useEffect } from 'react';
-import {
-  Alert,
-  Box,
-  Button,
-  List,
-  ListItemButton,
-  ListItemText,
-  Modal,
-  Typography,
-} from '@mui/material';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { Alert, Box, Button, Modal, Typography } from '@mui/material';
 import { CheckCircleOutline as CheckCircleOutlineIcon } from '@mui/icons-material';
-import { MapOutlined as MapOutlinedIcon } from '@mui/icons-material';
 
 import {
-  CARLA_MAPS,
-  fetchXodrText,
   getStoredXodrName,
   resolveXodrTextForSimulation,
-  setStoredXodrName,
 } from '@editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
 import { useEditorRefs, useHooks } from '@editor/context';
-
 import { getApiErrorMessage } from '@/api/errors';
 import { validateStartSimulationPayload } from '@/api/scenarioValidation';
 import { ScenarioGroup } from '@/api/types/IScenarioTypes';
 import TelemetryModal from '@/shared/ui/TelemetryModal';
 import { buildScenarioPayload } from '@right-panel/components/ScenarioControlWidget/Handlers';
-import { clearLoadedSumoNetwork } from '@scenario-export';
 import { buildOpenCDAArtifact } from '@scenario-export';
 import { useStartSimulationMutation } from '@editor/hooks/useApiHooks/useSimulationMutation';
 import { StartSimulationPayload } from '@editor/hooks/useApiHooks/useSimulationMutation/types/useSimulationMutationTypes';
 import { useEditorStore } from '@/store';
 import { useAppToast } from '@/shared/ui/AppToast';
+import { MapPickerModal } from './MapPickerModal';
+import { useMapSelection } from '../hooks/useMapSelection';
 import '../styles/EditorModals.scss';
 
 export default function EditorModals() {
@@ -43,6 +30,7 @@ export default function EditorModals() {
   const [simulationError, setSimulationError] = useState<string | null>(null);
   const [mapPickerError, setMapPickerError] = useState<string | null>(null);
   const [loadingMap, setLoadingMap] = useState<string | null>(null);
+  const startRequestRef = useRef(0);
   const startSimulationMutation = useStartSimulationMutation();
   const toast = useAppToast();
   const updateSimConfigCarla = useEditorStore((s) => s.updateSimConfigCarla);
@@ -52,63 +40,51 @@ export default function EditorModals() {
   const updateScenario = useEditorStore((s) => s.updateScenario);
   const { loadFile } = useHooks();
   const { odrMapRef } = useEditorRefs();
-
+  const { handleSelectMap, invalidate: invalidateMapSelection } =
+    useMapSelection({
+      loadFile,
+      updateSimConfigCarla,
+      updateScenario,
+      setSceneExplicitlyCleared,
+      toastSuccess: toast.success,
+      setMapPickerOpen,
+      setMapPickerError,
+      setLoadingMap,
+    });
   useEffect(() => {
     if (typeof window === 'undefined') {
       return;
     }
-
     window.editorModals = {
       openTelemetry: () => setTelemetryModalOpen(true),
       openSimulation: () => setSimulationConfirmOpen(true),
       openMapPicker: () => setMapPickerOpen(true),
     };
-
     return () => {
+      invalidateMapSelection();
+      startRequestRef.current += 1;
       delete (window as Window).editorModals;
     };
-  }, []);
-  const handleSelectMap = useCallback(
-    async (mapName: string) => {
-      setMapPickerError(null);
-      setLoadingMap(mapName);
-      try {
-        const xodrName = setStoredXodrName(mapName);
-        const xodrText = await fetchXodrText(xodrName);
-        updateSimConfigCarla({ map: mapName });
-        clearLoadedSumoNetwork();
-        loadFile(xodrText, true);
-
-        updateScenario({ id: '' });
-
-        setSceneExplicitlyCleared(true);
-        setMapPickerOpen(false);
-        toast.success(`Map ${mapName} loaded.`);
-      } catch (err) {
-        console.error(err);
-        setMapPickerError(
-          await getApiErrorMessage(err, `Failed to load map ${mapName}.`)
-        );
-      } finally {
-        setLoadingMap(null);
-      }
-    },
-    [
-      loadFile,
-      setSceneExplicitlyCleared,
-      toast,
-      updateSimConfigCarla,
-      updateScenario,
-    ]
-  );
+  }, [invalidateMapSelection]);
 
   const handleStart = useCallback(async () => {
+    if (startRequestRef.current || startSimulationMutation.isPending) return;
+    const requestId = ++startRequestRef.current;
     setSimulationError(null);
 
     const state = useEditorStore.getState();
     const scenario = state.Scenario;
     const mapName = getStoredXodrName(state.simConfig?.carla?.map);
     const xodr = await resolveXodrTextForSimulation(mapName);
+    const latestState = useEditorStore.getState();
+    if (
+      requestId !== startRequestRef.current ||
+      latestState.Scenario.id !== scenario.id ||
+      getStoredXodrName(latestState.simConfig?.carla?.map) !== mapName
+    ) {
+      if (requestId === startRequestRef.current) startRequestRef.current = 0;
+      return;
+    }
 
     const payload: StartSimulationPayload = {
       scenario_id: scenario.id || '',
@@ -128,19 +104,26 @@ export default function EditorModals() {
     const validation = validateStartSimulationPayload(payload);
     if (!validation.ok) {
       setSimulationError(validation.message);
+      startRequestRef.current = 0;
       return;
     }
 
     startSimulationMutation.mutate(payload, {
       onSuccess: () => {
+        if (requestId !== startRequestRef.current) return;
         setSimulationError(null);
         setSimulationConfirmOpen(false);
       },
       onError: async (err) => {
         console.error(err);
-        setSimulationError(
-          await getApiErrorMessage(err, 'Failed to start simulation.')
+        const message = await getApiErrorMessage(
+          err,
+          'Failed to start simulation.'
         );
+        if (requestId === startRequestRef.current) setSimulationError(message);
+      },
+      onSettled: () => {
+        if (requestId === startRequestRef.current) startRequestRef.current = 0;
       },
     });
   }, [startSimulationMutation, odrMapRef]);
@@ -195,42 +178,13 @@ export default function EditorModals() {
         </Box>
       </Modal>
 
-      <Modal open={mapPickerOpen} onClose={() => setMapPickerOpen(false)}>
-        <Box className="editor-map-picker-modal">
-          <Box className="editor-map-picker-modal__header">
-            <MapOutlinedIcon />
-            <Typography className="editor-map-picker-modal__title" variant="h6">
-              Select map
-            </Typography>
-          </Box>
-          {mapPickerError ? (
-            <Alert className="editor-modal-alert" severity="error">
-              {mapPickerError}
-            </Alert>
-          ) : null}
-          <List className="editor-map-picker-modal__list" dense>
-            {CARLA_MAPS.map((mapName) => (
-              <ListItemButton
-                key={mapName}
-                onClick={() => handleSelectMap(mapName)}
-                disabled={Boolean(loadingMap)}
-                className="editor-map-picker-modal__item"
-              >
-                <ListItemText
-                  primary={mapName}
-                  secondary={loadingMap === mapName ? 'Loading…' : undefined}
-                  primaryTypographyProps={{
-                    className: 'editor-map-picker-modal__item-primary',
-                  }}
-                  secondaryTypographyProps={{
-                    className: 'editor-map-picker-modal__item-secondary',
-                  }}
-                />
-              </ListItemButton>
-            ))}
-          </List>
-        </Box>
-      </Modal>
+      <MapPickerModal
+        open={mapPickerOpen}
+        error={mapPickerError}
+        loadingMap={loadingMap}
+        onClose={() => setMapPickerOpen(false)}
+        onSelectMap={(mapName) => void handleSelectMap(mapName)}
+      />
     </>
   );
 }

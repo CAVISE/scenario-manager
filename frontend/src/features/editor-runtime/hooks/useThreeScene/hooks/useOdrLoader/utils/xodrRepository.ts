@@ -1,8 +1,10 @@
 const XODR_EXT = '.xodr';
 import { CACHE_KEY } from '../../../constants/openDriveConstants';
+import { readXodrFromIndexedDb, writeXodrToIndexedDb } from './xodrIndexedDb';
 const MAP_NAME_KEY = 'cached_xodr_name';
 const LEGACY_CONTENT_CACHE_KEY = 'cached_xodr_content';
 export const DEFAULT_XODR = 'data.xodr';
+export const LARGE_XODR = 'osm-area-20261021.viewer.xodr';
 
 const CARLA_MAPS = [
   'Town01',
@@ -15,6 +17,9 @@ const CARLA_MAPS = [
   'Town10HD',
   'Town10HD_Opt',
   'TownBig',
+  'osm-area.viewer',
+  'osm-area-20261021.viewer',
+  'strogino_modified_viewer',
 ] as const;
 
 function generateMapAliases(): Record<string, string[]> {
@@ -41,56 +46,13 @@ const MAP_ALIASES = generateMapAliases();
 
 let cachedXodrContent: string | null = null;
 
-const IDB_NAME = 'scenario-manager-xodr-cache';
-const IDB_STORE = 'xodr';
-const IDB_VERSION = 1;
-
-function openXodrCacheDb(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(IDB_NAME, IDB_VERSION);
-    request.onupgradeneeded = () => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains(IDB_STORE)) {
-        db.createObjectStore(IDB_STORE);
-      }
-    };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-}
-
-async function idbGetXodrContent(): Promise<string | null> {
-  try {
-    const db = await openXodrCacheDb();
-    return await new Promise<string | null>((resolve, reject) => {
-      const tx = db.transaction(IDB_STORE, 'readonly');
-      const req = tx.objectStore(IDB_STORE).get(CACHE_KEY);
-      req.onsuccess = () => resolve((req.result as string | undefined) ?? null);
-      req.onerror = () => reject(req.error);
-    });
-  } catch (error) {
-    console.warn('Failed to read cached OpenDRIVE map from IndexedDB.', error);
-    return null;
-  }
-}
-
-async function idbSetXodrContent(content: string): Promise<void> {
-  try {
-    const db = await openXodrCacheDb();
-    await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction(IDB_STORE, 'readwrite');
-      tx.objectStore(IDB_STORE).put(content, CACHE_KEY);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-  } catch (error) {
-    console.warn('Failed to persist cached OpenDRIVE map to IndexedDB.', error);
-  }
-}
+// Browsers commonly cap localStorage at about 5 MB. Large OpenDRIVE exports
+// are kept in IndexedDB instead, which is designed for this amount of data.
+const LOCAL_STORAGE_MAX_CHARS = 2 * 1024 * 1024;
 
 export async function initXodrCacheFromIndexedDb(): Promise<void> {
   if (cachedXodrContent) return;
-  const stored = await idbGetXodrContent();
+  const stored = await readXodrFromIndexedDb();
   if (stored && isOpenDrive(stored)) cachedXodrContent = stored;
 }
 
@@ -180,6 +142,10 @@ export function getStoredXodrName(fallbackMapName?: string): string {
   return withXodrExtension(normalized);
 }
 
+export function isLargeXodrSelected(): boolean {
+  return getStoredXodrName() === LARGE_XODR;
+}
+
 export async function fetchXodrText(mapName: string): Promise<string> {
   const candidates = buildCandidates(mapName);
   for (const candidate of candidates) {
@@ -204,12 +170,16 @@ export function getCachedXodrContent(): string | null {
 
 export function setCachedCustomXodrContent(content: string): void {
   cachedXodrContent = content;
-  try {
-    localStorage.setItem(CACHE_KEY, content);
-  } catch (error) {
-    console.warn('OpenDRIVE map is too large for localStorage.', error);
+  if (content.length <= LOCAL_STORAGE_MAX_CHARS) {
+    try {
+      localStorage.setItem(CACHE_KEY, content);
+    } catch (error) {
+      console.warn('Failed to cache OpenDRIVE map in localStorage.', error);
+    }
+  } else {
+    localStorage.removeItem(CACHE_KEY);
   }
-  void idbSetXodrContent(content);
+  void writeXodrToIndexedDb(content);
 }
 
 export async function resolveXodrTextForSimulation(

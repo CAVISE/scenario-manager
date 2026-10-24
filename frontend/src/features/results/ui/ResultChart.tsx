@@ -1,21 +1,21 @@
 import { useId, useMemo, useState } from 'react';
-import type { ResultChart as Chart, ResultChartProps } from '../types/results';
-
-const colorClass = (index: number) =>
-  [
-    'result-chart-color-blue',
-    'result-chart-color-orange',
-    'result-chart-color-green',
-    'result-chart-color-purple',
-  ][index % 4];
-const LEFT = 68;
-const TOP = 22;
-const WIDTH = 584;
-const HEIGHT = 218;
-const format = (value: number) =>
-  value.toLocaleString(undefined, { maximumFractionDigits: 2 });
-const axisLabel = (axis: Chart['x_axis']) =>
-  `${axis.label}${axis.unit ? ` (${axis.unit})` : ''}`;
+import type { ResultChartProps } from '../types/results';
+import {
+  ResultChartDataTable,
+  ResultChartReadout,
+} from '../components/ResultChartDataTable';
+import { ResultChartHeading } from '../components/ResultChartHeading';
+import { ResultChartLegend } from '../components/ResultChartLegend';
+import {
+  axisLabel,
+  buildChartGeometry,
+  colorClass,
+  formatChartValue,
+  HEIGHT,
+  LEFT,
+  TOP,
+  WIDTH,
+} from '../model/resultChartGeometry';
 
 export default function ResultChart({ chart }: ResultChartProps) {
   const id = useId();
@@ -30,107 +30,29 @@ export default function ResultChart({ chart }: ResultChartProps) {
         .filter((line) => !hidden.includes(line.id)),
     [chart, hidden]
   );
-  const geometry = useMemo(() => {
-    let xMin = Infinity,
-      xMax = -Infinity,
-      yMin = Infinity,
-      yMax = -Infinity;
-    for (const line of visible) {
-      for (const [x, y] of line.points) {
-        if (y === null) continue;
-        xMin = Math.min(xMin, x);
-        xMax = Math.max(xMax, x);
-        yMin = Math.min(yMin, y);
-        yMax = Math.max(yMax, y);
-      }
-    }
-    const empty = !Number.isFinite(xMin);
-    if (empty) {
-      xMin = 0;
-      xMax = 1;
-      yMin = 0;
-      yMax = 1;
-    }
-    if (xMin === xMax) {
-      xMin -= 0.5;
-      xMax += 0.5;
-    }
-    if (yMin === yMax) {
-      yMin -= 0.5;
-      yMax += 0.5;
-    }
-    const padding = (yMax - yMin) * 0.08;
-    yMin -= padding;
-    yMax += padding;
-    if (chart.kind === 'trajectory') {
-      // Equal physical scale on both axes, so routes are not distorted.
-      const scale = Math.max((xMax - xMin) / WIDTH, (yMax - yMin) / HEIGHT);
-      const cx = (xMin + xMax) / 2,
-        cy = (yMin + yMax) / 2;
-      xMin = cx - (scale * WIDTH) / 2;
-      xMax = cx + (scale * WIDTH) / 2;
-      yMin = cy - (scale * HEIGHT) / 2;
-      yMax = cy + (scale * HEIGHT) / 2;
-    }
-    const sx = (x: number) => LEFT + ((x - xMin) / (xMax - xMin)) * WIDTH;
-    const sy = (y: number) =>
-      TOP + HEIGHT - ((y - yMin) / (yMax - yMin)) * HEIGHT;
-    const paths = visible.map((line) => {
-      let connected = false;
-      return line.points
-        .map(([x, y]) => {
-          if (y === null) {
-            connected = false;
-            return '';
-          }
-          const command = connected
-            ? chart.kind === 'step'
-              ? `H${sx(x)}V`
-              : `L${sx(x)},`
-            : `M${sx(x)},`;
-          connected = true;
-          return `${command}${sy(y)}`;
-        })
-        .join(' ');
-    });
-    return { xMin, xMax, yMin, yMax, sx, sy, empty, paths };
-  }, [chart.kind, visible]);
+  const geometry = useMemo(
+    () => buildChartGeometry(chart, visible),
+    [chart, visible]
+  );
   const selectedLine = active ? chart.series[active.line] : null;
   const selectedPoint = active ? selectedLine?.points[active.point] : null;
 
   return (
     <article className="result-chart" aria-labelledby={`${id}-title`}>
-      <div className="result-chart-heading">
-        <h3 id={`${id}-title`}>{chart.title}</h3>
-        <span>
-          {chart.kind === 'trajectory'
-            ? 'Spatial view'
-            : chart.kind === 'step'
-              ? 'Event timeline'
-              : 'Recorded samples'}
-        </span>
-      </div>
-      <p>{chart.description}</p>
-      <div className="result-chart-legend" aria-label={`${chart.title} series`}>
-        {chart.series.map((line, index) => (
-          <button
-            key={line.id}
-            type="button"
-            aria-pressed={!hidden.includes(line.id)}
-            onClick={() => {
-              setHidden((current) =>
-                current.includes(line.id)
-                  ? current.filter((key) => key !== line.id)
-                  : [...current, line.id]
-              );
-              setActive(null);
-            }}
-          >
-            <i className={colorClass(index)} />
-            {line.label}
-          </button>
-        ))}
-      </div>
+      <ResultChartHeading chart={chart} titleId={`${id}-title`} />
+      <ResultChartLegend
+        title={chart.title}
+        series={chart.series}
+        hidden={hidden}
+        onToggle={(seriesId) => {
+          setHidden((current) =>
+            current.includes(seriesId)
+              ? current.filter((id) => id !== seriesId)
+              : [...current, seriesId]
+          );
+          setActive(null);
+        }}
+      />
       <svg
         viewBox="0 0 680 294"
         role="img"
@@ -198,12 +120,12 @@ export default function ResultChart({ chart }: ResultChartProps) {
             <g key={tick} className="result-chart-axis">
               <line x1={LEFT} y1={y} x2={LEFT + WIDTH} y2={y} />
               <text x={LEFT - 10} y={y + 4} textAnchor="end">
-                {format(
+                {formatChartValue(
                   geometry.yMax - (tick * (geometry.yMax - geometry.yMin)) / 4
                 )}
               </text>
               <text x={x} y={TOP + HEIGHT + 22} textAnchor="middle">
-                {format(
+                {formatChartValue(
                   geometry.xMin + (tick * (geometry.xMax - geometry.xMin)) / 4
                 )}
               </text>
@@ -253,13 +175,22 @@ export default function ResultChart({ chart }: ResultChartProps) {
             </g>
           ))}
           {selectedPoint && selectedPoint[1] !== null && (
-            <circle
-              cx={geometry.sx(selectedPoint[0])}
-              cy={geometry.sy(selectedPoint[1])}
-              r={5}
-              strokeWidth={2}
-              className={`result-chart-selected ${colorClass(active?.line ?? 0)}`}
-            />
+            <>
+              <line
+                className="result-chart-cursor"
+                x1={geometry.sx(selectedPoint[0])}
+                x2={geometry.sx(selectedPoint[0])}
+                y1={TOP}
+                y2={TOP + HEIGHT}
+              />
+              <circle
+                cx={geometry.sx(selectedPoint[0])}
+                cy={geometry.sy(selectedPoint[1])}
+                r={5}
+                strokeWidth={2}
+                className={`result-chart-selected ${colorClass(active?.line ?? 0)}`}
+              />
+            </>
           )}
         </g>
         {geometry.empty && (
@@ -273,40 +204,12 @@ export default function ResultChart({ chart }: ResultChartProps) {
           </text>
         )}
       </svg>
-      <div className="result-chart-readout" aria-live="polite">
-        {selectedPoint && selectedPoint[1] !== null
-          ? `${selectedLine?.label} · ${format(selectedPoint[0])} ${chart.x_axis.unit} → ${format(selectedPoint[1])} ${chart.y_axis.unit}`
-          : 'Hover over the chart or focus it and use ← → to inspect values.'}
-      </div>
-      <details className="result-chart-table">
-        <summary>View sample data</summary>
-        <p>
-          First 100 samples per series. Download charts.json for the full
-          dataset.
-        </p>
-        <div>
-          <table>
-            <thead>
-              <tr>
-                <th>Series</th>
-                <th>{axisLabel(chart.x_axis)}</th>
-                <th>{axisLabel(chart.y_axis)}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visible.flatMap((line) =>
-                line.points.slice(0, 100).map(([x, y], index) => (
-                  <tr key={`${line.id}-${index}`}>
-                    <td>{line.label}</td>
-                    <td>{format(x)}</td>
-                    <td>{y === null ? 'Unavailable' : format(y)}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </details>
+      <ResultChartReadout
+        chart={chart}
+        label={selectedLine?.label}
+        point={selectedPoint}
+      />
+      <ResultChartDataTable chart={chart} visible={visible} />
     </article>
   );
 }

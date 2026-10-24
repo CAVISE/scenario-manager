@@ -9,7 +9,8 @@
   border-left: 1px solid var(--workspace-border);
   display: flex;
   flex-direction: column;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--font-sans);
+  font-size: 14px;
   z-index: 100;
   box-shadow: var(--workspace-shadow);
   overflow: hidden;
@@ -583,6 +584,13 @@
   color: var(--workspace-accent);
   background: var(--workspace-surface);
   box-shadow: var(--workspace-shadow);
+}
+
+.rp-properties-hint {
+  margin: 0;
+  color: var(--workspace-muted);
+  font-size: 13px;
+  line-height: 1.45;
 }
 
 .rp-multi-selection {
@@ -1333,6 +1341,44 @@
   font-size: 14px;
 }
 
+// Keep the editor panel compact, but never force the user to read controls at
+// caption size. The 12px styles above came from the original dense layout.
+.rp-root {
+  :is(button, input, select, textarea) {
+    font-size: 14px;
+  }
+
+  :is(
+    .rp-subtitle,
+    .rp-context-status,
+    .rp-context-help,
+    .rp-preflight__status,
+    .rp-preflight__hint,
+    .rp-preflight__issues,
+    .rp-context-id,
+    .rp-section-label,
+    .rp-selection-count,
+    .rp-scenario-label,
+    .rp-scenario-notice,
+    .rp-scenario-statuses-header,
+    .rp-scenario-muted,
+    .rp-scenario-status-name,
+    .rp-scenario-status-pill,
+    .rp-footer,
+    .rp-workspace-kicker,
+    .rp-workspace-placeholder p,
+    .rp-workspace-note,
+    .rp-run-progress,
+    .rp-result-run-copy > span
+  ) {
+    font-size: 13px;
+  }
+
+  :is(.rp-title, .rp-properties-title) {
+    font-size: 16px;
+  }
+}
+
 .rp-results-empty {
   display: grid;
   justify-items: start;
@@ -1399,5 +1445,14 @@
     align-items: flex-start;
     flex-direction: column;
     gap: 4px;
+  }
+}
+
+@media (pointer: coarse) {
+  .rp-section-header,
+  .rp-properties-tabs button,
+  .rp-btn,
+  .rp-quick-action {
+    min-height: 44px;
   }
 }

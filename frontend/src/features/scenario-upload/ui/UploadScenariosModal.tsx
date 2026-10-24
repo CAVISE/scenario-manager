@@ -1,14 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import {
-  Modal,
-  Box,
-  Typography,
-  Button,
-  TextField,
-  IconButton,
-  CircularProgress,
-  Alert,
-} from '@mui/material';
+import React, { useState, useCallback, useRef } from 'react';
+import { Modal, Box, Typography, IconButton, Alert } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import { useNoticeWithToast } from '@/shared/ui/AppToast';
@@ -21,8 +12,8 @@ import {
 } from '@editor/hooks/useApiHooks/useScenarioQueries';
 import { handleLoad } from '@right-panel/components/ScenarioControlWidget/Handlers';
 import type { UploadScenariosModalProps } from '../types/UploadScenariosModalTypes';
-import { getScenarioPreviewSrc } from '../utils/previewSrc';
-import ScenarioCard from '../components/ScenarioCard';
+import { ScenarioSelectionList } from '../components/ScenarioSelectionList';
+import { SelectedScenarioDetails } from '../components/SelectedScenarioDetails';
 import '../styles/UploadScenariosModal.scss';
 
 const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
@@ -37,7 +28,7 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
     defaultLevel: 'info',
   });
   const [loadingScene, setLoadingScene] = useState(false);
-
+  const selectionRequestRef = useRef(0);
   const {
     data: scenarios = [],
     isLoading,
@@ -45,23 +36,23 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
     error,
     refetch,
   } = useScenariosListQuery(open);
-
   const patchScenarioMutation = useScenarioPatchMutation();
   const { updateSceneGraph, loadFile, setStep } = useHooks();
-
   const handleSelectScenario = (scenario: ScenarioListItem) => {
+    selectionRequestRef.current += 1;
     setSelectedScenario(scenario);
     setEditedDescription(scenario.annotation || '');
     setNotice('');
   };
-
   const handleBack = () => {
+    selectionRequestRef.current += 1;
     setSelectedScenario(null);
     setEditedDescription('');
     setNotice('');
   };
 
   const handleClose = useCallback(() => {
+    selectionRequestRef.current += 1;
     setSelectedScenario(null);
     setEditedDescription('');
     setNotice('');
@@ -74,13 +65,19 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
 
   const handleSaveDescription = useCallback(async () => {
     if (!selectedScenario?.scenario_id) return;
+    const requestId = selectionRequestRef.current;
+    const scenarioId = selectedScenario.scenario_id;
+    const description = editedDescription;
     try {
       await patchScenarioMutation.mutateAsync({
-        id: selectedScenario.scenario_id,
-        payload: { description: editedDescription },
+        id: scenarioId,
+        payload: { description },
       });
+      if (requestId !== selectionRequestRef.current) return;
       setSelectedScenario((prev) =>
-        prev ? { ...prev, annotation: editedDescription } : prev
+        prev?.scenario_id === scenarioId
+          ? { ...prev, annotation: description }
+          : prev
       );
       setNoticeWithToast('Description saved');
       refetch();
@@ -99,6 +96,7 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
 
   const handleLoadOnScene = useCallback(async () => {
     if (!selectedScenario?.scenario_id) return;
+    const requestId = selectionRequestRef.current;
     setLoadingScene(true);
     setNotice('');
     try {
@@ -109,10 +107,13 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
         updateSceneGraph,
         loadFile,
         setStep,
+        isCurrent: () => requestId === selectionRequestRef.current,
       });
     } finally {
-      setLoadingScene(false);
-      handleClose();
+      if (requestId === selectionRequestRef.current) {
+        setLoadingScene(false);
+        handleClose();
+      }
     }
   }, [
     selectedScenario,
@@ -122,10 +123,6 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
     setStep,
     handleClose,
   ]);
-
-  const thumb = selectedScenario
-    ? getScenarioPreviewSrc(selectedScenario.preview)
-    : undefined;
 
   return (
     <Modal
@@ -175,101 +172,25 @@ const UploadScenariosModal: React.FC<UploadScenariosModalProps> = ({
         )}
 
         {selectedScenario === null ? (
-          <>
-            {isError && (
-              <Alert
-                severity="error"
-                className="upload-scenarios-modal__alert"
-                action={
-                  <Button
-                    color="inherit"
-                    size="small"
-                    onClick={() => refetch()}
-                  >
-                    Retry
-                  </Button>
-                }
-              >
-                {getApiErrorMessageSync(error, 'Failed to load scenario list')}
-              </Alert>
-            )}
-            {isLoading ? (
-              <Box className="upload-scenarios-modal__loading">
-                <CircularProgress size={28} />
-              </Box>
-            ) : (
-              <Box className="upload-scenarios-modal__list">
-                {scenarios.length === 0 && (
-                  <Box className="upload-scenarios-modal__empty">
-                    <Typography className="upload-scenarios-modal__empty-text">
-                      No saved scenarios
-                    </Typography>
-                  </Box>
-                )}
-                {scenarios.map((scenario) => (
-                  <ScenarioCard
-                    key={scenario.scenario_id}
-                    scenario={scenario}
-                    onScenarioSelect={handleSelectScenario}
-                  />
-                ))}
-              </Box>
-            )}
-          </>
+          <ScenarioSelectionList
+            scenarios={scenarios}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            onRetry={refetch}
+            onSelect={handleSelectScenario}
+          />
         ) : (
-          <Box className="upload-scenarios-modal__detail">
-            {thumb ? (
-              <Box
-                component="img"
-                src={thumb}
-                alt={selectedScenario.name}
-                className="upload-scenarios-modal__detail-image"
-              />
-            ) : (
-              <Box className="upload-scenarios-modal__detail-placeholder">
-                No preview
-              </Box>
-            )}
-            <TextField
-              label="ID"
-              value={selectedScenario.scenario_id}
-              InputProps={{ readOnly: true }}
-              fullWidth
-              variant="outlined"
-              className="upload-scenarios-modal__field"
-            />
-            <TextField
-              label="Description"
-              placeholder="Enter scenario description"
-              value={editedDescription}
-              onChange={(e) => setEditedDescription(e.target.value)}
-              multiline
-              rows={3}
-              fullWidth
-              variant="outlined"
-              className="upload-scenarios-modal__field"
-            />
-            <Box className="upload-scenarios-modal__actions">
-              <Button
-                variant="outlined"
-                onClick={handleSaveDescription}
-                disabled={
-                  !isDescriptionDirty || patchScenarioMutation.isPending
-                }
-                className="upload-scenarios-modal__button upload-scenarios-modal__button--secondary"
-              >
-                {patchScenarioMutation.isPending ? 'Saving…' : 'Save'}
-              </Button>
-              <Button
-                variant="contained"
-                onClick={handleLoadOnScene}
-                disabled={loadingScene}
-                className="upload-scenarios-modal__button upload-scenarios-modal__button--primary"
-              >
-                {loadingScene ? 'Loading…' : 'Load onto scene'}
-              </Button>
-            </Box>
-          </Box>
+          <SelectedScenarioDetails
+            scenario={selectedScenario}
+            description={editedDescription}
+            isDescriptionDirty={isDescriptionDirty}
+            isSaving={patchScenarioMutation.isPending}
+            isLoading={loadingScene}
+            onDescriptionChange={setEditedDescription}
+            onSave={handleSaveDescription}
+            onLoad={handleLoadOnScene}
+          />
         )}
       </Box>
     </Modal>

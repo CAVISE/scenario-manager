@@ -8,4 +8,5 @@ export const CARLA_MAPS = [
   'Town07',
   'Town10HD',
   'TownBig',
+  'osm-area-20261021.viewer',
 ];

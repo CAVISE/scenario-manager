@@ -2,6 +2,7 @@ import { OpenDriveModule } from '@editor/hooks/useOpenDriveUtils/useOdrMap/types
 import { libOpenDrive } from '@editor/utils/libOpenDrive';
 import { useEditorStore } from '@/store';
 import { useEffect, useRef } from 'react';
+import { beginMapLoadRequest } from '@editor/lib/mapLoadRequest';
 import { UseOdrLoaderProps } from '../types/useOdrLoaderTypes';
 import {
   MAP_PATH,
@@ -30,9 +31,10 @@ export function useOdrLoader({
 
   useEffect(() => {
     let cancelled = false;
+    const isInitialMapLoadCurrent = beginMapLoadRequest();
     function processFile(fileText: string, clearMap: boolean) {
       const Module = moduleRef.current;
-      if (!Module || cancelled) return;
+      if (!Module || cancelled || !isInitialMapLoadCurrent()) return;
       setCachedCustomXodrContent(fileText);
       if (clearMap) {
         const s = useEditorStore.getState();
@@ -132,6 +134,7 @@ export function useOdrLoader({
       setError?.(new Error('OpenDRIVE module not initialized'));
       return;
     }
+    beginMapLoadRequest();
     setCachedCustomXodrContent(fileText);
 
     if (sourceName) {

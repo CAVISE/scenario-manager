@@ -14,7 +14,7 @@
 
 .cavise-logo__wordmark {
   fill: #93f2c8;
-  font-family: 'Arial Narrow', Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
   font-size: 45px;
   font-weight: 300;
   letter-spacing: 1.5px;
@@ -22,7 +22,7 @@
 
 .cavise-logo__tagline {
   fill: #f5faf6;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.35px;
@@ -30,7 +30,7 @@
 
 .cavise-logo__error {
   fill: #ff7070;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
   font-size: 30px;
   font-weight: 700;
 }

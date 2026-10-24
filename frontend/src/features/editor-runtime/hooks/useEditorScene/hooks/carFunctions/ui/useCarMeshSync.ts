@@ -1,10 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { useEditorStore } from '@/store';
 import type { Car } from '@/entities/vehicle';
 import { useCarModel } from './useCarModel';
 import { useHooks, useEditorRefs } from '@editor/context';
 import { applyColor, cloneMaterials } from '../utils/CarUtils';
+import { invalidateEditorScene } from '@editor/lib/invalidateEditorScene';
 
 export function useCarMeshSync() {
   const cars = useEditorStore((s) => s.cars);
@@ -21,9 +22,10 @@ export function useCarMeshSync() {
     if (!scene || !carModelRef.current) return;
 
     let structuralChange = false;
+    const carsById = new Map(cars.map((car) => [car.id, car]));
 
     carMeshesRef.current = carMeshesRef.current.filter((wrapper) => {
-      const stillExists = cars.find((c) => c.id === wrapper.userData.id);
+      const stillExists = carsById.has(wrapper.userData.id);
       if (!stillExists) {
         scene.remove(wrapper);
         lastSyncedCarsRef.current.delete(wrapper.userData.id);
@@ -43,13 +45,15 @@ export function useCarMeshSync() {
 
       return !!stillExists;
     });
+    const meshesById = new Map(
+      carMeshesRef.current.map((mesh) => [mesh.userData.id as string, mesh])
+    );
 
     cars.forEach((car) => {
-      const already = carMeshesRef.current.find(
-        (m) => m.userData.id === car.id
-      );
+      const already = meshesById.get(car.id);
       if (already) {
-        if (lastSyncedCarsRef.current.get(car.id) === car) return;
+        const previousCar = lastSyncedCarsRef.current.get(car.id);
+        if (previousCar === car) return;
         lastSyncedCarsRef.current.set(car.id, car);
 
         const isAttached =
@@ -74,7 +78,7 @@ export function useCarMeshSync() {
             already.scale.set(car.scale, car.scale, car.scale);
         }
 
-        applyColor(already, car.color);
+        if (previousCar?.color !== car.color) applyColor(already, car.color);
         return;
       }
 
@@ -100,14 +104,13 @@ export function useCarMeshSync() {
       wrapper.add(modelInstance);
       scene.add(wrapper);
       carMeshesRef.current.push(wrapper as unknown as THREE.Mesh);
+      meshesById.set(car.id, wrapper as unknown as THREE.Mesh);
       lastSyncedCarsRef.current.set(car.id, car);
       structuralChange = true;
     });
 
     if (selectedId) {
-      const selectedMesh = carMeshesRef.current.find(
-        (m) => m.userData.id === selectedId
-      );
+      const selectedMesh = meshesById.get(selectedId);
       if (selectedMesh) {
         setTimeout(() => {
           const state = useEditorStore.getState();
@@ -122,9 +125,10 @@ export function useCarMeshSync() {
       }
     }
     if (structuralChange) updateSceneGraph();
+    invalidateEditorScene();
   }
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     syncMeshes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cars, selectedId, modelLoaded]);

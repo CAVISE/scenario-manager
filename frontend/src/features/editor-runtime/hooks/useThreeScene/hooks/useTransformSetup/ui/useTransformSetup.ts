@@ -9,25 +9,45 @@ export function useTransformSetup({
   isDraggingRef,
 }: UseTransformSetupProps): UseTransformSetupResult {
   const isDraggingLocalRef = useRef(false);
+  const releaseFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!transformControls) return;
 
-    function onMouseDown() {
-      isDraggingLocalRef.current = true;
-      if (isDraggingRef) isDraggingRef.current = true;
-    }
-    function onMouseUp() {
-      isDraggingLocalRef.current = false;
-      if (isDraggingRef) isDraggingRef.current = false;
+    function onDraggingChanged(event: { value: boolean }) {
+      if (event.value) {
+        if (releaseFrameRef.current !== null) {
+          cancelAnimationFrame(releaseFrameRef.current);
+          releaseFrameRef.current = null;
+        }
+        isDraggingLocalRef.current = true;
+        if (isDraggingRef) isDraggingRef.current = true;
+        return;
+      }
+
+      // Let the transform listener persist the final matrix before scene-sync
+      // is allowed to read state and write it back to the selected mesh.
+      releaseFrameRef.current = requestAnimationFrame(() => {
+        releaseFrameRef.current = null;
+        isDraggingLocalRef.current = false;
+        if (isDraggingRef) isDraggingRef.current = false;
+      });
     }
 
-    transformControls.addEventListener('mouseDown' as never, onMouseDown);
-    transformControls.addEventListener('mouseUp' as never, onMouseUp);
+    transformControls.addEventListener(
+      'dragging-changed' as never,
+      onDraggingChanged as never
+    );
 
     return () => {
-      transformControls.removeEventListener('mouseDown' as never, onMouseDown);
-      transformControls.removeEventListener('mouseUp' as never, onMouseUp);
+      if (releaseFrameRef.current !== null) {
+        cancelAnimationFrame(releaseFrameRef.current);
+        releaseFrameRef.current = null;
+      }
+      transformControls.removeEventListener(
+        'dragging-changed' as never,
+        onDraggingChanged as never
+      );
     };
   }, [transformControls, isDraggingRef]);
 

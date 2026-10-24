@@ -1,23 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { SimpleTreeView } from '@mui/x-tree-view/SimpleTreeView';
-import { TreeItem } from '@mui/x-tree-view/TreeItem';
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Menu,
-  MenuItem,
-} from '@mui/material';
 import { useEditorStore } from '@/store';
 import { useWorkspacePreferences } from '@/store/ui/useWorkspacePreferences';
 import { resolveSelection } from '@/store/utils/sceneEntities';
 import { useEditorRefs } from '@editor/context';
-import { useAppToast } from '@/shared/ui/AppToast';
-import { deleteSelectedObjects } from '../../MultiSelectionProperties/model/batchActions';
 import {
   buildNavigationTree,
   filterNavigationTree,
@@ -27,12 +14,12 @@ import type {
   NavigationNode,
   SceneTreePanelProps,
 } from '../types/SceneTreePanelTypes';
-import { ENTITY_TYPE_KEYS, TYPE_META } from '../constants/sceneTreeConstants';
 import '../styles/SceneTreePanel.scss';
 import { findObjectInScene } from '../funcs/sceneUtils';
 import * as THREE from 'three';
 import '../styles/navigation.scss';
-import { watchHistoryEntryValidity } from '../funcs/deletionSnapshots/ui/deletionSnapshots';
+import { SceneTreeNode } from './SceneTreeNode';
+import { SceneTreeActions } from './SceneTreeActions';
 
 export default function SceneTreePanel({
   readOnly = false,
@@ -49,7 +36,6 @@ export default function SceneTreePanel({
     }))
   );
   const { sceneRef } = useEditorRefs();
-  const toast = useAppToast();
   const [query, setQuery] = useState('');
   const [expandedItems, setExpandedItems] = useState<string[]>([
     'group:car',
@@ -59,8 +45,6 @@ export default function SceneTreePanel({
     'group:point',
     'group:lidar',
   ]);
-  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
-  const [clearOpen, setClearOpen] = useState(false);
   const hoverHelper = useRef<THREE.BoxHelper | null>(null);
   const tree = useMemo(() => buildNavigationTree(state), [state]);
   const filtered = useMemo(
@@ -99,46 +83,15 @@ export default function SceneTreePanel({
     const current = useEditorStore.getState();
     current.selectObjects(resolveSelection(current, ids));
   };
-  const renderNode = (node: NavigationNode) => {
-    const meta = node.kind ? TYPE_META[ENTITY_TYPE_KEYS[node.kind]] : null;
-    return (
-      <TreeItem
-        key={node.id}
-        itemId={node.id}
-        label={
-          <div
-            className="stp-node"
-            data-scene-id={node.id}
-            onMouseEnter={() => {
-              clearHover();
-              if (!node.kind || !sceneRef.current) return;
-              const object = findObjectInScene({ itemId: node.id, sceneRef });
-              if (object) {
-                const helper = new THREE.BoxHelper(object, 0x54b8e8);
-                helper.raycast = () => {};
-                sceneRef.current.add(helper);
-                hoverHelper.current = helper;
-              }
-            }}
-            onMouseLeave={clearHover}
-          >
-            <span className="stp-node-icon" aria-hidden="true">
-              {meta?.icon ?? '▤'}
-            </span>
-            <span className="stp-node-name">{node.name}</span>
-            {meta && (
-              <span
-                className={`stp-node-badge stp-node-badge--${meta.label.toLowerCase()}`}
-              >
-                {meta.label}
-              </span>
-            )}
-          </div>
-        }
-      >
-        {node.children?.map(renderNode)}
-      </TreeItem>
-    );
+  const showHover = (node: NavigationNode) => {
+    clearHover();
+    if (!node.kind || !sceneRef.current) return;
+    const object = findObjectInScene({ itemId: node.id, sceneRef });
+    if (!object) return;
+    const helper = new THREE.BoxHelper(object, 0x54b8e8);
+    helper.raycast = () => {};
+    sceneRef.current.add(helper);
+    hoverHelper.current = helper;
   };
 
   return (
@@ -148,15 +101,13 @@ export default function SceneTreePanel({
         <span className="stp-header-count" data-testid="scene-graph-count">
           {allIds.length} objects
         </span>
-        <button
-          type="button"
-          className="stp-menu-button"
-          aria-label="Scene actions"
-          aria-haspopup="menu"
-          onClick={(event) => setMenuAnchor(event.currentTarget)}
-        >
-          ⋯
-        </button>
+        <SceneTreeActions
+          readOnly={readOnly}
+          allIds={allIds}
+          visibleIds={visibleIds}
+          selectedIds={state.selectedIds}
+          onSelect={select}
+        />
       </div>
       <div className="stp-search">
         <input
@@ -203,7 +154,14 @@ export default function SceneTreePanel({
                   );
               }}
             >
-              {filtered.map(renderNode)}
+              {filtered.map((node) => (
+                <SceneTreeNode
+                  key={node.id}
+                  node={node}
+                  onHover={showHover}
+                  onLeave={clearHover}
+                />
+              ))}
             </SimpleTreeView>
           ) : (
             <p className="stp-empty-text">No matching objects</p>
@@ -220,96 +178,6 @@ export default function SceneTreePanel({
         {state.selectedIds.length} selected · Ctrl/⌘ toggles · Shift selects a
         range
       </p>
-      <Menu
-        anchorEl={menuAnchor}
-        open={Boolean(menuAnchor)}
-        onClose={() => setMenuAnchor(null)}
-      >
-        <MenuItem
-          disabled={!visibleIds.length}
-          onClick={() => {
-            select(visibleIds);
-            setMenuAnchor(null);
-          }}
-        >
-          Select all shown
-        </MenuItem>
-        <MenuItem
-          disabled={!state.selectedIds.length}
-          onClick={() => {
-            select([]);
-            setMenuAnchor(null);
-          }}
-        >
-          Clear selection
-        </MenuItem>
-        <MenuItem
-          disabled={readOnly || !state.selectedIds.length}
-          onClick={() => {
-            setMenuAnchor(null);
-            const result = deleteSelectedObjects();
-            if (result) {
-              toast.undo(
-                `${result.count} objects deleted`,
-                () => useEditorStore.getState().undo(),
-                undefined,
-                watchHistoryEntryValidity(result.entryId)
-              );
-            }
-          }}
-        >
-          Delete selected
-        </MenuItem>
-        <MenuItem
-          disabled={readOnly || !allIds.length}
-          onClick={() => {
-            setMenuAnchor(null);
-            setClearOpen(true);
-          }}
-        >
-          Clear scene…
-        </MenuItem>
-      </Menu>
-      <Dialog
-        open={clearOpen}
-        onClose={() => setClearOpen(false)}
-        aria-labelledby="clear-scene-title"
-      >
-        <DialogTitle id="clear-scene-title">Clear scene?</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Remove all {allIds.length} objects and their routes and sensors? You
-            can restore them with Undo.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setClearOpen(false)}>Cancel</Button>
-          <Button
-            color="error"
-            disabled={readOnly}
-            onClick={() => {
-              if (
-                readOnly ||
-                useEditorStore.getState().simulationSession.phase === 'running'
-              )
-                return;
-              select(allIds);
-              const result = deleteSelectedObjects();
-              setClearOpen(false);
-              if (result) {
-                toast.undo(
-                  'Scene cleared',
-                  () => useEditorStore.getState().undo(),
-                  undefined,
-                  watchHistoryEntryValidity(result.entryId)
-                );
-              }
-            }}
-          >
-            Clear scene
-          </Button>
-        </DialogActions>
-      </Dialog>
     </div>
   );
 }

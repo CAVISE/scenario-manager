@@ -19,6 +19,10 @@ export function createStoreSubscriptions(
     if (getIsDragging()) return;
     if (syncRoutePointMeshesTimeout) clearTimeout(syncRoutePointMeshesTimeout);
     syncRoutePointMeshesTimeout = setTimeout(() => {
+      if (getIsDragging()) {
+        syncRoutePointMeshesTimeout = null;
+        return;
+      }
       syncRoutePointMeshes();
       updateSceneGraph();
       syncRoutePointMeshesTimeout = null;

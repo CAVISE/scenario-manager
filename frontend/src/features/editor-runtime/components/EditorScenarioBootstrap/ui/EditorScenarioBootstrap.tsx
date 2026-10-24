@@ -61,6 +61,7 @@ export const EditorScenarioBootstrap = () => {
         updateSceneGraph,
         loadFile,
         setStep,
+        isCurrent: () => !cancelled,
       }).finally(() => {
         if (cancelled) return;
         clearScenarioParam();

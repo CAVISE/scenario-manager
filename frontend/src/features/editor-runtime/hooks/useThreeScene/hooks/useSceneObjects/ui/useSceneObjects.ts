@@ -7,6 +7,7 @@ import { UseSceneObjectsResult } from '../types/useSceneObjectsTypes';
 import { useEditorStore } from '@/store';
 import { useEditorRefs } from '@editor/context';
 import { groupByCarId, getGroupedByCarId } from '@/shared/utils/groupByCarId';
+import { invalidateEditorScene } from '@editor/lib/invalidateEditorScene';
 
 export function useSceneObjects(): UseSceneObjectsResult {
   const { threeRef, routePointMeshesRef, roadMeshRef, transformControlsRef } =
@@ -32,6 +33,7 @@ export function useSceneObjects(): UseSceneObjectsResult {
 
     routePointMeshesRef.current = result.routePointMeshes;
     localLineArrRef.current = result.lines;
+    invalidateEditorScene();
   }, [routePointMeshesRef, threeRef, transformControlsRef]);
 
   const syncRoadMesh = useCallback(

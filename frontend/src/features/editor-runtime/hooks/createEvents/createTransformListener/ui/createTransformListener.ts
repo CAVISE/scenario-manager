@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import type * as THREE from 'three';
 import { useEditorStore } from '@/store';
 import {
   type ActiveMove,
@@ -9,8 +9,9 @@ import { MOVE_LABEL } from '../constants/createTransformListener.constants';
 import { updaterFor } from '../hooks/useUpdaterFor';
 import { readSnapshot } from '../hooks/useReadSnapshot';
 import { resolveAttachedEntity } from '../hooks/useResolveAttachedEntity';
-import { findMeshForEntity } from '../hooks/useFindMeshForEntity';
 import { snapshotsDiffer } from '../utils/snapshotsDiffer';
+import { createTransformReattacher } from '../utils/createTransformReattacher';
+import { createObjectChangeHandler } from '../utils/createObjectChangeHandler';
 
 export function createTransformListener(
   opts: CreateTransformListenerOptions
@@ -22,6 +23,18 @@ export function createTransformListener(
     routePointMeshesRef,
     carQuaternionsRef,
   } = opts;
+  const reattacher = createTransformReattacher({
+    transformControls,
+    sceneRef,
+    carMeshesRef,
+    routePointMeshesRef,
+  });
+  const handler = createObjectChangeHandler({
+    transformControls,
+    carMeshesRef,
+    routePointMeshesRef,
+    carQuaternionsRef,
+  });
 
   let activeMove: ActiveMove | null = null;
 
@@ -57,101 +70,9 @@ export function createTransformListener(
     }
   };
 
-  const handler = (obj?: THREE.Object3D) => {
-    try {
-      const target =
-        obj ??
-        (
-          transformControls as unknown as {
-            object: THREE.Object3D | undefined;
-          }
-        ).object;
-      if (!target?.userData) return;
-      const { type, id } = target.userData;
-
-      if (type === 'car' && id) {
-        carQuaternionsRef.current.set(id, target.quaternion.clone());
-        useEditorStore.getState().updateCar(id, {
-          x: target.position.x,
-          y: target.position.y,
-          z: target.position.z,
-          rotation: target.rotation.z,
-          scale: target.scale.x,
-        });
-      }
-
-      if (type === 'rsu' && id) {
-        useEditorStore.getState().updateRSU(id, {
-          x: target.position.x,
-          y: target.position.y,
-          z: target.position.z,
-        });
-      }
-
-      if (type === 'lidar' && id) {
-        useEditorStore.getState().updateLidar(id, {
-          x: target.position.x,
-          y: target.position.y,
-          z: target.position.z,
-          rotation: target.rotation.z,
-        });
-      }
-
-      if (type === 'building' && id) {
-        useEditorStore.getState().updateBuilding(id, {
-          x: target.position.x,
-          y: target.position.y,
-          z: target.position.z,
-          rotation: target.rotation.y,
-          scale: target.scale.x,
-          material: target.userData.material,
-          height: target.userData.height,
-        });
-      }
-
-      if (type === 'pedestrian' && id) {
-        const isRoot =
-          !target.parent || target.parent.userData.type !== 'pedestrian';
-        if (isRoot) {
-          const worldPos = new THREE.Vector3();
-          target.getWorldPosition(worldPos);
-          useEditorStore.getState().updatePedestrian(id, {
-            x: worldPos.x,
-            y: worldPos.y,
-            z: worldPos.z,
-          });
-        }
-      }
-
-      if (type === 'route-point') {
-        const routePointMeshes = routePointMeshesRef.current;
-        for (let i = 0; i < routePointMeshes.length; i++) {
-          const ci = routePointMeshes[i].indexOf(target as THREE.Mesh);
-          if (ci !== -1) {
-            const carId = carMeshesRef.current[i]?.userData.id;
-            const pt = useEditorStore
-              .getState()
-              .points.filter((p) => p.carId === carId)[ci];
-            if (pt)
-              useEditorStore.getState().updatePoint(pt.id, {
-                x: target.position.x,
-                y: target.position.y,
-                z: target.position.z,
-              });
-            useEditorStore
-              .getState()
-              .selectObjects([{ type: 'point', id: pt?.id || '' }]);
-            break;
-          }
-        }
-      }
-    } catch (err) {
-      console.error('objectChange error:', err);
-    }
-  };
-
   const onDraggingChanged = (e: DraggingChangedEvent) => {
     if (e.value) {
+      reattacher.cancel();
       const obj = (
         transformControls as unknown as { object: THREE.Object3D | undefined }
       ).object;
@@ -173,24 +94,14 @@ export function createTransformListener(
       const entity = obj
         ? resolveAttachedEntity(obj, carMeshesRef, routePointMeshesRef)
         : null;
-      transformControls.detach();
 
       handler(obj);
       commitActiveMove();
 
-      if (entity && sceneRef.current) {
-        const scene = sceneRef.current;
-        setTimeout(() => {
-          const mesh = findMeshForEntity(
-            entity.kind,
-            entity.id,
-            scene,
-            carMeshesRef,
-            routePointMeshesRef
-          );
-          if (mesh) transformControls.attach(mesh);
-        }, 0);
-      }
+      // Keep the current attachment through the state update. Detaching here
+      // makes the gizmo disappear between mouse-up and the asynchronous
+      // reattach, especially after a rotate operation.
+      if (entity) reattacher.schedule(entity);
     }
   };
 
@@ -201,6 +112,7 @@ export function createTransformListener(
   );
   return () => {
     cancelScheduledFlush();
+    reattacher.cancel();
     transformControls.removeEventListener(
       'objectChange' as never,
       scheduleFlush

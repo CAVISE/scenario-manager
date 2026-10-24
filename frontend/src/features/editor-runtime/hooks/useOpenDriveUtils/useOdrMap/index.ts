@@ -1,6 +1,12 @@
 import {
   createOdrMaterials,
+  disposeOdrMaterials,
   clearOdrScene,
   buildOdrScene,
 } from './ui/useOdrMap';
-export { createOdrMaterials, clearOdrScene, buildOdrScene };
+export {
+  createOdrMaterials,
+  disposeOdrMaterials,
+  clearOdrScene,
+  buildOdrScene,
+};

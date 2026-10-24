@@ -1,29 +1,14 @@
-import { MutableRefObject, useEffect, useRef } from 'react';
+import { MutableRefObject, useLayoutEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { GLTFLoader, TransformControls } from 'three-stdlib';
+import { TransformControls } from 'three-stdlib';
 import { useEditorStore } from '@/store';
 import type { Pedestrian } from '@/entities/pedestrian';
 import { useHooks, useEditorRefs } from '@editor/context';
-
-const loader = new GLTFLoader();
-let pedestrianModel: THREE.Object3D | null = null;
-
-const ensurePedestrianModel = (): Promise<boolean> => {
-  if (pedestrianModel) return Promise.resolve(true);
-  return new Promise((resolve) => {
-    loader.load(
-      '/man_in_suit.glb',
-      (gltf) => {
-        pedestrianModel = gltf.scene;
-        resolve(true);
-      },
-      undefined,
-      () => resolve(false)
-    );
-  });
-};
-
-let pedestrianSyncQueue: Promise<void> = Promise.resolve();
+import { invalidateEditorScene } from '@editor/lib/invalidateEditorScene';
+import {
+  ensurePedestrianModel,
+  getPedestrianModel,
+} from '../utils/pedestrianModel';
 
 function syncPedestrians(
   pedestrians: Pedestrian[],
@@ -39,11 +24,12 @@ function syncPedestrians(
   const attached = (tc as unknown as { object?: THREE.Object3D })?.object;
   const pedestrianMeshes = pedestrianMeshesRef.current;
   if (!pedestrianMeshes) return;
+  const pedestrianIds = new Set(pedestrians.map((pedestrian) => pedestrian.id));
 
   let structuralChange = false;
 
   pedestrianMeshesRef.current = pedestrianMeshes.filter((p) => {
-    if (pedestrians.some((pe) => pe.id === p.userData.id)) return true;
+    if (pedestrianIds.has(p.userData.id)) return true;
     if (attached && (attached === p || p.getObjectById(attached.id)))
       return true;
     p.traverse((child) => {
@@ -62,9 +48,15 @@ function syncPedestrians(
   });
 
   pedestrianObjsRef.current = [...pedestrianMeshesRef.current];
+  const meshesById = new Map(
+    pedestrianMeshesRef.current.map((mesh) => [
+      mesh.userData.id as string,
+      mesh,
+    ])
+  );
 
   pedestrians.forEach((ped) => {
-    const exists = pedestrianMeshes.find((p) => p.userData.id === ped.id);
+    const exists = meshesById.get(ped.id);
     if (exists) {
       if (lastSyncedPedestriansRef.current.get(ped.id) === ped) return;
       lastSyncedPedestriansRef.current.set(ped.id, ped);
@@ -79,6 +71,7 @@ function syncPedestrians(
       }
       return;
     }
+    const pedestrianModel = getPedestrianModel();
     if (!pedestrianModel) return;
 
     const modelClone = pedestrianModel.clone(true);
@@ -101,15 +94,18 @@ function syncPedestrians(
     const currentMeshes = pedestrianMeshesRef.current;
     if (!currentMeshes) return;
     currentMeshes.push(modelClone as THREE.Mesh);
+    meshesById.set(ped.id, modelClone as THREE.Mesh);
     const pedestrianObjs = pedestrianObjsRef.current;
     if (!pedestrianObjs) return;
     pedestrianObjs.push(modelClone as THREE.Mesh);
   });
 
   if (structuralChange) updateSceneGraph();
+  invalidateEditorScene();
 }
 
 function queuePedestrianSync(
+  queueRef: MutableRefObject<Promise<void>>,
   pedestrians: ReturnType<typeof useEditorStore.getState>['pedestrians'],
   scene: THREE.Scene,
   pedestrianMeshesRef: MutableRefObject<THREE.Mesh[]>,
@@ -117,23 +113,27 @@ function queuePedestrianSync(
   transformControlsRef: MutableRefObject<TransformControls | null>,
   isDraggingRef: MutableRefObject<boolean>,
   lastSyncedPedestriansRef: MutableRefObject<Map<string, Pedestrian>>,
-  updateSceneGraph: () => void
+  updateSceneGraph: () => void,
+  isCurrent: () => boolean
 ): Promise<void> {
-  pedestrianSyncQueue = pedestrianSyncQueue.then(() =>
-    ensurePedestrianModel().then(() => {
-      syncPedestrians(
-        pedestrians,
-        scene,
-        pedestrianMeshesRef,
-        pedestrianObjsRef,
-        transformControlsRef,
-        isDraggingRef,
-        lastSyncedPedestriansRef,
-        updateSceneGraph
-      );
-    })
-  );
-  return pedestrianSyncQueue;
+  const sync = async () => {
+    if (!isCurrent()) return;
+    await ensurePedestrianModel();
+    if (!isCurrent()) return;
+    syncPedestrians(
+      pedestrians,
+      scene,
+      pedestrianMeshesRef,
+      pedestrianObjsRef,
+      transformControlsRef,
+      isDraggingRef,
+      lastSyncedPedestriansRef,
+      updateSceneGraph
+    );
+  };
+  const next = queueRef.current.catch(console.error).then(sync);
+  queueRef.current = next;
+  return next;
 }
 
 export function usePedestrianMeshSync() {
@@ -147,20 +147,24 @@ export function usePedestrianMeshSync() {
     isDraggingRef,
   } = useEditorRefs();
   const lastSyncedPedestriansRef = useRef<Map<string, Pedestrian>>(new Map());
+  const syncQueueRef = useRef<Promise<void>>(Promise.resolve());
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
     const trySync = (attempts = 0) => {
+      if (cancelled) return;
       const scene = sceneRef.current;
       if (!scene) {
-        if (attempts < 10) setTimeout(() => trySync(attempts + 1), 300);
+        if (attempts < 10)
+          retryTimer = setTimeout(() => trySync(attempts + 1), 300);
         return;
       }
-      if (cancelled) return;
 
       const currentPedestrians = useEditorStore.getState().pedestrians;
       queuePedestrianSync(
+        syncQueueRef,
         currentPedestrians,
         scene,
         pedestrianMeshesRef,
@@ -168,13 +172,15 @@ export function usePedestrianMeshSync() {
         transformControlsRef,
         isDraggingRef,
         lastSyncedPedestriansRef,
-        updateSceneGraph
+        updateSceneGraph,
+        () => !cancelled && sceneRef.current === scene
       );
     };
     trySync();
 
     return () => {
       cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pedestrians, updateSceneGraph]);

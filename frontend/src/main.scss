@@ -4,6 +4,13 @@ $press-ease: cubic-bezier(0.4, 0, 0.2, 1);
 $press-ms: 180ms;
 
 :root {
+  --font-sans: 'Inter', 'Segoe UI', Roboto, Helvetica, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.875rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.5rem;
   --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --motion-fast: 180ms;
   --motion-base: 280ms;
@@ -122,6 +129,23 @@ body,
   overflow: hidden;
 }
 
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  color: var(--workspace-text);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
 .app-loader {
   position: fixed;
   inset: 0;
@@ -131,7 +155,7 @@ body,
   justify-content: center;
   background: #123b39;
   color: #e6e6e6;
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-sans);
   z-index: 9999;
 }
 

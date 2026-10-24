@@ -58,7 +58,7 @@ export function syncRoutePointMeshes(ctx: LoadPointsContext) {
       canvas.height = 64;
       const ctx2d = canvas.getContext('2d')!;
       ctx2d.fillStyle = 'black';
-      ctx2d.font = 'bold 72px Arial';
+      ctx2d.font = '700 72px Inter, Segoe UI, sans-serif';
       ctx2d.textAlign = 'center';
       ctx2d.textBaseline = 'middle';
       ctx2d.strokeStyle = 'black';

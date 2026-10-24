@@ -18,6 +18,7 @@ export function buildMap({
   syncRoutePointMeshes,
   syncRoadMesh,
   updateSceneGraph,
+  preparedGeometry,
 }: BuildMapParams): OdrMapMeshes {
   const { scene, camera, controls, light, transformControls, picking } = three;
 
@@ -39,6 +40,7 @@ export function buildMap({
     fitView,
     prevMeshes: odrMeshesRef.current,
     onDone: () => {},
+    preparedGeometry,
   });
 
   odrMeshesRef.current = newMeshes;

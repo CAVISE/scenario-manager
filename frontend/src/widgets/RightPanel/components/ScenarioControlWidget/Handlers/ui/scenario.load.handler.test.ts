@@ -91,6 +91,7 @@ describe('scenario.load.handler (sync preview)', () => {
       canvas.width = 1920;
       canvas.height = 1080;
       canvas.toDataURL = vi.fn(() => 'data:image/png;base64,FULL_RES');
+      vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
       setCanvasReference(canvas);
 
       const result = generatePreviewSync();

@@ -9,117 +9,13 @@ import {
   DEFAULT_XODR,
   getCachedXodrContent,
 } from '@editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
-
-let canvasRef: HTMLCanvasElement | null = null;
-let cachedPreview: string | null = null;
-let previewGenerationInProgress = false;
-let pendingPreviewCallbacks: Array<(preview: string | null) => void> = [];
-
-export function setCanvasReference(canvas: HTMLCanvasElement | null): void {
-  canvasRef = canvas;
-  cachedPreview = null;
-}
-
-const PREVIEW_MAX_DIMENSION = 400;
-
-function capturePreview(): string | null {
-  if (!canvasRef) return null;
-  try {
-    const { width, height } = canvasRef;
-    if (width === 0 || height === 0) return null;
-
-    const scale = Math.min(1, PREVIEW_MAX_DIMENSION / Math.max(width, height));
-    if (scale >= 1) {
-      return canvasRef.toDataURL('image/png');
-    }
-
-    const targetWidth = Math.max(1, Math.round(width * scale));
-    const targetHeight = Math.max(1, Math.round(height * scale));
-
-    const offscreen = document.createElement('canvas');
-    offscreen.width = targetWidth;
-    offscreen.height = targetHeight;
-    const ctx2d = offscreen.getContext('2d');
-    if (!ctx2d) return canvasRef.toDataURL('image/png');
-
-    ctx2d.drawImage(canvasRef, 0, 0, targetWidth, targetHeight);
-    return offscreen.toDataURL('image/png');
-  } catch (error) {
-    console.warn('Failed to capture preview:', error);
-    return null;
-  }
-}
-
-export function invalidatePreviewCache(): void {
-  cachedPreview = null;
-}
-
-export function generatePreviewAsync(): Promise<string | null> {
-  return new Promise((resolve) => {
-    if (!canvasRef) {
-      resolve(null);
-      return;
-    }
-
-    if (cachedPreview) {
-      resolve(cachedPreview);
-      return;
-    }
-
-    if (previewGenerationInProgress) {
-      pendingPreviewCallbacks.push(resolve);
-      return;
-    }
-
-    previewGenerationInProgress = true;
-
-    requestAnimationFrame(() => {
-      try {
-        const preview = capturePreview();
-        if (preview) {
-          cachedPreview = preview;
-        }
-        resolve(preview);
-
-        const callbacks = [...pendingPreviewCallbacks];
-        pendingPreviewCallbacks = [];
-        callbacks.forEach((cb) => cb(preview));
-      } catch (error) {
-        console.warn('Failed to generate preview:', error);
-        resolve(null);
-
-        const callbacks = [...pendingPreviewCallbacks];
-        pendingPreviewCallbacks = [];
-        callbacks.forEach((cb) => cb(null));
-      } finally {
-        previewGenerationInProgress = false;
-      }
-    });
-  });
-}
-
-export function generatePreviewSync(): string | null {
-  if (!canvasRef) {
-    console.warn('No canvas reference set, cannot generate preview');
-    return null;
-  }
-
-  if (cachedPreview) {
-    return cachedPreview;
-  }
-
-  try {
-    const preview = capturePreview();
-    if (preview) {
-      cachedPreview = preview;
-      return preview;
-    }
-    return null;
-  } catch (error) {
-    console.warn('Failed to generate preview:', error);
-    return null;
-  }
-}
+import { generatePreviewSync } from '../utils/scenarioPreview';
+export {
+  generatePreviewAsync,
+  generatePreviewSync,
+  invalidatePreviewCache,
+  setCanvasReference,
+} from '../utils/scenarioPreview';
 
 export function buildScenarioPayload(): ScenarioPayload {
   const s = useEditorStore.getState();

@@ -49,6 +49,8 @@ beforeEach(() => {
     routePointMeshesRef: { current: [] },
     rsuMeshesRef: { current: [] },
     pedestrianMeshesRef: { current: [] },
+    pickableObjectsRef: { current: objects },
+    isDraggingRef: { current: false },
     modeRef: { current: modes },
     currentCarRef: { current: 'car' },
     currentColorRef: { current: '00ff00' },
@@ -69,6 +71,7 @@ describe('3D selection', () => {
     const { result } = renderHook(() => useClickHandler(context()));
     mocks.intersect.mockReturnValue([{ object: objects[0] }]);
     act(() => result.current(new MouseEvent('click')));
+    expect(mocks.intersect).toHaveBeenLastCalledWith(objects, true);
     mocks.intersect.mockReturnValue([{ object: objects[1] }]);
     mocks.attach.mockClear();
     act(() => result.current(new MouseEvent('click', { shiftKey: true })));
@@ -89,6 +92,21 @@ describe('3D selection', () => {
     modes.isAddedPoints = true;
     const { result } = renderHook(() => useClickHandler(context()));
     act(() => result.current(new MouseEvent('click')));
+    expect(useEditorStore.getState().selectedIds).toEqual([
+      objects[0].userData.id,
+    ]);
+    expect(mocks.detach).not.toHaveBeenCalled();
+  });
+
+  it('does not clear selection from the click emitted after a transform drag', () => {
+    useEditorStore
+      .getState()
+      .selectObjects([{ id: objects[0].userData.id, type: 'car' }]);
+    (mocks.refs.isDraggingRef as { current: boolean }).current = true;
+
+    const { result } = renderHook(() => useClickHandler(context()));
+    act(() => result.current(new MouseEvent('click')));
+
     expect(useEditorStore.getState().selectedIds).toEqual([
       objects[0].userData.id,
     ]);

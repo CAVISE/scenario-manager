@@ -79,6 +79,7 @@ export function EditorNavigation({
           <NavLink
             to="/"
             aria-label="Home"
+            title="Home"
             end
             className={({ isActive }) =>
               `editor-navigation-footer-link${isActive ? ' active' : ''}`
@@ -92,6 +93,7 @@ export function EditorNavigation({
           <NavLink
             to="/scenarios"
             aria-label="Scenarios"
+            title="Scenarios"
             className={({ isActive }) =>
               `editor-navigation-footer-link${isActive ? ' active' : ''}`
             }
@@ -104,6 +106,7 @@ export function EditorNavigation({
           <NavLink
             to="/settings"
             aria-label="Settings"
+            title="Settings"
             className={({ isActive }) =>
               `editor-navigation-footer-link${isActive ? ' active' : ''}`
             }

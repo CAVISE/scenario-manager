@@ -14,6 +14,7 @@ import NumericInput from '../../NumericInput';
 import { IPedestrianProps } from '../types/PedestrianPropertiesTypes';
 import { parseNumberInputChange } from '@/shared/utils/numberInputUtils';
 import { usePropertiesMode } from '../../../context/PropertiesModeContext';
+import { PedestrianV2XFields } from './PedestrianV2XFields';
 import '../../../styles/PropertyFields.scss';
 
 function clampCrossFactor(value: number): number {
@@ -137,95 +138,10 @@ export default function PedestrianProperties({
             V2X
           </Typography>
 
-          <Grid item container spacing={1}>
-            <Grid item xs={6}>
-              <FormControl>
-                <FormLabel>TX Power (mW)</FormLabel>
-                <Input
-                  size="small"
-                  type="number"
-                  slotProps={numInputSlot}
-                  value={pedestrian.tx_power}
-                  onChange={(e) => {
-                    const parsed_tx_power = parseNumberInputChange(e.target);
-                    if (parsed_tx_power === undefined || isNaN(parsed_tx_power))
-                      return;
-                    updatePedestrian(pedestrian.id, {
-                      tx_power: parsed_tx_power,
-                    });
-                  }}
-                />
-              </FormControl>
-            </Grid>
-            <Grid item xs={6}>
-              <FormControl>
-                <FormLabel>Beacon interval (ms)</FormLabel>
-                <Input
-                  size="small"
-                  type="number"
-                  slotProps={numInputSlot}
-                  value={pedestrian.beacon_interval}
-                  onChange={(e) => {
-                    const parsed_beacon_interval = parseNumberInputChange(
-                      e.target
-                    );
-                    if (
-                      parsed_beacon_interval === undefined ||
-                      isNaN(parsed_beacon_interval)
-                    )
-                      return;
-                    updatePedestrian(pedestrian.id, {
-                      beacon_interval: parsed_beacon_interval,
-                    });
-                  }}
-                />
-              </FormControl>
-            </Grid>
-          </Grid>
-
-          <FormControl>
-            <FormLabel>Frequency (Hz)</FormLabel>
-            <Input
-              size="small"
-              type="number"
-              slotProps={numInputSlot}
-              value={pedestrian.frequency}
-              onChange={(e) => {
-                const parsed_frequency = parseNumberInputChange(e.target);
-                if (parsed_frequency === undefined || isNaN(parsed_frequency))
-                  return;
-                updatePedestrian(pedestrian.id, {
-                  frequency: parsed_frequency,
-                });
-              }}
-            />
-          </FormControl>
-
-          <FormControl onClick={(e) => e.stopPropagation()}>
-            <FormLabel>Protocol</FormLabel>
-            <ToggleButtonGroup
-              exclusive
-              value={pedestrian.protocol}
-              onChange={(_, val) => {
-                if (val)
-                  updatePedestrian(pedestrian.id, {
-                    protocol: val as 'DSRC' | 'C-V2X',
-                  });
-              }}
-              size="small"
-              fullWidth
-            >
-              {(['DSRC', 'C-V2X'] as const).map((proto) => (
-                <ToggleButton
-                  key={proto}
-                  value={proto}
-                  className="right-panel-property-toggle"
-                >
-                  {proto}
-                </ToggleButton>
-              ))}
-            </ToggleButtonGroup>
-          </FormControl>
+          <PedestrianV2XFields
+            pedestrian={pedestrian}
+            onUpdate={(patch) => updatePedestrian(pedestrian.id, patch)}
+          />
         </>
       )}
 

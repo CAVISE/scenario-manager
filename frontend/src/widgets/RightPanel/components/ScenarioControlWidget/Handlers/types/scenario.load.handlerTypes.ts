@@ -7,4 +7,5 @@ export interface LoadScenarioOptions {
   updateSceneGraph: () => void;
   loadFile: (fileContent: string, x: boolean, sourceName?: string) => void;
   setStep?: (step: keyof typeof LOADING_STEPS) => void;
+  isCurrent?: () => boolean;
 }

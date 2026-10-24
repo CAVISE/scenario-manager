@@ -1,9 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { useEditorStore } from '@/store';
 import type { RSU } from '@/entities/roadside-unit';
 import { ensureRsuModel, rsuModel } from '../utils/RsuUtils';
 import { useEditorRefs, useHooks } from '@editor/context';
+import { invalidateEditorScene } from '@editor/lib/invalidateEditorScene';
 
 export function useRSUMeshSync(): void {
   const RSUs = useEditorStore((s) => s.RSUs);
@@ -17,14 +18,16 @@ export function useRSUMeshSync(): void {
     isDraggingRef,
   } = useEditorRefs();
   const lastSyncedRSUsRef = useRef<Map<string, RSU>>(new Map());
-  useEffect(() => {
+  useLayoutEffect(() => {
     let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
     const trySync = (attempts = 0) => {
       const scene = sceneRef.current;
 
       if (!scene) {
-        if (attempts < 10) setTimeout(() => trySync(attempts + 1), 300);
+        if (attempts < 10)
+          retryTimer = setTimeout(() => trySync(attempts + 1), 300);
         return;
       }
       ensureRsuModel().then((hasModel) => {
@@ -57,11 +60,15 @@ export function useRSUMeshSync(): void {
 
         rsuObjectMeshesRef.current = [...rsuRenderMeshesRef.current];
         rsuMeshesRef.current = [...rsuRenderMeshesRef.current];
+        const meshesById = new Map(
+          rsuRenderMeshesRef.current.map((mesh) => [
+            mesh.userData.id as string,
+            mesh,
+          ])
+        );
 
         currentRSUs.forEach((rsu) => {
-          const existing = rsuRenderMeshesRef.current.find(
-            (p) => p.userData.id === rsu.id
-          );
+          const existing = meshesById.get(rsu.id);
 
           if (existing) {
             if (existing.userData?.isFallbackRSU) {
@@ -90,6 +97,7 @@ export function useRSUMeshSync(): void {
                 rsuRenderMeshesRef.current.splice(oldIdx, 1);
                 rsuObjectMeshesRef.current.splice(oldIdx, 1);
                 rsuMeshesRef.current.splice(oldIdx, 1);
+                meshesById.delete(rsu.id);
               }
               structuralChange = true;
             } else {
@@ -120,10 +128,12 @@ export function useRSUMeshSync(): void {
           rsuRenderMeshesRef.current.push(obj as THREE.Mesh);
           rsuObjectMeshesRef.current.push(obj as THREE.Mesh);
           rsuMeshesRef.current.push(obj as THREE.Mesh);
+          meshesById.set(rsu.id, obj as THREE.Mesh);
           structuralChange = true;
         });
 
         if (structuralChange) updateSceneGraph();
+        invalidateEditorScene();
       });
     };
 
@@ -131,6 +141,7 @@ export function useRSUMeshSync(): void {
 
     return () => {
       cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [RSUs, updateSceneGraph]);

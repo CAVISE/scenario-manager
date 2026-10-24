@@ -23,6 +23,7 @@ const VALID_CARLA_MAPS = new Set([
   'Town07',
   'Town10HD',
   'TownBig',
+  'osm-area-20261021.viewer',
 ]);
 
 export function isValidAttackType(type: string): type is AttackStageType {

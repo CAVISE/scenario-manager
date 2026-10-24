@@ -6,6 +6,7 @@ import {
   PickingTextures,
 } from '../../useThreeSetup/types/useThreeSetupTypes';
 import { OpenDriveMapInstance } from '@editor/types/editorTypes';
+import type { ScenePerformanceMonitor } from '../utils/scenePerformanceMonitor';
 
 export interface SpotlightState {
   paused: boolean;
@@ -26,10 +27,12 @@ export interface StartAnimateParams {
   getRoadMesh: () => THREE.Mesh | null;
   getRoadmarksMesh: () => THREE.Mesh | null;
   spotlightInfo: HTMLElement | null;
+  performanceMonitor?: ScenePerformanceMonitor;
   onBeforeRender?: () => void;
 }
 
 export interface AnimationHandle {
   running: boolean;
+  invalidate: () => void;
   stop: () => void;
 }

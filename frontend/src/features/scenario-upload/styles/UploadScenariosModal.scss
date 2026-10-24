@@ -247,7 +247,7 @@
     align-items: center;
     justify-content: center;
     color: var(--workspace-muted);
-    font-size: 12px;
+    font-size: 13px;
   }
 
   &__card-body {
@@ -274,8 +274,8 @@
 
   &__card-id {
     color: var(--workspace-muted);
-    font-family: monospace !important;
-    font-size: 0.7rem !important;
+    font-family: var(--font-mono) !important;
+    font-size: 0.8125rem !important;
   }
 
   &__card-description,

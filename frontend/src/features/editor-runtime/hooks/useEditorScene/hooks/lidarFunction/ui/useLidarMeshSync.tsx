@@ -1,9 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { useEditorStore } from '@/store';
 import type { Lidar } from '@/entities/vehicle';
 import { useEditorRefs, useHooks } from '@editor/context';
 import { createLidarMesh, disposeLidarGroup } from '../utils/LidarUtils';
+import { invalidateEditorScene } from '@editor/lib/invalidateEditorScene';
 
 export function useLidarMeshSync() {
   const { carMeshesRef, transformControlsRef } = useEditorRefs();
@@ -13,12 +14,17 @@ export function useLidarMeshSync() {
   const lastSyncedLidarsRef = useRef<
     Map<string, { lidar: Lidar; parentScale: number }>
   >(new Map());
-  useEffect(() => {
+  useLayoutEffect(() => {
     const timer = setTimeout(() => {
       const carMeshes = carMeshesRef.current;
 
       const existingGroups = new Map<string, THREE.Group>();
+      const carMeshesById = new Map<string, THREE.Group>();
       carMeshes.forEach((wrapper) => {
+        carMeshesById.set(
+          wrapper.userData.id,
+          wrapper as unknown as THREE.Group
+        );
         wrapper.children.forEach((child) => {
           if (child.userData.type === 'lidar') {
             existingGroups.set(child.userData.id, child as THREE.Group);
@@ -40,8 +46,7 @@ export function useLidarMeshSync() {
       });
 
       lidars.forEach((lidar) => {
-        const wrapper = carMeshes.find((m) => m.userData.id === lidar.carId) as
-          THREE.Group | undefined;
+        const wrapper = carMeshesById.get(lidar.carId);
         if (!wrapper) return;
 
         const existing = existingGroups.get(lidar.id);
@@ -69,20 +74,23 @@ export function useLidarMeshSync() {
           }
           existing.scale.setScalar(1 / parentScale);
 
-          const cone = existing.children.find(
-            (c) =>
-              (c as THREE.Mesh).isMesh &&
-              (c as THREE.Mesh).geometry instanceof THREE.ConeGeometry
-          ) as THREE.Mesh | undefined;
-          if (cone) {
-            cone.geometry.dispose();
-            cone.geometry = new THREE.ConeGeometry(
-              lidar.range * 0.1,
-              lidar.range * 0.3,
-              32,
-              1,
-              true
-            );
+          if (lastSynced?.lidar.range !== lidar.range) {
+            const cone = existing.children.find(
+              (c) =>
+                (c as THREE.Mesh).isMesh &&
+                (c as THREE.Mesh).geometry instanceof THREE.ConeGeometry
+            ) as THREE.Mesh | undefined;
+            if (cone) {
+              cone.geometry.dispose();
+              cone.geometry = new THREE.ConeGeometry(
+                lidar.range * 0.1,
+                lidar.range * 0.3,
+                32,
+                1,
+                true
+              );
+              cone.position.z = lidar.range * 0.15;
+            }
           }
         } else {
           const group = createLidarMesh(lidar);
@@ -94,6 +102,7 @@ export function useLidarMeshSync() {
         }
       });
       if (structuralChange) updateSceneGraph();
+      invalidateEditorScene();
     }, 0);
 
     return () => clearTimeout(timer);
