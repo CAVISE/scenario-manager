@@ -244,7 +244,12 @@ def _update_scenario(
     stored_map = normalize_optional_str(row.map)
     map_changed = incoming_map is not None and incoming_map != stored_map
     can_explicitly_clear_for_map_change = body.explicit_clear and incoming_is_empty
-    if map_changed and had_existing_content and not can_explicitly_clear_for_map_change:
+    if (
+        body.scenario is not None
+        and map_changed
+        and had_existing_content
+        and not can_explicitly_clear_for_map_change
+    ):
         raise HTTPException(
             status_code=409,
             detail=(

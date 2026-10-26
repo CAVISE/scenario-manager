@@ -312,18 +312,20 @@ def test_update_scenario_409_when_map_change_empties_scene(scenario_client, db_s
     )
 
 
-def test_update_scenario_409_when_map_change_omits_scene(scenario_client, db_session):
+def test_update_scenario_allows_map_change_when_scene_is_omitted(
+    scenario_client, db_session
+):
     add_scenario(db_session, map="Town03", scenario_text=json.dumps(_A_CAR_ON_TOWN03))
     response = scenario_client.patch(
         "/api/v1/scenarios/sc-1",
         json={"scenario_id": "sc-1", "map": "Town01"},
     )
 
-    assert response.status_code == 409
+    assert response.status_code == 200
     db_session.expire_all()
     assert (
         db_session.scalar(select(Scenario.map).where(Scenario.scenario_id == "sc-1"))
-        == "Town03"
+        == "Town01"
     )
 
 
@@ -434,24 +436,6 @@ def test_update_scenario_rejects_map_change_with_new_content_present(
         db_session.scalar(select(Scenario.map).where(Scenario.scenario_id == "sc-1"))
         == "Town03"
     )
-
-
-def test_update_scenario_allows_map_change_when_no_scenario_field_sent(
-    scenario_client, db_session
-):
-    # A caller that changes the map but doesn't send a scenario field
-    # at all (body.scenario is None) is not asserting any car/RSU
-    # positions for this call -- extract_scenario_groups(None) is [],
-    # and the wipe guard only triggers when body.scenario is explicitly
-    # provided (`is not None`), so a call that never touches the scene
-    # at all isn't blocked for content it never sent.
-    add_scenario(db_session, map="Town03", scenario_text=json.dumps(_A_CAR_ON_TOWN03))
-    response = scenario_client.patch(
-        "/api/v1/scenarios/sc-1",
-        json={"scenario_id": "sc-1", "map": "Town01"},
-    )
-
-    assert response.status_code == 200
 
 
 def test_update_scenario_same_map_not_blocked(scenario_client, db_session):
