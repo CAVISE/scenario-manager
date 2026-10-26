@@ -13,6 +13,7 @@ import {
 } from '@scenario-export';
 import { useAppToast } from '@/shared/ui/AppToast';
 import { useEditorRefs } from '@editor/context';
+import { getOdrMapOffsets } from '@editor/lib/getOdrMapOffsets';
 import {
   resolveSumoNetwork,
   buildSumoRoutes,
@@ -50,15 +51,15 @@ export default function SumoExportSection({
       const network = await resolveSumoNetwork(
         getSumoNetFilename(simConfig.carla.map)
       );
-      const map = odrMapRef.current;
-      if (!map) {
+      const mapOffsets = getOdrMapOffsets(odrMapRef.current);
+      if (!mapOffsets) {
         throw new Error(
           'OpenDRIVE map offsets are unavailable; wait for the map to finish loading'
         );
       }
       const routes = buildSumoRoutes(network.content, cars, points, {
-        x: map.x_offs,
-        y: map.y_offs,
+        x: mapOffsets.x,
+        y: mapOffsets.y,
       });
       const content = generateRouXml(simConfig, cars, routes);
       openExportDialog(
@@ -77,15 +78,15 @@ export default function SumoExportSection({
       const network = await resolveSumoNetwork(
         getSumoNetFilename(simConfig.carla.map)
       );
-      const map = odrMapRef.current;
-      if (!map) {
+      const mapOffsets = getOdrMapOffsets(odrMapRef.current);
+      if (!mapOffsets) {
         throw new Error(
           'OpenDRIVE map offsets are unavailable; wait for the map to finish loading'
         );
       }
       const offsets = getSumoCoordinateOffsets(network.content, {
-        x: map.x_offs,
-        y: map.y_offs,
+        x: mapOffsets.x,
+        y: mapOffsets.y,
       });
       const content = generatePolyXml(buildings, offsets);
       openExportDialog(

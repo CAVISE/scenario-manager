@@ -14,7 +14,7 @@ import {
 import {
   Close as CloseIcon,
   ContentCopy as ContentCopyIcon,
-  DeleteOutline as DeleteOutlineIcon,
+  DeleteOutlined as DeleteOutlineIcon,
 } from '@mui/icons-material';
 import { useEditorStore } from '@/store';
 import { type ErrorLogModalProps } from '../types/ErrorLogModalTypes';

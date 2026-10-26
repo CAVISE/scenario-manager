@@ -1,7 +1,6 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Alert, Box, Button, Modal, Typography } from '@mui/material';
-import { CheckCircleOutline as CheckCircleOutlineIcon } from '@mui/icons-material';
-
+import { CheckCircleOutlined as CheckCircleOutlineIcon } from '@mui/icons-material';
 import {
   getStoredXodrName,
   resolveXodrTextForSimulation,
@@ -17,10 +16,15 @@ import { useStartSimulationMutation } from '@editor/hooks/useApiHooks/useSimulat
 import { StartSimulationPayload } from '@editor/hooks/useApiHooks/useSimulationMutation/types/useSimulationMutationTypes';
 import { useEditorStore } from '@/store';
 import { useAppToast } from '@/shared/ui/AppToast';
+import { getOdrMapOffsets } from '@editor/lib/getOdrMapOffsets';
 import { MapPickerModal } from './MapPickerModal';
 import { useMapSelection } from '../hooks/useMapSelection';
+import { useEditorModalActions } from '../hooks/useEditorModalActions';
+import { useMapChangeConfirmation } from '../hooks/useMapChangeConfirmation';
+import { useMapPickerOpenEvent } from '../hooks/useMapPickerOpenEvent';
+import { useInitialMapPickerQuery } from '../hooks/useInitialMapPickerQuery';
+import { MapChangeConfirmDialog } from './MapChangeConfirmDialog';
 import '../styles/EditorModals.scss';
-
 export default function EditorModals() {
   const [telemetryModalOpen, setTelemetryModalOpen] = useState(false);
   const [simulationConfirmOpen, setSimulationConfirmOpen] = useState(false);
@@ -30,6 +34,7 @@ export default function EditorModals() {
   const [simulationError, setSimulationError] = useState<string | null>(null);
   const [mapPickerError, setMapPickerError] = useState<string | null>(null);
   const [loadingMap, setLoadingMap] = useState<string | null>(null);
+  useInitialMapPickerQuery();
   const startRequestRef = useRef(0);
   const startSimulationMutation = useStartSimulationMutation();
   const toast = useAppToast();
@@ -37,8 +42,10 @@ export default function EditorModals() {
   const setSceneExplicitlyCleared = useEditorStore(
     (s) => s.setSceneExplicitlyCleared
   );
+  const setMapLoading = useEditorStore((s) => s.setMapLoading);
+  const markScenarioClean = useEditorStore((s) => s.markScenarioClean);
   const updateScenario = useEditorStore((s) => s.updateScenario);
-  const { loadFile } = useHooks();
+  const { loadFile, cancelMapLoad } = useHooks();
   const { odrMapRef } = useEditorRefs();
   const { handleSelectMap, invalidate: invalidateMapSelection } =
     useMapSelection({
@@ -46,36 +53,43 @@ export default function EditorModals() {
       updateSimConfigCarla,
       updateScenario,
       setSceneExplicitlyCleared,
+      setMapLoading,
+      markScenarioClean,
       toastSuccess: toast.success,
       setMapPickerOpen,
       setMapPickerError,
       setLoadingMap,
+      cancelMapLoad,
     });
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-    window.editorModals = {
-      openTelemetry: () => setTelemetryModalOpen(true),
-      openSimulation: () => setSimulationConfirmOpen(true),
-      openMapPicker: () => setMapPickerOpen(true),
-    };
-    return () => {
-      invalidateMapSelection();
-      startRequestRef.current += 1;
-      delete (window as Window).editorModals;
-    };
+  const { pendingMap, requestMapChange, cancelMapChange, discardAndChangeMap } =
+    useMapChangeConfirmation({ selectMap: handleSelectMap });
+  const openMapPicker = useCallback(() => {
+    invalidateMapSelection();
+    setLoadingMap(null);
+    setMapPickerError(null);
+    setMapPickerOpen(true);
   }, [invalidateMapSelection]);
-
+  useMapPickerOpenEvent(openMapPicker);
+  useEditorModalActions({
+    setTelemetryOpen: setTelemetryModalOpen,
+    setSimulationOpen: setSimulationConfirmOpen,
+    setMapPickerOpen,
+    selectMap: requestMapChange,
+  });
   const handleStart = useCallback(async () => {
-    if (startRequestRef.current || startSimulationMutation.isPending) return;
+    if (
+      startRequestRef.current ||
+      startSimulationMutation.isPending ||
+      useEditorStore.getState().isMapLoading
+    )
+      return;
     const requestId = ++startRequestRef.current;
     setSimulationError(null);
-
     const state = useEditorStore.getState();
     const scenario = state.Scenario;
     const mapName = getStoredXodrName(state.simConfig?.carla?.map);
     const xodr = await resolveXodrTextForSimulation(mapName);
+    const mapOffsets = getOdrMapOffsets(odrMapRef.current);
     const latestState = useEditorStore.getState();
     if (
       requestId !== startRequestRef.current ||
@@ -85,7 +99,6 @@ export default function EditorModals() {
       if (requestId === startRequestRef.current) startRequestRef.current = 0;
       return;
     }
-
     const payload: StartSimulationPayload = {
       scenario_id: scenario.id || '',
       scenario_name: scenario.name || 'Scenario',
@@ -96,18 +109,16 @@ export default function EditorModals() {
       xodr,
       scenario: buildScenarioPayload().scenario as ScenarioGroup[],
       attacks: state.simConfig?.attacks ?? [],
-      map_offsets: odrMapRef.current
-        ? { x: odrMapRef.current.x_offs, y: -odrMapRef.current.y_offs }
+      map_offsets: mapOffsets
+        ? { x: mapOffsets.x, y: -mapOffsets.y }
         : undefined,
     };
-
     const validation = validateStartSimulationPayload(payload);
     if (!validation.ok) {
       setSimulationError(validation.message);
       startRequestRef.current = 0;
       return;
     }
-
     startSimulationMutation.mutate(payload, {
       onSuccess: () => {
         if (requestId !== startRequestRef.current) return;
@@ -127,14 +138,12 @@ export default function EditorModals() {
       },
     });
   }, [startSimulationMutation, odrMapRef]);
-
   return (
     <>
       <TelemetryModal
         open={telemetryModalOpen}
         onClose={() => setTelemetryModalOpen(false)}
       />
-
       <Modal
         open={simulationConfirmOpen}
         onClose={() => setSimulationConfirmOpen(false)}
@@ -183,7 +192,12 @@ export default function EditorModals() {
         error={mapPickerError}
         loadingMap={loadingMap}
         onClose={() => setMapPickerOpen(false)}
-        onSelectMap={(mapName) => void handleSelectMap(mapName)}
+        onSelectMap={(mapName) => void requestMapChange(mapName)}
+      />
+      <MapChangeConfirmDialog
+        mapName={pendingMap}
+        onCancel={cancelMapChange}
+        onDiscard={discardAndChangeMap}
       />
     </>
   );

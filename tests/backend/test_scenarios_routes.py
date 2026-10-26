@@ -229,6 +229,23 @@ def test_update_scenario_updates_opendrive(scenario_client, db_session):
     )
 
 
+def test_update_scenario_can_clear_preview(scenario_client, db_session):
+    add_scenario(db_session, preview="data:image/png;base64,old-preview")
+    response = scenario_client.patch(
+        "/api/v1/scenarios/sc-1",
+        json={"scenario_id": "sc-1", "preview": None},
+    )
+
+    assert response.status_code == 200
+    db_session.expire_all()
+    assert (
+        db_session.scalar(
+            select(Scenario.preview).where(Scenario.scenario_id == "sc-1")
+        )
+        is None
+    )
+
+
 def test_update_scenario_404_when_missing(scenario_client):
     response = scenario_client.patch(
         "/api/v1/scenarios/missing",
@@ -288,6 +305,21 @@ def test_update_scenario_409_when_map_change_empties_scene(scenario_client, db_s
 
     assert response.status_code == 409
     assert "explicit_clear" in response.json()["detail"]
+    db_session.expire_all()
+    assert (
+        db_session.scalar(select(Scenario.map).where(Scenario.scenario_id == "sc-1"))
+        == "Town03"
+    )
+
+
+def test_update_scenario_409_when_map_change_omits_scene(scenario_client, db_session):
+    add_scenario(db_session, map="Town03", scenario_text=json.dumps(_A_CAR_ON_TOWN03))
+    response = scenario_client.patch(
+        "/api/v1/scenarios/sc-1",
+        json={"scenario_id": "sc-1", "map": "Town01"},
+    )
+
+    assert response.status_code == 409
     db_session.expire_all()
     assert (
         db_session.scalar(select(Scenario.map).where(Scenario.scenario_id == "sc-1"))
@@ -381,12 +413,11 @@ def test_update_scenario_409_even_when_stored_map_was_unset(
     assert response.status_code == 409
 
 
-def test_update_scenario_allows_map_change_with_new_content_present(
+def test_update_scenario_rejects_map_change_with_new_content_present(
     scenario_client, db_session
 ):
-    # Placing new (non-empty) content under a different map is not a
-    # wipe -- it's not blocked, only flagged via the response's warning
-    # field so the caller can double-check the positions.
+    # Coordinates are map-relative. Updating a saved scenario in place
+    # would silently move its objects onto unrelated roads.
     add_scenario(db_session, map="Town03", scenario_text=json.dumps(_A_CAR_ON_TOWN03))
     new_content = {
         "scenario_text": [{"vehicle": "car", "path": [{"x": 1.0, "y": 2.0, "z": 0.0}]}]
@@ -396,15 +427,12 @@ def test_update_scenario_allows_map_change_with_new_content_present(
         json={"scenario_id": "sc-1", "map": "Town01", "scenario": new_content},
     )
 
-    assert response.status_code == 200
-    body = response.json()
-    assert body.get("warning")
-    assert "Town03" in body["warning"]
-    assert "Town01" in body["warning"]
+    assert response.status_code == 409
+    assert "cannot change maps" in response.json()["detail"]
     db_session.expire_all()
     assert (
         db_session.scalar(select(Scenario.map).where(Scenario.scenario_id == "sc-1"))
-        == "Town01"
+        == "Town03"
     )
 
 

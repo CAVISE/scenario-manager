@@ -61,11 +61,21 @@ export const LocalPlannerSection = ({
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="subtitle2" color="text.secondary">
+      <Typography
+        variant="subtitle2"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         Local planner
       </Typography>
 
-      <Typography variant="caption" color="text.secondary">
+      <Typography
+        variant="caption"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         Buffer & update frequencies
       </Typography>
       <Stack direction="row" spacing={2}>
@@ -112,7 +122,12 @@ export const LocalPlannerSection = ({
         />
       </Stack>
 
-      <Typography variant="caption" color="text.secondary">
+      <Typography
+        variant="caption"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         Path parameters
       </Typography>
       <Stack direction="row" spacing={2}>
@@ -146,10 +161,21 @@ export const LocalPlannerSection = ({
         />
       </Stack>
 
-      <Typography variant="caption" color="text.secondary">
+      <Typography
+        variant="caption"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         Debug options
       </Typography>
-      <Stack direction="row" spacing={2} alignItems="center">
+      <Stack
+        direction="row"
+        spacing={2}
+        sx={{
+          alignItems: 'center',
+        }}
+      >
         <FormControlLabel
           control={
             <Switch
@@ -158,7 +184,13 @@ export const LocalPlannerSection = ({
             />
           }
           label={
-            <Stack direction="row" alignItems="center" spacing={1}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: 'center',
+              }}
+            >
               <span>Debug</span>
               <Chip
                 label={debug ? 'On' : 'Off'}
@@ -178,7 +210,13 @@ export const LocalPlannerSection = ({
             />
           }
           label={
-            <Stack direction="row" alignItems="center" spacing={1}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: 'center',
+              }}
+            >
               <span>Debug traj.</span>
               <Chip
                 label={debugTrajectory ? 'On' : 'Off'}

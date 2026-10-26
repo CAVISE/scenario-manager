@@ -14,7 +14,7 @@ export const HooksProvider = ({ children }: EditorProviderProps) => {
   const buildingModelRef = useBuildingLoader();
   const { sceneGraph, updateSceneGraph } = useSceneGraph(sceneRef);
   const { loadingText, loadingProgress, setStep } = useLoadingState();
-  const { actionsRef, loadFile } = useThreeScene({
+  const { actionsRef, loadFile, cancelMapLoad } = useThreeScene({
     updateSceneGraph,
     setStep,
   });
@@ -39,6 +39,7 @@ export const HooksProvider = ({ children }: EditorProviderProps) => {
     loadingText,
     setStep,
     actionsRef,
+    cancelMapLoad,
     loadFile,
     handleAddCar,
     handleAddRSU,

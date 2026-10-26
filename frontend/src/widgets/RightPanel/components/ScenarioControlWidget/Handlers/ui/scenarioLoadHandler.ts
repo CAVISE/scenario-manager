@@ -38,7 +38,7 @@ export const handleLoad = async ({
   setStep,
   isCurrent: isCallerCurrent,
 }: LoadScenarioOptions) => {
-  if (!hasId) return;
+  if (!hasId) return false;
   const isMapLoadCurrent = beginMapLoadRequest();
   const isCurrent = () => isMapLoadCurrent() && (isCallerCurrent?.() ?? true);
   setStep?.('map');
@@ -48,7 +48,23 @@ export const handleLoad = async ({
       queryKey: scenarioKeys.detail(id),
       queryFn: () => scenariosApi.get(id),
     });
-    if (!isCurrent()) return;
+    if (!isCurrent()) return false;
+    const xodr = data.file_ ?? (data.scenario as unknown as Scenario)?.file_;
+    const map =
+      data.map ||
+      (xodr && !isOpenDrive(xodr) ? toCarlaMapNameFromXodr(xodr) : null);
+    if (xodr) {
+      const text = isOpenDrive(xodr) ? xodr : await fetchXodrText(xodr);
+      if (!isCurrent()) return false;
+      const loaded = await loadFile(
+        text,
+        true,
+        isOpenDrive(xodr) ? undefined : xodr
+      );
+      if (loaded === false) throw new Error('Failed to load the scenario map.');
+    }
+    if (!isCurrent()) return false;
+
     useEditorStore.setState({ simConfig: defaultSimConfig });
     const state = useEditorStore.getState();
     state.updateScenario({
@@ -59,18 +75,9 @@ export const handleLoad = async ({
       file_: data.file_ ?? null,
       revision: data.revision,
     });
-    const xodr = data.file_ ?? (data.scenario as unknown as Scenario)?.file_;
-    const map =
-      data.map ||
-      (xodr && !isOpenDrive(xodr) ? toCarlaMapNameFromXodr(xodr) : null);
     if (map) {
       state.updateSimConfigCarla({ map });
       setStoredXodrName(map);
-    }
-    if (xodr) {
-      const text = isOpenDrive(xodr) ? xodr : await fetchXodrText(xodr);
-      if (!isCurrent()) return;
-      loadFile(text, true, isOpenDrive(xodr) ? undefined : xodr);
     }
 
     const scenarioText = (
@@ -85,17 +92,15 @@ export const handleLoad = async ({
     restorePedestrians(scenarioText, state);
     restoreBuildings(scenarioText, state);
 
-    const meta = data.scenario as
-      { scenario_id?: string; name_of_scenario?: string } | undefined;
-    state.updateScenario({
-      id: String(meta?.scenario_id ?? id),
-      name: meta?.name_of_scenario ?? '',
-    });
+    state.clearHistory();
+    state.clearDeletionHistory();
+    state.markScenarioClean?.();
     updateSceneGraph();
     setNotice('The scenario has been uploaded.');
     if (!xodr) setStep?.('done');
+    return true;
   } catch (err) {
-    if (!isCurrent()) return;
+    if (!isCurrent()) return false;
     console.error(err);
     setStep?.('done');
     if (
@@ -106,6 +111,7 @@ export const handleLoad = async ({
     } else {
       setNotice(await getApiErrorMessage(err, 'Failed to load scenario.'));
     }
+    return false;
   }
 };
 

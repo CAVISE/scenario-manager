@@ -6,7 +6,7 @@ export interface ClearSceneParams {
   three: ThreeSetup;
   odrMeshes: OdrMapMeshes;
   disposableGeometries: THREE.BufferGeometry[];
-  localLineArrRef: MutableRefObject<THREE.Line[][]>;
+  localLineArrRef: MutableRefObject<THREE.Mesh[][]>;
   carMeshesRef: MutableRefObject<THREE.Mesh[]>;
   rsuObjectMeshesRef: MutableRefObject<THREE.Mesh[]>;
   routePointMeshesRef: MutableRefObject<THREE.Mesh[][]>;

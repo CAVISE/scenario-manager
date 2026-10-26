@@ -38,23 +38,27 @@ export function LocalPlannerNumberField({
         className="sim-config-field--grow"
         direction="row"
         spacing={1}
-        alignItems="center"
+        sx={{
+          alignItems: 'center',
+        }}
       >
         <TextField
           label={label}
           type="number"
           size="small"
           fullWidth
-          inputProps={{
-            ...numInputSlot.input,
-            min: options?.min,
-            max: options?.max,
-            step: options?.step || 1,
-          }}
           value={value}
           onChange={(event) =>
             onChange(event, field, options?.min, options?.max)
           }
+          slotProps={{
+            htmlInput: {
+              ...numInputSlot.input,
+              min: options?.min,
+              max: options?.max,
+              step: options?.step || 1,
+            },
+          }}
         />
         {options?.chip && (
           <Chip

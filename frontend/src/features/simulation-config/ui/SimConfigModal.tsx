@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   Modal,
   Box,
@@ -25,6 +25,7 @@ import {
 import { parseNumberInputChange } from '@/shared/utils/numberInputUtils';
 import { mergeSimConfigWithDefaults } from '@scenario-export';
 import { useEditorStore } from '@/store';
+import { useNumberInputHold } from '../hooks/useNumberInputHold';
 import '../styles/SimConfigModal.scss';
 
 export default function SimConfigModal({ open, onClose }: SimConfigModalProps) {
@@ -36,110 +37,7 @@ export default function SimConfigModal({ open, onClose }: SimConfigModalProps) {
     [rawSimConfig]
   );
   const updateSimConfig = useEditorStore((s) => s.updateSimConfig);
-
-  useEffect(() => {
-    const container = modalContentRef.current;
-
-    if (!open || !container) {
-      return undefined;
-    }
-
-    const HOLD_DELAY_MS = 350;
-    const HOLD_REPEAT_MS = 90;
-
-    let activeInput: HTMLInputElement | null = null;
-    let holdDelayTimeout: number | null = null;
-    let holdInterval: number | null = null;
-    let step = 1;
-    let minimum: number | undefined;
-    let maximum: number | undefined;
-
-    const clearHoldTimers = () => {
-      if (holdDelayTimeout !== null) {
-        window.clearTimeout(holdDelayTimeout);
-        holdDelayTimeout = null;
-      }
-      if (holdInterval !== null) {
-        window.clearInterval(holdInterval);
-        holdInterval = null;
-      }
-    };
-
-    const stopHolding = () => {
-      clearHoldTimers();
-      activeInput = null;
-    };
-
-    const updateInputValue = (nextValue: number) => {
-      if (!activeInput) {
-        return;
-      }
-
-      const clampedValue = Math.min(
-        maximum ?? Number.POSITIVE_INFINITY,
-        Math.max(minimum ?? Number.NEGATIVE_INFINITY, nextValue)
-      );
-
-      activeInput.value = String(clampedValue);
-      activeInput.dispatchEvent(new Event('input', { bubbles: true }));
-      activeInput.dispatchEvent(new Event('change', { bubbles: true }));
-    };
-
-    const stepInput = () => {
-      if (!activeInput) {
-        return;
-      }
-      const currentValue = Number(activeInput.value);
-      updateInputValue(
-        (Number.isFinite(currentValue) ? currentValue : 0) + step
-      );
-    };
-
-    const startHolding = (event: Event) => {
-      const target = event.target as HTMLElement | null;
-      const input = target?.closest(
-        'input[type="number"]'
-      ) as HTMLInputElement | null;
-
-      if (!input) {
-        return;
-      }
-
-      stopHolding();
-      activeInput = input;
-      minimum = input.min ? Number(input.min) : undefined;
-      maximum = input.max ? Number(input.max) : undefined;
-      step = Number(input.step || 1);
-      step = Number.isFinite(step) && step > 0 ? step : 1;
-
-      holdDelayTimeout = window.setTimeout(() => {
-        holdDelayTimeout = null;
-        if (!activeInput) {
-          return;
-        }
-        stepInput();
-        holdInterval = window.setInterval(stepInput, HOLD_REPEAT_MS);
-      }, HOLD_DELAY_MS);
-    };
-
-    container.addEventListener('mousedown', startHolding as EventListener);
-    container.addEventListener('touchstart', startHolding as EventListener);
-    container.addEventListener('mouseleave', stopHolding as EventListener);
-    window.addEventListener('mouseup', stopHolding);
-    window.addEventListener('touchend', stopHolding);
-
-    return () => {
-      stopHolding();
-      container.removeEventListener('mousedown', startHolding as EventListener);
-      container.removeEventListener(
-        'touchstart',
-        startHolding as EventListener
-      );
-      container.removeEventListener('mouseleave', stopHolding as EventListener);
-      window.removeEventListener('mouseup', stopHolding);
-      window.removeEventListener('touchend', stopHolding);
-    };
-  }, [open]);
+  useNumberInputHold(modalContentRef, open);
 
   return (
     <Modal open={open} onClose={onClose}>
@@ -152,7 +50,9 @@ export default function SimConfigModal({ open, onClose }: SimConfigModalProps) {
           className="sim-config-modal__summary-row"
           direction="row"
           spacing={2}
-          alignItems="center"
+          sx={{
+            alignItems: 'center',
+          }}
         >
           <TextField
             label="Duration (s)"
@@ -193,7 +93,7 @@ export default function SimConfigModal({ open, onClose }: SimConfigModalProps) {
         {tab === 0 && <OmnetTab />}
         {tab === 1 && <ArteryTab />}
         {tab === 2 && <SionnaTab />}
-        {tab === 3 && <CarlaTab />}
+        {tab === 3 && <CarlaTab onMapLoaded={onClose} />}
         {tab === 4 && <OpenCDATab />}
         {tab === 5 && <SumoTab />}
         {tab === 6 && <CapiTab />}
@@ -201,9 +101,11 @@ export default function SimConfigModal({ open, onClose }: SimConfigModalProps) {
 
         <Stack
           direction="row"
-          justifyContent="space-between"
-          alignItems="center"
           className="sim-config-modal__actions"
+          sx={{
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
         >
           <Stack direction="row" spacing={1} />
           <Button

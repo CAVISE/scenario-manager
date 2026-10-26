@@ -23,7 +23,12 @@ export const BlueprintSection = ({
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="subtitle2" color="text.secondary">
+      <Typography
+        variant="subtitle2"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         Blueprint
       </Typography>
 
@@ -47,11 +52,22 @@ export const BlueprintSection = ({
         onChange={(e) => updateField('bp_meta_path', e.target.value)}
       />
 
-      <Typography variant="caption" color="text.secondary">
+      <Typography
+        variant="caption"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         Class sample probabilities (sum ≤ 1)
       </Typography>
 
-      <Stack direction="row" spacing={1} flexWrap="wrap">
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          flexWrap: 'wrap',
+        }}
+      >
         {(['car', 'truck', 'bus', 'bicycle', 'motorcycle'] as const).map(
           (cls) => (
             <TextField
@@ -59,12 +75,6 @@ export const BlueprintSection = ({
               label={cls}
               type="number"
               size="small"
-              inputProps={{
-                ...numInputSlot.input,
-                step: '0.05',
-                min: '0',
-                max: '1',
-              }}
               value={classProbabilities[cls]}
               onChange={(e) => {
                 const val = parseNumberFromEvent(e, 0, 1);
@@ -77,6 +87,14 @@ export const BlueprintSection = ({
                 });
               }}
               className="sim-config-field--90"
+              slotProps={{
+                htmlInput: {
+                  ...numInputSlot.input,
+                  step: '0.05',
+                  min: '0',
+                  max: '1',
+                },
+              }}
             />
           )
         )}

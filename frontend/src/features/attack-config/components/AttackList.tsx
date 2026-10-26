@@ -18,7 +18,13 @@ export function AttackList({
   onSelect,
 }: AttackListProps) {
   return (
-    <Stack direction="row" gap={1} flexWrap="wrap">
+    <Stack
+      direction="row"
+      sx={{
+        gap: 1,
+        flexWrap: 'wrap',
+      }}
+    >
       {attacks.map((attack, idx) => {
         const stageLabel = getStageLabels(attack.stages);
         const hasStages = stageLabel.length > 0;

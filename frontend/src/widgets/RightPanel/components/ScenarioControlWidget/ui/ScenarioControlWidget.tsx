@@ -23,10 +23,11 @@ export default function ScenarioControlWidget({
   const map = useEditorStore((s) => s.simConfig.carla.map);
   const vehicleCount = useEditorStore((s) => s.cars.length);
   const rsuCount = useEditorStore((s) => s.RSUs.length);
+  const isMapLoading = useEditorStore((s) => s.isMapLoading);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const fieldId = useId();
   const hasId = Boolean(scenario.id?.trim());
-  const disabled = readOnly || controls.isBusy;
+  const disabled = readOnly || controls.isBusy || isMapLoading;
   const focusIssue = (entityId: string | null) => {
     if (!entityId) return;
     window.dispatchEvent(
@@ -95,6 +96,11 @@ export default function ScenarioControlWidget({
       {readOnly && (
         <p className="rp-context-help">
           Editing is paused while the simulation is running.
+        </p>
+      )}
+      {isMapLoading && (
+        <p className="rp-context-help">
+          Loading map — saving is temporarily disabled.
         </p>
       )}
       {controls.notice && (

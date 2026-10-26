@@ -5,7 +5,12 @@ import type { CapiSectionProps } from '../types/capiTypes';
 export const RadioSection = ({ capi, update }: CapiSectionProps) => (
   <>
     <Divider />
-    <Typography variant="subtitle2" color="text.secondary">
+    <Typography
+      variant="subtitle2"
+      sx={{
+        color: 'text.secondary',
+      }}
+    >
       Radio
     </Typography>
     <Stack direction="row" spacing={2}>

@@ -12,6 +12,8 @@ function removeEntity(entity: DeletionSnapshot['entities'][number]) {
   switch (entity.kind) {
     case 'car':
       st.removeCar(entity.car.id);
+      st.removePointsByCarId(entity.car.id);
+      st.removeLidarsByCarId(entity.car.id);
       break;
     case 'rsu': {
       const idx = st.RSUs.findIndex((r) => r.id === entity.rsu.id);
@@ -73,7 +75,9 @@ export function pushSingleDeletionSnapshot({
     label: snapshot.label,
     sourceSnapshotId: snapshotId,
     undo: () => {
-      useEditorStore.getState().restoreLastDeletion(snapshotId);
+      useEditorStore
+        .getState()
+        .restoreLastDeletion(snapshotId, { preserveHistoryEntry: true });
     },
     redo: () => {
       removeEntities(entities);
@@ -132,7 +136,9 @@ export function pushClearSceneSnapshot(): PushedSnapshotInfo | null {
     label,
     sourceSnapshotId: snapshotId,
     undo: () => {
-      useEditorStore.getState().restoreLastDeletion(snapshotId);
+      useEditorStore
+        .getState()
+        .restoreLastDeletion(snapshotId, { preserveHistoryEntry: true });
     },
     redo: () => {
       removeEntities(entities);

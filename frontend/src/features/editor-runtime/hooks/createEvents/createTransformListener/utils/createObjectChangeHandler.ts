@@ -2,11 +2,18 @@ import { useEditorStore } from '@/store';
 import type { MutableRefObject } from 'react';
 import * as THREE from 'three';
 import type { CreateTransformListenerOptions } from '../types/createTransformListenerTypes';
+import {
+  updateRouteLinesForCar,
+  updateRouteLinesForWaypoint,
+} from '@editor/scene/loaders/loadPoints/utils/routeLine';
+import { snapTransform } from './snapTransform';
 
 interface CreateObjectChangeHandlerOptions {
   transformControls: CreateTransformListenerOptions['transformControls'];
   carMeshesRef: MutableRefObject<THREE.Mesh[]>;
   routePointMeshesRef: MutableRefObject<THREE.Mesh[][]>;
+  localLineArrRef: MutableRefObject<THREE.Mesh[][]>;
+  roadMeshRef: MutableRefObject<THREE.Mesh | null>;
   carQuaternionsRef: MutableRefObject<Map<string, THREE.Quaternion>>;
 }
 
@@ -14,6 +21,8 @@ export function createObjectChangeHandler({
   transformControls,
   carMeshesRef,
   routePointMeshesRef,
+  localLineArrRef,
+  roadMeshRef,
   carQuaternionsRef,
 }: CreateObjectChangeHandlerOptions) {
   return (obj?: THREE.Object3D) => {
@@ -27,8 +36,26 @@ export function createObjectChangeHandler({
         ).object;
       if (!target?.userData) return;
       const { type, id } = target.userData;
+      if (
+        type === 'car' ||
+        type === 'rsu' ||
+        type === 'lidar' ||
+        type === 'building' ||
+        type === 'pedestrian' ||
+        type === 'route-point'
+      ) {
+        snapTransform(target, type, roadMeshRef.current);
+      }
 
       if (type === 'car' && id) {
+        const carIndex = carMeshesRef.current.indexOf(target as THREE.Mesh);
+        if (carIndex >= 0) {
+          updateRouteLinesForCar(
+            target,
+            routePointMeshesRef.current[carIndex],
+            localLineArrRef.current[carIndex]
+          );
+        }
         carQuaternionsRef.current.set(id, target.quaternion.clone());
         useEditorStore.getState().updateCar(id, {
           x: target.position.x,
@@ -98,6 +125,12 @@ export function createObjectChangeHandler({
               z: target.position.z,
             });
           }
+          updateRouteLinesForWaypoint(
+            ci,
+            carMeshesRef.current[i],
+            routePointMeshes[i],
+            localLineArrRef.current[i]
+          );
           useEditorStore
             .getState()
             .selectObjects([{ type: 'point', id: point?.id || '' }]);

@@ -45,9 +45,11 @@ export default function OpenCDATabRareSections({
         </Typography>
         <Typography
           variant="caption"
-          color="text.secondary"
-          display="block"
           className="opencda-panel__description"
+          sx={{
+            color: 'text.secondary',
+            display: 'block',
+          }}
         >
           Rare blocks used in scenario_testing configs — expand only what you
           need.

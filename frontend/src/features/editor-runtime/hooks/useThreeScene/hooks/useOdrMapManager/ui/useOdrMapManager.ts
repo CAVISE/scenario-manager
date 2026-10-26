@@ -83,26 +83,18 @@ export function useOdrMapManager({
   }, [odrMaterials]);
 
   const loadOdrMap = useCallback(
-    (clearMap = true, fitView = true) => {
+    (
+      clearMap = true,
+      fitView = true,
+      onComplete?: (success: boolean) => void,
+      xodrText?: string
+    ) => {
       const three = threeRef.current;
       const Module = moduleRef.current;
       const OdrMap = mapRef.current;
-      if (!three || !Module || !OdrMap) return;
-
-      if (clearMap) {
-        clearScene({
-          three,
-          odrMeshes: odrMeshesRef.current,
-          disposableGeometries: disposableGeometriesRef.current,
-          localLineArrRef,
-          carMeshesRef,
-          rsuObjectMeshesRef,
-          routePointMeshesRef,
-          carQuaternionsRef,
-          currentCarRef,
-          currentColorRef,
-          syncRoadMesh,
-        });
+      if (!three || !Module || !OdrMap) {
+        onComplete?.(false);
+        return;
       }
 
       const isLargeMap = isLargeXodrSelected();
@@ -113,9 +105,27 @@ export function useOdrMapManager({
       geometryPreparationAbortRef.current?.abort();
       geometryPreparationAbortRef.current = null;
       const buildScene = (preparedGeometry?: PreparedOdrGeometry) => {
-        if (requestId !== mapBuildRequestRef.current) return;
+        if (requestId !== mapBuildRequestRef.current) {
+          onComplete?.(false);
+          return;
+        }
 
         try {
+          if (clearMap) {
+            clearScene({
+              three,
+              odrMeshes: odrMeshesRef.current,
+              disposableGeometries: disposableGeometriesRef.current,
+              localLineArrRef,
+              carMeshesRef,
+              rsuObjectMeshesRef,
+              routePointMeshesRef,
+              carQuaternionsRef,
+              currentCarRef,
+              currentColorRef,
+              syncRoadMesh,
+            });
+          }
           buildMap({
             three,
             Module,
@@ -144,6 +154,7 @@ export function useOdrMapManager({
           setError?.(
             err instanceof Error ? err : new Error('Failed to build map scene')
           );
+          onComplete?.(false);
           return;
         }
 
@@ -163,12 +174,17 @@ export function useOdrMapManager({
 
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
-            if (requestId === mapBuildRequestRef.current) setStep('done');
+            if (requestId !== mapBuildRequestRef.current) {
+              onComplete?.(false);
+              return;
+            }
+            setStep('done');
+            onComplete?.(true);
           });
         });
       };
 
-      const xodr = getCachedXodrContent();
+      const xodr = xodrText ?? getCachedXodrContent();
       if (isLargeMap && xodr) {
         const cachedGeometry = preparedGeometryCacheRef.current;
         if (
@@ -186,12 +202,18 @@ export function useOdrMapManager({
           abortController.signal
         )
           .then((geometry) => {
-            if (requestId !== mapBuildRequestRef.current) return;
+            if (requestId !== mapBuildRequestRef.current) {
+              onComplete?.(false);
+              return;
+            }
             preparedGeometryCacheRef.current = { xodr, resolution, geometry };
             buildScene(geometry);
           })
           .catch((err) => {
-            if (abortController.signal.aborted) return;
+            if (abortController.signal.aborted) {
+              onComplete?.(false);
+              return;
+            }
             console.warn(
               '[OdrMapManager] worker preparation failed; using main-thread fallback',
               err
@@ -226,6 +248,16 @@ export function useOdrMapManager({
     ]
   );
 
+  const cancelMapBuild = useCallback(() => {
+    mapBuildRequestRef.current += 1;
+    geometryPreparationAbortRef.current?.abort();
+    geometryPreparationAbortRef.current = null;
+    if (lidarRestoreTimerRef.current) {
+      clearTimeout(lidarRestoreTimerRef.current);
+      lidarRestoreTimerRef.current = null;
+    }
+  }, []);
+
   const reloadOdrMap = useCallback(() => {
     const Module = moduleRef.current;
     if (!Module) {
@@ -234,12 +266,11 @@ export function useOdrMapManager({
       return;
     }
     try {
+      odrMapRef.current = null;
       mapRef.current?.delete();
       mapRef.current = new Module.OpenDriveMap(MAP_PATH, ODR_MAP_OPTIONS);
       odrMapRef.current = mapRef.current;
       loadOdrMap(true, false);
-      console.log('X offset: ', mapRef.current.x_offs);
-      console.log('Y offset: ', mapRef.current.y_offs);
     } catch (err) {
       console.error(err);
       setStep('done');
@@ -252,6 +283,7 @@ export function useOdrMapManager({
   return {
     getOdrMeshes: useCallback(() => odrMeshesRef.current, []),
     loadOdrMap,
+    cancelMapBuild,
     reloadOdrMap,
     setModuleRef: moduleRef,
     setMapRef: mapRef,

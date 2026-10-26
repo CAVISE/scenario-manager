@@ -23,12 +23,18 @@ export interface UseOdrMapManagerProps {
   syncRoadMesh: (mesh: THREE.Mesh | null) => void;
   updateSceneGraph: () => void;
   buildingMeshesRef: MutableRefObject<THREE.Object3D[]>;
-  localLineArrRef: MutableRefObject<THREE.Line[][]>;
+  localLineArrRef: MutableRefObject<THREE.Mesh[][]>;
 }
 
 export interface UseOdrMapManagerResult {
   getOdrMeshes: () => OdrMapMeshes;
-  loadOdrMap: (clearMap?: boolean, fitView?: boolean) => void;
+  loadOdrMap: (
+    clearMap?: boolean,
+    fitView?: boolean,
+    onComplete?: (success: boolean) => void,
+    xodrText?: string
+  ) => void;
+  cancelMapBuild: () => void;
   reloadOdrMap: () => void;
   setModuleRef: MutableRefObject<OpenDriveModule | null>;
   setMapRef: MutableRefObject<OpenDriveMapInstance | null>;

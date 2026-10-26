@@ -98,6 +98,20 @@ describe('3D selection', () => {
     expect(mocks.detach).not.toHaveBeenCalled();
   });
 
+  it('selects an existing object without leaving pedestrian placement mode', () => {
+    modes.isAddPedestrianModeActive = true;
+    mocks.intersect.mockReturnValue([{ object: objects[1] }]);
+    const { result } = renderHook(() => useClickHandler(context()));
+
+    act(() => result.current(new MouseEvent('click')));
+
+    expect(useEditorStore.getState().selectedIds).toEqual([
+      objects[1].userData.id,
+    ]);
+    expect(modes.isAddPedestrianModeActive).toBe(true);
+    expect(mocks.attach).toHaveBeenCalledWith(objects[1]);
+  });
+
   it('does not clear selection from the click emitted after a transform drag', () => {
     useEditorStore
       .getState()

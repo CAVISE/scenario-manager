@@ -7,7 +7,7 @@ import {
   TextField,
   Tooltip,
 } from '@mui/material';
-import { DeleteOutline as DeleteOutlineIcon } from '@mui/icons-material';
+import { DeleteOutlined as DeleteOutlineIcon } from '@mui/icons-material';
 import { GnssSpooferForm } from './GnssSpooferForm';
 import { OpenCDAAttackStage } from '@scenario-export';
 import type { StageEditorProps } from '../types/AttackConfigModalTypes';
@@ -21,7 +21,13 @@ export function StageEditor({ stage, onUpdate, onDelete }: StageEditorProps) {
 
   return (
     <Stack spacing={1.5}>
-      <Stack direction="row" spacing={1} alignItems="center">
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: 'center',
+        }}
+      >
         <TextField
           label="Stage type"
           size="small"

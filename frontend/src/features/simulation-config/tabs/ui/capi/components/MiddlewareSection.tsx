@@ -5,7 +5,12 @@ import type { CapiSectionProps } from '../types/capiTypes';
 export const MiddlewareSection = ({ capi, update }: CapiSectionProps) => (
   <>
     <Divider />
-    <Typography variant="subtitle2" color="text.secondary">
+    <Typography
+      variant="subtitle2"
+      sx={{
+        color: 'text.secondary',
+      }}
+    >
       Middleware
     </Typography>
     <Stack direction="row" spacing={2}>
@@ -14,11 +19,13 @@ export const MiddlewareSection = ({ capi, update }: CapiSectionProps) => (
         type="number"
         size="small"
         fullWidth
-        inputProps={{ step: 0.01 }}
         value={capi.middleware_update_interval}
         onChange={(e) =>
           updateNumberField(e, 'middleware_update_interval', update)
         }
+        slotProps={{
+          htmlInput: { step: 0.01 },
+        }}
       />
       <TextField
         label="Datetime"

@@ -15,6 +15,8 @@ import {
   sanitizePositions,
 } from '@editor/scene/utils/sceneHelpers';
 import { encodeUInt32 } from '@/shared/lib/editorUtils';
+import { useWorkspacePreferences } from '@/store/ui/useWorkspacePreferences';
+import { isEditorVisualVisible } from '@editor/lib/visualPreferences';
 import { PickingScenes } from '../../useThreeSetup/types/useThreeSetupTypes';
 import type {
   PreparedOdrGeometry,
@@ -271,6 +273,10 @@ function buildModuleOdrScene(options: LoadOdrMapParams): OdrMapMeshes {
   const ground_grid = new THREE.GridHelper(diag, diag / 10, 0x2f2f2f, 0x2f2f2f);
   ground_grid.geometry.rotateX(Math.PI / 2);
   ground_grid.position.set(center.x, center.y, bbox.min.z - 0.1);
+  ground_grid.visible = isEditorVisualVisible(
+    useWorkspacePreferences.getState(),
+    'grid'
+  );
   disposableGeometries.push(ground_grid.geometry);
   scene.add(ground_grid);
 
@@ -481,6 +487,10 @@ function buildPreparedOdrScene(
   );
   ground_grid.geometry.rotateX(Math.PI / 2);
   ground_grid.position.set(center.x, center.y, bbox.min.z - 0.1);
+  ground_grid.visible = isEditorVisualVisible(
+    useWorkspacePreferences.getState(),
+    'grid'
+  );
   disposableGeometries.push(ground_grid.geometry);
   scene.add(ground_grid);
 

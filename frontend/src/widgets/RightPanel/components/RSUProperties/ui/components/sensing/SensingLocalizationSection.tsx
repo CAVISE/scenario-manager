@@ -43,8 +43,10 @@ export function SensingLocalizationSection({
     <>
       <Typography
         variant="caption"
-        color="text.secondary"
         className="right-panel-property-eyebrow"
+        sx={{
+          color: 'text.secondary',
+        }}
       >
         Localization
       </Typography>
@@ -65,9 +67,9 @@ export function SensingLocalizationSection({
         }
         label="Activate (GNSS + Kalman Filter)"
       />
-      <Grid item container spacing={1}>
+      <Grid container spacing={1}>
         {GNSS_NOISE_FIELDS.map(({ key, label, def }) => (
-          <Grid item xs={4} key={key}>
+          <Grid key={key} size={4}>
             <FormControl>
               <FormLabel className="right-panel-property-label">
                 {label}

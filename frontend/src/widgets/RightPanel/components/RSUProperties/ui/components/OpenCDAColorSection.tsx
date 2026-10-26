@@ -38,11 +38,11 @@ export function OpenCDAColorSection({
       </Box>
       {showColor && (
         <Box className="right-panel-property-primary-panel">
-          <Grid item container spacing={1}>
+          <Grid container spacing={1}>
             {([0, 1, 2] as const).map((idx) => {
               const labels = ['R', 'G', 'B'];
               return (
-                <Grid item xs={4} key={idx}>
+                <Grid key={idx} size={4}>
                   <FormControl>
                     <FormLabel className="right-panel-property-label">
                       {labels[idx]}

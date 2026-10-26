@@ -37,8 +37,10 @@ export function VehicleRouteCard({
     <Box className="sim-config-card">
       <Typography
         variant="caption"
-        color="text.secondary"
         className="sim-config-card-title"
+        sx={{
+          color: 'text.secondary',
+        }}
       >
         {car.model || `Vehicle ${index + 1}`}
       </Typography>
@@ -58,22 +60,26 @@ export function VehicleRouteCard({
             type="number"
             size="small"
             fullWidth
-            inputProps={{ step: 0.05 }}
             value={car.sumo_depart ?? 0.05}
             onChange={(event) =>
               onUpdate({ sumo_depart: parseNumberInputChange(event.target) })
             }
+            slotProps={{
+              htmlInput: { step: 0.05 },
+            }}
           />
           <TextField
             label="Max speed (m/s)"
             type="number"
             size="small"
             fullWidth
-            inputProps={{ step: 0.1 }}
             value={car.sumo_max_speed ?? 16.665}
             onChange={(event) =>
               onUpdate({ sumo_max_speed: parseNumberInputChange(event.target) })
             }
+            slotProps={{
+              htmlInput: { step: 0.1 },
+            }}
           />
         </Stack>
         <Stack direction="row" spacing={1}>
@@ -92,7 +98,6 @@ export function VehicleRouteCard({
             type="number"
             size="small"
             fullWidth
-            inputProps={{ step: 1 }}
             placeholder="auto"
             value={car.sumo_depart_pos ?? ''}
             onChange={(event) => {
@@ -103,6 +108,9 @@ export function VehicleRouteCard({
               }
               const value = Number(raw);
               if (!Number.isNaN(value)) onUpdate({ sumo_depart_pos: value });
+            }}
+            slotProps={{
+              htmlInput: { step: 1 },
             }}
           />
         </Stack>

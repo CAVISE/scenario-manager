@@ -28,6 +28,10 @@ export type RightPanelProps = {
   activeTab?: EditorTab;
   showSceneGraph?: boolean;
   readOnly?: boolean;
+  collapsed?: boolean;
+  width?: number;
+  onCollapsedChange?: (collapsed: boolean) => void;
+  onWidthChange?: (width: number) => void;
   controls: ScenarioControls;
   onTabChange: (tab: EditorTab) => void;
   preferredResultRunId?: string | null;

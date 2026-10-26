@@ -17,17 +17,19 @@ export const NumField = ({
     type="number"
     size="small"
     fullWidth
-    inputProps={{
-      ...numInputSlot.input,
-      step: String(step ?? 1),
-      min,
-      max,
-    }}
     value={value}
     onChange={(e) => {
       const parsed = parseNumberInputChange(e.target);
       const clamped = validateNumber(parsed || 0, min, max);
       onChange(clamped);
+    }}
+    slotProps={{
+      htmlInput: {
+        ...numInputSlot.input,
+        step: String(step ?? 1),
+        min,
+        max,
+      },
     }}
   />
 );

@@ -44,8 +44,19 @@ export const ExtraConfigsSection = ({ capi, update }: CapiSectionProps) => {
   return (
     <>
       <Divider />
-      <Stack direction="row" justifyContent="space-between" alignItems="center">
-        <Typography variant="subtitle2" color="text.secondary">
+      <Stack
+        direction="row"
+        sx={{
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        <Typography
+          variant="subtitle2"
+          sx={{
+            color: 'text.secondary',
+          }}
+        >
           Extra configs ([Config ...])
         </Typography>
         <Button size="small" variant="outlined" onClick={handleAddConfig}>
@@ -76,7 +87,13 @@ export const ExtraConfigsSection = ({ capi, update }: CapiSectionProps) => {
                 }
               />
             </Stack>
-            <Stack direction="row" gap={1} alignItems="center">
+            <Stack
+              direction="row"
+              sx={{
+                gap: 1,
+                alignItems: 'center',
+              }}
+            >
               <FormControlLabel
                 control={
                   <Switch

@@ -5,7 +5,12 @@ import type { CapiSectionProps } from '../types/capiTypes';
 export const TraCISection = ({ capi, update }: CapiSectionProps) => (
   <>
     <Divider />
-    <Typography variant="subtitle2" color="text.secondary">
+    <Typography
+      variant="subtitle2"
+      sx={{
+        color: 'text.secondary',
+      }}
+    >
       TraCI (ConnectLauncher)
     </Typography>
     <Stack direction="row" spacing={2}>

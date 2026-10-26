@@ -1,6 +1,6 @@
 import { create, type StateCreator } from 'zustand';
 import { persist, type PersistOptions } from 'zustand/middleware';
-import { mergeSimConfigWithDefaults } from '@scenario-export';
+import { mergeSimConfigWithDefaults } from '@scenario-export/model/utils/configGeneratorUtils';
 import { createHistorySlice } from '../model/slices/createHistorySlice';
 import { createSceneSlice } from '../model/slices/createSceneSlice';
 import { createSimulationSlice } from '../model/slices/createSimulationSlice';
@@ -78,6 +78,7 @@ const persistOptions: PersistOptions<EditorState, EditorPersist> = {
     selectedIds: state.selectedIds,
     selectedObjects: state.selectedObjects,
     pedestrians: state.pedestrians,
+    savedScenarioFingerprint: state.savedScenarioFingerprint,
   }),
   merge: (persisted, current) => {
     const state = persisted as Partial<EditorPersist> | undefined;

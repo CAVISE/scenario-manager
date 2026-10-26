@@ -5,9 +5,20 @@ import type { DriftLikeFieldsProps } from '../types/AttackConfigModalTypes';
 export function DriftLikeFields({ params, updateParam }: DriftLikeFieldsProps) {
   return (
     <>
-      <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: 2,
+        }}
+      >
         <Box>
-          <Typography variant="caption" color="text.secondary">
+          <Typography
+            variant="caption"
+            sx={{
+              color: 'text.secondary',
+            }}
+          >
             Start time
           </Typography>
           <NumericInput
@@ -18,7 +29,12 @@ export function DriftLikeFields({ params, updateParam }: DriftLikeFieldsProps) {
           />
         </Box>
         <Box>
-          <Typography variant="caption" color="text.secondary">
+          <Typography
+            variant="caption"
+            sx={{
+              color: 'text.secondary',
+            }}
+          >
             Ramp duration
           </Typography>
           <NumericInput
@@ -37,9 +53,20 @@ export function DriftLikeFields({ params, updateParam }: DriftLikeFieldsProps) {
         Offset parameters
       </Divider>
 
-      <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: 2,
+        }}
+      >
         <Box>
-          <Typography variant="caption" color="text.secondary">
+          <Typography
+            variant="caption"
+            sx={{
+              color: 'text.secondary',
+            }}
+          >
             Lateral offset
           </Typography>
           <NumericInput
@@ -50,7 +77,12 @@ export function DriftLikeFields({ params, updateParam }: DriftLikeFieldsProps) {
           />
         </Box>
         <Box>
-          <Typography variant="caption" color="text.secondary">
+          <Typography
+            variant="caption"
+            sx={{
+              color: 'text.secondary',
+            }}
+          >
             Longitudinal offset
           </Typography>
           <NumericInput
@@ -63,7 +95,12 @@ export function DriftLikeFields({ params, updateParam }: DriftLikeFieldsProps) {
       </Box>
 
       <Box>
-        <Typography variant="caption" color="text.secondary">
+        <Typography
+          variant="caption"
+          sx={{
+            color: 'text.secondary',
+          }}
+        >
           Drift rate
         </Typography>
         <NumericInput

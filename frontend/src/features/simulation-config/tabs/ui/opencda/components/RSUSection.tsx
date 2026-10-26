@@ -36,7 +36,12 @@ export const RSUSection = ({
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="subtitle2" color="text.secondary">
+      <Typography
+        variant="subtitle2"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         RSU base
       </Typography>
 
@@ -46,18 +51,22 @@ export const RSUSection = ({
           type="number"
           size="small"
           fullWidth
-          inputProps={{ ...numInputSlot.input, min: 1, max: 128 }}
           value={rsu_lidar_channels}
           onChange={numberField('rsu_lidar_channels', 1, 128)}
+          slotProps={{
+            htmlInput: { ...numInputSlot.input, min: 1, max: 128 },
+          }}
         />
         <TextField
           label="LiDAR range (m)"
           type="number"
           size="small"
           fullWidth
-          inputProps={{ ...numInputSlot.input, min: 1, max: 500 }}
           value={rsu_lidar_range}
           onChange={numberField('rsu_lidar_range', 1, 500)}
+          slotProps={{
+            htmlInput: { ...numInputSlot.input, min: 1, max: 500 },
+          }}
         />
       </Stack>
 
@@ -67,18 +76,22 @@ export const RSUSection = ({
           type="number"
           size="small"
           fullWidth
-          inputProps={{ ...numInputSlot.input, min: 0, max: 1 }}
           value={rsu_camera_visualize}
           onChange={numberField('rsu_camera_visualize', 0, 1)}
+          slotProps={{
+            htmlInput: { ...numInputSlot.input, min: 0, max: 1 },
+          }}
         />
         <TextField
           label="Camera count (0–4)"
           type="number"
           size="small"
           fullWidth
-          inputProps={{ ...numInputSlot.input, min: 0, max: 4 }}
           value={rsu_cam_num}
           onChange={numberField('rsu_cam_num', 0, 4)}
+          slotProps={{
+            htmlInput: { ...numInputSlot.input, min: 0, max: 4 },
+          }}
         />
       </Stack>
 

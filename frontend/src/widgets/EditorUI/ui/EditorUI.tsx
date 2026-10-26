@@ -1,16 +1,17 @@
 import { CoordinatesWidget } from '@widgets/CoordinateWidget';
 import { EditorTransformControls } from '../../EditorTransformControls';
-import { lazy, Suspense, useEffect, useState } from 'react';
-import { useMediaQuery } from '@mui/material';
+import { lazy, Suspense, useEffect, useState, type CSSProperties } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { EditorToolbar } from '@widgets/EditorToolbar';
 import type { EditorTab } from '@widgets/EditorNavigation/types/EditorNavigationTypes';
 import SceneTreePanel from '@right-panel/components/SceneTreePanel';
 import { useEditorStore } from '@/store';
+import { useWorkspacePreferences } from '@/store/ui/useWorkspacePreferences';
 import { useScenarioControls } from '@right-panel/components/ScenarioControlWidget/hooks/useScenarioControls';
 import { useSelectionSceneSync } from '@editor/hooks/useEditorEngine/useSelectionSceneSync/useSelectionSceneSync';
 import SelectionBadge from '../../SelectionBadge';
 import EditorNavigation from '@widgets/EditorNavigation';
+import { useResizablePanel } from '../model/useResizablePanel';
 import '../styles/EditorChrome.scss';
 
 const RightPanel = lazy(() => import('@/widgets/RightPanel'));
@@ -19,15 +20,19 @@ export function EditorUI() {
   const [activeTab, setActiveTab] = useState<EditorTab>('edit');
   const [searchParams] = useSearchParams();
   const preferredResultRunId = searchParams.get('run');
-  const narrowViewport = useMediaQuery('(max-width: 1150px)');
-  const [sceneOpen, setSceneOpen] = useState<boolean | null>(null);
-  const showScene = sceneOpen ?? !narrowViewport;
+  const preferences = useWorkspacePreferences();
+  const showScene = preferences.sceneGraphOpen;
+  const startSceneResize = useResizablePanel(
+    'left',
+    preferences.scenePanelWidth,
+    (scenePanelWidth) => preferences.update({ scenePanelWidth })
+  );
   useEffect(() => {
-    const showObjects = () => setSceneOpen(true);
+    const showObjects = () => preferences.update({ sceneGraphOpen: true });
     window.addEventListener('editor-show-in-scene-graph', showObjects);
     return () =>
       window.removeEventListener('editor-show-in-scene-graph', showObjects);
-  }, []);
+  }, [preferences]);
   useEffect(() => {
     if (searchParams.get('workspace') === 'results') {
       setActiveTab('results');
@@ -39,10 +44,21 @@ export function EditorUI() {
   const isSimulationRunning = useEditorStore(
     (s) => s.simulationSession.phase === 'running'
   );
-  useSelectionSceneSync(isSimulationRunning || controls.isBusy);
+  const isMapLoading = useEditorStore((s) => s.isMapLoading);
+  const isReadOnly = isSimulationRunning || controls.isBusy || isMapLoading;
+  useSelectionSceneSync(isReadOnly);
 
   return (
-    <div className="editor-chrome" data-workspace={activeTab}>
+    <div
+      className={`editor-chrome${preferences.compactEditor ? ' editor-chrome--compact' : ''}`}
+      data-workspace={activeTab}
+      style={
+        {
+          '--editor-panel-user-width': `${preferences.contextPanelWidth}px`,
+          '--editor-scene-user-width': `${preferences.scenePanelWidth}px`,
+        } as CSSProperties
+      }
+    >
       <header className="editor-command-bar">
         <div className="editor-scenario-heading">
           <span
@@ -66,10 +82,12 @@ export function EditorUI() {
           </span>
         ) : null}
         <EditorToolbar
-          readOnly={isSimulationRunning || controls.isBusy}
+          readOnly={isReadOnly}
           onWorkspaceChange={setActiveTab}
           onSave={controls.save}
-          onToggleScene={() => setSceneOpen(!showScene)}
+          onToggleScene={() =>
+            preferences.update({ sceneGraphOpen: !preferences.sceneGraphOpen })
+          }
           sceneGraphOpen={showScene}
           showSceneToggle={activeTab === 'edit'}
           isSaving={controls.operation === 'save'}
@@ -85,14 +103,19 @@ export function EditorUI() {
           hidden={!showScene}
           aria-label="Scene objects"
         >
-          <SceneTreePanel readOnly={isSimulationRunning || controls.isBusy} />
+          <SceneTreePanel readOnly={isReadOnly} />
+          <div
+            className="editor-panel-resize-handle editor-panel-resize-handle--left"
+            role="separator"
+            aria-label="Resize scene graph panel"
+            aria-orientation="vertical"
+            onPointerDown={startSceneResize}
+          />
         </div>
       )}
 
       {activeTab === 'edit' && (
-        <EditorTransformControls
-          readOnly={isSimulationRunning || controls.isBusy}
-        />
+        <EditorTransformControls readOnly={isReadOnly} />
       )}
 
       <Suspense fallback={null}>
@@ -102,7 +125,15 @@ export function EditorUI() {
           controls={controls}
           preferredResultRunId={preferredResultRunId}
           showSceneGraph={false}
-          readOnly={isSimulationRunning}
+          readOnly={isReadOnly}
+          collapsed={preferences.rightPanelCollapsed}
+          width={preferences.contextPanelWidth}
+          onCollapsedChange={(rightPanelCollapsed) =>
+            preferences.update({ rightPanelCollapsed })
+          }
+          onWidthChange={(contextPanelWidth) =>
+            preferences.update({ contextPanelWidth })
+          }
         />
       </Suspense>
 

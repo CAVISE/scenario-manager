@@ -243,21 +243,21 @@ def _update_scenario(
     incoming_map = normalize_optional_str(body.map)
     stored_map = normalize_optional_str(row.map)
     map_changed = incoming_map is not None and incoming_map != stored_map
-    map_change_warning = None
-    if map_changed and not incoming_is_empty:
-        map_change_warning = (
-            f"Map changed from '{stored_map or '(unset)'}' to "
-            f"'{incoming_map}' while cars/RSUs/pedestrians are still "
-            f"present. Their positions were likely placed against the "
-            f"previous map and may not land on valid roads here -- "
-            f"double-check them in the editor."
+    can_explicitly_clear_for_map_change = body.explicit_clear and incoming_is_empty
+    if map_changed and had_existing_content and not can_explicitly_clear_for_map_change:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "A saved scenario with placed objects cannot change maps. "
+                "Choose the new map in the editor to create a new draft."
+            ),
         )
 
     if body.scenario_name is not None:
         row.name_of_scenario = body.scenario_name
     if body.scenario is not None:
         row.scenario_text = json.dumps(_normalize_scenario_blob(body.scenario))
-    if body.preview is not None:
+    if "preview" in body.model_fields_set:
         row.preview = body.preview
     if body.annotation is not None:
         row.annotation = body.annotation
@@ -273,7 +273,7 @@ def _update_scenario(
         message="Scenario updated",
         scenario_id=body.scenario_id,
         revision=row.revision,
-        warning=map_change_warning,
+        warning=None,
     )
 
 

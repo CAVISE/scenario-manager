@@ -5,6 +5,7 @@ import { Save as SaveIcon } from '@mui/icons-material';
 import { PlayArrow as PlayArrowIcon } from '@mui/icons-material';
 import { Assessment as AssessmentIcon } from '@mui/icons-material';
 import { Upload as UploadIcon } from '@mui/icons-material';
+import { openMapPicker } from '@/shared/lib/editorMapPickerEvent';
 import type { FileMenuProps } from '../types/FileMenuTypes';
 
 export default function FileMenu({
@@ -15,16 +16,12 @@ export default function FileMenu({
   onSave,
   onWorkspaceChange,
 }: FileMenuProps) {
-  const onOpenFile = () => {
-    window.editorModals?.openMapPicker();
-  };
-
   return (
     <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={onClose}>
       <MenuItem
         disabled={readOnly}
         onClick={() => {
-          onOpenFile();
+          openMapPicker();
           onClose();
         }}
       >

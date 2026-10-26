@@ -52,19 +52,21 @@ export function useDblClickHandler(ctx: SharedMouseContext) {
       const carMeshes = carMeshesRef.current;
       const rsuRenderMeshes = rsuRenderMeshesRef.current;
       const routePointMeshes = routePointMeshesRef.current;
-      const intersects = ctx.raycaster.intersectObjects([
-        ...carMeshes,
-        ...routePointMeshes.flat(),
-        ...rsuRenderMeshes,
-      ]);
+      const intersects = ctx.raycaster.intersectObjects(
+        [...carMeshes, ...routePointMeshes.flat(), ...rsuRenderMeshes],
+        true
+      );
 
       if (mode.isAddPointModeActive) {
         const addAt = (x: number, y: number, z: number) => {
           useEditorStore.getState().addRSU(x, y, z);
           timers.rsu.current?.scheduleReset();
         };
-        if (intersects.length > 0 && intersects[0].object === road) {
-          const pt = intersects[0].point;
+        if (intersects.length > 0) return;
+
+        const [roadHit] = ctx.raycaster.intersectObject(road, true);
+        if (roadHit) {
+          const pt = roadHit.point;
           addAt(pt.x, pt.y, pt.z);
         } else if (intersects.length === 0) {
           const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
@@ -80,6 +82,8 @@ export function useDblClickHandler(ctx: SharedMouseContext) {
           useEditorStore.getState().addPedestrian(x, y, z);
           timers.pedestrian.current?.scheduleReset();
         };
+
+        if (intersects.length > 0) return;
 
         const roadHits = ctx.raycaster.intersectObjects([road], true);
 

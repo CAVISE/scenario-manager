@@ -56,15 +56,6 @@ export function useClickHandler(ctx: SharedMouseContext) {
       return;
     }
 
-    if (
-      !readOnly &&
-      (mode.isAddPointModeActive ||
-        mode.isAddPedestrianModeActive ||
-        mode.isAddedPoints ||
-        state.isBuildingMode)
-    )
-      return;
-
     const select = (
       object: THREE.Object3D,
       id = object.userData.id as string | undefined
@@ -81,6 +72,16 @@ export function useClickHandler(ctx: SharedMouseContext) {
       if (!readOnly && selection.length === 1 && selection[0].id === id)
         tc.attach(object);
     };
+
+    const selectHit = (hit: THREE.Intersection) => {
+      let root = hit.object;
+      while (
+        root.parent &&
+        (!root.userData.id || root.parent.userData.id === root.userData.id)
+      )
+        root = root.parent;
+      select(root);
+    };
     const startedAt = import.meta.env.DEV ? performance.now() : 0;
     const hits = ctx.raycaster.intersectObjects(
       pickableObjectsRef.current,
@@ -96,14 +97,17 @@ export function useClickHandler(ctx: SharedMouseContext) {
       ).__editorPerformanceMetrics;
       monitor?.recordSelection(performance.now() - startedAt);
     }
+    const isPlacementMode =
+      mode.isAddPointModeActive ||
+      mode.isAddPedestrianModeActive ||
+      mode.isAddedPoints ||
+      state.isBuildingMode;
+    if (!readOnly && isPlacementMode) {
+      if (hits.length) selectHit(hits[0]);
+      return;
+    }
     if (hits.length) {
-      let root = hits[0].object;
-      while (
-        root.parent &&
-        (!root.userData.id || root.parent.userData.id === root.userData.id)
-      )
-        root = root.parent;
-      select(root);
+      selectHit(hits[0]);
       return;
     }
     if (!additive) {

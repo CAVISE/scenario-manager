@@ -13,10 +13,16 @@ export const EditorScenarioBootstrap = () => {
   const { sceneRef } = useEditorRefs();
   const { updateSceneGraph, loadFile, setStep } = useHooks();
   const loadedIdRef = useRef<string | null>(null);
+  const loadingIdRef = useRef<string | null>(null);
   const toast = useAppToast();
 
   useEffect(() => {
-    if (!scenarioId || loadedIdRef.current === scenarioId) return;
+    if (
+      !scenarioId ||
+      loadedIdRef.current === scenarioId ||
+      loadingIdRef.current === scenarioId
+    )
+      return;
 
     let cancelled = false;
 
@@ -50,9 +56,8 @@ export const EditorScenarioBootstrap = () => {
         return;
       }
 
-      loadedIdRef.current = scenarioId;
-
-      handleLoad({
+      loadingIdRef.current = scenarioId;
+      void handleLoad({
         hasId: true,
         scenarioIdInput: scenarioId,
         setNotice: (message: string) => {
@@ -62,10 +67,15 @@ export const EditorScenarioBootstrap = () => {
         loadFile,
         setStep,
         isCurrent: () => !cancelled,
-      }).finally(() => {
-        if (cancelled) return;
-        clearScenarioParam();
-      });
+      })
+        .then((loaded) => {
+          if (cancelled || !loaded) return;
+          loadedIdRef.current = scenarioId;
+          clearScenarioParam();
+        })
+        .finally(() => {
+          if (loadingIdRef.current === scenarioId) loadingIdRef.current = null;
+        });
     };
 
     tryLoad();

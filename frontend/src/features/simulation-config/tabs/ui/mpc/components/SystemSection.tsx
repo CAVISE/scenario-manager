@@ -4,7 +4,12 @@ import type { MpcSectionProps } from '../types/mpcTypes';
 
 export const SystemSection = ({ mpc, update }: MpcSectionProps) => (
   <>
-    <Typography variant="subtitle2" color="text.secondary">
+    <Typography
+      variant="subtitle2"
+      sx={{
+        color: 'text.secondary',
+      }}
+    >
       System
     </Typography>
     <Stack direction="row" spacing={2}>

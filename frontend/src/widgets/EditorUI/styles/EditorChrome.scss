@@ -1,7 +1,7 @@
 .editor-chrome {
   --editor-nav-width: 92px;
-  --editor-panel-width: 332px;
-  --editor-scene-width: 258px;
+  --editor-panel-width: var(--editor-panel-user-width, 332px);
+  --editor-scene-width: var(--editor-scene-user-width, 258px);
   --editor-top: 80px;
 
   position: fixed;
@@ -99,6 +99,26 @@
     box-shadow: var(--workspace-shadow);
   }
 
+  .editor-panel-resize-handle,
+  .rp-resize-handle {
+    display: block;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 8px;
+    cursor: col-resize;
+    touch-action: none;
+    z-index: 3;
+  }
+
+  .editor-panel-resize-handle--left {
+    right: 0;
+  }
+
+  .rp-resize-handle {
+    left: 0;
+  }
+
   .stp-root {
     border: 0;
     border-radius: inherit;
@@ -139,6 +159,18 @@
   .stp-root .stp-header-count {
     color: var(--workspace-muted);
     border-color: var(--workspace-border);
+  }
+}
+
+.editor-chrome--compact {
+  font-size: 13px;
+
+  .editor-command-bar {
+    padding: 8px 12px;
+  }
+
+  .editor-navigation-brand-name small {
+    display: none;
   }
 }
 
@@ -285,8 +317,8 @@
 @media (width <= 1150px) {
   .editor-chrome {
     --editor-nav-width: 80px;
-    --editor-panel-width: 310px;
-    --editor-scene-width: 230px;
+    --editor-panel-width: var(--editor-panel-user-width, 310px);
+    --editor-scene-width: var(--editor-scene-user-width, 230px);
   }
 }
 
@@ -294,11 +326,11 @@
   .editor-chrome {
     --editor-top: 124px;
     --editor-panel-width: min(
-      310px,
+      var(--editor-panel-user-width, 310px),
       calc(100vw - var(--editor-nav-width) - 48px)
     );
     --editor-scene-width: min(
-      258px,
+      var(--editor-scene-user-width, 258px),
       calc(100vw - var(--editor-nav-width) - var(--editor-panel-width) - 40px)
     );
   }
@@ -359,7 +391,7 @@
   .editor-chrome {
     --editor-nav-width: 64px;
     --editor-panel-width: min(
-      280px,
+      var(--editor-panel-user-width, 280px),
       calc(100vw - var(--editor-nav-width) - 24px)
     );
     --editor-top: 128px;

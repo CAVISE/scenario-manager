@@ -5,6 +5,7 @@ import { useEditorStore } from '@/store';
 import { useTransformSetup } from '../hooks/useTransformSetup';
 import { useSceneObjects } from '../hooks/useSceneObjects';
 import { useSceneAnimator } from '../hooks/useSceneAnimator';
+import { useEditorVisualPreferences } from '../hooks/useEditorVisualPreferences';
 
 import type {
   useThreeSceneProps,
@@ -34,11 +35,13 @@ export function useThreeScene({
     carMeshesRef,
     carQuaternionsRef,
     routePointMeshesRef,
+    roadMeshRef,
     modeRef,
     currentCarRef,
     currentColorRef,
     isDraggingRef,
     buildingMeshesRef,
+    odrMapRef,
   } = useEditorRefs();
 
   const actionsRef = useRef({
@@ -96,16 +99,22 @@ export function useThreeScene({
   const { syncRoutePointMeshes, syncRoadMesh, localLineArrRef } =
     useSceneObjects();
 
-  const { getOdrMeshes, loadOdrMap, reloadOdrMap, setModuleRef, setMapRef } =
-    useOdrMapManager({
-      setStep,
-      setError,
-      syncRoutePointMeshes,
-      syncRoadMesh,
-      updateSceneGraph,
-      buildingMeshesRef,
-      localLineArrRef,
-    });
+  const {
+    getOdrMeshes,
+    loadOdrMap,
+    cancelMapBuild,
+    reloadOdrMap,
+    setModuleRef,
+    setMapRef,
+  } = useOdrMapManager({
+    setStep,
+    setError,
+    syncRoutePointMeshes,
+    syncRoadMesh,
+    updateSceneGraph,
+    buildingMeshesRef,
+    localLineArrRef,
+  });
   const loadOdrMapRef = useRef(loadOdrMap);
   useEffect(() => {
     loadOdrMapRef.current = loadOdrMap;
@@ -115,6 +124,7 @@ export function useThreeScene({
     setError,
     moduleRef: setModuleRef,
     mapRef: setMapRef,
+    odrMapRef,
     loadOdrMapRef,
   });
 
@@ -125,6 +135,11 @@ export function useThreeScene({
     // every mouse move. It makes the large OSM map unresponsive, while the
     // normal map rendering and editor controls remain available.
     spotlightEnabled: () => !isLargeXodrSelected(),
+  });
+  useEditorVisualPreferences({
+    ready: threeReady,
+    sceneRef,
+    getOdrMeshes,
   });
   useEffect(() => {
     if (!threeReady) return;
@@ -142,6 +157,8 @@ export function useThreeScene({
       sceneRef,
       carMeshesRef,
       routePointMeshesRef,
+      localLineArrRef,
+      roadMeshRef,
       carQuaternionsRef,
     });
   }, [
@@ -150,6 +167,8 @@ export function useThreeScene({
     sceneRef,
     carMeshesRef,
     routePointMeshesRef,
+    localLineArrRef,
+    roadMeshRef,
     carQuaternionsRef,
   ]);
 
@@ -174,7 +193,7 @@ export function useThreeScene({
       controls,
       getOdrMeshes,
       syncRoutePointMeshes,
-      loadFile: () => {},
+      loadFile: async () => false,
       reloadOdrMap,
     });
 
@@ -198,5 +217,5 @@ export function useThreeScene({
     reloadOdrMap,
   ]);
 
-  return { actionsRef, loadFile };
+  return { actionsRef, loadFile, cancelMapLoad: cancelMapBuild };
 }

@@ -9,7 +9,10 @@ import {
   DEFAULT_XODR,
   getCachedXodrContent,
 } from '@editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
-import { generatePreviewSync } from '../utils/scenarioPreview';
+import {
+  generatePreviewSync,
+  invalidatePreviewCache,
+} from '../utils/scenarioPreview';
 export {
   generatePreviewAsync,
   generatePreviewSync,
@@ -19,6 +22,7 @@ export {
 
 export function buildScenarioPayload(): ScenarioPayload {
   const s = useEditorStore.getState();
+  invalidatePreviewCache();
   const preview = generatePreviewSync();
   const pointsByCarId = groupByCarId(s.points);
   const lidarsByCarId = groupByCarId(s.lidars);

@@ -62,6 +62,18 @@ describe('toUploadScenarioBody', () => {
     expect(body.scenario_id).toBe('explicit-id');
   });
 
+  it('includes a selected map in the upload request', () => {
+    const body = toUploadScenarioBody({
+      scenario_id: 'sc-1',
+      name_of_scenario: 'Scenario',
+      file_: null,
+      scenario: [],
+      map: 'Town05',
+    });
+
+    expect(body.map).toBe('Town05');
+  });
+
   it('falls back to payload.scenario_id when scenarioIdInput is not given', () => {
     const payload: ScenarioPayload = {
       scenario_id: 'payload-id',

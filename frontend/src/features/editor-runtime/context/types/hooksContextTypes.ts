@@ -23,5 +23,10 @@ export interface hooksContextTypes {
   handleStartRoutePointPlacement: () => void;
   detachTransformControls: () => void;
   handleSetBuildingMode: (value: boolean) => void;
-  loadFile: (text: string, clearMap: boolean) => void;
+  cancelMapLoad: () => void;
+  loadFile: (
+    text: string,
+    clearMap: boolean,
+    sourceName?: string
+  ) => Promise<boolean>;
 }

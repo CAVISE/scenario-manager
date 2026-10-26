@@ -10,7 +10,7 @@ export function ensureRsuModel(): Promise<boolean> {
   if (rsuModelPromise) return rsuModelPromise;
   rsuModelPromise = new Promise((resolve) => {
     loader.load(
-      '/pedestrian_traffic_light.glb',
+      '/hydrant.glb',
       (gltf) => {
         rsuModel = gltf.scene;
         resolve(true);

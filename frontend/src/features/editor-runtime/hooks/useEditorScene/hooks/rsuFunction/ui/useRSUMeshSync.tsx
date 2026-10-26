@@ -112,7 +112,7 @@ export function useRSUMeshSync(): void {
           let obj: THREE.Object3D;
           if (hasModel && rsuModel) {
             obj = rsuModel.clone(true);
-            obj.scale.setScalar(0.05);
+            obj.scale.setScalar(0.01);
             obj.rotation.x += Math.PI / 2;
             obj.userData = { type: 'rsu', id: rsu.id, isFallbackRSU: false };
             lastSyncedRSUsRef.current.set(rsu.id, rsu);

@@ -82,4 +82,40 @@ describe('waypoint keyboard deletion', () => {
       selectedPointId,
     ]);
   });
+
+  it('deletes an RSU root instead of walking up to the scene', () => {
+    const scene = new THREE.Scene();
+    const rsuId = useEditorStore.getState().addRSU(10, 20, 30);
+    const rsu = new THREE.Group();
+    rsu.userData = { id: rsuId, type: 'rsu' };
+    rsu.add(
+      new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial())
+    );
+    scene.add(rsu);
+    mocks.refs = {
+      sceneRef: { current: scene },
+      carMeshesRef: { current: [] },
+      transformControlsRef: { current: { object: rsu, detach: vi.fn() } },
+      rsuRenderMeshesRef: { current: [rsu] },
+      rsuObjectMeshesRef: { current: [rsu] },
+      rsuMeshesRef: { current: [rsu] },
+      routePointMeshesRef: { current: [] },
+      modeRef: { current: {} },
+    };
+
+    const { result } = renderHook(() => useKeyDownHandler({ toast }));
+    act(() => result.current(new KeyboardEvent('keydown', { key: 'Delete' })));
+
+    expect(useEditorStore.getState().RSUs).toEqual([]);
+    expect(scene.children).not.toContain(rsu);
+    expect(mocks.refs.rsuRenderMeshesRef).toMatchObject({ current: [] });
+    expect(useEditorStore.getState().canRedo()).toBe(false);
+
+    expect(useEditorStore.getState().undo()).toBe(true);
+    expect(useEditorStore.getState().RSUs).toHaveLength(1);
+    expect(useEditorStore.getState().canRedo()).toBe(true);
+
+    expect(useEditorStore.getState().redo()).toBe(true);
+    expect(useEditorStore.getState().RSUs).toEqual([]);
+  });
 });

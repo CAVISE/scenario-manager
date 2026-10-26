@@ -8,7 +8,13 @@ export interface UseOdrLoaderProps {
   setError: ((err: Error) => void) | undefined;
   moduleRef: MutableRefObject<OpenDriveModule | null>;
   mapRef: MutableRefObject<OpenDriveMapInstance | null>;
+  odrMapRef: MutableRefObject<OpenDriveMapInstance | null>;
   loadOdrMapRef: MutableRefObject<
-    (clearMap?: boolean, fitView?: boolean) => void
+    (
+      clearMap?: boolean,
+      fitView?: boolean,
+      onComplete?: (success: boolean) => void,
+      xodrText?: string
+    ) => void
   >;
 }

@@ -11,6 +11,7 @@ export interface CarlaSectionProps {
 
 export interface MapWeatherSectionProps extends CarlaSectionProps {
   selectedMap: string;
+  onMapLoaded?: () => void;
 }
 
 export interface WeatherOverrideSectionProps extends CarlaSectionProps {

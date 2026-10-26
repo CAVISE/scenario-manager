@@ -43,7 +43,7 @@ export function toUploadScenarioBody(
     preview: payload.preview ?? undefined,
     file_: payload.file_ ?? undefined,
     scenario: scenarioToStoredJson(payload.scenario),
-    map: payload.map ?? undefined,
+    ...(payload.map ? { map: payload.map } : {}),
   };
 }
 
@@ -61,7 +61,7 @@ export function toUpdateScenarioBody(
     ...(payload.revision ? { expected_revision: payload.revision } : {}),
     scenario_name: payload.name_of_scenario ?? undefined,
     annotation: payload.description ?? undefined,
-    preview: payload.preview ?? undefined,
+    ...(payload.preview === undefined ? {} : { preview: payload.preview }),
     file_: payload.file_ ?? undefined,
     ...(payload.scenario !== undefined
       ? { scenario: scenarioToStoredJson(groups) }

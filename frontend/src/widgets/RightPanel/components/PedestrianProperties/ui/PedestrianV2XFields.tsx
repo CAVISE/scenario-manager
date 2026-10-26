@@ -33,8 +33,8 @@ export function PedestrianV2XFields({
 }: PedestrianV2XFieldsProps) {
   return (
     <>
-      <Grid item container spacing={1}>
-        <Grid item xs={6}>
+      <Grid container spacing={1}>
+        <Grid size={6}>
           <FormControl>
             <FormLabel>TX Power (mW)</FormLabel>
             <Input
@@ -48,7 +48,7 @@ export function PedestrianV2XFields({
             />
           </FormControl>
         </Grid>
-        <Grid item xs={6}>
+        <Grid size={6}>
           <FormControl>
             <FormLabel>Beacon interval (ms)</FormLabel>
             <Input

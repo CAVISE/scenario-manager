@@ -1,6 +1,6 @@
 import {
   AssessmentOutlined,
-  PlayCircleOutline,
+  PlayCircleOutlined,
   RefreshOutlined,
 } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
@@ -76,7 +76,7 @@ export default function RunsPage() {
       {isLoading ? (
         <div className="workspace-empty workspace-empty--loading" role="status">
           <span className="workspace-empty__icon" aria-hidden="true">
-            <PlayCircleOutline />
+            <PlayCircleOutlined />
           </span>
           <strong>Loading simulation runs</strong>
           <p>Checking the current CARLA queue…</p>
@@ -99,7 +99,7 @@ export default function RunsPage() {
       ) : !runs.length ? (
         <div className="workspace-empty">
           <span className="workspace-empty__icon" aria-hidden="true">
-            <PlayCircleOutline />
+            <PlayCircleOutlined />
           </span>
           <strong>No simulation runs yet</strong>
           <p>Open a scenario in the editor to create the first run.</p>

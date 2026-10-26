@@ -11,10 +11,20 @@ export const VehicleRoutesSection = ({
     return (
       <>
         <Divider />
-        <Typography variant="subtitle2" color="text.secondary">
+        <Typography
+          variant="subtitle2"
+          sx={{
+            color: 'text.secondary',
+          }}
+        >
           Vehicle routes
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography
+          variant="caption"
+          sx={{
+            color: 'text.secondary',
+          }}
+        >
           No vehicles on scene
         </Typography>
       </>
@@ -24,7 +34,12 @@ export const VehicleRoutesSection = ({
   return (
     <>
       <Divider />
-      <Typography variant="subtitle2" color="text.secondary">
+      <Typography
+        variant="subtitle2"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         Vehicle routes
       </Typography>
       {cars.map((car, index) => (

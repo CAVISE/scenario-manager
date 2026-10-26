@@ -5,6 +5,7 @@ import { useEditorStore } from '@/store';
 import { useWorkspacePreferences } from '@/store/ui/useWorkspacePreferences';
 import { resolveSelection } from '@/store/utils/sceneEntities';
 import { useEditorRefs } from '@editor/context';
+import { invalidateEditorScene } from '@editor/lib/invalidateEditorScene';
 import {
   buildNavigationTree,
   filterNavigationTree,
@@ -59,6 +60,7 @@ export default function SceneTreePanel({
       helper.parent?.remove(helper);
       helper.dispose();
       hoverHelper.current = null;
+      invalidateEditorScene();
     }
   };
   useEffect(() => clearHover, []);
@@ -90,8 +92,10 @@ export default function SceneTreePanel({
     if (!object) return;
     const helper = new THREE.BoxHelper(object, 0x54b8e8);
     helper.raycast = () => {};
+    helper.update();
     sceneRef.current.add(helper);
     hoverHelper.current = helper;
+    invalidateEditorScene();
   };
 
   return (
@@ -107,6 +111,7 @@ export default function SceneTreePanel({
           visibleIds={visibleIds}
           selectedIds={state.selectedIds}
           onSelect={select}
+          onClearHover={clearHover}
         />
       </div>
       <div className="stp-search">

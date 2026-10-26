@@ -29,7 +29,12 @@ export const SumoFilesSection = ({
 
   return (
     <>
-      <Typography variant="subtitle2" color="text.secondary">
+      <Typography
+        variant="subtitle2"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         Files
       </Typography>
       <Stack direction="row" spacing={2}>
@@ -46,11 +51,19 @@ export const SumoFilesSection = ({
           size="small"
           fullWidth
           value={getNetFilePath(carlaMap)}
-          InputProps={{ readOnly: true }}
           helperText="Derived from the selected CARLA map"
+          slotProps={{
+            input: { readOnly: true },
+          }}
         />
       </Stack>
-      <Stack direction="row" spacing={2} alignItems="center">
+      <Stack
+        direction="row"
+        spacing={2}
+        sx={{
+          alignItems: 'center',
+        }}
+      >
         <Button component="label" size="small" variant="outlined">
           Load SUMO network
           <input
@@ -60,7 +73,12 @@ export const SumoFilesSection = ({
             onChange={handleFileChange}
           />
         </Button>
-        <Typography variant="caption" color="text.secondary">
+        <Typography
+          variant="caption"
+          sx={{
+            color: 'text.secondary',
+          }}
+        >
           {loadedNetFilename
             ? `Loaded: ${loadedNetFilename}`
             : 'Not loaded; the exporter will try the displayed local path'}

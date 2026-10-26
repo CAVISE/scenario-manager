@@ -51,6 +51,23 @@ describe('page reload simulation (fresh module instance)', () => {
     });
   });
 
+  it('persists scenario metadata as part of the local draft', async () => {
+    const { useEditorStore } = await import('./useEditorStore');
+    act(() => {
+      useEditorStore.getState().updateScenario({
+        name: 'Local draft',
+        description: 'Restored after reload',
+      });
+    });
+
+    const raw = localStorageMock.__raw['editor-scenario-cache'];
+    const persisted = JSON.parse(raw).state;
+    expect(persisted.Scenario).toMatchObject({
+      name: 'Local draft',
+      description: 'Restored after reload',
+    });
+  });
+
   it('a car added before reload is restored after the store module is freshly re-imported', async () => {
     const { useEditorStore: storeBeforeReload } =
       await import('./useEditorStore');

@@ -11,6 +11,8 @@ export interface CreateTransformListenerOptions {
   sceneRef: MutableRefObject<THREE.Scene | undefined>;
   carMeshesRef: MutableRefObject<THREE.Mesh[]>;
   routePointMeshesRef: MutableRefObject<THREE.Mesh[][]>;
+  localLineArrRef: MutableRefObject<THREE.Mesh[][]>;
+  roadMeshRef: MutableRefObject<THREE.Mesh | null>;
   carQuaternionsRef: MutableRefObject<Map<string, THREE.Quaternion>>;
 }
 export type MoveKind =

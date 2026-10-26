@@ -136,9 +136,10 @@
       background-color 140ms ease,
       border-color 140ms ease;
 
-    &:hover {
+    &:hover,
+    &.Mui-focusVisible {
       background: var(--workspace-accent-soft) !important;
-      border-color: var(--workspace-border) !important;
+      border-color: var(--workspace-accent) !important;
     }
 
     &:active:not(.Mui-disabled) {

@@ -24,8 +24,8 @@ export function V2XParametersSection({
         V2X Parameters
       </Typography>
 
-      <Grid item container spacing={1}>
-        <Grid item xs={6}>
+      <Grid container spacing={1}>
+        <Grid size={6}>
           <FormControl>
             <FormLabel>TX Power (mW)</FormLabel>
             <Input
@@ -42,7 +42,7 @@ export function V2XParametersSection({
             />
           </FormControl>
         </Grid>
-        <Grid item xs={6}>
+        <Grid size={6}>
           <FormControl>
             <FormLabel>Range (m)</FormLabel>
             <Input
@@ -60,8 +60,8 @@ export function V2XParametersSection({
         </Grid>
       </Grid>
 
-      <Grid item container spacing={1}>
-        <Grid item xs={6}>
+      <Grid container spacing={1}>
+        <Grid size={6}>
           <FormControl>
             <FormLabel>Frequency (Hz)</FormLabel>
             <Input
@@ -78,7 +78,7 @@ export function V2XParametersSection({
             />
           </FormControl>
         </Grid>
-        <Grid item xs={6}>
+        <Grid size={6}>
           <FormControl>
             <FormLabel>Beacon interval (ms)</FormLabel>
             <Input

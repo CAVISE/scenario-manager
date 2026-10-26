@@ -53,6 +53,18 @@ describe('batch editing and history', () => {
     ).toEqual([75, 75]);
   });
 
+  it('records a newly added object as a reversible action', () => {
+    dispose = createHistoryTracker({ getIsDragging: () => false });
+    const id = useEditorStore.getState().addRSU(10, 20, 30);
+
+    expect(useEditorStore.getState().historyStack).toHaveLength(1);
+    expect(useEditorStore.getState().undo()).toBe(true);
+    expect(useEditorStore.getState().RSUs).toEqual([]);
+
+    expect(useEditorStore.getState().redo()).toBe(true);
+    expect(useEditorStore.getState().RSUs.map((rsu) => rsu.id)).toEqual([id]);
+  });
+
   it('flushes a pending individual edit before recording the batch operation', () => {
     const first = addCar(40),
       second = addCar(60);

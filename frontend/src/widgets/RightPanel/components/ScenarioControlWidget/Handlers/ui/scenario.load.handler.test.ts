@@ -185,6 +185,22 @@ describe('scenario.load.handler (sync preview)', () => {
       expect(payload.preview).toBe('data:image/png;base64,PAYLOAD_PREVIEW');
     });
 
+    it('captures a fresh preview for each payload', () => {
+      const canvas = document.createElement('canvas');
+      canvas.toDataURL = vi
+        .fn()
+        .mockReturnValueOnce('data:image/png;base64:BEFORE')
+        .mockReturnValueOnce('data:image/png;base64:AFTER');
+      setCanvasReference(canvas);
+
+      expect(buildScenarioPayload().preview).toBe(
+        'data:image/png;base64:BEFORE'
+      );
+      expect(buildScenarioPayload().preview).toBe(
+        'data:image/png;base64:AFTER'
+      );
+    });
+
     it('returns null preview when no canvas is set', () => {
       setCanvasReference(null);
 

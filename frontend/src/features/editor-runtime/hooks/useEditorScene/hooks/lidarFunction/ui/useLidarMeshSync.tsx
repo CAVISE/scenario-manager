@@ -3,7 +3,11 @@ import * as THREE from 'three';
 import { useEditorStore } from '@/store';
 import type { Lidar } from '@/entities/vehicle';
 import { useEditorRefs, useHooks } from '@editor/context';
-import { createLidarMesh, disposeLidarGroup } from '../utils/LidarUtils';
+import {
+  createLidarMesh,
+  disposeLidarGroup,
+  updateLidarScanVolume,
+} from '../utils/LidarUtils';
 import { invalidateEditorScene } from '@editor/lib/invalidateEditorScene';
 
 export function useLidarMeshSync() {
@@ -75,22 +79,7 @@ export function useLidarMeshSync() {
           existing.scale.setScalar(1 / parentScale);
 
           if (lastSynced?.lidar.range !== lidar.range) {
-            const cone = existing.children.find(
-              (c) =>
-                (c as THREE.Mesh).isMesh &&
-                (c as THREE.Mesh).geometry instanceof THREE.ConeGeometry
-            ) as THREE.Mesh | undefined;
-            if (cone) {
-              cone.geometry.dispose();
-              cone.geometry = new THREE.ConeGeometry(
-                lidar.range * 0.1,
-                lidar.range * 0.3,
-                32,
-                1,
-                true
-              );
-              cone.position.z = lidar.range * 0.15;
-            }
+            updateLidarScanVolume(existing, lidar);
           }
         } else {
           const group = createLidarMesh(lidar);

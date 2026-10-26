@@ -7,7 +7,7 @@ export function createBuilding(params: CreateBuildingParams): Building {
     depth: 20,
     height: 20,
     material: 'concrete',
-    scale: 0.5,
+    scale: 1,
     rotation: 0,
   };
 }

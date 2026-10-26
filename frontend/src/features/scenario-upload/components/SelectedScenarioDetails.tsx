@@ -43,10 +43,12 @@ export const SelectedScenarioDetails = ({
       <TextField
         label="ID"
         value={scenario.scenario_id}
-        InputProps={{ readOnly: true }}
         fullWidth
         variant="outlined"
         className="upload-scenarios-modal__field"
+        slotProps={{
+          input: { readOnly: true },
+        }}
       />
       <TextField
         label="Description"

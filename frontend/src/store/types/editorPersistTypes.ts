@@ -12,4 +12,5 @@ export type EditorPersist = Pick<
   | 'selectedIds'
   | 'selectedObjects'
   | 'pedestrians'
+  | 'savedScenarioFingerprint'
 >;

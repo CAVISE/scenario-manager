@@ -5,6 +5,10 @@ let pendingPreviewCallbacks: Array<(preview: string | null) => void> = [];
 
 const PREVIEW_MAX_DIMENSION = 400;
 
+function asPreview(value: string): string | null {
+  return value || null;
+}
+
 export function setCanvasReference(canvas: HTMLCanvasElement | null): void {
   canvasRef = canvas;
   cachedPreview = null;
@@ -16,7 +20,7 @@ function capturePreview(): string | null {
     const { width, height } = canvasRef;
     if (width === 0 || height === 0) return null;
     const scale = Math.min(1, PREVIEW_MAX_DIMENSION / Math.max(width, height));
-    if (scale >= 1) return canvasRef.toDataURL('image/png');
+    if (scale >= 1) return asPreview(canvasRef.toDataURL('image/png'));
 
     const targetWidth = Math.max(1, Math.round(width * scale));
     const targetHeight = Math.max(1, Math.round(height * scale));
@@ -24,9 +28,9 @@ function capturePreview(): string | null {
     offscreen.width = targetWidth;
     offscreen.height = targetHeight;
     const context = offscreen.getContext('2d');
-    if (!context) return canvasRef.toDataURL('image/png');
+    if (!context) return asPreview(canvasRef.toDataURL('image/png'));
     context.drawImage(canvasRef, 0, 0, targetWidth, targetHeight);
-    return offscreen.toDataURL('image/png');
+    return asPreview(offscreen.toDataURL('image/png'));
   } catch (error) {
     console.warn('Failed to capture preview:', error);
     return null;

@@ -5,7 +5,12 @@ import type { MpcSectionProps } from '../types/mpcTypes';
 export const VehicleGeometrySection = ({ mpc, update }: MpcSectionProps) => (
   <>
     <Divider />
-    <Typography variant="subtitle2" color="text.secondary">
+    <Typography
+      variant="subtitle2"
+      sx={{
+        color: 'text.secondary',
+      }}
+    >
       Vehicle geometry
     </Typography>
     <Stack direction="row" spacing={2}>
@@ -14,18 +19,22 @@ export const VehicleGeometrySection = ({ mpc, update }: MpcSectionProps) => (
         type="number"
         size="small"
         fullWidth
-        inputProps={{ step: 0.1 }}
         value={mpc.RF}
         onChange={(e) => update({ RF: parseNumberInputChange(e.target) })}
+        slotProps={{
+          htmlInput: { step: 0.1 },
+        }}
       />
       <TextField
         label="RB (m)"
         type="number"
         size="small"
         fullWidth
-        inputProps={{ step: 0.1 }}
         value={mpc.RB}
         onChange={(e) => update({ RB: parseNumberInputChange(e.target) })}
+        slotProps={{
+          htmlInput: { step: 0.1 },
+        }}
       />
     </Stack>
     <Stack direction="row" spacing={2}>
@@ -34,18 +43,22 @@ export const VehicleGeometrySection = ({ mpc, update }: MpcSectionProps) => (
         type="number"
         size="small"
         fullWidth
-        inputProps={{ step: 0.1 }}
         value={mpc.W}
         onChange={(e) => update({ W: parseNumberInputChange(e.target) })}
+        slotProps={{
+          htmlInput: { step: 0.1 },
+        }}
       />
       <TextField
         label="wd_ratio"
         type="number"
         size="small"
         fullWidth
-        inputProps={{ step: 0.05 }}
         value={mpc.wd_ratio}
         onChange={(e) => update({ wd_ratio: parseNumberInputChange(e.target) })}
+        slotProps={{
+          htmlInput: { step: 0.05 },
+        }}
       />
     </Stack>
     <Stack direction="row" spacing={2}>
@@ -54,18 +67,22 @@ export const VehicleGeometrySection = ({ mpc, update }: MpcSectionProps) => (
         type="number"
         size="small"
         fullWidth
-        inputProps={{ step: 0.1 }}
         value={mpc.WB}
         onChange={(e) => update({ WB: parseNumberInputChange(e.target) })}
+        slotProps={{
+          htmlInput: { step: 0.1 },
+        }}
       />
       <TextField
         label="TR (m)"
         type="number"
         size="small"
         fullWidth
-        inputProps={{ step: 0.01 }}
         value={mpc.TR}
         onChange={(e) => update({ TR: parseNumberInputChange(e.target) })}
+        slotProps={{
+          htmlInput: { step: 0.01 },
+        }}
       />
     </Stack>
     <TextField
@@ -73,9 +90,11 @@ export const VehicleGeometrySection = ({ mpc, update }: MpcSectionProps) => (
       type="number"
       size="small"
       className="sim-config-field--half"
-      inputProps={{ step: 0.05 }}
       value={mpc.TW}
       onChange={(e) => update({ TW: parseNumberInputChange(e.target) })}
+      slotProps={{
+        htmlInput: { step: 0.05 },
+      }}
     />
   </>
 );

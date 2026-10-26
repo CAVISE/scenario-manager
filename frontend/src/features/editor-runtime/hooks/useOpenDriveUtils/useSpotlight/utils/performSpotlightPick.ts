@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { decodeUInt32, isValid } from '@/shared/lib/editorUtils';
 import { applyVertexColors } from '@editor/scene/utils/sceneHelpers';
+import { getOdrMapOffsets } from '@editor/lib/getOdrMapOffsets';
 import { COLORS } from '../../useOdrMap/constants/useOdrMapConstants';
 import type {
   OdrLanesMesh,
@@ -60,10 +61,10 @@ export function performSpotlightPick(
     positionBuffer
   );
 
-  const odrMap = params.getOpenDriveMap();
-  if (odrMap) {
-    positionBuffer[0] += odrMap.x_offs;
-    positionBuffer[1] += odrMap.y_offs;
+  const offsets = getOdrMapOffsets(params.getOpenDriveMap());
+  if (offsets) {
+    positionBuffer[0] += offsets.x;
+    positionBuffer[1] += offsets.y;
   }
   camera.clearViewOffset();
   renderer.setRenderTarget(null);

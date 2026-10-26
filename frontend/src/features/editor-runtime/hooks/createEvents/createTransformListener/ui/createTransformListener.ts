@@ -21,6 +21,8 @@ export function createTransformListener(
     sceneRef,
     carMeshesRef,
     routePointMeshesRef,
+    localLineArrRef,
+    roadMeshRef,
     carQuaternionsRef,
   } = opts;
   const reattacher = createTransformReattacher({
@@ -33,6 +35,8 @@ export function createTransformListener(
     transformControls,
     carMeshesRef,
     routePointMeshesRef,
+    localLineArrRef,
+    roadMeshRef,
     carQuaternionsRef,
   });
 

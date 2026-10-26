@@ -50,11 +50,14 @@ export function MapPickerModal({
               <ListItemText
                 primary={mapName}
                 secondary={loadingMap === mapName ? 'Loading…' : undefined}
-                primaryTypographyProps={{
-                  className: 'editor-map-picker-modal__item-primary',
-                }}
-                secondaryTypographyProps={{
-                  className: 'editor-map-picker-modal__item-secondary',
+                slotProps={{
+                  primary: {
+                    className: 'editor-map-picker-modal__item-primary',
+                  },
+
+                  secondary: {
+                    className: 'editor-map-picker-modal__item-secondary',
+                  },
                 }}
               />
             </ListItemButton>

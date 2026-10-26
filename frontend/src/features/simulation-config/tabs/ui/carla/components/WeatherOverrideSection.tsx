@@ -20,7 +20,12 @@ export const WeatherOverrideSection = ({
 }: WeatherOverrideSectionProps) => (
   <>
     <Divider />
-    <Typography variant="subtitle2" color="text.secondary">
+    <Typography
+      variant="subtitle2"
+      sx={{
+        color: 'text.secondary',
+      }}
+    >
       OpenCDA Weather
     </Typography>
     <FormControlLabel
@@ -40,9 +45,11 @@ export const WeatherOverrideSection = ({
     />
     {customWeatherEnabled && (
       <Box
-        display="grid"
-        gridTemplateColumns="repeat(2, minmax(0, 1fr))"
-        gap={1.5}
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+          gap: 1.5,
+        }}
       >
         {CARLA_WEATHER_KEYS.map((key) => (
           <TextField

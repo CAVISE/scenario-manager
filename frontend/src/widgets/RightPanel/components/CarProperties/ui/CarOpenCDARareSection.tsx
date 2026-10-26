@@ -93,8 +93,10 @@ export default function CarOpenCDARareSection({ car }: CarSectionProps) {
 
             <Typography
               variant="caption"
-              color="text.secondary"
               className="car-properties-section__caption"
+              sx={{
+                color: 'text.secondary',
+              }}
             >
               sensing / perception
             </Typography>

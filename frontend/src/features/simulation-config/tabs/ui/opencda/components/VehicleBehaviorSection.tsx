@@ -43,7 +43,12 @@ export const VehicleBehaviorSection = ({
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="subtitle2" color="text.secondary">
+      <Typography
+        variant="subtitle2"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         Vehicle behavior
       </Typography>
 
@@ -53,18 +58,22 @@ export const VehicleBehaviorSection = ({
           type="number"
           size="small"
           fullWidth
-          inputProps={{ ...numInputSlot.input, min: 0, max: 300 }}
           value={maxSpeed}
           onChange={numberField('max_speed', 0, 300)}
+          slotProps={{
+            htmlInput: { ...numInputSlot.input, min: 0, max: 300 },
+          }}
         />
         <TextField
           label="Tailgate speed"
           type="number"
           size="small"
           fullWidth
-          inputProps={{ ...numInputSlot.input, min: 0 }}
           value={tailgateSpeed}
           onChange={numberField('tailgate_speed', 0)}
+          slotProps={{
+            htmlInput: { ...numInputSlot.input, min: 0 },
+          }}
         />
       </Stack>
 
@@ -74,18 +83,22 @@ export const VehicleBehaviorSection = ({
           type="number"
           size="small"
           fullWidth
-          inputProps={{ ...numInputSlot.input, min: 0, step: 0.1 }}
           value={safetyTime}
           onChange={numberField('safety_time', 0)}
+          slotProps={{
+            htmlInput: { ...numInputSlot.input, min: 0, step: 0.1 },
+          }}
         />
         <TextField
           label="Emergency param"
           type="number"
           size="small"
           fullWidth
-          inputProps={{ ...numInputSlot.input, min: 0, step: '0.05' }}
           value={emergencyParam}
           onChange={numberField('emergency_param', 0)}
+          slotProps={{
+            htmlInput: { ...numInputSlot.input, min: 0, step: '0.05' },
+          }}
         />
       </Stack>
 
@@ -95,18 +108,22 @@ export const VehicleBehaviorSection = ({
           type="number"
           size="small"
           fullWidth
-          inputProps={{ ...numInputSlot.input, min: 0 }}
           value={collisionTimeAhead}
           onChange={numberField('collision_time_ahead', 0)}
+          slotProps={{
+            htmlInput: { ...numInputSlot.input, min: 0 },
+          }}
         />
         <TextField
           label="Sample resolution (m)"
           type="number"
           size="small"
           fullWidth
-          inputProps={{ ...numInputSlot.input, min: 0.1, step: 0.1 }}
           value={sampleResolution}
           onChange={numberField('sample_resolution', 0.1)}
+          slotProps={{
+            htmlInput: { ...numInputSlot.input, min: 0.1, step: 0.1 },
+          }}
         />
       </Stack>
 
@@ -116,18 +133,22 @@ export const VehicleBehaviorSection = ({
           type="number"
           size="small"
           fullWidth
-          inputProps={{ ...numInputSlot.input, min: 0 }}
           value={speedLimDist}
           onChange={numberField('speed_lim_dist', 0)}
+          slotProps={{
+            htmlInput: { ...numInputSlot.input, min: 0 },
+          }}
         />
         <TextField
           label="Speed decrease"
           type="number"
           size="small"
           fullWidth
-          inputProps={{ ...numInputSlot.input, min: 0 }}
           value={speedDecrease}
           onChange={numberField('speed_decrease', 0)}
+          slotProps={{
+            htmlInput: { ...numInputSlot.input, min: 0 },
+          }}
         />
       </Stack>
 
@@ -136,12 +157,20 @@ export const VehicleBehaviorSection = ({
         type="number"
         size="small"
         fullWidth
-        inputProps={{ ...numInputSlot.input, min: 0 }}
         value={overtakeCounterRecover}
         onChange={numberField('overtake_counter_recover', 0)}
+        slotProps={{
+          htmlInput: { ...numInputSlot.input, min: 0 },
+        }}
       />
 
-      <Stack direction="row" gap={1} flexWrap="wrap">
+      <Stack
+        direction="row"
+        sx={{
+          gap: 1,
+          flexWrap: 'wrap',
+        }}
+      >
         <FormControlLabel
           control={
             <Switch

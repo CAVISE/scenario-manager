@@ -24,11 +24,11 @@ export function useOdrLoader({
   setError,
   moduleRef,
   mapRef,
+  odrMapRef,
   loadOdrMapRef,
 }: UseOdrLoaderProps) {
   const callbacksRef = useRef({ setStep, setError });
   callbacksRef.current = { setStep, setError };
-
   useEffect(() => {
     let cancelled = false;
     const isInitialMapLoadCurrent = beginMapLoadRequest();
@@ -49,15 +49,12 @@ export function useOdrLoader({
       } catch {
         //
       }
-
       try {
         Module.FS_createDataFile('.', DEFAULT_XODR, fileText, true, true);
-
+        odrMapRef.current = null;
         mapRef.current?.delete();
         mapRef.current = new Module.OpenDriveMap(MAP_PATH, ODR_MAP_OPTIONS);
-
         callbacksRef.current.setStep('scene');
-
         loadOdrMapRef.current(clearMap);
       } catch (err) {
         console.error(err);
@@ -67,7 +64,6 @@ export function useOdrLoader({
         );
       }
     }
-
     async function fetchAndLoad() {
       try {
         const cached = getCachedXodrContent();
@@ -76,7 +72,6 @@ export function useOdrLoader({
           processFile(cached, false);
           return;
         }
-
         const mapName = getStoredXodrName(
           useEditorStore.getState().simConfig?.carla?.map
         );
@@ -95,19 +90,14 @@ export function useOdrLoader({
         );
       }
     }
-
     async function init() {
       callbacksRef.current.setStep('wasm');
-
       await initXodrCacheFromIndexedDb();
       try {
         const Module = await libOpenDrive();
-
         if (cancelled) return;
-
         moduleRef.current = Module as OpenDriveModule;
         callbacksRef.current.setStep('map');
-
         await fetchAndLoad();
       } catch (err) {
         if (cancelled) return;
@@ -128,31 +118,22 @@ export function useOdrLoader({
     };
   }, [moduleRef, mapRef, loadOdrMapRef]);
 
-  function loadFile(fileText: string, clearMap: boolean, sourceName?: string) {
+  async function loadFile(
+    fileText: string,
+    clearMap: boolean,
+    sourceName?: string
+  ): Promise<boolean> {
     if (!moduleRef.current) {
       setStep('done');
       setError?.(new Error('OpenDRIVE module not initialized'));
-      return;
-    }
-    beginMapLoadRequest();
-    setCachedCustomXodrContent(fileText);
-
-    if (sourceName) {
-      setStoredXodrName(sourceName);
-    } else {
-      clearStoredXodrName();
+      return false;
     }
     setStep('map');
     const Module = moduleRef.current;
-
-    if (clearMap) {
-      const s = useEditorStore.getState();
-      s.cars.forEach((c) => s.removeCar(c.id));
-      s.removeAllRSUs();
-      s.points.forEach((p) => s.removePoint(p.id));
-      s.buildings.forEach((b) => s.removeBuilding(b.id));
-      s.pedestrians.forEach((p) => s.removePedestrian(p.id));
-    }
+    const previousMapName = getStoredXodrName(
+      useEditorStore.getState().simConfig?.carla?.map
+    );
+    if (sourceName) setStoredXodrName(sourceName);
     try {
       Module.FS_unlink(MAP_PATH);
     } catch {
@@ -167,10 +148,12 @@ export function useOdrLoader({
       setError?.(
         err instanceof Error ? err : new Error('FS_createDataFile failed')
       );
-      return;
+      if (sourceName) setStoredXodrName(previousMapName);
+      return false;
     }
 
     try {
+      odrMapRef.current = null;
       mapRef.current?.delete();
       mapRef.current = new Module.OpenDriveMap(MAP_PATH, ODR_MAP_OPTIONS);
     } catch (err) {
@@ -179,16 +162,28 @@ export function useOdrLoader({
       setError?.(
         err instanceof Error ? err : new Error('OpenDriveMap parse failed')
       );
-      return;
+      if (sourceName) setStoredXodrName(previousMapName);
+      return false;
     }
 
     try {
-      setStep('scene');
-      loadOdrMapRef.current(clearMap);
+      const built = await new Promise<boolean>((resolve) => {
+        setStep('scene');
+        loadOdrMapRef.current(clearMap, true, resolve, fileText);
+      });
+      if (!built) {
+        if (sourceName) setStoredXodrName(previousMapName);
+        return false;
+      }
+      setCachedCustomXodrContent(fileText);
+      if (!sourceName) clearStoredXodrName();
+      return true;
     } catch (err) {
       console.error('loadOdrMapRef failed:', err);
       setStep('done');
       setError?.(err instanceof Error ? err : new Error('loadOdrMap failed'));
+      if (sourceName) setStoredXodrName(previousMapName);
+      return false;
     }
   }
 

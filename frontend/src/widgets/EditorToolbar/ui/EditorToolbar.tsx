@@ -1,7 +1,7 @@
 import '../styles/EditorToolbar.scss';
 import { useState, useCallback } from 'react';
-import { Badge, Button, IconButton, Tooltip } from '@mui/material';
-import { SaveOutlined, AccountTreeOutlined } from '@mui/icons-material';
+import { Badge, IconButton, Tooltip } from '@mui/material';
+import { AccountTreeOutlined } from '@mui/icons-material';
 import { Menu as MenuIcon } from '@mui/icons-material';
 import { Settings as SettingsIcon } from '@mui/icons-material';
 import { Download as DownloadIcon } from '@mui/icons-material';
@@ -18,6 +18,7 @@ import { useHistoryActions } from '@editor/hooks/createEvents/useHistoryActions'
 import { useEditorStore } from '@/store';
 import { EditorToolbarDialogs } from './EditorToolbarDialogs';
 import { EditorToolbarHistoryControls } from './EditorToolbarHistoryControls';
+import { EditorSaveButton } from './EditorSaveButton';
 
 function sanitizeDownloadFilename(name: string, fallback: string): string {
   const t = name.trim() || fallback;
@@ -180,16 +181,11 @@ export const EditorToolbar = ({
         </Tooltip>
       </div>
 
-      <Button
-        className="editor-save-button"
-        variant="contained"
-        size="small"
-        startIcon={<SaveOutlined />}
-        disabled={readOnly}
-        onClick={onSave}
-      >
-        {isSaving ? 'Saving…' : 'Save'}
-      </Button>
+      <EditorSaveButton
+        readOnly={readOnly}
+        isSaving={isSaving}
+        onSave={onSave}
+      />
 
       <EditorToolbarDialogs
         readOnly={readOnly}

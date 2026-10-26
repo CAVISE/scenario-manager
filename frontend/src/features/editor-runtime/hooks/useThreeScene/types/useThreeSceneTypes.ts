@@ -13,5 +13,10 @@ export interface UseThreeSceneResult {
     deleteCar: () => void;
     addPedestrian: () => void;
   }>;
-  loadFile: (text: string, clearMap: boolean) => void;
+  cancelMapLoad: () => void;
+  loadFile: (
+    text: string,
+    clearMap: boolean,
+    sourceName?: string
+  ) => Promise<boolean>;
 }

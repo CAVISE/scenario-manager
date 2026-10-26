@@ -2,25 +2,30 @@ import * as THREE from 'three';
 
 export const disposeMesh = (mesh: THREE.Object3D): void => {
   mesh.traverse((child) => {
-    const m = child as THREE.Mesh;
-    if (m.isMesh) {
-      m.geometry?.dispose();
-      const materials = Array.isArray(m.material) ? m.material : [m.material];
+    const renderable = child as THREE.Object3D & {
+      isMesh?: boolean;
+      isSprite?: boolean;
+      geometry?: THREE.BufferGeometry;
+      material?: THREE.Material | THREE.Material[];
+    };
+    if (renderable.isMesh || renderable.isSprite) {
+      if ('geometry' in renderable) renderable.geometry?.dispose();
+      const materials = Array.isArray(renderable.material)
+        ? renderable.material
+        : [renderable.material];
       materials.forEach((mt) => mt?.dispose());
     }
   });
 };
 
-export const disposeLine = (line: THREE.Line): void => {
+export const disposeLine = (line: THREE.Mesh): void => {
   line.parent?.remove(line);
-  line.geometry?.dispose();
-  (line.material as THREE.Material)?.dispose();
+  disposeMesh(line);
 };
 
 export const disposeRoutePointMesh = (routePointMesh: THREE.Mesh): void => {
   routePointMesh.parent?.remove(routePointMesh);
-  routePointMesh.geometry?.dispose();
-  (routePointMesh.material as THREE.Material)?.dispose();
+  disposeMesh(routePointMesh);
 };
 
 export const removeFromArray = <T>(

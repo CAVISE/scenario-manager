@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type * as THREE from 'three';
 import {
   Button,
   IconButton,
@@ -17,17 +18,23 @@ import {
   AccessibilityNew as PedestrianIcon,
   Timeline as WaypointIcon,
   Add as AddIcon,
+  ViewInAr as IsometricIcon,
+  CenterFocusStrong as FocusIcon,
+  Map as TopViewIcon,
 } from '@mui/icons-material';
 import { useTransformMode } from '@editor/hooks/useEditorEngine/useTransformMode';
 import { useEditorRefs, useHooks } from '@editor/context';
 import { useEditorStore } from '@/store';
 import type { EditorTransformControlsProps } from '../types/EditorTransformControlsTypes';
+import { applyCameraPreset } from '../model/cameraPresets';
+import { invalidateEditorScene } from '@editor/lib/invalidateEditorScene';
+import { EditorObjectActions } from './EditorObjectActions';
 
 export const EditorTransformControls = ({
   readOnly = false,
 }: EditorTransformControlsProps) => {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
-  const { transformControlsRef } = useEditorRefs();
+  const { transformControlsRef, threeRef } = useEditorRefs();
   const {
     handleAddCar,
     handleAddRSU,
@@ -44,6 +51,15 @@ export const EditorTransformControls = ({
       s.cars.some((car) => car.id === s.selectedIds[0])
   );
   const canTransform = !readOnly && selectedIds.length === 1;
+  const applyView = (preset: 'top' | 'isometric' | 'focus') => {
+    const three = threeRef.current;
+    if (!three) return;
+    const focusedObject = (
+      three.transformControls as unknown as { object?: THREE.Object3D }
+    ).object;
+    applyCameraPreset(preset, three.camera, three.controls, focusedObject);
+    invalidateEditorScene();
+  };
   const addActions = [
     {
       label: 'Vehicle',
@@ -116,6 +132,33 @@ export const EditorTransformControls = ({
             </span>
           </Tooltip>
         ))}
+      </div>
+      <span className="editor-tools-divider" />
+      <EditorObjectActions readOnly={readOnly} />
+      <span className="editor-tools-divider" />
+      <div className="editor-tool-group" aria-label="Camera view">
+        <span className="editor-tool-group-label">View</span>
+        <Tooltip title="Top view">
+          <IconButton size="small" onClick={() => applyView('top')}>
+            <TopViewIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Isometric view">
+          <IconButton size="small" onClick={() => applyView('isometric')}>
+            <IsometricIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Focus selected object">
+          <span>
+            <IconButton
+              size="small"
+              disabled={selectedIds.length !== 1}
+              onClick={() => applyView('focus')}
+            >
+              <FocusIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
       </div>
       <span className="editor-tools-divider" />
       <div className="editor-tool-group" aria-label="Add object">

@@ -13,7 +13,12 @@ const PRESETS = [
 export function SumoQuickPresets({ onSelect }: SumoQuickPresetsProps) {
   return (
     <Stack className="sim-config-quick-presets" direction="row" spacing={1}>
-      <Typography variant="caption" color="text.secondary">
+      <Typography
+        variant="caption"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         Quick presets:
       </Typography>
       {PRESETS.map(({ host, port }) => (

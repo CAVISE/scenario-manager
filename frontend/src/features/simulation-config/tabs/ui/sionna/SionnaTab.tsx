@@ -45,7 +45,13 @@ export default function SionnaTab() {
           }
         />
       </Stack>
-      <Stack direction="row" flexWrap="wrap" gap={1}>
+      <Stack
+        direction="row"
+        sx={{
+          flexWrap: 'wrap',
+          gap: 1,
+        }}
+      >
         {(['los', 'reflection', 'diffraction', 'scattering'] as const).map(
           (key) => (
             <FormControlLabel

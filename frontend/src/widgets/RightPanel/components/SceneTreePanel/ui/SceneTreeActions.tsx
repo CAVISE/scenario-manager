@@ -10,9 +10,11 @@ import {
   MenuItem,
 } from '@mui/material';
 import { useEditorStore } from '@/store';
+import { useEditorRefs } from '@editor/context';
 import { deleteSelectedObjects } from '../../MultiSelectionProperties/model/batchActions';
 import { watchHistoryEntryValidity } from '../funcs/deletionSnapshots/ui/deletionSnapshots';
 import { useAppToast } from '@/shared/ui/AppToast';
+import { invalidateEditorScene } from '@editor/lib/invalidateEditorScene';
 
 type SceneTreeActionsProps = {
   readOnly: boolean;
@@ -20,6 +22,7 @@ type SceneTreeActionsProps = {
   visibleIds: string[];
   selectedIds: string[];
   onSelect: (ids: string[]) => void;
+  onClearHover: () => void;
 };
 
 export const SceneTreeActions = ({
@@ -28,19 +31,25 @@ export const SceneTreeActions = ({
   visibleIds,
   selectedIds,
   onSelect,
+  onClearHover,
 }: SceneTreeActionsProps) => {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const [clearOpen, setClearOpen] = useState(false);
   const toast = useAppToast();
+  const { transformControlsRef } = useEditorRefs();
   const remove = (getMessage: (count: number) => string) => {
+    transformControlsRef.current?.detach();
+    onClearHover();
     const result = deleteSelectedObjects();
-    if (result)
+    if (result) {
+      invalidateEditorScene();
       toast.undo(
         getMessage(result.count),
         () => useEditorStore.getState().undo(),
         undefined,
         watchHistoryEntryValidity(result.entryId)
       );
+    }
   };
   return (
     <>

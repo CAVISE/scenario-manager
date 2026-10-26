@@ -13,7 +13,7 @@ export function useSceneObjects(): UseSceneObjectsResult {
   const { threeRef, routePointMeshesRef, roadMeshRef, transformControlsRef } =
     useEditorRefs();
 
-  const localLineArrRef = useRef<THREE.Line[][]>([]);
+  const localLineArrRef = useRef<THREE.Mesh[][]>([]);
 
   const syncRoutePointMeshes = useCallback(() => {
     const scene = threeRef.current?.scene;

@@ -25,7 +25,12 @@ const LOG_LEVELS: CapiConfig['capi_log_level'][] = [
 export const CAPIConnectionSection = ({ capi, update }: CapiSectionProps) => (
   <>
     <Divider />
-    <Typography variant="subtitle2" color="text.secondary">
+    <Typography
+      variant="subtitle2"
+      sx={{
+        color: 'text.secondary',
+      }}
+    >
       CAPI connection
     </Typography>
     <Stack direction="row" spacing={2}>

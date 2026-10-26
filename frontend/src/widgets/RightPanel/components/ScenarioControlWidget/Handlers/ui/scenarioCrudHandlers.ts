@@ -37,6 +37,7 @@ export const handleCreate = async (
       });
     }
     useEditorStore.getState().setSceneExplicitlyCleared(false);
+    useEditorStore.getState().markScenarioClean?.();
     setNotice('Scenario saved.');
     return true;
   } catch (err) {
@@ -66,6 +67,7 @@ export const handlePatch = async (
       useEditorStore.getState().updateScenario({ revision: result.revision });
     }
     useEditorStore.getState().setSceneExplicitlyCleared(false);
+    useEditorStore.getState().markScenarioClean?.();
     setNotice(
       result?.warning
         ? `The scenario has been updated. ${result.warning}`

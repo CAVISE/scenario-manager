@@ -40,8 +40,19 @@ export const V2XSection = ({
 
   return (
     <Stack spacing={1.5}>
-      <Stack direction="row" alignItems="center" spacing={1}>
-        <Typography variant="subtitle2" color="text.secondary">
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: 'center',
+        }}
+      >
+        <Typography
+          variant="subtitle2"
+          sx={{
+            color: 'text.secondary',
+          }}
+        >
           Export / defaults
         </Typography>
         <Chip
@@ -51,7 +62,14 @@ export const V2XSection = ({
         />
       </Stack>
 
-      <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
+      <Stack
+        direction="row"
+        spacing={2}
+        sx={{
+          alignItems: 'center',
+          flexWrap: 'wrap',
+        }}
+      >
         <FormControlLabel
           control={
             <Switch
@@ -66,22 +84,25 @@ export const V2XSection = ({
           label="V2X range (m)"
           type="number"
           size="small"
-          inputProps={{
-            ...numInputSlot.input,
-            min: 0,
-            max: 1000,
-            step: 1,
-          }}
           value={range}
           onChange={handleRangeChange}
           className="sim-config-field--max-140"
           helperText={
             isRangeLarge ? '⚠️ Large range may impact performance' : ''
           }
-          FormHelperTextProps={{
-            className: isRangeLarge
-              ? 'sim-config-helper-text--warning'
-              : undefined,
+          slotProps={{
+            htmlInput: {
+              ...numInputSlot.input,
+              min: 0,
+              max: 1000,
+              step: 1,
+            },
+
+            formHelperText: {
+              className: isRangeLarge
+                ? 'sim-config-helper-text--warning'
+                : undefined,
+            },
           }}
         />
 
@@ -102,7 +123,12 @@ export const V2XSection = ({
         </FormControl>
       </Stack>
 
-      <Typography variant="caption" color="text.secondary">
+      <Typography
+        variant="caption"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         Vehicle-to-Everything (V2X) communication enables cooperative awareness
         between vehicles and infrastructure
       </Typography>

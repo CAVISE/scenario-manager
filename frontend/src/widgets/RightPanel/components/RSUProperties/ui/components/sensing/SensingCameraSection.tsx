@@ -10,11 +10,16 @@ export function SensingCameraSection({
 }: SensingCameraSectionProps) {
   return (
     <>
-      <Typography variant="caption" color="text.secondary">
+      <Typography
+        variant="caption"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         Camera
       </Typography>
-      <Grid item container spacing={1}>
-        <Grid item xs={6}>
+      <Grid container spacing={1}>
+        <Grid size={6}>
           <FormControl>
             <FormLabel className="right-panel-property-label">
               Visualize (count)
@@ -38,7 +43,7 @@ export function SensingCameraSection({
             />
           </FormControl>
         </Grid>
-        <Grid item xs={6}>
+        <Grid size={6}>
           <FormControl>
             <FormLabel className="right-panel-property-label">Count</FormLabel>
             <Input

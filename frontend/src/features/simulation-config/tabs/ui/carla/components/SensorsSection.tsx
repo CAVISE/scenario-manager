@@ -13,10 +13,21 @@ import type { CarlaSectionProps } from '../types/carlaTypes';
 export const SensorsSection = ({ carla, update }: CarlaSectionProps) => (
   <>
     <Divider />
-    <Typography variant="subtitle2" color="text.secondary">
+    <Typography
+      variant="subtitle2"
+      sx={{
+        color: 'text.secondary',
+      }}
+    >
       Sensors
     </Typography>
-    <Stack direction="row" flexWrap="wrap" gap={1}>
+    <Stack
+      direction="row"
+      sx={{
+        flexWrap: 'wrap',
+        gap: 1,
+      }}
+    >
       {CARLA_SENSORS.map((s) => (
         <FormControlLabel
           key={s}

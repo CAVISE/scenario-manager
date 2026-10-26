@@ -14,7 +14,12 @@ export default function ArteryTab() {
   const updateSimConfigArtery = useEditorStore((s) => s.updateSimConfigArtery);
   return (
     <Stack spacing={2}>
-      <Typography variant="subtitle2" color="text.secondary">
+      <Typography
+        variant="subtitle2"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         SUMO
       </Typography>
       <TextField
@@ -30,13 +35,15 @@ export default function ArteryTab() {
           type="number"
           size="small"
           fullWidth
-          inputProps={{ step: 0.01 }}
           value={simConfig.artery.sumo_step_length}
           onChange={(e) =>
             updateSimConfigArtery({
               sumo_step_length: parseNumberInputChange(e.target),
             })
           }
+          slotProps={{
+            htmlInput: { step: 0.01 },
+          }}
         />
         <TextField
           label="Seed"
@@ -52,7 +59,12 @@ export default function ArteryTab() {
         />
       </Stack>
       <Divider />
-      <Typography variant="subtitle2" color="text.secondary">
+      <Typography
+        variant="subtitle2"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         Middleware (Vehicles)
       </Typography>
       <Stack direction="row" spacing={2}>
@@ -102,7 +114,12 @@ export default function ArteryTab() {
           }
         />
       </Stack>
-      <Stack direction="row" gap={1}>
+      <Stack
+        direction="row"
+        sx={{
+          gap: 1,
+        }}
+      >
         <FormControlLabel
           control={
             <Switch
@@ -127,10 +144,20 @@ export default function ArteryTab() {
         />
       </Stack>
       <Divider />
-      <Typography variant="subtitle2" color="text.secondary">
+      <Typography
+        variant="subtitle2"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         RSU Services
       </Typography>
-      <Stack direction="row" gap={1}>
+      <Stack
+        direction="row"
+        sx={{
+          gap: 1,
+        }}
+      >
         <FormControlLabel
           control={
             <Switch

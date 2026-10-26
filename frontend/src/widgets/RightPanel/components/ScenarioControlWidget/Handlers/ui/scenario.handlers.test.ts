@@ -106,6 +106,8 @@ const createStoreState = () => {
     addLidarsBatch: vi.fn(),
     setSceneExplicitlyCleared: vi.fn(),
     updateSimulationSession: vi.fn(),
+    clearHistory: vi.fn(),
+    clearDeletionHistory: vi.fn(),
   };
 
   state.addCarsBatch.mockImplementation((carsToAdd: Array<unknown>) => {
@@ -342,6 +344,35 @@ beforeEach(() => {
 });
 
 describe('handleLoad regression', () => {
+  it('keeps the name from the scenario API detail after restoring scene objects', async () => {
+    fetchQueryMock.mockResolvedValue({
+      scenario_id: 'named-1',
+      scenario_name: 'Scenario visible to the user',
+      file_: VALID_XODR,
+      scenario: {
+        scenario_text: [{ vehicle: 'car', path: [{ x: 1, y: 2, z: 0 }] }],
+      },
+    });
+
+    await handleLoad({
+      hasId: true,
+      scenarioIdInput: 'named-1',
+      setNotice: vi.fn(),
+      updateSceneGraph: vi.fn(),
+      loadFile: vi.fn(),
+    });
+
+    expect(storeState.updateScenario).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'named-1',
+        name: 'Scenario visible to the user',
+      })
+    );
+    expect(storeState.updateScenario).not.toHaveBeenCalledWith(
+      expect.objectContaining({ name: '' })
+    );
+  });
+
   it('handles all vehicle types: car, pedestrian, RSU', async () => {
     fetchQueryMock.mockResolvedValue({
       scenario: {

@@ -137,7 +137,7 @@ export function useKeyDownHandler({ toast }: UseKeyDownHandlerProps) {
 
       if (type === 'rsu') {
         let root: THREE.Object3D = attached;
-        while (root.parent && root.userData.type !== 'point') {
+        while (root.parent && root.userData.type !== 'rsu') {
           root = root.parent;
         }
 

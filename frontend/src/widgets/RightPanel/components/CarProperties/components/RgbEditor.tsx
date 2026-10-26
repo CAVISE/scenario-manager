@@ -8,7 +8,7 @@ export function RgbEditor({ color, onChange }: RgbEditorProps) {
   return (
     <Grid container spacing={1}>
       {(['R', 'G', 'B'] as const).map((label, idx) => (
-        <Grid xs={4} key={label}>
+        <Grid key={label} size={4}>
           <FormControl>
             <FormLabel className="car-properties-section__label">
               {label}

@@ -36,8 +36,19 @@ export const VTypesSection = ({ sumo, onUpdate }: SumoSectionProps) => {
   return (
     <>
       <Divider />
-      <Stack direction="row" justifyContent="space-between" alignItems="center">
-        <Typography variant="subtitle2" color="text.secondary">
+      <Stack
+        direction="row"
+        sx={{
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        <Typography
+          variant="subtitle2"
+          sx={{
+            color: 'text.secondary',
+          }}
+        >
           Vehicle types (vTypes)
         </Typography>
         <Button size="small" variant="outlined" onClick={handleAddVType}>
@@ -70,7 +81,6 @@ export const VTypesSection = ({ sumo, onUpdate }: SumoSectionProps) => {
                 type="number"
                 size="small"
                 fullWidth
-                inputProps={{ step: 0.1 }}
                 value={vt.minGap}
                 onChange={(e) =>
                   handleVTypeChange(
@@ -79,13 +89,15 @@ export const VTypesSection = ({ sumo, onUpdate }: SumoSectionProps) => {
                     parseNumberInputChange(e.target) || 0
                   )
                 }
+                slotProps={{
+                  htmlInput: { step: 0.1 },
+                }}
               />
               <TextField
                 label="tau"
                 type="number"
                 size="small"
                 fullWidth
-                inputProps={{ step: 0.1 }}
                 value={vt.tau}
                 onChange={(e) =>
                   handleVTypeChange(
@@ -94,6 +106,9 @@ export const VTypesSection = ({ sumo, onUpdate }: SumoSectionProps) => {
                     parseNumberInputChange(e.target) || 0
                   )
                 }
+                slotProps={{
+                  htmlInput: { step: 0.1 },
+                }}
               />
               <TextField
                 label="carFollowModel"
@@ -105,7 +120,13 @@ export const VTypesSection = ({ sumo, onUpdate }: SumoSectionProps) => {
                 }
               />
             </Stack>
-            <Stack direction="row" spacing={1} alignItems="center">
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: 'center',
+              }}
+            >
               <TextField
                 label="speedFactor"
                 size="small"

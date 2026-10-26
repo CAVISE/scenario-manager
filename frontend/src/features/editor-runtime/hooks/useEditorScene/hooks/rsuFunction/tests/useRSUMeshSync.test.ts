@@ -653,9 +653,9 @@ describe('useRSUMeshSync', () => {
       expect(replacement.position.y).toBe(200);
       expect(replacement.position.z).toBe(300);
 
-      expect(replacement.scale.x).toBe(0.05);
-      expect(replacement.scale.y).toBe(0.05);
-      expect(replacement.scale.z).toBe(0.05);
+      expect(replacement.scale.x).toBe(0.01);
+      expect(replacement.scale.y).toBe(0.01);
+      expect(replacement.scale.z).toBe(0.01);
 
       expect(replacement.rotation.x).toBeCloseTo(Math.PI / 2);
 
@@ -899,9 +899,9 @@ describe('useRSUMeshSync', () => {
       expect(obj.position.y).toBe(20);
       expect(obj.position.z).toBe(30);
 
-      expect(obj.scale.x).toBe(0.05);
-      expect(obj.scale.y).toBe(0.05);
-      expect(obj.scale.z).toBe(0.05);
+      expect(obj.scale.x).toBe(0.01);
+      expect(obj.scale.y).toBe(0.01);
+      expect(obj.scale.z).toBe(0.01);
 
       expect(obj.rotation.x).toBeCloseTo(Math.PI / 2);
 

@@ -4,22 +4,14 @@ import { MapWeatherSection } from './components/MapWeatherSection';
 import { CarlaSettingsSection } from './components/CarlaSettingsSection';
 import { WeatherOverrideSection } from './components/WeatherOverrideSection';
 import { SensorsSection } from './components/SensorsSection';
-import { useEffect } from 'react';
 
-export default function CarlaTab() {
-  const {
-    simConfig,
-    updateSimConfigCarla,
-    storedMap,
-    selectedMap,
-    customWeatherEnabled,
-  } = useCarlaConfig();
+interface CarlaTabProps {
+  onMapLoaded?: () => void;
+}
 
-  useEffect(() => {
-    if (storedMap && !simConfig.carla.map) {
-      updateSimConfigCarla({ map: storedMap });
-    }
-  }, [simConfig.carla.map, storedMap, updateSimConfigCarla]);
+export default function CarlaTab({ onMapLoaded }: CarlaTabProps) {
+  const { simConfig, updateSimConfigCarla, selectedMap, customWeatherEnabled } =
+    useCarlaConfig();
 
   return (
     <Stack spacing={2}>
@@ -27,6 +19,7 @@ export default function CarlaTab() {
         carla={simConfig.carla}
         selectedMap={selectedMap}
         update={updateSimConfigCarla}
+        onMapLoaded={onMapLoaded}
       />
       <CarlaSettingsSection
         carla={simConfig.carla}
