@@ -12,6 +12,13 @@ _MIN_DETECTION_RANGE_M = 15.0
 _MIN_DETECTION_RANGE_FRACTION = 0.4
 _MAX_GNSS_NOISE_MULTIPLIER = 3.0
 
+# OpenDRIVE maps converted from OSM contain substantially more short road
+# sections than CARLA's stock towns.  A 20 m graph keeps CARLA RPC traffic
+# bounded during startup.  The router preserves short connector topology and
+# resamples only a selected route before it reaches the controller.
+_OSM_DERIVED_MAPS = frozenset({"osm-area", "osm-area-20261021"})
+_OSM_GLOBAL_ROUTE_SAMPLE_RESOLUTION_M = 20.0
+
 
 def _set_override(
     config: DictConfig,
@@ -184,6 +191,16 @@ def apply_environment_overrides(
         "keep the traffic manager synchronized with the world",
         overrides,
     )
+
+    normalized_map_name = map_name.removesuffix(".xodr")
+    if normalized_map_name in _OSM_DERIVED_MAPS:
+        _set_override(
+            config,
+            "vehicle_base.behavior.sample_resolution",
+            _OSM_GLOBAL_ROUTE_SAMPLE_RESOLUTION_M,
+            "limit OpenDRIVE/OSM global-route graph density during CAV startup",
+            overrides,
+        )
 
     if OmegaConf.select(config, "blueprint.use_multi_class_bp", default=False):
         raw_path = OmegaConf.select(config, "blueprint.bp_meta_path", default="")

@@ -10,6 +10,9 @@ from app.integrations.opencda.runtime import (
     reset_stale_sync_mode as _reset_stale_sync_mode,
     run_with_timeout as _run_with_timeout,
 )
+from app.integrations.opencda.opendrive import (
+    generate_world as _generate_opendrive_world,
+)
 from app.integrations.opencda.preflight import (
     check_perception_requires_apply_ml as _check_perception_requires_apply_ml,
     check_scenario_matches_map,
@@ -21,6 +24,7 @@ from app.integrations.opencda.pedestrians import (
 from app.integrations.opencda.telemetry import (
     log_cav_forensic,
     log_rsu_forensic,
+    map_position_diagnostics,
 )
 from app.log_config import add_run_file_handler, get_logger, remove_run_file_handler
 from app.integrations.opencda.config import (
@@ -96,6 +100,29 @@ def _run_output_dir(map_name: str, current_time: str) -> str:
     )
 
 
+def _focus_spectator_on_cav(spectator, cavs: list, tick_count: int) -> None:
+    """Keep a spawned CAV visible even when scenario vehicles are far apart.
+
+    A wide, centroid-based overhead view made vehicles separated by several
+    hundred metres indistinguishable in the CARLA window.  Following one CAV
+    at a usable altitude also gives an operator an immediate visual signal
+    that spawning succeeded.  Rotate the focus every five simulation seconds
+    when there is more than one active CAV.
+    """
+    if not cavs:
+        return
+
+    focus_interval_ticks = 100  # 5 seconds at the standard 0.05 s timestep.
+    cav = cavs[(tick_count // focus_interval_ticks) % len(cavs)]
+    location = cav.vehicle.get_location()
+    spectator.set_transform(
+        carla.Transform(
+            carla.Location(x=location.x, y=location.y, z=80),
+            carla.Rotation(pitch=-90),
+        )
+    )
+
+
 def run_scenario(scenario_raw: dict, params: dict):
     settings = get_settings()
 
@@ -163,10 +190,16 @@ def run_scenario(scenario_raw: dict, params: dict):
             log.info("Loading map once via client: %s ...", map_name)
             if xodr_path:
                 with open(xodr_path) as f:
-                    client.generate_opendrive_world(f.read())
+                    world = _generate_opendrive_world(
+                        client,
+                        carla,
+                        f.read(),
+                        map_name,
+                        settings.carla_timeout_seconds,
+                    )
             else:
-                client.load_world(map_name)
-            loaded_map = client.get_world().get_map()
+                world = client.load_world(map_name)
+            loaded_map = world.get_map()
             log.info("carla_map obtained: %s", loaded_map.name)
             return loaded_map
 
@@ -262,17 +295,9 @@ def run_scenario(scenario_raw: dict, params: dict):
             )
 
         if single_cav_list:
-            locs = [cav.vehicle.get_location() for cav in single_cav_list]
-            center_x = sum(location.x for location in locs) / len(locs)
-            center_y = sum(location.y for location in locs) / len(locs)
             spectator = scenario_manager.world.get_spectator()
-            spectator.set_transform(
-                carla.Transform(
-                    carla.Location(x=center_x, y=center_y, z=500),
-                    carla.Rotation(pitch=-90),
-                )
-            )
-            log.debug("Spectator set to center (%.1f, %.1f, z=500)", center_x, center_y)
+            _focus_spectator_on_cav(spectator, single_cav_list, tick_count)
+            log.debug("Spectator focused on first spawned CAV at z=80")
 
         scene_container = OmegaConf.to_container(scene_dict, resolve=True)
         if scene_container.get("scenario", {}).get("rsu_list"):
@@ -328,21 +353,7 @@ def run_scenario(scenario_raw: dict, params: dict):
                     )
 
             if active_cavs:
-                locs = [cav.vehicle.get_location() for cav in active_cavs]
-                cx = sum(location.x for location in locs) / len(locs)
-                cy = sum(location.y for location in locs) / len(locs)
-                spread = max(
-                    max(location.x for location in locs)
-                    - min(location.x for location in locs),
-                    max(location.y for location in locs)
-                    - min(location.y for location in locs),
-                )
-                z = max(80, spread * 1.2)
-                spectator.set_transform(
-                    carla.Transform(
-                        carla.Location(x=cx, y=cy, z=z), carla.Rotation(pitch=-90)
-                    )
-                )
+                _focus_spectator_on_cav(spectator, active_cavs, tick_count)
 
             for cav in active_cavs:
                 loc = cav.vehicle.get_location()
@@ -366,6 +377,16 @@ def run_scenario(scenario_raw: dict, params: dict):
                         "CAV id=%d off-road road_distance=%s",
                         cav.vehicle.id,
                         f"{road_distance:.2f}" if road_distance is not None else "None",
+                    )
+                    log.warning(
+                        "CAV id=%d off-road map_diagnostics=%s",
+                        cav.vehicle.id,
+                        map_position_diagnostics(
+                            scenario_manager.carla_map,
+                            scenario_manager.world,
+                            loc,
+                            carla,
+                        ),
                     )
                     stop_control = carla.VehicleControl(throttle=0.0, brake=1.0)
                     cav.vehicle.apply_control(stop_control)

@@ -132,6 +132,31 @@ def test_runtime_config_uses_yaml_then_environment_overrides(
     }
 
 
+def test_runtime_config_uses_coarser_global_route_graph_for_osm_map(
+    open_cda_config_factory,
+):
+    config_yaml = yaml.safe_dump(open_cda_config_factory(), sort_keys=False)
+    payload = _scenario_payload(config_yaml)
+    payload["map"] = "osm-area.xodr"
+
+    scene, _, overrides = compile_open_cda_config(
+        payload,
+        SimpleNamespace(
+            carla_port=2345,
+            carla_traffic_manager_port=8001,
+            base_dir=Path.cwd(),
+        ),
+    )
+
+    assert scene.vehicle_base.behavior.sample_resolution == 20.0
+    assert any(
+        item["path"] == "vehicle_base.behavior.sample_resolution"
+        and item["source"] == 2
+        and item["effective"] == 20.0
+        for item in overrides
+    )
+
+
 def test_parser_rejects_invalid_traffic_manager_port(open_cda_config_factory):
     config = open_cda_config_factory()
     config["carla_traffic_manager"]["port"] = 0

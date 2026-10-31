@@ -167,6 +167,21 @@ def test_invalid_values_become_gaps_and_missing_gt_is_not_reported_as_real_dista
     )
 
 
+def test_planning_accepts_callable_carla_transform_accessors():
+    vm = vehicle()
+    vm.agent.initial_global_route = [
+        (NS(transform=lambda: transform(0)), None),
+        (NS(transform=lambda: transform(10)), None),
+    ]
+
+    collector = VehicleCharts(vm, 0.1)
+    collector.planning()
+
+    metrics = {item["id"]: item["value"] for item in collector.metrics}
+    assert metrics["planned_distance"] == 10
+    assert metrics["destination_distance"] == 7
+
+
 def test_one_broken_module_does_not_discard_other_vehicles(result_root):
     broken = vehicle(8)
     broken.localizer = None

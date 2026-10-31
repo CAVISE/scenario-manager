@@ -9,6 +9,7 @@ services:
       - "8000:8000"
     volumes:
       - simulation_results:/app/evaluation_outputs
+      - simulation_xodrs:/app/assets/xodrs
     env_file:
       - ./.env
     environment:
@@ -49,6 +50,7 @@ services:
     command: ["python", "-m", "app.run_worker"]
     volumes:
       - simulation_results:/app/evaluation_outputs
+      - simulation_xodrs:/app/assets/xodrs
     env_file:
       - ./.env
     environment:
@@ -81,7 +83,7 @@ services:
       - sh
       - -ec
       - |
-        mkdir -p /app/evaluation_outputs
+        mkdir -p /app/evaluation_outputs /app/assets/xodrs
         marker=/app/evaluation_outputs/.legacy-imported
         if [ ! -e "$$marker" ]; then
           for source in /legacy-results/*; do
@@ -89,11 +91,12 @@ services:
             target="/app/evaluation_outputs/$$(basename "$$source")"
             [ -e "$$target" ] || cp -a "$$source" "$$target"
           done
-          chown -R 10001:10001 /app/evaluation_outputs
           touch "$$marker"
         fi
+        chown -R 10001:10001 /app/evaluation_outputs /app/assets/xodrs
     volumes:
       - simulation_results:/app/evaluation_outputs
+      - simulation_xodrs:/app/assets/xodrs
       - ./evaluation_outputs:/legacy-results:ro
     restart: "no"
 
@@ -135,6 +138,7 @@ services:
 volumes:
   postgres_data:
   simulation_results:
+  simulation_xodrs:
 
 networks:
   cavise:

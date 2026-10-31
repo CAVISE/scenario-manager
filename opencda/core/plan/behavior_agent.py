@@ -311,12 +311,14 @@ class BehaviorAgent(object):
 
     def _select_destination_route(self, raw_end_waypoint, requested_end_location):
         """
-        Pick the reachable destination lane with the shortest traced route.
+        Pick a reachable destination lane while preserving the editor's snap.
 
         CARLA's get_waypoint() may snap a clicked destination to the lane that
         is physically nearest but has the wrong driving direction. The previous
         code only tried get_left_lane(), which misses maps where the opposite
-        lane is returned by get_right_lane().
+        lane is returned by get_right_lane().  A neighbouring lane is a
+        fallback, not a marginal route-length optimisation: selecting one can
+        introduce an unnecessary lane change just before a junction.
         """
         best = None
         for label, candidate in self._end_waypoint_candidates(raw_end_waypoint):
@@ -331,7 +333,12 @@ class BehaviorAgent(object):
             route_distance = self._route_distance(route_trace)
             snap_distance = candidate.transform.location.distance(requested_end_location)
             same_sign = self.start_waypoint.lane_id * candidate.lane_id > 0
-            score = (route_distance, snap_distance, 0 if same_sign else 1)
+            score = (
+                0 if same_sign else 1,
+                0 if label == 'nearest' else 1,
+                snap_distance,
+                route_distance,
+            )
             log.info(
                 "[set_destination] candidate=%s road=%s lane=%s route_len=%d route_dist=%.1f snap_dist=%.1f same_sign=%s",
                 label, candidate.road_id, candidate.lane_id, len(route_trace),
@@ -494,7 +501,17 @@ class BehaviorAgent(object):
             dao = GlobalRoutePlannerDAO(
                 wld.get_map(), sampling_resolution=self._sampling_resolution)
             grp = GlobalRoutePlanner(dao)
+            log.info(
+                "[_trace_route] building global graph (resolution=%.1fm)",
+                self._sampling_resolution,
+            )
             grp.setup()
+            log.info(
+                "[_trace_route] global graph ready: topology=%d nodes=%d edges=%d",
+                len(grp._topology),
+                grp._graph.number_of_nodes(),
+                grp._graph.number_of_edges(),
+            )
             self._global_planner = grp
 
         start_loc = start_waypoint.transform.location

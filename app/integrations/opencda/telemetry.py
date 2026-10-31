@@ -34,6 +34,54 @@ def destination_distance(cav: Any) -> float | None:
         return None
 
 
+def map_position_diagnostics(
+    carla_map: Any, world: Any, location: Any, carla_module: Any
+) -> dict[str, Any]:
+    """Describe logical and physical road state at a suspected off-road point."""
+
+    def waypoint_data(waypoint: Any) -> dict[str, Any] | None:
+        if waypoint is None:
+            return None
+        point = waypoint.transform.location
+        return {
+            "road": waypoint.road_id,
+            "lane": waypoint.lane_id,
+            "s": round(waypoint.s, 2),
+            "location": format_location(point),
+        }
+
+    try:
+        exact = carla_map.get_waypoint(
+            location, project_to_road=False, lane_type=carla_module.LaneType.Driving
+        )
+        nearest = carla_map.get_waypoint(
+            location, project_to_road=True, lane_type=carla_module.LaneType.Driving
+        )
+        nearest_distance = (
+            nearest.transform.location.distance(location)
+            if nearest is not None
+            else None
+        )
+        probe = carla_module.Location(x=location.x, y=location.y, z=location.z + 3.0)
+        projection = world.ground_projection(probe, 8.0)
+        surface = (
+            getattr(projection, "location", None) if projection is not None else None
+        )
+        return {
+            "exact": waypoint_data(exact),
+            "nearest": waypoint_data(nearest),
+            "nearest_distance_m": round(nearest_distance, 2)
+            if nearest_distance is not None
+            else None,
+            "surface": format_location(surface),
+            "surface_vertical_gap_m": round(abs(surface.z - location.z), 2)
+            if surface is not None
+            else None,
+        }
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
 def log_cav_forensic(
     tick_count: int,
     cav: Any,

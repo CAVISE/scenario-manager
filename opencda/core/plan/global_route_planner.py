@@ -430,6 +430,73 @@ class GlobalRoutePlanner(object):
 
         return closest_index
 
+    def _densify_path(self, waypoints):
+        """Restore lane-level detail after a coarse global graph search.
+
+        Large OpenDRIVE maps are searched with a coarse graph to keep CARLA
+        RPC traffic bounded.  A controller must not receive that coarse
+        polyline directly, however: on a curved OSM-derived road it can cut
+        a bend and leave the drivable lane.  This method resamples only the
+        selected path, following CARLA waypoints toward each coarse anchor.
+        """
+        if len(waypoints) < 2:
+            return waypoints
+
+        graph_resolution = self._dao.get_resolution()
+        route_resolution = min(4.5, graph_resolution)
+        if route_resolution >= graph_resolution:
+            return waypoints
+
+        dense = [waypoints[0]]
+        for anchor in waypoints[1:]:
+            current = dense[-1]
+            anchor_location = anchor.transform.location
+            # A connector may be only a few metres long in its OpenDRIVE
+            # ``s`` coordinate while its lane centre follows a pronounced
+            # curve (for example at merges where lane widths differ).  A
+            # 4.5 m controller waypoint would join the ends with a chord and
+            # let the vehicle cut across the junction.  Densify only such
+            # selected junction pieces; long ordinary roads retain the
+            # inexpensive route resolution used by the global graph.
+            segment_resolution = (
+                min(route_resolution, 0.5)
+                if getattr(current, 'is_junction', False)
+                or getattr(anchor, 'is_junction', False)
+                else route_resolution
+            )
+            remaining = current.transform.location.distance(anchor_location)
+            max_steps = min(
+                256,
+                max(1, math.ceil(remaining / segment_resolution) * 3),
+            )
+
+            for _ in range(max_steps):
+                remaining = current.transform.location.distance(anchor_location)
+                if remaining <= segment_resolution:
+                    break
+                successors = current.next(segment_resolution)
+                if not successors:
+                    break
+                closer = [
+                    waypoint for waypoint in successors
+                    if waypoint.transform.location.distance(anchor_location)
+                    < remaining - 1e-3
+                ]
+                if not closer:
+                    break
+                current = min(
+                    closer,
+                    key=lambda waypoint: waypoint.transform.location.distance(
+                        anchor_location
+                    ),
+                )
+                dense.append(current)
+
+            if dense[-1].transform.location.distance(anchor_location) > 1e-3:
+                dense.append(anchor)
+
+        return dense
+
     def trace_route(self, origin, destination):
         """
         This method returns list of (carla.Waypoint, RoadOption)
@@ -460,7 +527,9 @@ class GlobalRoutePlanner(object):
                     closest_index = self._find_closest_in_list(
                         current_waypoint, next_edge['path'])
                     closest_index = min(
-                        len(next_edge['path']) - 1, closest_index + 5)
+                        len(next_edge['path']) - 1,
+                        closest_index + max(1, math.ceil(10.0 / resolution)),
+                    )
                     current_waypoint = next_edge['path'][closest_index]
                 else:
                     current_waypoint = next_edge['exit_waypoint']
@@ -471,7 +540,8 @@ class GlobalRoutePlanner(object):
                     edge['path'] + [edge['exit_waypoint']]
                 closest_index = self._find_closest_in_list(
                     current_waypoint, path)
-                for waypoint in path[closest_index:]:
+                path = self._densify_path(path[closest_index:])
+                for waypoint in path:
                     current_waypoint = waypoint
                     route_trace.append((current_waypoint, road_option))
                     if len(

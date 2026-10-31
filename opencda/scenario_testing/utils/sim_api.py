@@ -227,6 +227,13 @@ class ScenarioManager:
         weather = self.set_weather(simulation_config['weather'])
         self.world.set_weather(weather)
 
+        # A freshly generated OpenDRIVE world needs one synchronous frame
+        # before actors or sensors are created.  Without it, CARLA can leave
+        # the first spawn RPC waiting indefinitely on custom maps.
+        log.info('Priming synchronous CARLA world before actor creation.')
+        self.world.tick()
+        log.info('Synchronous CARLA world primed.')
+
         # Define probabilities for each type of blueprint
         self.use_multi_class_bp = scenario_params["blueprint"][
             'use_multi_class_bp'] if 'blueprint' in scenario_params else False
@@ -397,6 +404,13 @@ class ScenarioManager:
                 spawn_transform = wp.transform
                 spawn_transform.location.z += 0.3
 
+                log.info(
+                    "CAV %s: calling try_spawn_actor at (%.2f, %.2f, %.2f)",
+                    cav_config.get('name', i),
+                    spawn_transform.location.x,
+                    spawn_transform.location.y,
+                    spawn_transform.location.z,
+                )
                 vehicle = self.world.try_spawn_actor(cav_vehicle_bp, spawn_transform)
                 if vehicle is None:
                     for next_wp in wp.next(5.0):
@@ -407,24 +421,52 @@ class ScenarioManager:
                             break
                 if vehicle is None:
                     raise RuntimeError(f"Failed to spawn vehicle at {spawn_transform.location}")
+                log.info(
+                    "CAV %s: actor id=%s spawned; creating VehicleManager",
+                    cav_config.get('name', i),
+                    vehicle.id,
+                )
                 vehicle_manager = VehicleManager(
                     vehicle, cav_config, application,
                     self.carla_map, self.cav_world,
                     current_time=self.scenario_params['current_time'],
                     data_dumping=data_dump)
 
+                log.info(
+                    "CAV %s: VehicleManager ready; advancing first frame",
+                    cav_config.get('name', i),
+                )
                 self.world.tick()
+                log.info(
+                    "CAV %s: first frame completed",
+                    cav_config.get('name', i),
+                )
 
                 vehicle_manager.v2x_manager.set_platoon(None)
 
                 destination = carla.Location(x=cav_config['destination'][0],
                                              y=cav_config['destination'][1],
                                              z=cav_config['destination'][2])
+                log.info(
+                    "CAV %s: updating initial localization, perception and map state",
+                    cav_config.get('name', i),
+                )
                 vehicle_manager.update_info()
+                log.info(
+                    "CAV %s: initial state ready; building route to (%.2f, %.2f, %.2f)",
+                    cav_config.get('name', i),
+                    destination.x,
+                    destination.y,
+                    destination.z,
+                )
                 vehicle_manager.set_destination(
                     vehicle_manager.vehicle.get_location(),
                     destination,
                     clean=True)
+                log.info(
+                    "CAV %s: initial route is ready",
+                    cav_config.get('name', i),
+                )
 
                 buf_len = len(vehicle_manager.agent.get_local_planner().get_waypoint_buffer())
                 if buf_len == 0:
