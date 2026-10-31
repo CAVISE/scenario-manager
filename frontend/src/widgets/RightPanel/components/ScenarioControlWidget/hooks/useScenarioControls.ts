@@ -6,6 +6,7 @@ import { useNoticeWithToast } from '@/shared/ui/AppToast';
 import { useEditorStore } from '@/store';
 import { useEditorRefs } from '@editor/context';
 import { getOdrMapOffsets } from '@editor/lib/getOdrMapOffsets';
+import { odrOffsetsToCarlaOffsets } from '@/shared/lib/coordinateTransform';
 import {
   useScenarioCreateMutation,
   useScenarioDeleteMutation,
@@ -72,7 +73,7 @@ export function useScenarioControls(): ScenarioControls {
         const mapOffsets = getOdrMapOffsets(odrMapRef.current);
         const payload = await buildStartSimulationPayload(
           useEditorStore.getState().Scenario.id,
-          mapOffsets ? { x: mapOffsets.x, y: -mapOffsets.y } : undefined
+          mapOffsets ? odrOffsetsToCarlaOffsets(mapOffsets) : undefined
         );
         const result = await simulationApi.preflight(payload);
         if (requestId === preflightRequestRef.current) setPreflight(result);
@@ -90,7 +91,7 @@ export function useScenarioControls(): ScenarioControls {
           notify,
           id,
           startMutation,
-          mapOffsets ? { x: mapOffsets.x, y: -mapOffsets.y } : undefined
+          mapOffsets ? odrOffsetsToCarlaOffsets(mapOffsets) : undefined
         );
       }
     } catch (error) {

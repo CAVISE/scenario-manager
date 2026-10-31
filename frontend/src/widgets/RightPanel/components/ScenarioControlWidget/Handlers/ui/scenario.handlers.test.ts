@@ -18,6 +18,7 @@ vi.mock(
     return {
       ...mod,
       resolveXodrTextForSimulation: resolveXodrMock,
+      resolveRuntimeXodrTextForSimulation: resolveXodrMock,
       getStoredXodrName: vi.fn(() => 'Town10HD.xodr'),
     };
   }

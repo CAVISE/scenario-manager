@@ -3,7 +3,10 @@ import { getApiErrorMessage } from '@/api/errors';
 import { buildOpenCDAArtifact } from '@scenario-export';
 import { useStartSimulationMutation } from '@editor/hooks/useApiHooks/useSimulationMutation';
 import type { StartSimulationPayload } from '@editor/hooks/useApiHooks/useSimulationMutation/types/useSimulationMutationTypes';
-import { resolveXodrTextForSimulation } from '@editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
+import {
+  getRuntimeXodrName,
+  resolveRuntimeXodrTextForSimulation,
+} from '@editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
 import { useEditorStore } from '@/store';
 import type { ScenarioGroup as ApiScenarioGroup } from '@/api/types/IScenarioTypes';
 
@@ -15,8 +18,9 @@ export const buildStartSimulationPayload = async (
 ): Promise<StartSimulationPayload> => {
   const state = useEditorStore.getState();
   const scenario = state.Scenario;
-  const map = state.simConfig?.carla?.map || 'Town10HD';
-  const xodr = await resolveXodrTextForSimulation(map);
+  const editorMap = state.simConfig?.carla?.map || 'Town10HD';
+  const map = getRuntimeXodrName(editorMap);
+  const xodr = await resolveRuntimeXodrTextForSimulation(editorMap);
   return {
     scenario_id: scenario.id || scenarioIdInput.trim() || '',
     scenario_name: scenario.name || 'Scenario',

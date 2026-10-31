@@ -1,4 +1,58 @@
 const XODR_EXT = '.xodr';
+
+/**
+ * A map can use distinct source assets in the editor and in each simulator.
+ * Adding a simulator integration means extending this profile, not adding an
+ * exception to a launch handler.  If a profile is absent, the map is treated
+ * as a one-file map and its editor asset is used for every target.
+ */
+export type MapTarget = 'carla' | 'sumo' | 'artery' | 'omnet' | 'sionna';
+
+export type MapAssetProfile = {
+  /** Stable logical name; file names may change without changing the profile. */
+  id: string;
+  editorXodr: string;
+  /** Assets whose geometry is in the same declared editor coordinate frame. */
+  targets: Partial<Record<MapTarget, { xodr: string }>>;
+};
+
+export const MAP_ASSET_PROFILES: readonly MapAssetProfile[] = [
+  {
+    id: 'osm-area',
+    editorXodr: 'osm-area.viewer.xodr',
+    targets: {
+      carla: { xodr: 'osm-area.xodr' },
+    },
+  },
+  {
+    id: 'osm-area-20261021',
+    editorXodr: 'osm-area-20261021.viewer.xodr',
+    targets: {
+      carla: { xodr: 'osm-area-20261021.xodr' },
+    },
+  },
+  {
+    id: 'osm-area-20261030-certified',
+    editorXodr: 'osm-area-20261030-certified.viewer.xodr',
+    targets: {
+      carla: { xodr: 'osm-area-20261030-certified.xodr' },
+    },
+  },
+  {
+    id: 'strogino-smoke-certified',
+    editorXodr: 'strogino-smoke-certified.viewer.xodr',
+    targets: {
+      carla: { xodr: 'strogino-smoke-certified.xodr' },
+    },
+  },
+  {
+    id: 'strogino',
+    editorXodr: 'strogino_modified_viewer.xodr',
+    targets: {
+      carla: { xodr: 'strogino_modified.xodr' },
+    },
+  },
+];
 import { CACHE_KEY } from '../../../constants/openDriveConstants';
 import { readXodrFromIndexedDb, writeXodrToIndexedDb } from './xodrIndexedDb';
 const MAP_NAME_KEY = 'cached_xodr_name';
@@ -19,7 +73,11 @@ const CARLA_MAPS = [
   'TownBig',
   'osm-area.viewer',
   'osm-area-20261021.viewer',
+  'osm-area-valid-20261029',
+  'osm-area-20261030-certified.viewer',
   'strogino_modified_viewer',
+  'strogino-valid-20261029',
+  'strogino-smoke-certified.viewer',
 ] as const;
 
 function generateMapAliases(): Record<string, string[]> {
@@ -76,6 +134,28 @@ function stripExt(value: string): string {
   return value.toLowerCase().endsWith(XODR_EXT)
     ? value.slice(0, -XODR_EXT.length)
     : value;
+}
+
+/**
+ * Resolves a target-specific map asset.  With no target profile, the existing
+ * editor XODR is retained for backward compatibility with one-file maps.
+ */
+export function getTargetXodrName(
+  editorMapName: string,
+  target: MapTarget
+): string {
+  const normalized = withXodrExtension(editorMapName);
+  const profile = MAP_ASSET_PROFILES.find(
+    (item) =>
+      item.editorXodr.toLowerCase() === normalized.toLowerCase() ||
+      item.id.toLowerCase() === stripExt(normalized).toLowerCase()
+  );
+  return profile?.targets[target]?.xodr ?? normalized;
+}
+
+/** Backward-compatible CARLA-specific name used by the execution workflow. */
+export function getRuntimeXodrName(editorMapName: string): string {
+  return getTargetXodrName(editorMapName, 'carla');
 }
 
 function normalizeMapName(mapName: string): string {
@@ -157,6 +237,21 @@ export async function fetchXodrText(mapName: string): Promise<string> {
   throw new Error(`Failed to load valid OpenDRIVE map for: ${mapName}`);
 }
 
+/** Loads one named map only; paired runtime maps must not fall back to another asset. */
+async function fetchExactXodrText(mapName: string): Promise<string> {
+  const normalized = withXodrExtension(mapName);
+  const response = await fetch(`./${normalized}`);
+  if (!response.ok) {
+    throw new Error(`Failed to load runtime OpenDRIVE map: ${normalized}`);
+  }
+
+  const text = await response.text();
+  if (!isOpenDrive(text)) {
+    throw new Error(`Runtime map is not valid OpenDRIVE: ${normalized}`);
+  }
+  return text;
+}
+
 export function getCachedXodrContent(): string | null {
   if (cachedXodrContent) return cachedXodrContent;
 
@@ -194,6 +289,28 @@ export async function resolveXodrTextForSimulation(
     console.error(e);
     return undefined;
   }
+}
+
+/**
+ * Resolves the XODR for execution.  When an editor/runtime pair is configured,
+ * do not return the editor's cache: it belongs to the viewer map, not CARLA.
+ */
+export async function resolveRuntimeXodrTextForSimulation(
+  editorMapName?: string
+): Promise<string | undefined> {
+  const resolvedEditorMap = getStoredXodrName(editorMapName);
+  const runtimeMap = getRuntimeXodrName(resolvedEditorMap);
+
+  if (runtimeMap !== resolvedEditorMap) {
+    try {
+      return await fetchExactXodrText(runtimeMap);
+    } catch (error) {
+      console.error(error);
+      return undefined;
+    }
+  }
+
+  return resolveXodrTextForSimulation(resolvedEditorMap);
 }
 
 let preloadPromise: Promise<void> | null = null;

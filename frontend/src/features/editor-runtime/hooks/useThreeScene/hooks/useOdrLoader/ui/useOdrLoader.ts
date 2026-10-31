@@ -13,6 +13,7 @@ import {
   DEFAULT_XODR,
   getCachedXodrContent,
   getStoredXodrName,
+  normalizeMapName,
   fetchXodrText,
   initXodrCacheFromIndexedDb,
   setStoredXodrName,
@@ -66,15 +67,23 @@ export function useOdrLoader({
     }
     async function fetchAndLoad() {
       try {
+        const mapName = getStoredXodrName(
+          useEditorStore.getState().simConfig?.carla?.map
+        );
+        // The XODR cache is the source of truth on initial editor restore.
+        // Keep the visible CARLA map selector aligned with the file actually
+        // rendered instead of briefly reverting to defaultSimConfig (Town03).
+        const editorMapName = normalizeMapName(mapName);
+        const state = useEditorStore.getState();
+        if (state.simConfig?.carla?.map !== editorMapName) {
+          state.updateSimConfigCarla({ map: editorMapName });
+        }
         const cached = getCachedXodrContent();
         if (cached) {
           console.log('[OdrLoader] restoring map content from cache');
           processFile(cached, false);
           return;
         }
-        const mapName = getStoredXodrName(
-          useEditorStore.getState().simConfig?.carla?.map
-        );
         const text = await fetchXodrText(mapName);
         if (cancelled) return;
         console.log(

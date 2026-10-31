@@ -1,4 +1,5 @@
 import { defaultSimConfig } from '../constants/defaultSimConfig';
+import { CARLA_MAPS } from '@editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
 import type {
   AttackStageType,
   AttackStageTypeWithCustom,
@@ -13,18 +14,10 @@ const VALID_ATTACK_TYPES: readonly AttackStageType[] = [
   'spoofer',
 ];
 
-const VALID_CARLA_MAPS = new Set([
-  'Town01',
-  'Town02',
-  'Town03',
-  'Town04',
-  'Town05',
-  'Town06',
-  'Town07',
-  'Town10HD',
-  'TownBig',
-  'osm-area-20261021.viewer',
-]);
+// The map picker and configuration exporter must use the same registry.
+// Otherwise a valid custom XODR is silently replaced with the default Town03
+// when its OpenCDA configuration is generated.
+const VALID_CARLA_MAPS = new Set<string>(CARLA_MAPS);
 
 export function isValidAttackType(type: string): type is AttackStageType {
   return VALID_ATTACK_TYPES.includes(type as AttackStageType);

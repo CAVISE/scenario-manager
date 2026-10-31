@@ -3,6 +3,14 @@ import type {
   MapOffsets,
 } from '@/shared/types/coordinateTransformTypes';
 
+/**
+ * Convert raw OpenDRIVE offsets to the coordinate convention used by CARLA.
+ * All CARLA previews and runtime payloads must use this value unchanged.
+ */
+export function odrOffsetsToCarlaOffsets(offsets: MapOffsets): MapOffsets {
+  return { x: offsets.x, y: -offsets.y };
+}
+
 export function editorToCarla(
   x: number,
   y: number,

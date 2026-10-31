@@ -160,6 +160,14 @@ describe('normalizeCarlaMap (via mergeSimConfigWithDefaults)', () => {
     expect(merged.carla.map).toBe('Town05');
   });
 
+  it('preserves a registered custom OpenDRIVE map instead of falling back to Town03', () => {
+    const merged = mergeSimConfigWithDefaults({
+      carla: { ...defaultSimConfig.carla, map: 'strogino-valid-20261029' },
+    });
+
+    expect(merged.carla.map).toBe('strogino-valid-20261029');
+  });
+
   it('passes through a valid map name with surrounding whitespace trimmed', () => {
     const merged = mergeSimConfigWithDefaults({
       carla: { ...defaultSimConfig.carla, map: '  Town03  ' },

@@ -1,9 +1,25 @@
 import { describe, expect, it } from 'vitest';
-import { carlaToEditor, editorToCarla } from '../coordinateTransform';
+import {
+  carlaToEditor,
+  editorToCarla,
+  odrOffsetsToCarlaOffsets,
+} from '../coordinateTransform';
 
 const offsets = { x: -8.377, y: -28.583 };
 
 describe('coordinateTransform', () => {
+  it('normalizes raw OpenDRIVE offsets once for all CARLA consumers', () => {
+    const carlaOffsets = odrOffsetsToCarlaOffsets({
+      x: 212.003,
+      y: -123.089,
+    });
+
+    expect(carlaOffsets).toEqual({ x: 212.003, y: 123.089 });
+    const result = editorToCarla(-42.75, -76.42, 0, carlaOffsets, false);
+    expect(result.x).toBeCloseTo(169.253, 6);
+    expect(result.y).toBeCloseTo(199.509, 6);
+  });
+
   it('round-trips editor ↔ CARLA', () => {
     const carla = editorToCarla(10.5, -31.27, 0.2, offsets);
     expect(carla.x).toBeCloseTo(2.123, 2);

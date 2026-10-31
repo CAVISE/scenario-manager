@@ -3,7 +3,8 @@ import { Alert, Box, Button, Modal, Typography } from '@mui/material';
 import { CheckCircleOutlined as CheckCircleOutlineIcon } from '@mui/icons-material';
 import {
   getStoredXodrName,
-  resolveXodrTextForSimulation,
+  getRuntimeXodrName,
+  resolveRuntimeXodrTextForSimulation,
 } from '@editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
 import { useEditorRefs, useHooks } from '@editor/context';
 import { getApiErrorMessage } from '@/api/errors';
@@ -17,6 +18,7 @@ import { StartSimulationPayload } from '@editor/hooks/useApiHooks/useSimulationM
 import { useEditorStore } from '@/store';
 import { useAppToast } from '@/shared/ui/AppToast';
 import { getOdrMapOffsets } from '@editor/lib/getOdrMapOffsets';
+import { odrOffsetsToCarlaOffsets } from '@/shared/lib/coordinateTransform';
 import { MapPickerModal } from './MapPickerModal';
 import { useMapSelection } from '../hooks/useMapSelection';
 import { useEditorModalActions } from '../hooks/useEditorModalActions';
@@ -87,14 +89,15 @@ export default function EditorModals() {
     setSimulationError(null);
     const state = useEditorStore.getState();
     const scenario = state.Scenario;
-    const mapName = getStoredXodrName(state.simConfig?.carla?.map);
-    const xodr = await resolveXodrTextForSimulation(mapName);
+    const editorMapName = getStoredXodrName(state.simConfig?.carla?.map);
+    const runtimeMapName = getRuntimeXodrName(editorMapName);
+    const xodr = await resolveRuntimeXodrTextForSimulation(editorMapName);
     const mapOffsets = getOdrMapOffsets(odrMapRef.current);
     const latestState = useEditorStore.getState();
     if (
       requestId !== startRequestRef.current ||
       latestState.Scenario.id !== scenario.id ||
-      getStoredXodrName(latestState.simConfig?.carla?.map) !== mapName
+      getStoredXodrName(latestState.simConfig?.carla?.map) !== editorMapName
     ) {
       if (requestId === startRequestRef.current) startRequestRef.current = 0;
       return;
@@ -105,12 +108,12 @@ export default function EditorModals() {
       weather: scenario.weather || 'ClearNoon',
       description: scenario.description || '',
       opencda_config_yaml: buildOpenCDAArtifact(state),
-      map: mapName,
+      map: runtimeMapName,
       xodr,
       scenario: buildScenarioPayload().scenario as ScenarioGroup[],
       attacks: state.simConfig?.attacks ?? [],
       map_offsets: mapOffsets
-        ? { x: mapOffsets.x, y: -mapOffsets.y }
+        ? odrOffsetsToCarlaOffsets(mapOffsets)
         : undefined,
     };
     const validation = validateStartSimulationPayload(payload);
