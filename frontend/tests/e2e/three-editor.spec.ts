@@ -1,4 +1,5 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from './fixtures';
+import type { Page } from '@playwright/test';
 
 const openEditor = async (page: Page) => {
   await page.goto('/');
@@ -14,13 +15,62 @@ const openEditor = async (page: Page) => {
   await expect(page.locator('.sm-loader-root')).toHaveCount(0, {
     timeout: 30000,
   });
+  await expect(page.getByTestId('editor-canvas').locator('canvas')).toBeVisible();
+  await page.waitForTimeout(500);
 };
 test.beforeEach(async ({ page }) => {
   await page.route('**/api/ws/simulation', (route) => route.abort());
 });
 const openSpeedDial = async (page: Page) => {
-  const dial = page.locator('[aria-label="SpeedDial tooltip example"]');
-  await dial.click();
+  await page.getByRole('button', { name: 'Add object' }).click();
+};
+
+const chooseAddObject = async (page: Page, name: string) => {
+  await openSpeedDial(page);
+  const action = page.getByRole('menuitem', { name, exact: true });
+  await action.click();
+  await expect(action).not.toBeVisible();
+};
+
+const placeObjectOnCanvas = async (
+  page: Page,
+  points: ReadonlyArray<readonly [number, number]> = [[640, 400]]
+) => {
+  for (const [clientX, clientY] of points) {
+    await page
+      .getByTestId('editor-canvas')
+      .locator('canvas')
+      .evaluate(
+        (canvas, point) =>
+          canvas.dispatchEvent(
+            new MouseEvent('dblclick', {
+              bubbles: true,
+              cancelable: true,
+              clientX: point.clientX,
+              clientY: point.clientY,
+              view: window,
+            })
+          ),
+        { clientX, clientY }
+      );
+  }
+};
+
+const openUploadModal = async (page: Page) => {
+  await page.getByRole('button', { name: 'File menu' }).click();
+  await page.getByRole('menuitem', { name: 'Upload' }).click();
+};
+
+const loadMockScenario = async (page: Page) => {
+  await openUploadModal(page);
+  await page
+    .locator('.upload-scenarios-modal')
+    .getByText('Mock scenario', { exact: true })
+    .click();
+  await page.getByRole('button', { name: 'Load onto scene' }).click();
+  await expect(page.getByTestId('scene-graph-count')).not.toHaveText(
+    '0 objects'
+  );
 };
 
 const mockScenarioApi = async (page: Page) => {
@@ -127,16 +177,22 @@ test.describe('Three.js editor flows', () => {
     await expect(page.getByTestId('editor-canvas')).toBeVisible();
     await expect(page.getByTestId('transform-controls')).toBeVisible();
     await expect(page.getByText('Settings')).toBeVisible();
-    await expect(page.getByText('scene is empty')).toBeVisible();
+    await expect(
+      page.getByText('Add an object to start building your scenario.')
+    ).toBeVisible();
   });
 
   test('switches transform modes', async ({ page }) => {
+    await mockScenarioApi(page);
     await openEditor(page);
+    await loadMockScenario(page);
+    await page.getByText('Building 01', { exact: true }).click();
 
     const translate = page.getByTestId('transform-translate');
     const rotate = page.getByTestId('transform-rotate');
     const scale = page.getByTestId('transform-scale');
 
+    await expect(translate).toBeEnabled();
     await expect(translate).toHaveClass(/MuiIconButton-colorPrimary/);
     await rotate.click();
     await expect(rotate).toHaveClass(/MuiIconButton-colorPrimary/);
@@ -148,19 +204,22 @@ test.describe('Three.js editor flows', () => {
     await openEditor(page);
     await openSpeedDial(page);
     await expect(
-      page.getByRole('menuitem', { name: 'Add waypoint' })
+      page.getByRole('menuitem', { name: 'Waypoint — select a vehicle' })
     ).toBeVisible();
-    await expect(page.getByRole('menuitem', { name: 'Add car' })).toBeVisible();
-    await expect(page.getByRole('menuitem', { name: 'Add RSU' })).toBeVisible();
     await expect(
-      page.getByRole('menuitem', { name: 'Add a pedestrian' })
+      page.getByRole('menuitem', { name: 'Vehicle', exact: true })
+    ).toBeVisible();
+    await expect(
+      page.getByRole('menuitem', { name: 'RSU', exact: true })
+    ).toBeVisible();
+    await expect(
+      page.getByRole('menuitem', { name: 'Pedestrian', exact: true })
     ).toBeVisible();
   });
 
   test('opens upload modal from toolbar menu', async ({ page }) => {
     await openEditor(page);
-    await page.getByRole('button', { name: 'Menu' }).click();
-    await page.getByRole('menuitem', { name: 'Upload' }).click();
+    await openUploadModal(page);
     await expect(
       page.getByRole('heading', { name: 'Load Scenario' })
     ).toBeVisible();
@@ -176,14 +235,7 @@ test.describe('Three.js editor flows', () => {
     await mockScenarioApi(page);
     await openEditor(page);
 
-    await page.getByRole('button', { name: 'Menu' }).click();
-    await page.getByRole('menuitem', { name: 'Upload' }).click();
-    await page.getByText('Mock scenario').click();
-    await page.getByRole('button', { name: 'Load onto scene' }).click();
-
-    await expect(page.getByTestId('scene-graph-count')).not.toHaveText(
-      '0 objects'
-    );
+    await loadMockScenario(page);
     await expect(
       page.getByText('The scenario has been uploaded.').first()
     ).toBeVisible();
@@ -193,18 +245,14 @@ test.describe('Three.js editor flows', () => {
     await mockScenarioApi(page);
     await openEditor(page);
 
-    await page.getByRole('button', { name: 'Menu' }).click();
-    await page.getByRole('menuitem', { name: 'Upload' }).click();
-    await page.getByText('Mock scenario').click();
-    await page.getByRole('button', { name: 'Load onto scene' }).click();
-    await expect(page.getByTestId('scene-graph-count')).not.toHaveText(
-      '0 objects'
-    );
-    await page.keyboard.press('Escape');
-
-    await page.getByRole('button', { name: 'Clear all' }).click();
+    await loadMockScenario(page);
+    await page.getByRole('button', { name: 'Scene actions' }).click();
+    await page.getByRole('menuitem', { name: 'Clear scene…' }).click();
+    await page.getByRole('button', { name: 'Clear scene' }).click();
     await expect(page.getByTestId('scene-graph-count')).toHaveText('0 objects');
-    await expect(page.getByText('scene is empty')).toBeVisible();
+    await expect(
+      page.getByText('Add an object to start building your scenario.')
+    ).toBeVisible();
   });
 });
 test('loading scenario with a building renders it in scene graph', async ({
@@ -212,50 +260,33 @@ test('loading scenario with a building renders it in scene graph', async ({
 }) => {
   await mockScenarioApi(page);
   await openEditor(page);
-  await page.getByRole('button', { name: 'Menu' }).click();
-  await page.getByRole('menuitem', { name: 'Upload' }).click();
-  await page.getByText('Mock scenario').click();
-  await page.getByRole('button', { name: 'Load onto scene' }).click();
+  await loadMockScenario(page);
 
-  await expect(
-    page.locator('.stp-node-name', { hasText: 'Building' })
-  ).toBeVisible();
+  await expect(page.getByText('Building 01', { exact: true })).toBeVisible();
 });
 test('deleting a building via panel removes its mesh, not just the store entry', async ({
   page,
 }) => {
   await mockScenarioApi(page);
   await openEditor(page);
-  await page.getByRole('button', { name: 'Menu' }).click();
-  await page.getByRole('menuitem', { name: 'Upload' }).click();
-  await page.getByText('Mock scenario').click();
-  await page.getByRole('button', { name: 'Load onto scene' }).click();
-  await expect(
-    page.locator('.stp-node-name', { hasText: 'Building' })
-  ).toBeVisible();
+  await loadMockScenario(page);
+  await expect(page.getByText('Building 01', { exact: true })).toBeVisible();
 
   const countBefore = await page.getByTestId('scene-graph-count').textContent();
-  await page.getByText(/Building/).click();
+  await page.getByText('Building 01', { exact: true }).click();
   await page.getByRole('button', { name: 'Delete building' }).click();
   await expect(page.getByTestId('scene-graph-count')).not.toHaveText(
     countBefore!
   );
-  await expect(page.getByText(/Building/)).not.toBeVisible();
+  await expect(page.getByText('Building 01', { exact: true })).not.toBeVisible();
 });
 test('reloading a scenario does not accumulate duplicate building meshes', async ({
   page,
 }) => {
   await mockScenarioApi(page);
   await openEditor(page);
-  await page.getByRole('button', { name: 'Menu' }).click();
-  await page.getByRole('menuitem', { name: 'Upload' }).click();
-  await page.getByText('Mock scenario').click();
-  await page.getByRole('button', { name: 'Load onto scene' }).click();
-
-  await page.getByRole('button', { name: 'Menu' }).click();
-  await page.getByRole('menuitem', { name: 'Upload' }).click();
-  await page.getByText('Mock scenario').click();
-  await page.getByRole('button', { name: 'Load onto scene' }).click();
+  await loadMockScenario(page);
+  await loadMockScenario(page);
   await expect(page.getByTestId('scene-graph-count')).not.toHaveText(
     '0 objects'
   );
@@ -265,63 +296,48 @@ test('adding building via speed dial and double-click creates a mesh', async ({
   page,
 }) => {
   await openEditor(page);
-  await openSpeedDial(page);
-  await page.getByRole('menuitem', { name: 'Add building' }).click();
+  await chooseAddObject(page, 'Building');
+  await placeObjectOnCanvas(page, [[120, 650]]);
 
-  const canvas = page.getByTestId('editor-canvas');
-  await canvas.click({ position: { x: 50, y: 50 } });
-  await canvas.dblclick({ position: { x: 400, y: 300 } });
-
-  await expect(
-    page.locator('.stp-node-name', { hasText: 'Building' })
-  ).toBeVisible();
+  await expect(page.locator('.stp-node-name', { hasText: /^Building \d+$/ })).toBeVisible();
 });
 test('deleting a pedestrian via panel removes its mesh, not just the store entry', async ({
   page,
 }) => {
   await mockScenarioApi(page);
   await openEditor(page);
-  await page.getByRole('button', { name: 'Menu' }).click();
-  await page.getByRole('menuitem', { name: 'Upload' }).click();
-  await page.getByText('Mock scenario').click();
-  await page.getByRole('button', { name: 'Load onto scene' }).click();
+  await loadMockScenario(page);
 
   const countBefore = await page.getByTestId('scene-graph-count').textContent();
-  await page.getByText(/Pedestrian/).click();
+  await page.getByText('Pedestrian 01', { exact: true }).click();
   await page.getByRole('button', { name: 'Delete pedestrian' }).click();
 
   await expect(page.getByTestId('scene-graph-count')).not.toHaveText(
     countBefore!
   );
-  await expect(page.getByText(/Pedestrian/)).not.toBeVisible();
+  await expect(
+    page.getByText('Pedestrian 01', { exact: true })
+  ).not.toBeVisible();
 });
 test('adding pedestrian via speed dial and double-click creates a mesh', async ({
   page,
 }) => {
   await openEditor(page);
-  await openSpeedDial(page);
-  await page.getByRole('menuitem', { name: 'Add a pedestrian' }).click();
+  await chooseAddObject(page, 'Pedestrian');
+  await placeObjectOnCanvas(page);
 
-  const canvas = page.getByTestId('editor-canvas');
-  await canvas.click({ position: { x: 50, y: 50 } });
-  await canvas.dblclick({ position: { x: 400, y: 300 } });
-
-  await expect(page.getByText(/Pedestrian/)).toBeVisible();
+  await expect(
+    page.locator('.stp-node-name', { hasText: /^Pedestrian \d+$/ })
+  ).toBeVisible();
 });
 test('adding RSU via speed dial and double-click creates a mesh', async ({
   page,
 }) => {
   await openEditor(page);
-  await openSpeedDial(page);
-  await page.getByRole('menuitem', { name: 'Add RSU' }).click();
+  await chooseAddObject(page, 'RSU');
+  await placeObjectOnCanvas(page);
 
-  const canvas = page.getByTestId('editor-canvas');
-  await canvas.click({ position: { x: 50, y: 50 } });
-  await canvas.dblclick({ position: { x: 400, y: 300 } });
-
-  await expect(
-    page.locator('.stp-node-name', { hasText: 'RSU' })
-  ).toBeVisible();
+  await expect(page.locator('.stp-node-name', { hasText: /^RSU \d+$/ })).toBeVisible();
 });
 // test('adding car via speed dial and single click creates a mesh', async ({
 //   page,

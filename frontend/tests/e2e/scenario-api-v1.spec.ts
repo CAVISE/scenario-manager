@@ -1,19 +1,8 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 test('scenario v1 CRUD uses the current REST contract', async ({ page }) => {
   let revision = 1;
   let storedScenario: Record<string, unknown> | null = null;
-
-  await page.route('**/api/auth/me', (route) =>
-    route.fulfill({
-      contentType: 'application/json',
-      body: JSON.stringify({
-        email: 'operator@example.test',
-        role: 'operator',
-        authentication_enabled: true,
-      }),
-    })
-  );
 
   await page.route('**/api/v1/scenarios**', async (route) => {
     const request = route.request();
@@ -89,7 +78,7 @@ test('scenario v1 CRUD uses the current REST contract', async ({ page }) => {
 
   await page.goto('/');
   await expect(
-    page.getByRole('heading', { name: 'Welcome to Scenario Manager' })
+    page.getByRole('heading', { name: 'Dashboard' })
   ).toBeVisible();
   const result = await page.evaluate(async () => {
     const create = await fetch('/api/v1/scenarios', {
