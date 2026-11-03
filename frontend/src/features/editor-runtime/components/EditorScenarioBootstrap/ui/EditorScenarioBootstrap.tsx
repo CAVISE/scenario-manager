@@ -1,86 +1,60 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { handleLoad } from '@right-panel/components/ScenarioControlWidget/Handlers';
 import { useAppToast } from '@/shared/ui/AppToast';
-import { useEditorRefs, useHooks } from '@editor/context';
-
-const MAX_SCENE_WAIT_ATTEMPTS = 20;
-const SCENE_WAIT_INTERVAL_MS = 150;
+import { useHooks } from '@editor/context';
 
 export const EditorScenarioBootstrap = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const scenarioId = searchParams.get('scenario');
-  const { sceneRef } = useEditorRefs();
-  const { updateSceneGraph, loadFile, setStep } = useHooks();
+  const { updateSceneGraph, loadFile, setStep, loadingText } = useHooks();
   const loadedIdRef = useRef<string | null>(null);
   const toast = useAppToast();
+  const [runtimeReady, setRuntimeReady] = useState(false);
+  const callbacksRef = useRef({ updateSceneGraph, loadFile, setStep, toast });
+  callbacksRef.current = { updateSceneGraph, loadFile, setStep, toast };
 
   useEffect(() => {
-    if (!scenarioId || loadedIdRef.current === scenarioId) return;
+    // A Three.js scene alone is not enough: WASM and the initial map must
+    // finish loading first. Latch readiness so the scenario's own loading
+    // steps do not cancel its bootstrap effect.
+    if (loadingText === null) setRuntimeReady(true);
+  }, [loadingText]);
+
+  useEffect(() => {
+    if (!runtimeReady || !scenarioId || loadedIdRef.current === scenarioId) {
+      return;
+    }
 
     let cancelled = false;
+    loadedIdRef.current = scenarioId;
+    const { updateSceneGraph, loadFile, setStep } = callbacksRef.current;
 
-    const clearScenarioParam = () => {
+    void handleLoad({
+      hasId: true,
+      scenarioIdInput: scenarioId,
+      setNotice: (message: string) => {
+        if (!cancelled && message) callbacksRef.current.toast.error(message);
+      },
+      updateSceneGraph,
+      loadFile,
+      setStep,
+    }).finally(() => {
+      if (cancelled) return;
       setSearchParams(
         (prev) => {
           const next = new URLSearchParams(prev);
-          next.delete('scenario');
+          if (next.get('scenario') === scenarioId) next.delete('scenario');
           return next;
         },
         { replace: true }
       );
-    };
-
-    const giveUp = () => {
-      if (cancelled) return;
-      toast.error(
-        `Couldn't open scenario "${scenarioId}": the editor scene took too long to load. Try reloading the page.`
-      );
-      clearScenarioParam();
-    };
-
-    const tryLoad = (attempts = 0) => {
-      if (cancelled) return;
-      if (!sceneRef.current) {
-        if (attempts < MAX_SCENE_WAIT_ATTEMPTS) {
-          setTimeout(() => tryLoad(attempts + 1), SCENE_WAIT_INTERVAL_MS);
-        } else {
-          giveUp();
-        }
-        return;
-      }
-
-      loadedIdRef.current = scenarioId;
-
-      handleLoad({
-        hasId: true,
-        scenarioIdInput: scenarioId,
-        setNotice: (message: string) => {
-          if (message) toast.error(message);
-        },
-        updateSceneGraph,
-        loadFile,
-        setStep,
-      }).finally(() => {
-        if (cancelled) return;
-        clearScenarioParam();
-      });
-    };
-
-    tryLoad();
+    });
 
     return () => {
       cancelled = true;
     };
-  }, [
-    scenarioId,
-    setSearchParams,
-    sceneRef,
-    toast,
-    updateSceneGraph,
-    loadFile,
-    setStep,
-  ]);
+  }, [scenarioId, setSearchParams, runtimeReady]);
 
   return null;
 };
