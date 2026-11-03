@@ -18,7 +18,6 @@ import open3d as o3d
 import opencda.core.sensing.perception.sensor_transformation as st
 from opencda.core.common.misc import \
     cal_distance_angle, get_speed, get_speed_sumo
-from opencda.core.common.opencv_utils import destroy_all_windows_safely
 from opencda.core.sensing.perception.obstacle_vehicle import \
     ObstacleVehicle
 from opencda.core.sensing.perception.static_obstacle import TrafficLight
@@ -915,7 +914,7 @@ class PerceptionManager:
             self.lidar.sensor.destroy()
 
         if self.camera_visualize:
-            destroy_all_windows_safely()
+            cv2.destroyAllWindows()
 
         if self.lidar_visualize:
             self.o3d_vis.destroy_window()

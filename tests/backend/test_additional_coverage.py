@@ -37,6 +37,7 @@ def test_update_scenario_with_none_fields(scenario_client, db_session):
         json={
             "scenario_id": "sc-1",
             "scenario_name": None,
+            "preview": None,
             "annotation": None,
         },
     )

@@ -60,30 +60,13 @@ class GlobalRoutePlannerDAO(object):
             endloc = wp2.transform.location
             if wp1.transform.location.distance(
                     endloc) > self._sampling_resolution:
-                next_waypoints = wp1.next(self._sampling_resolution)
-                if not next_waypoints:
-                    # Some OSM-derived OpenDRIVE links terminate before the
-                    # requested sampling step.  The topology pair itself is
-                    # still a valid graph edge; it simply has no sampled
-                    # intermediate waypoints.
-                    topology.append(seg_dict)
-                    continue
-                w = next_waypoints[0]
+                w = wp1.next(self._sampling_resolution)[0]
                 while w.transform.location.distance(
                         endloc) > self._sampling_resolution:
                     seg_dict['path'].append(w)
-                    next_waypoints = w.next(self._sampling_resolution)
-                    if not next_waypoints:
-                        break
-                    w = next_waypoints[0]
-            # A topology segment shorter than the sampling resolution is
-            # already represented exactly by its entry and exit waypoints.
-            # Calling ``wp1.next(resolution)`` here can jump through a short
-            # OpenDRIVE junction connector into the following road.  The
-            # foreign waypoint then becomes part of this edge and a vehicle
-            # receives a route that cuts across the junction.  Keep the path
-            # empty; GlobalRoutePlanner.trace_route always emits the two
-            # topology endpoints and later densifies the selected route.
+                    w = w.next(self._sampling_resolution)[0]
+            else:
+                seg_dict['path'].append(wp1.next(self._sampling_resolution)[0])
             topology.append(seg_dict)
         return topology
 

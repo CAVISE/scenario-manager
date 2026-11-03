@@ -21,7 +21,6 @@ from opencda.core.map.map_utils import \
     lateral_shift, list_loc2array, list_wpt2array, convert_tl_status
 from opencda.core.map.map_drawing import \
     cv2_subpixel, draw_agent, draw_road, draw_lane
-from opencda.core.common.opencv_utils import destroy_all_windows_safely
 
 
 class MapManager(object):
@@ -583,4 +582,4 @@ class MapManager(object):
         self.vis_bev = cv2.cvtColor(self.vis_bev, cv2.COLOR_RGB2BGR)
 
     def destroy(self):
-        destroy_all_windows_safely()
+        cv2.destroyAllWindows()
