@@ -77,9 +77,7 @@ test('scenario v1 CRUD uses the current REST contract', async ({ page }) => {
   });
 
   await page.goto('/');
-  await expect(
-    page.getByRole('heading', { name: 'Dashboard' })
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
   const result = await page.evaluate(async () => {
     const create = await fetch('/api/v1/scenarios', {
       method: 'POST',

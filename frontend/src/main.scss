@@ -4,8 +4,8 @@ $press-ease: cubic-bezier(0.4, 0, 0.2, 1);
 $press-ms: 180ms;
 
 :root {
-  --font-sans: 'Inter', 'Segoe UI', Roboto, Helvetica, sans-serif;
-  --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+  --font-sans: 'Inter', 'Segoe UI', roboto, helvetica, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SFMono-Regular', consolas, monospace;
   --text-xs: 0.75rem;
   --text-sm: 0.8125rem;
   --text-base: 0.875rem;
@@ -134,7 +134,7 @@ body {
   font-size: var(--text-base);
   line-height: 1.5;
   color: var(--workspace-text);
-  text-rendering: optimizeLegibility;
+  text-rendering: optimizelegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

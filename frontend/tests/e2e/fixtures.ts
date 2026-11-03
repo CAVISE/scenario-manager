@@ -1,7 +1,7 @@
 import { expect, test as base } from '@playwright/test';
 
 export const test = base.extend({
-  page: async ({ page }, use) => {
+  page: async ({ page }, provide) => {
     await page.route('**/api/auth/me', (route) =>
       route.fulfill({
         contentType: 'application/json',
@@ -13,7 +13,7 @@ export const test = base.extend({
       })
     );
 
-    await use(page);
+    await provide(page);
   },
 });
 

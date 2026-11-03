@@ -125,7 +125,7 @@ export function useOdrLoader({
     return () => {
       cancelled = true;
     };
-  }, [moduleRef, mapRef, loadOdrMapRef]);
+  }, [moduleRef, mapRef, loadOdrMapRef, odrMapRef]);
 
   async function loadFile(
     fileText: string,

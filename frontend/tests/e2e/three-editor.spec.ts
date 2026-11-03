@@ -15,7 +15,9 @@ const openEditor = async (page: Page) => {
   await expect(page.locator('.sm-loader-root')).toHaveCount(0, {
     timeout: 30000,
   });
-  await expect(page.getByTestId('editor-canvas').locator('canvas')).toBeVisible();
+  await expect(
+    page.getByTestId('editor-canvas').locator('canvas')
+  ).toBeVisible();
   await page.waitForTimeout(500);
 };
 test.beforeEach(async ({ page }) => {
@@ -278,7 +280,9 @@ test('deleting a building via panel removes its mesh, not just the store entry',
   await expect(page.getByTestId('scene-graph-count')).not.toHaveText(
     countBefore!
   );
-  await expect(page.getByText('Building 01', { exact: true })).not.toBeVisible();
+  await expect(
+    page.getByText('Building 01', { exact: true })
+  ).not.toBeVisible();
 });
 test('reloading a scenario does not accumulate duplicate building meshes', async ({
   page,
@@ -299,7 +303,9 @@ test('adding building via speed dial and double-click creates a mesh', async ({
   await chooseAddObject(page, 'Building');
   await placeObjectOnCanvas(page, [[120, 650]]);
 
-  await expect(page.locator('.stp-node-name', { hasText: /^Building \d+$/ })).toBeVisible();
+  await expect(
+    page.locator('.stp-node-name', { hasText: /^Building \d+$/ })
+  ).toBeVisible();
 });
 test('deleting a pedestrian via panel removes its mesh, not just the store entry', async ({
   page,
@@ -337,7 +343,9 @@ test('adding RSU via speed dial and double-click creates a mesh', async ({
   await chooseAddObject(page, 'RSU');
   await placeObjectOnCanvas(page);
 
-  await expect(page.locator('.stp-node-name', { hasText: /^RSU \d+$/ })).toBeVisible();
+  await expect(
+    page.locator('.stp-node-name', { hasText: /^RSU \d+$/ })
+  ).toBeVisible();
 });
 // test('adding car via speed dial and single click creates a mesh', async ({
 //   page,

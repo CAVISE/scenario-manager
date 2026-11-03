@@ -12,10 +12,17 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock(
   '@editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository',
-  () => ({
-    fetchXodrText: mocks.fetchXodrText,
-    setStoredXodrName: mocks.setStoredXodrName,
-  })
+  async (importOriginal) => {
+    const actual =
+      await importOriginal<
+        typeof import('@editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository')
+      >();
+    return {
+      ...actual,
+      fetchXodrText: mocks.fetchXodrText,
+      setStoredXodrName: mocks.setStoredXodrName,
+    };
+  }
 );
 vi.mock('@editor/lib/mapLoadRequest', () => ({
   beginMapLoadRequest: () => () => true,
