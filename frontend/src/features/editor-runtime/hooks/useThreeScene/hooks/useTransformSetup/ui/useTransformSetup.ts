@@ -25,8 +25,6 @@ export function useTransformSetup({
         return;
       }
 
-      // Let the transform listener persist the final matrix before scene-sync
-      // is allowed to read state and write it back to the selected mesh.
       releaseFrameRef.current = requestAnimationFrame(() => {
         releaseFrameRef.current = null;
         isDraggingLocalRef.current = false;

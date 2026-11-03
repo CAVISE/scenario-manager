@@ -14,9 +14,6 @@ const VALID_ATTACK_TYPES: readonly AttackStageType[] = [
   'spoofer',
 ];
 
-// The map picker and configuration exporter must use the same registry.
-// Otherwise a valid custom XODR is silently replaced with the default Town03
-// when its OpenCDA configuration is generated.
 const VALID_CARLA_MAPS = new Set<string>(CARLA_MAPS);
 
 export function isValidAttackType(type: string): type is AttackStageType {

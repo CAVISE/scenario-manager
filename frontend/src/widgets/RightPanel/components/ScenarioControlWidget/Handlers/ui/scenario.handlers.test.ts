@@ -450,6 +450,33 @@ describe('handleLoad regression', () => {
     expect(setNotice).toHaveBeenCalledWith('The scenario has been uploaded.');
     expect(loadFile).toHaveBeenCalled();
   });
+
+  it('loads the stored map when opening a mapless scenario from the editor URL', async () => {
+    fetchQueryMock.mockResolvedValue({
+      scenario_id: 'mapless-1',
+      file_: null,
+      scenario: { scenario_text: [] },
+    });
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      text: () => Promise.resolve(VALID_XODR),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const loadFile = vi.fn().mockResolvedValue(true);
+
+    await handleLoad({
+      hasId: true,
+      scenarioIdInput: 'mapless-1',
+      setNotice: vi.fn(),
+      updateSceneGraph: vi.fn(),
+      loadFile,
+      initializeMapWhenMissing: true,
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith('./Town10HD.xodr');
+    expect(loadFile).toHaveBeenCalledWith(VALID_XODR, true, 'Town10HD.xodr');
+    vi.unstubAllGlobals();
+  });
 });
 
 describe('buildScenarioPayload', () => {

@@ -12,4 +12,6 @@ export interface LoadScenarioOptions {
   ) => Promise<boolean>;
   setStep?: (step: keyof typeof LOADING_STEPS) => void;
   isCurrent?: () => boolean;
+
+  initializeMapWhenMissing?: boolean;
 }

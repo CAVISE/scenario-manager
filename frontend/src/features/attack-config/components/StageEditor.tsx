@@ -73,9 +73,7 @@ export function StageEditor({ stage, onUpdate, onDelete }: StageEditorProps) {
             try {
               const parsed = JSON.parse(e.target.value);
               onUpdate({ ...stage, params: parsed });
-            } catch {
-              // Allow invalid JSON during editing
-            }
+            } catch {}
           }}
           helperText="Edit params as JSON"
         />

@@ -38,9 +38,7 @@ function ErrorLogModal({ open, onClose }: ErrorLogModalProps) {
       );
       setCopied(true);
       setTimeout(() => setCopied(false), COPY_FEEDBACK_DURATION);
-    } catch {
-      // Clipboard API can fail (permissions, insecure context)
-    }
+    } catch {}
   };
 
   const hasErrors = errorLog.length > 0;

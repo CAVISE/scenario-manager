@@ -102,9 +102,6 @@ export function createTransformListener(
       handler(obj);
       commitActiveMove();
 
-      // Keep the current attachment through the state update. Detaching here
-      // makes the gizmo disappear between mouse-up and the asynchronous
-      // reattach, especially after a rotate operation.
       if (entity) reattacher.schedule(entity);
     }
   };

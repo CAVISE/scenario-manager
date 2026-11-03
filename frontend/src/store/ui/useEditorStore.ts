@@ -102,6 +102,5 @@ export const useEditorStore = create<EditorState>()(
 );
 
 if (import.meta.env.DEV && typeof window !== 'undefined') {
-  // @ts-expect-error Exposed only as a development console helper.
-  window.useEditorStore = useEditorStore;
+  Object.assign(window, { useEditorStore });
 }

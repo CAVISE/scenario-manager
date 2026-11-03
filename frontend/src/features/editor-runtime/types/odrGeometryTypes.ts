@@ -1,10 +1,3 @@
-/**
- * Serializable geometry prepared from an OpenDRIVE map.
- *
- * This is the contract between the background parser and the scene builder.
- * Keeping it in the feature's domain types prevents map consumers from
- * depending on a particular Worker implementation.
- */
 export interface PreparedOdrMesh {
   positions: Float32Array;
   stCoordinates: Float32Array;

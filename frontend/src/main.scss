@@ -16,8 +16,6 @@ $press-ms: 180ms;
   --motion-base: 280ms;
 }
 
-// Keep every scrollable surface usable while removing native scrollbar chrome.
-// This applies to panels, dialogs and the browser engine's nested scroll areas.
 * {
   -ms-overflow-style: none;
   scrollbar-width: none;

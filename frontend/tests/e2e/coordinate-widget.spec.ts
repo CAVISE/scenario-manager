@@ -100,7 +100,6 @@ test.describe('coordinate widget', () => {
     const carlaDeltaX = second.carlaX - first.carlaX;
     const carlaDeltaY = second.carlaY - first.carlaY;
 
-    // The display rounds to two decimals, hence the small tolerance.
     expect(carlaDeltaX).toBeCloseTo(editorDeltaX, 1);
     expect(carlaDeltaY).toBeCloseTo(-editorDeltaY, 1);
   });

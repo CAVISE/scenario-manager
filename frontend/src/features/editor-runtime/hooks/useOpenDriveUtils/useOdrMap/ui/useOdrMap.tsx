@@ -338,9 +338,7 @@ function createPreparedRoadNetwork(geometry: PreparedOdrGeometry) {
   return {
     lanes_mesh: {
       get_idx_interval_lane: lanes.getInterval,
-      // The WASM binding returns a short-lived wrapper here. Spotlight code
-      // disposes that wrapper after every pick, so the JS replacement must
-      // keep the shared interval data alive until the whole map is cleared.
+
       delete: () => {},
     },
     roadmarks_mesh: {

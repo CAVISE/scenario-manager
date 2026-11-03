@@ -9,7 +9,6 @@ import {
 } from '@editor/hooks/useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
 import type { PreparedOdrGeometry } from '@editor/types/odrGeometryTypes';
 
-/** The last parsed large map. Its typed arrays are shared with Three.js. */
 export interface PreparedOdrGeometryCache {
   xodr: string;
   resolution: number;

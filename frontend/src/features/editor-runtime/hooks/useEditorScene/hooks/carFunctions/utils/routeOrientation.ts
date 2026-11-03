@@ -1,7 +1,7 @@
 import type { Car, Point } from '@/entities/vehicle';
 
 const MIN_DIRECTION_DISTANCE = 0.001;
-// Car.obj faces local -Y after the loader's X-axis correction.
+
 const CAR_FORWARD_ROTATION_OFFSET = Math.PI / 2;
 
 export function getRouteOrientation(car: Car, points: Point[]): number | null {

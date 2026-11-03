@@ -1,7 +1,7 @@
 import { OpenDriveModule } from '@editor/hooks/useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
 import { libOpenDrive } from '@editor/utils/libOpenDrive';
 import { useEditorStore } from '@/store';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { beginMapLoadRequest } from '@editor/lib/mapLoadRequest';
 import { UseOdrLoaderProps } from '../types/useOdrLoaderTypes';
 import {
@@ -27,7 +27,9 @@ export function useOdrLoader({
   mapRef,
   odrMapRef,
   loadOdrMapRef,
+  skipInitialMap,
 }: UseOdrLoaderProps) {
+  const [runtimeReady, setRuntimeReady] = useState(false);
   const callbacksRef = useRef({ setStep, setError });
   callbacksRef.current = { setStep, setError };
   useEffect(() => {
@@ -47,9 +49,7 @@ export function useOdrLoader({
       }
       try {
         Module.FS_unlink(MAP_PATH);
-      } catch {
-        //
-      }
+      } catch {}
       try {
         Module.FS_createDataFile('.', DEFAULT_XODR, fileText, true, true);
         odrMapRef.current = null;
@@ -70,9 +70,7 @@ export function useOdrLoader({
         const mapName = getStoredXodrName(
           useEditorStore.getState().simConfig?.carla?.map
         );
-        // The XODR cache is the source of truth on initial editor restore.
-        // Keep the visible CARLA map selector aligned with the file actually
-        // rendered instead of briefly reverting to defaultSimConfig (Town03).
+
         const editorMapName = normalizeMapName(mapName);
         const state = useEditorStore.getState();
         if (state.simConfig?.carla?.map !== editorMapName) {
@@ -106,6 +104,9 @@ export function useOdrLoader({
         const Module = await libOpenDrive();
         if (cancelled) return;
         moduleRef.current = Module as OpenDriveModule;
+        setRuntimeReady(true);
+
+        if (skipInitialMap) return;
         callbacksRef.current.setStep('map');
         await fetchAndLoad();
       } catch (err) {
@@ -125,7 +126,7 @@ export function useOdrLoader({
     return () => {
       cancelled = true;
     };
-  }, [moduleRef, mapRef, loadOdrMapRef, odrMapRef]);
+  }, [moduleRef, mapRef, loadOdrMapRef, odrMapRef, skipInitialMap]);
 
   async function loadFile(
     fileText: string,
@@ -196,5 +197,5 @@ export function useOdrLoader({
     }
   }
 
-  return { loadFile };
+  return { loadFile, runtimeReady };
 }

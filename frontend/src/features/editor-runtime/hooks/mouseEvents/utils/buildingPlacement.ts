@@ -68,8 +68,7 @@ export const footprintIntersectsRoad = (
   const raycaster = new THREE.Raycaster();
   const cos = Math.cos(footprint.rotation),
     sin = Math.sin(footprint.rotation);
-  // A bounded grid keeps placement responsive for large imported models while
-  // still sampling edges and the whole footprint after the cheap bbox reject.
+
   const dx = Math.min(8, Math.max(1, Math.ceil(2 * footprint.halfExtentX)));
   const dy = Math.min(8, Math.max(1, Math.ceil(2 * footprint.halfExtentY)));
   for (let i = 0; i <= dx; i++)

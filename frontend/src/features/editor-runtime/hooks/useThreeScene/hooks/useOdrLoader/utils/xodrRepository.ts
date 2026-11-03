@@ -1,18 +1,11 @@
 const XODR_EXT = '.xodr';
 
-/**
- * A map can use distinct source assets in the editor and in each simulator.
- * Adding a simulator integration means extending this profile, not adding an
- * exception to a launch handler.  If a profile is absent, the map is treated
- * as a one-file map and its editor asset is used for every target.
- */
 export type MapTarget = 'carla' | 'sumo' | 'artery' | 'omnet' | 'sionna';
 
 export type MapAssetProfile = {
-  /** Stable logical name; file names may change without changing the profile. */
   id: string;
   editorXodr: string;
-  /** Assets whose geometry is in the same declared editor coordinate frame. */
+
   targets: Partial<Record<MapTarget, { xodr: string }>>;
 };
 
@@ -104,8 +97,6 @@ const MAP_ALIASES = generateMapAliases();
 
 let cachedXodrContent: string | null = null;
 
-// Browsers commonly cap localStorage at about 5 MB. Large OpenDRIVE exports
-// are kept in IndexedDB instead, which is designed for this amount of data.
 const LOCAL_STORAGE_MAX_CHARS = 2 * 1024 * 1024;
 
 export async function initXodrCacheFromIndexedDb(): Promise<void> {
@@ -136,10 +127,6 @@ function stripExt(value: string): string {
     : value;
 }
 
-/**
- * Resolves a target-specific map asset.  With no target profile, the existing
- * editor XODR is retained for backward compatibility with one-file maps.
- */
 export function getTargetXodrName(
   editorMapName: string,
   target: MapTarget
@@ -153,7 +140,6 @@ export function getTargetXodrName(
   return profile?.targets[target]?.xodr ?? normalized;
 }
 
-/** Backward-compatible CARLA-specific name used by the execution workflow. */
 export function getRuntimeXodrName(editorMapName: string): string {
   return getTargetXodrName(editorMapName, 'carla');
 }
@@ -237,7 +223,6 @@ export async function fetchXodrText(mapName: string): Promise<string> {
   throw new Error(`Failed to load valid OpenDRIVE map for: ${mapName}`);
 }
 
-/** Loads one named map only; paired runtime maps must not fall back to another asset. */
 async function fetchExactXodrText(mapName: string): Promise<string> {
   const normalized = withXodrExtension(mapName);
   const response = await fetch(`./${normalized}`);
@@ -291,10 +276,6 @@ export async function resolveXodrTextForSimulation(
   }
 }
 
-/**
- * Resolves the XODR for execution.  When an editor/runtime pair is configured,
- * do not return the editor's cache: it belongs to the viewer map, not CARLA.
- */
 export async function resolveRuntimeXodrTextForSimulation(
   editorMapName?: string
 ): Promise<string | undefined> {

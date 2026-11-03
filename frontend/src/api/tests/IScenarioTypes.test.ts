@@ -227,8 +227,7 @@ describe('IScenarioTypes', () => {
     });
 
     it('returns null for non-array non-string detail', () => {
-      // @ts-expect-error - testing invalid input
-      expect(formatApiDetail(null)).toBeNull();
+      expect(formatApiDetail(null as never)).toBeNull();
     });
   });
 });

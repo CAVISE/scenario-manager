@@ -143,6 +143,5 @@ export function useRSUMeshSync(): void {
       cancelled = true;
       if (retryTimer) clearTimeout(retryTimer);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [RSUs, updateSceneGraph]);
 }

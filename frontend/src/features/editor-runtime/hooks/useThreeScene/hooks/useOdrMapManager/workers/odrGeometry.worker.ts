@@ -1,5 +1,3 @@
-/// <reference lib="webworker" />
-
 import type {
   PrepareOdrGeometryRequest,
   PrepareOdrGeometryResponse,
@@ -14,7 +12,20 @@ declare const libOpenDrive: (options: {
   locateFile: (path: string) => string;
 }) => Promise<WorkerModule>;
 
-const scope = self as DedicatedWorkerGlobalScope;
+declare function importScripts(...urls: string[]): void;
+
+type OdrWorkerScope = {
+  addEventListener(
+    type: 'message',
+    listener: (event: MessageEvent<PrepareOdrGeometryRequest>) => void
+  ): void;
+  postMessage(
+    message: PrepareOdrGeometryResponse,
+    options?: StructuredSerializeOptions
+  ): void;
+};
+
+const scope = self as unknown as OdrWorkerScope;
 const MAP_PATH = './data.xodr';
 const MAP_FILE_NAME = 'data.xodr';
 const MAP_OPTIONS = {
@@ -42,9 +53,7 @@ async function prepareGeometry({
     map.delete();
     try {
       Module.FS_unlink(MAP_PATH);
-    } catch {
-      // The module may have already cleaned up after a failed map parse.
-    }
+    } catch {}
   }
 }
 

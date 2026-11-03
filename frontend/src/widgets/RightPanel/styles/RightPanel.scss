@@ -1341,8 +1341,6 @@
   font-size: 14px;
 }
 
-// Keep the editor panel compact, but never force the user to read controls at
-// caption size. The 12px styles above came from the original dense layout.
 .rp-root {
   :is(button, input, select, textarea) {
     font-size: 14px;

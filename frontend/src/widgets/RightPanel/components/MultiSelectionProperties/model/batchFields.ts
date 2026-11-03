@@ -42,7 +42,7 @@ const typeFields: Record<EntityKind, BatchField[]> = {
 export function getBatchFields(items: EntityItem[]): BatchField[] {
   if (!items.length) return [];
   const sameType = items.every((item) => item.type === items[0].type);
-  // Sensor positions are local offsets; other entities use world coordinates.
+
   const positions =
     items.some((item) => item.type === 'lidar') && !sameType
       ? []

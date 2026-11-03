@@ -176,7 +176,7 @@ export function useDblClickHandler(ctx: SharedMouseContext) {
         timers.building.current?.scheduleReset();
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     [ctx, updateSceneGraph, buildingModelRef, toast]
   );
 }

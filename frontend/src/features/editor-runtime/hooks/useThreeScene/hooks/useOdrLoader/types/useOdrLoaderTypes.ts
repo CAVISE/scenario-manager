@@ -4,6 +4,7 @@ import { LOADING_STEPS } from '@editor/constants/editorConstants';
 import type { MutableRefObject } from 'react';
 
 export interface UseOdrLoaderProps {
+  skipInitialMap: boolean;
   setStep: (step: keyof typeof LOADING_STEPS) => void;
   setError: ((err: Error) => void) | undefined;
   moduleRef: MutableRefObject<OpenDriveModule | null>;

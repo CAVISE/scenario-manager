@@ -234,10 +234,9 @@ describe('mergeSimConfigWithDefaults: attacks and legacy bg_spawn_range fields',
           ...defaultSimConfig.opencda.bg_spawn_range,
           x_step: 5,
           y_step: 6,
-          // @ts-expect-error legacy fields kept only for backward-compat migration
           z_min: 99,
           z_max: 98,
-        },
+        } as never,
       },
     });
 

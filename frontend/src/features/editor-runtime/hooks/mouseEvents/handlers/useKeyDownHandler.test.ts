@@ -47,7 +47,7 @@ describe('waypoint keyboard deletion', () => {
     useEditorStore
       .getState()
       .selectObjects([{ id: selectedPointId, type: 'point' }]);
-    // Fail promptly if the loop stops advancing to the second vehicle.
+
     const firstGroup = routePointMeshes[0];
     let firstGroupReads = 0;
     Object.defineProperty(routePointMeshes, 0, {

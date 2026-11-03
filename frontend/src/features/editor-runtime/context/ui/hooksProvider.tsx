@@ -6,17 +6,25 @@ import { useEditorRefs } from './EditorRefsContext';
 import { HooksContext } from './hooksContext';
 import { useThreeScene } from '../../hooks/useThreeScene';
 import type { EditorProviderProps } from '../types/providerTypes';
+import { useLocation } from 'react-router-dom';
+import { useRef } from 'react';
 
 export const HooksProvider = ({ children }: EditorProviderProps) => {
+  const location = useLocation();
+
+  const skipInitialMapRef = useRef(
+    Boolean(new URLSearchParams(location.search).get('scenario')?.trim())
+  );
   const { sceneRef, currentCarRef, modeRef, transformControlsRef } =
     useEditorRefs();
 
   const buildingModelRef = useBuildingLoader();
   const { sceneGraph, updateSceneGraph } = useSceneGraph(sceneRef);
   const { loadingText, loadingProgress, setStep } = useLoadingState();
-  const { actionsRef, loadFile, cancelMapLoad } = useThreeScene({
+  const { actionsRef, loadFile, cancelMapLoad, runtimeReady } = useThreeScene({
     updateSceneGraph,
     setStep,
+    skipInitialMap: skipInitialMapRef.current,
   });
   const {
     handleAddCar,
@@ -37,6 +45,7 @@ export const HooksProvider = ({ children }: EditorProviderProps) => {
     updateSceneGraph,
     loadingProgress,
     loadingText,
+    runtimeReady,
     setStep,
     actionsRef,
     cancelMapLoad,

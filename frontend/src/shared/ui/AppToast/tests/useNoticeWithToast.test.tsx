@@ -103,8 +103,7 @@ describe('useNoticeWithToast', () => {
   it('covers default level in switch: should call toast.info for unknown level', () => {
     const { result } = renderHook(() => useNoticeWithToast(setNoticeMock));
 
-    // @ts-expect-error - testing invalid level
-    result.current('Unknown level message', 'unknown');
+    result.current('Unknown level message', 'unknown' as never);
 
     expect(setNoticeMock).toHaveBeenCalledWith('Unknown level message');
     expect(mockToast.info).toHaveBeenCalledWith('Unknown level message');

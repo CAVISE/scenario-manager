@@ -12,7 +12,6 @@ import type {
   SpotlightState,
 } from '../types/useSpotlightTypes';
 
-/** Renders one pixel of the picking scenes and updates highlighted road data. */
 export function performSpotlightPick(
   params: StartAnimateParams,
   state: SpotlightState

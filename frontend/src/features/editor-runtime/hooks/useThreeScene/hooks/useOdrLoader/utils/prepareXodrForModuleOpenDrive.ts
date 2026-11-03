@@ -1,5 +1,3 @@
-// A viewer-only approximation: a dense 1 m conversion exhausts the legacy
-// ModuleOpenDrive heap on city-scale maps.
 const MAX_SEGMENT_LENGTH_M = 5;
 const MIN_SEGMENT_LENGTH_M = 0.3;
 
@@ -176,10 +174,6 @@ function hasNonAsciiRoadName(road: Element): boolean {
   });
 }
 
-/**
- * Adapts a canonical CARLA XODR only in browser memory for the legacy WASM
- * renderer. The caller must retain the original string for simulation.
- */
 export function prepareXodrForModuleOpenDrive(xodr: string): string {
   const document = new DOMParser().parseFromString(xodr, 'application/xml');
   if (document.querySelector('parsererror')) {
@@ -212,7 +206,6 @@ export function prepareXodrForModuleOpenDrive(xodr: string): string {
       replacePlanView(document, planView);
     }
 
-    // Older ModuleOpenDrive builds assume byte strings for road names.
     road.setAttribute('name', `road_${road.getAttribute('id') ?? 'unnamed'}`);
   }
 

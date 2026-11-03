@@ -20,9 +20,7 @@ export function useClickHandler(ctx: SharedMouseContext) {
 
   return useCallback((event: MouseEvent) => {
     if (!ctx.insideEditorCanvas(event)) return;
-    // `click` fires after TransformControls' pointer-up. Keep the selected
-    // object intact instead of treating the release over a gizmo as a blank
-    // canvas click and clearing the selection.
+
     if (isDraggingRef.current) return;
     const tc = transformControlsRef.current;
     const scene = sceneRef.current;
@@ -114,6 +112,5 @@ export function useClickHandler(ctx: SharedMouseContext) {
       state.clearSelection();
       tc.detach();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }

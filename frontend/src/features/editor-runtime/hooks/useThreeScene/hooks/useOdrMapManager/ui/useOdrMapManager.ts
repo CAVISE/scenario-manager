@@ -34,8 +34,6 @@ import {
 import { prepareOdrGeometryInWorker } from '../utils/prepareOdrGeometryInWorker';
 import type { PreparedOdrGeometry } from '@editor/types/odrGeometryTypes';
 
-// The full-resolution mesh of this OSM export is too large to build on the
-// browser main thread. Keep the normal resolution for every other map.
 const LARGE_XODR_RESOLUTION = 2;
 
 export function useOdrMapManager({
@@ -230,7 +228,7 @@ export function useOdrMapManager({
 
       buildScene();
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     [
       syncRoutePointMeshes,
       syncRoadMesh,

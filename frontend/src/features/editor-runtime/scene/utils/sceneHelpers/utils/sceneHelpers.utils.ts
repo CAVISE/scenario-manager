@@ -11,17 +11,7 @@ export type { SanitizedPositions } from '@/shared/lib/geometryBufferUtils';
 export const ZOOM_MULTIPLIER = 1.5;
 export const RADIANS_CONVERSION = Math.PI / 180.0;
 
-/**
- * ModuleOpenDrive may return non-finite coordinates for malformed road
- * segments. Three.js cannot calculate bounds for such a buffer and then tries
- * again every frame. Preserve vertex numbering (used by lane IDs), replace
- * invalid values with a harmless origin and remove only primitives that use
- * those vertices.
- */
 export function sanitizePositions(positions: number[]): SanitizedPositions {
-  // Emscripten vectors currently contain coordinate triples at runtime even
-  // though their TypeScript facade is numeric. Preserve support for both the
-  // nested and already-flat representations.
   const flatPositions = positions.flat();
   return sanitizePositionBuffer(flatPositions);
 }

@@ -91,6 +91,13 @@ export function useBuildingMeshSync(): void {
       cancelled = true;
       if (retryTimer) clearTimeout(retryTimer);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [buildings, updateSceneGraph]);
+  }, [
+    buildings,
+    updateSceneGraph,
+    sceneRef,
+    buildingModelRef,
+    transformControlsRef,
+    isDraggingRef,
+    buildingMeshesRef,
+  ]);
 }

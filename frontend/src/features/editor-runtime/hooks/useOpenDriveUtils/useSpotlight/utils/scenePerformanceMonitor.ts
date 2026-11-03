@@ -40,10 +40,6 @@ const EMPTY_METRICS: ScenePerformanceMetrics = {
 
 const SAMPLE_INTERVAL_MS = 1000;
 
-/**
- * Keeps a rolling performance sample without adding a second render loop.
- * Values are intentionally kept in memory so they can be inspected in devtools.
- */
 export function createScenePerformanceMonitor(
   getNow: () => number = () => performance.now()
 ): ScenePerformanceMonitor {

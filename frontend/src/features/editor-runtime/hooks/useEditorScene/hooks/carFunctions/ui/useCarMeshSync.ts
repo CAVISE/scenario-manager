@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react';
+import { useCallback, useLayoutEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { useEditorStore } from '@/store';
 import type { Car } from '@/entities/vehicle';
@@ -17,7 +17,7 @@ export function useCarMeshSync() {
     useEditorRefs();
   const { updateSceneGraph } = useHooks();
   const lastSyncedCarsRef = useRef<Map<string, Car>>(new Map());
-  function syncMeshes() {
+  const syncMeshes = useCallback(() => {
     const scene = sceneRef.current;
     if (!scene || !carModelRef.current) return;
 
@@ -126,10 +126,18 @@ export function useCarMeshSync() {
     }
     if (structuralChange) updateSceneGraph();
     invalidateEditorScene();
-  }
+  }, [
+    cars,
+    selectedId,
+    sceneRef,
+    carModelRef,
+    carMeshesRef,
+    transformControlsRef,
+    isDraggingRef,
+    updateSceneGraph,
+  ]);
 
   useLayoutEffect(() => {
     syncMeshes();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cars, selectedId, modelLoaded]);
+  }, [cars, selectedId, modelLoaded, syncMeshes]);
 }

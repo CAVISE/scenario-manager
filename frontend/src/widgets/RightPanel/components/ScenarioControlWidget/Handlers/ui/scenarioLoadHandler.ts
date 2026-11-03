@@ -12,9 +12,10 @@ import { defaultSimConfig } from '@scenario-export';
 import { scenarioKeys } from '@editor/hooks/useApiHooks/useScenarioQueries';
 import {
   fetchXodrText,
+  getStoredXodrName,
   isOpenDrive,
+  setStoredXodrName,
 } from '@editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
-import { setStoredXodrName } from '@editor/hooks/useThreeScene/hooks/useOdrLoader/utils/xodrRepository';
 import { useEditorStore } from '@/store';
 import type { Scenario } from '@/entities/scenario';
 import type { Building } from '@/entities/building';
@@ -37,6 +38,7 @@ export const handleLoad = async ({
   loadFile,
   setStep,
   isCurrent: isCallerCurrent,
+  initializeMapWhenMissing = false,
 }: LoadScenarioOptions) => {
   if (!hasId) return false;
   const isMapLoadCurrent = beginMapLoadRequest();
@@ -50,16 +52,23 @@ export const handleLoad = async ({
     });
     if (!isCurrent()) return false;
     const xodr = data.file_ ?? (data.scenario as unknown as Scenario)?.file_;
+    const fallbackMapName = initializeMapWhenMissing
+      ? getStoredXodrName(useEditorStore.getState().simConfig?.carla?.map)
+      : null;
     const map =
       data.map ||
-      (xodr && !isOpenDrive(xodr) ? toCarlaMapNameFromXodr(xodr) : null);
-    if (xodr) {
-      const text = isOpenDrive(xodr) ? xodr : await fetchXodrText(xodr);
+      (xodr && !isOpenDrive(xodr) ? toCarlaMapNameFromXodr(xodr) : null) ||
+      fallbackMapName;
+    const mapSource = xodr ?? fallbackMapName;
+    if (mapSource) {
+      const text = isOpenDrive(mapSource)
+        ? mapSource
+        : await fetchXodrText(mapSource);
       if (!isCurrent()) return false;
       const loaded = await loadFile(
         text,
         true,
-        isOpenDrive(xodr) ? undefined : xodr
+        isOpenDrive(mapSource) ? undefined : mapSource
       );
       if (loaded === false) throw new Error('Failed to load the scenario map.');
     }

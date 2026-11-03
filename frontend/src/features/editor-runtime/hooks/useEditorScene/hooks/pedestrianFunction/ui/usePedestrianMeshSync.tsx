@@ -182,6 +182,5 @@ export function usePedestrianMeshSync() {
       cancelled = true;
       if (retryTimer) clearTimeout(retryTimer);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pedestrians, updateSceneGraph]);
 }
