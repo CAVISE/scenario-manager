@@ -45,6 +45,7 @@
     "zustand": "^5.0.3"
   },
   "resolutions": {
+    "**/minimatch": "11.0.1",
     "vitest/vite": "8.3.5",
     "eslint-plugin-react-hooks/zod": "4.6.6",
     "stylelint/colord": "2.10.0",
