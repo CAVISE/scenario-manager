@@ -8,7 +8,7 @@ export interface LoadPointsContext {
   cars: Vec3[];
   points: Point[][];
   routePointMeshes: THREE.Mesh[][];
-  lines: THREE.Line[][];
+  lines: THREE.Mesh[][];
   transformControlsRef: React.RefObject<TransformControls | null>;
 }
 export interface ConnectLinesContext {
@@ -16,5 +16,5 @@ export interface ConnectLinesContext {
   cars: Vec3[];
   points: Vec3[][];
   routePointMeshes: THREE.Mesh[][];
-  lines: THREE.Line[][];
+  lines: THREE.Mesh[][];
 }

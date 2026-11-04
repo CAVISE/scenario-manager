@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 import { useEditorStore } from '@/store';
 import type { ScenarioControlWidgetProps } from '../types/ScenarioControlWidgetTypes';
+import { ScenarioPreflight } from './ScenarioPreflight';
 
 export default function ScenarioControlWidget({
   controls,
@@ -22,10 +23,11 @@ export default function ScenarioControlWidget({
   const map = useEditorStore((s) => s.simConfig.carla.map);
   const vehicleCount = useEditorStore((s) => s.cars.length);
   const rsuCount = useEditorStore((s) => s.RSUs.length);
+  const isMapLoading = useEditorStore((s) => s.isMapLoading);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const fieldId = useId();
   const hasId = Boolean(scenario.id?.trim());
-  const disabled = readOnly || controls.isBusy;
+  const disabled = readOnly || controls.isBusy || isMapLoading;
   const focusIssue = (entityId: string | null) => {
     if (!entityId) return;
     window.dispatchEvent(
@@ -78,62 +80,11 @@ export default function ScenarioControlWidget({
           <dd>{rsuCount}</dd>
         </div>
       </dl>
-      <div className="rp-preflight" aria-live="polite">
-        <div className="rp-preflight__header">
-          <span>Preflight check</span>
-          {controls.preflight ? (
-            <span
-              className={`rp-preflight__status ${
-                controls.preflight.valid ? 'is-valid' : 'has-errors'
-              }`}
-            >
-              {controls.preflight.valid
-                ? controls.preflight.issues.length
-                  ? 'Ready with warnings'
-                  : 'Ready to run'
-                : `${controls.preflight.issues.length} issue${
-                    controls.preflight.issues.length === 1 ? '' : 's'
-                  }`}
-            </span>
-          ) : (
-            <span className="rp-preflight__status">Not checked</span>
-          )}
-        </div>
-        {controls.preflight?.issues.length ? (
-          <ul className="rp-preflight__issues">
-            {controls.preflight.issues.map((issue, index) => (
-              <li
-                key={`${issue.code}-${issue.path.join('.')}-${index}`}
-                className={`is-${issue.severity}`}
-              >
-                <span>{issue.message}</span>
-                {issue.entity_id ? (
-                  <button
-                    type="button"
-                    onClick={() => focusIssue(issue.entity_id)}
-                  >
-                    Show on scene
-                  </button>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="rp-preflight__hint">
-            {controls.preflight?.valid
-              ? 'The scenario configuration is ready for a simulation run.'
-              : 'Check the current configuration before starting a simulation.'}
-          </p>
-        )}
-        <button
-          type="button"
-          className="rp-btn rp-preflight__button"
-          disabled={disabled}
-          onClick={controls.validate}
-        >
-          {controls.operation === 'validate' ? 'Checking…' : 'Check scenario'}
-        </button>
-      </div>
+      <ScenarioPreflight
+        controls={controls}
+        disabled={disabled}
+        onFocusIssue={focusIssue}
+      />
       <button
         type="button"
         className="rp-btn rp-btn-primary"
@@ -145,6 +96,11 @@ export default function ScenarioControlWidget({
       {readOnly && (
         <p className="rp-context-help">
           Editing is paused while the simulation is running.
+        </p>
+      )}
+      {isMapLoading && (
+        <p className="rp-context-help">
+          Loading map — saving is temporarily disabled.
         </p>
       )}
       {controls.notice && (

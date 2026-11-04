@@ -12,10 +12,21 @@ import type { CapiSectionProps } from '../types/capiTypes';
 export const CommandEnvSection = ({ capi, update }: CapiSectionProps) => (
   <>
     <Divider />
-    <Typography variant="subtitle2" color="text.secondary">
+    <Typography
+      variant="subtitle2"
+      sx={{
+        color: 'text.secondary',
+      }}
+    >
       Command environment
     </Typography>
-    <Stack direction="row" spacing={2} alignItems="center">
+    <Stack
+      direction="row"
+      spacing={2}
+      sx={{
+        alignItems: 'center',
+      }}
+    >
       <FormControlLabel
         control={
           <Switch
@@ -36,7 +47,12 @@ export const CommandEnvSection = ({ capi, update }: CapiSectionProps) => (
       value={capi.cmdenv_output_file}
       onChange={(e) => updateStringField(e, 'cmdenv_output_file', update)}
     />
-    <Stack direction="row" gap={1}>
+    <Stack
+      direction="row"
+      sx={{
+        gap: 1,
+      }}
+    >
       <FormControlLabel
         control={
           <Switch

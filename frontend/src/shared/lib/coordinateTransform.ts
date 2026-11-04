@@ -3,6 +3,10 @@ import type {
   MapOffsets,
 } from '@/shared/types/coordinateTransformTypes';
 
+export function odrOffsetsToCarlaOffsets(offsets: MapOffsets): MapOffsets {
+  return { x: offsets.x, y: -offsets.y };
+}
+
 export function editorToCarla(
   x: number,
   y: number,

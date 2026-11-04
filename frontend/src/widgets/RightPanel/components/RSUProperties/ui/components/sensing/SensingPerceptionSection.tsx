@@ -19,8 +19,10 @@ export function SensingPerceptionSection({
     <>
       <Typography
         variant="caption"
-        color="text.secondary"
         className="right-panel-property-eyebrow"
+        sx={{
+          color: 'text.secondary',
+        }}
       >
         Perception
       </Typography>

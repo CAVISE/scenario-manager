@@ -23,5 +23,6 @@ export const useStoreReset = () => {
     store.selectObjects([]);
     store.updateScenario(DEFAULT_SCENARIO);
     store.updateSimConfigCarla({ weather_preset: 'ClearNoon' });
+    store.markScenarioClean?.();
   }, []);
 };

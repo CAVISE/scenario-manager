@@ -22,6 +22,7 @@ export interface EditorRefs {
   loadPointsRef: MutableRefObject<() => void>;
   loadRSURef: MutableRefObject<() => void>;
   pedestrianMeshesRef: MutableRefObject<THREE.Mesh[]>;
+  pickableObjectsRef: MutableRefObject<THREE.Object3D[]>;
   isDraggingRef: MutableRefObject<boolean>;
   mountRef: MutableRefObject<HTMLDivElement | null>;
   modeRef: MutableRefObject<{

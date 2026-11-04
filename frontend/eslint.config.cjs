@@ -35,6 +35,7 @@ module.exports = defineConfig([
       },
     },
     rules: {
+      'no-empty': ['error', { allowEmptyCatch: true }],
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
       'react-hooks/exhaustive-deps': 'warn',

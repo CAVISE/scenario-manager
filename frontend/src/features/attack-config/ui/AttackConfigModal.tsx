@@ -29,8 +29,10 @@ export default function AttackConfigModal({
       <Box className="attack-config-modal">
         <Stack
           direction="row"
-          justifyContent="space-between"
-          alignItems="center"
+          sx={{
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
         >
           <Typography variant="h6">Attack Configuration</Typography>
           <Stack direction="row" spacing={1}>
@@ -60,7 +62,9 @@ export default function AttackConfigModal({
         <Typography
           className="attack-config-modal__description"
           variant="body2"
-          color="text.secondary"
+          sx={{
+            color: 'text.secondary',
+          }}
         >
           Configure top-level `attacks` list for OpenCDA adversary framework.
           For GNSS spoofer, use the structured form for precise parameter
@@ -69,7 +73,11 @@ export default function AttackConfigModal({
         <Divider className="attack-config-modal__header-divider" />
 
         {attacks.length === 0 ? (
-          <Typography color="text.secondary">
+          <Typography
+            sx={{
+              color: 'text.secondary',
+            }}
+          >
             No attacks configured. Click &quot;+ GNSS Spoofer&quot; or &quot;Add
             blank&quot;.
           </Typography>

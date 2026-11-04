@@ -5,7 +5,10 @@ import {
   getStoredXodrName,
   fetchXodrText,
   resolveXodrTextForSimulation,
+  resolveRuntimeXodrTextForSimulation,
   DEFAULT_XODR,
+  getRuntimeXodrName,
+  getTargetXodrName,
   normalizeMapName,
   CARLA_MAPS,
 } from './xodrRepository';
@@ -475,6 +478,60 @@ describe('resolveXodrTextForSimulation', () => {
   });
 });
 
+describe('editor/runtime OpenDRIVE pairs', () => {
+  it('uses the CARLA asset for the Strogino viewer map', () => {
+    expect(getRuntimeXodrName('strogino_modified_viewer.xodr')).toBe(
+      'strogino_modified.xodr'
+    );
+  });
+
+  it.each([
+    'strogino-smoke-certified',
+    'strogino-smoke-certified.viewer',
+    'strogino-smoke-certified.viewer.xodr',
+  ])('uses the certified runtime asset for %s', (editorMap) => {
+    expect(getRuntimeXodrName(editorMap)).toBe('strogino-smoke-certified.xodr');
+  });
+  it.each([
+    ['osm-area.viewer.xodr', 'osm-area.xodr'],
+    ['osm-area-20261021.viewer.xodr', 'osm-area-20261021.xodr'],
+  ])('uses the configured CARLA asset for %s', (editorMap, runtimeMap) => {
+    expect(getTargetXodrName(editorMap, 'carla')).toBe(runtimeMap);
+  });
+
+  it('keeps a one-file map unchanged for an unconfigured target', () => {
+    expect(getTargetXodrName('Town01.xodr', 'sumo')).toBe('Town01.xodr');
+  });
+
+  it('does not reuse cached viewer content for the Strogino CARLA run', async () => {
+    localStorageMock.setItem('cached_xodr', VALID_OPENDRIVE);
+    fetchMock.mockResolvedValue(
+      okResponse('<OpenDRIVE><header /></OpenDRIVE>') as never
+    );
+
+    const result = await resolveRuntimeXodrTextForSimulation(
+      'strogino_modified_viewer.xodr'
+    );
+
+    expect(result).toBe('<OpenDRIVE><header /></OpenDRIVE>');
+    expect(fetchMock).toHaveBeenCalledWith('./strogino_modified.xodr');
+  });
+
+  it('fails instead of falling back to another map when the runtime asset is absent', async () => {
+    fetchMock.mockResolvedValue(notFound() as never);
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const result = await resolveRuntimeXodrTextForSimulation(
+      'strogino_modified_viewer.xodr'
+    );
+
+    expect(result).toBeUndefined();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith('./strogino_modified.xodr');
+    errorSpy.mockRestore();
+  });
+});
+
 describe('CARLA_MAPS and normalizeMapName', () => {
   it('contains Town10HD_Opt in CARLA_MAPS', () => {
     expect(CARLA_MAPS).toContain('Town10HD');
@@ -488,6 +545,10 @@ describe('CARLA_MAPS and normalizeMapName', () => {
   it('normalizeMapName handles lowercase variants', () => {
     expect(normalizeMapName('town10hd_opt')).toBe('Town10HD');
     expect(normalizeMapName('town10hd')).toBe('Town10HD');
+  });
+
+  it('normalizes a cached viewer XODR to the map selector value', () => {
+    expect(normalizeMapName('osm-area.viewer.xodr')).toBe('osm-area.viewer');
   });
 
   it('normalizeMapName returns original name for unknown maps', () => {

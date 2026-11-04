@@ -7,7 +7,7 @@ import {
   TextField,
   Tooltip,
 } from '@mui/material';
-import { DeleteOutline as DeleteOutlineIcon } from '@mui/icons-material';
+import { DeleteOutlined as DeleteOutlineIcon } from '@mui/icons-material';
 import { Add as AddIcon } from '@mui/icons-material';
 import { JsonField } from './JsonField';
 import { StageEditor } from './StageEditor';
@@ -26,7 +26,13 @@ export function AttackEditor({
 
   return (
     <Stack spacing={1.5}>
-      <Stack direction="row" spacing={1} alignItems="center">
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: 'center',
+        }}
+      >
         <TextField
           label="attack.name"
           size="small"

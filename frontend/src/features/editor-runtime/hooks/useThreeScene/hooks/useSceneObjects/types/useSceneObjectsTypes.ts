@@ -7,5 +7,5 @@ export interface UseSceneObjectsProps {
 export interface UseSceneObjectsResult {
   syncRoutePointMeshes: () => void;
   syncRoadMesh: (roadMesh: THREE.Mesh | null) => void;
-  localLineArrRef: MutableRefObject<THREE.Line[][]>;
+  localLineArrRef: MutableRefObject<THREE.Mesh[][]>;
 }

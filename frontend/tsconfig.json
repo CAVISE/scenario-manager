@@ -13,7 +13,7 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
-    "types": ["node"],
+    "types": ["node", "vite/client"],
     "target": "ES2020",
     "useDefineForClassFields": true,
     "ignoreDeprecations": "5.0",

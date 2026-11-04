@@ -1,18 +1,9 @@
-import {
-  ArticleOutlined,
-  DownloadOutlined,
-  ImageOutlined,
-  RefreshOutlined,
-  TerminalOutlined,
-} from '@mui/icons-material';
+import { RefreshOutlined } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
-import { API_URL } from '@/VARS';
 import { simulationRunsApi } from '@/features/simulation-runs/api/simulationRunsApi';
-import type {
-  RunArtifact,
-  SimulationRunStatus,
-} from '@/features/simulation-runs';
+import type { SimulationRunStatus } from '@/features/simulation-runs';
+import { RunArtifactList } from './components/RunArtifactList';
 import './styles/RunsPage.scss';
 
 const statusLabel: Record<SimulationRunStatus, string> = {
@@ -32,21 +23,6 @@ const formattedDate = (value?: number | null) =>
         timeStyle: 'short',
       })
     : '—';
-
-const formattedBytes = (value: number) => {
-  if (value < 1024) return `${value} B`;
-  if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
-  return `${(value / (1024 * 1024)).toFixed(1)} MB`;
-};
-
-const artifactIcon = (artifact: RunArtifact) =>
-  artifact.kind === 'image' ? (
-    <ImageOutlined />
-  ) : artifact.kind === 'log' ? (
-    <TerminalOutlined />
-  ) : (
-    <ArticleOutlined />
-  );
 
 export default function RunDetailsPage() {
   const { runId = '' } = useParams();
@@ -198,54 +174,7 @@ export default function RunDetailsPage() {
         </article>
       </div>
 
-      <section
-        className="workspace-artifact-explorer"
-        aria-labelledby="artifact-title"
-      >
-        <div className="workspace-section-heading">
-          <div>
-            <span className="workspace-kicker">ARTIFACT EXPLORER</span>
-            <h2 id="artifact-title">Results and diagnostics</h2>
-          </div>
-          <span className="workspace-count">
-            {run.artifacts.length} available
-          </span>
-        </div>
-        {run.artifacts.length ? (
-          <div className="workspace-artifact-list">
-            {run.artifacts.map((artifact) => (
-              <article key={artifact.filename}>
-                <span className="workspace-artifact-icon">
-                  {artifactIcon(artifact)}
-                </span>
-                <div>
-                  <strong>{artifact.filename}</strong>
-                  <span>
-                    {artifact.kind} · {formattedBytes(artifact.size_bytes)} ·{' '}
-                    {formattedDate(artifact.modified_at)}
-                  </span>
-                </div>
-                <a
-                  className="workspace-secondary"
-                  href={`${API_URL.replace(/\/$/, '')}${artifact.url}`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <DownloadOutlined /> Download
-                </a>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <div className="workspace-empty">
-            <strong>No artifacts yet</strong>
-            <p>
-              Files will appear here as the simulation writes results, logs and
-              configurations.
-            </p>
-          </div>
-        )}
-      </section>
+      <RunArtifactList artifacts={run.artifacts} formatDate={formattedDate} />
     </section>
   );
 }

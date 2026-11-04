@@ -160,6 +160,14 @@ describe('normalizeCarlaMap (via mergeSimConfigWithDefaults)', () => {
     expect(merged.carla.map).toBe('Town05');
   });
 
+  it('preserves a registered custom OpenDRIVE map instead of falling back to Town03', () => {
+    const merged = mergeSimConfigWithDefaults({
+      carla: { ...defaultSimConfig.carla, map: 'strogino-valid-20261029' },
+    });
+
+    expect(merged.carla.map).toBe('strogino-valid-20261029');
+  });
+
   it('passes through a valid map name with surrounding whitespace trimmed', () => {
     const merged = mergeSimConfigWithDefaults({
       carla: { ...defaultSimConfig.carla, map: '  Town03  ' },
@@ -226,10 +234,9 @@ describe('mergeSimConfigWithDefaults: attacks and legacy bg_spawn_range fields',
           ...defaultSimConfig.opencda.bg_spawn_range,
           x_step: 5,
           y_step: 6,
-          // @ts-expect-error legacy fields kept only for backward-compat migration
           z_min: 99,
           z_max: 98,
-        },
+        } as never,
       },
     });
 

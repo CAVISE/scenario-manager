@@ -350,6 +350,7 @@ describe('addBuilding', () => {
       depth: 20,
       height: 20,
       material: 'concrete',
+      scale: 1,
     });
     expect(buildings[0].name).toBe('building_1');
   });

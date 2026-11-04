@@ -14,7 +14,7 @@ import {
 import {
   Close as CloseIcon,
   ContentCopy as ContentCopyIcon,
-  DeleteOutline as DeleteOutlineIcon,
+  DeleteOutlined as DeleteOutlineIcon,
 } from '@mui/icons-material';
 import { useEditorStore } from '@/store';
 import { type ErrorLogModalProps } from '../types/ErrorLogModalTypes';
@@ -38,9 +38,7 @@ function ErrorLogModal({ open, onClose }: ErrorLogModalProps) {
       );
       setCopied(true);
       setTimeout(() => setCopied(false), COPY_FEEDBACK_DURATION);
-    } catch {
-      // Clipboard API can fail (permissions, insecure context)
-    }
+    } catch {}
   };
 
   const hasErrors = errorLog.length > 0;

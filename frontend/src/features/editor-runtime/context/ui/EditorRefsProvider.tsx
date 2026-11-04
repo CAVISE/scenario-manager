@@ -27,6 +27,7 @@ export const EditorRefsProvider = ({ children }: EditorProviderProps) => {
     loadPointsRef: useRef<() => void>(() => {}),
     loadRSURef: useRef<() => void>(() => {}),
     pedestrianMeshesRef: useRef<THREE.Mesh[]>([]),
+    pickableObjectsRef: useRef<THREE.Object3D[]>([]),
     isDraggingRef: useRef(false),
     mountRef: useRef<HTMLDivElement | null>(null),
     modeRef: useRef({

@@ -27,8 +27,18 @@ export function AppThemeProvider({ children }: AppThemeProviderProps) {
           divider: mode === 'dark' ? '#2b625d' : '#d8e9e2',
         },
         typography: {
-          fontFamily:
-            '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+          fontFamily: 'Inter, "Segoe UI", Roboto, Helvetica, sans-serif',
+          fontSize: 14,
+          h1: { fontSize: '2rem', fontWeight: 700, lineHeight: 1.2 },
+          h2: { fontSize: '1.5rem', fontWeight: 700, lineHeight: 1.25 },
+          h3: { fontSize: '1.25rem', fontWeight: 600, lineHeight: 1.3 },
+          h4: { fontSize: '1.125rem', fontWeight: 600, lineHeight: 1.35 },
+          subtitle1: { fontSize: '1rem', fontWeight: 600, lineHeight: 1.4 },
+          subtitle2: { fontSize: '0.875rem', fontWeight: 600, lineHeight: 1.4 },
+          body1: { fontSize: '0.875rem', lineHeight: 1.5 },
+          body2: { fontSize: '0.8125rem', lineHeight: 1.5 },
+          button: { fontSize: '0.8125rem', fontWeight: 600, lineHeight: 1.25 },
+          caption: { fontSize: '0.75rem', lineHeight: 1.4 },
         },
       }),
     [mode]

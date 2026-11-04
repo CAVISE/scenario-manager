@@ -7,9 +7,9 @@ export function PositionSection({ rsu, updateRSU }: PositionSectionProps) {
   return (
     <>
       <FormLabel>Position</FormLabel>
-      <Grid item container spacing={1}>
+      <Grid container spacing={1}>
         {(['x', 'y', 'z'] as const).map((axis) => (
-          <Grid item xs={4} key={axis}>
+          <Grid key={axis} size={4}>
             <FormControl>
               <FormLabel className="right-panel-property-label">
                 {axis.toUpperCase()}

@@ -50,6 +50,21 @@ vi.mock('../utils/LidarUtils', () => ({
     return group;
   }),
   disposeLidarGroup: vi.fn(),
+  updateLidarScanVolume: vi.fn((group: THREE.Group, lidar: Lidar) => {
+    const cone = group.children.find(
+      (child) => (child as THREE.Mesh).geometry instanceof THREE.ConeGeometry
+    ) as THREE.Mesh | undefined;
+    if (!cone) return;
+    cone.geometry.dispose();
+    cone.geometry = new THREE.ConeGeometry(
+      lidar.range * 0.1,
+      lidar.range * 0.3,
+      32,
+      1,
+      true
+    );
+    cone.position.z = lidar.range * 0.15;
+  }),
 }));
 
 let storeState: {
@@ -447,6 +462,21 @@ vi.mock('../utils/LidarUtils', () => ({
     return group;
   }),
   disposeLidarGroup: vi.fn(),
+  updateLidarScanVolume: vi.fn((group: THREE.Group, lidar: Lidar) => {
+    const cone = group.children.find(
+      (child) => (child as THREE.Mesh).geometry instanceof THREE.ConeGeometry
+    ) as THREE.Mesh | undefined;
+    if (!cone) return;
+    cone.geometry.dispose();
+    cone.geometry = new THREE.ConeGeometry(
+      lidar.range * 0.1,
+      lidar.range * 0.3,
+      32,
+      1,
+      true
+    );
+    cone.position.z = lidar.range * 0.15;
+  }),
 }));
 
 describe('useLidarMeshSync - additional coverage', () => {
@@ -727,6 +757,21 @@ vi.mock('../utils/LidarUtils', () => ({
     return group;
   }),
   disposeLidarGroup: vi.fn(),
+  updateLidarScanVolume: vi.fn((group: THREE.Group, lidar: Lidar) => {
+    const cone = group.children.find(
+      (child) => (child as THREE.Mesh).geometry instanceof THREE.ConeGeometry
+    ) as THREE.Mesh | undefined;
+    if (!cone) return;
+    cone.geometry.dispose();
+    cone.geometry = new THREE.ConeGeometry(
+      lidar.range * 0.1,
+      lidar.range * 0.3,
+      32,
+      1,
+      true
+    );
+    cone.position.z = lidar.range * 0.15;
+  }),
 }));
 
 describe('useLidarMeshSync - line 52 coverage', () => {

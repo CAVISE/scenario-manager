@@ -5,7 +5,12 @@ import type { RgbTripleProps } from '../types/opencdaRareTypes';
 
 export const RgbTriple = ({ label, value, onChange }: RgbTripleProps) => (
   <Stack spacing={0.5}>
-    <Typography variant="caption" color="text.secondary">
+    <Typography
+      variant="caption"
+      sx={{
+        color: 'text.secondary',
+      }}
+    >
       {label}
     </Typography>
     <Stack direction="row" spacing={1}>
@@ -15,11 +20,6 @@ export const RgbTriple = ({ label, value, onChange }: RgbTripleProps) => (
           label={['R', 'G', 'B'][i]}
           type="number"
           size="small"
-          inputProps={{
-            ...numInputSlot.input,
-            min: 0,
-            max: 255,
-          }}
           className="sim-config-field--72"
           value={value[i]}
           onChange={(e) => {
@@ -28,6 +28,13 @@ export const RgbTriple = ({ label, value, onChange }: RgbTripleProps) => (
             const next = [...value] as [number, number, number];
             next[i] = clamped;
             onChange(next);
+          }}
+          slotProps={{
+            htmlInput: {
+              ...numInputSlot.input,
+              min: 0,
+              max: 255,
+            },
           }}
         />
       ))}

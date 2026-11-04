@@ -21,6 +21,9 @@ const number = (value: number | null | undefined, unit = '') =>
     ? '—'
     : `${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}${unit ? ` ${unit}` : ''}`;
 
+const outcomeClass = (run: { is_demo?: boolean; outcome?: string }) =>
+  run.is_demo ? 'demo' : (run.outcome ?? 'archived');
+
 export function RunDetails({ run, response, category }: RunDetailsProps) {
   const data = response.data;
   const [actorId, setActorId] = useState(data?.actors[0]?.id ?? '');
@@ -46,7 +49,7 @@ export function RunDetails({ run, response, category }: RunDetailsProps) {
           </p>
         </div>
         <span
-          className={`results-outcome ${run.outcome === 'partial' ? 'partial' : ''}`}
+          className={`results-outcome results-outcome--${outcomeClass(run)}`}
         >
           {run.is_demo
             ? 'Demo data'
@@ -58,7 +61,7 @@ export function RunDetails({ run, response, category }: RunDetailsProps) {
         </span>
       </div>
       {run.outcome === 'partial' && (
-        <div className="results-callout">
+        <div className="results-callout results-callout--warning">
           This run was stopped early. Charts include only the steps completed
           before stopping.
         </div>

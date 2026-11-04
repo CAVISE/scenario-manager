@@ -1,7 +1,7 @@
 import { getLoadedSumoNetwork, setLoadedSumoNetwork } from '@scenario-export';
 import { mergeSimConfigWithDefaults, defaultSimConfig } from '@scenario-export';
 import { useEditorStore } from '@/store';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 export const useSumoConfig = () => {
   const rawSimConfig = useEditorStore((s) => s.simConfig);
@@ -19,12 +19,24 @@ export const useSumoConfig = () => {
   const [loadedNetFilename, setLoadedNetFilename] = useState(
     getLoadedSumoNetwork()?.filename ?? ''
   );
+  const networkLoadRequestRef = useRef(0);
+
+  useEffect(
+    () => () => {
+      networkLoadRequestRef.current += 1;
+    },
+    []
+  );
 
   const handleLoadNetwork = async (file: File) => {
+    const requestId = ++networkLoadRequestRef.current;
     try {
-      setLoadedSumoNetwork(file.name, await file.text());
+      const content = await file.text();
+      if (requestId !== networkLoadRequestRef.current) return;
+      setLoadedSumoNetwork(file.name, content);
       setLoadedNetFilename(file.name);
     } catch (error) {
+      if (requestId !== networkLoadRequestRef.current) return;
       setError(error instanceof Error ? error : new Error(String(error)));
     }
   };

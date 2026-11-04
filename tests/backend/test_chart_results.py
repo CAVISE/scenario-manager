@@ -1,4 +1,5 @@
 import json
+import os
 from types import SimpleNamespace as NS
 
 import pytest
@@ -104,7 +105,9 @@ def test_chart_data_is_returned_from_disk_for_partial_runs(
     directory = evaluate(result_root)
     response = scenario_client.get("/api/results/Town01_test")
     assert response.status_code == 200
-    assert response.json()["data"] == json.loads((directory / CHARTS_NAME).read_text())
+    assert json.loads(response.content)["data"] == json.loads(
+        (directory / CHARTS_NAME).read_text(encoding="utf-8")
+    )
     assert response.json()["data_error"] is None
     assert CHARTS_NAME in [entry["filename"] for entry in response.json()["files"]]
 
@@ -130,6 +133,10 @@ def test_legacy_result_has_no_invented_chart_data(scenario_client, result_root):
     assert len(response.json()["files"]) == 1
 
 
+@pytest.mark.skipif(
+    os.name == "nt",
+    reason="Creating symbolic links requires Windows Developer Mode or elevation.",
+)
 def test_chart_symlinks_and_wrong_run_are_not_served(scenario_client, result_root):
     directory = evaluate(result_root)
     chart_path = directory / CHARTS_NAME
@@ -158,6 +165,21 @@ def test_invalid_values_become_gaps_and_missing_gt_is_not_reported_as_real_dista
         next(item for item in collector.metrics if item["id"] == "distance")["value"]
         is None
     )
+
+
+def test_planning_accepts_callable_carla_transform_accessors():
+    vm = vehicle()
+    vm.agent.initial_global_route = [
+        (NS(transform=lambda: transform(0)), None),
+        (NS(transform=lambda: transform(10)), None),
+    ]
+
+    collector = VehicleCharts(vm, 0.1)
+    collector.planning()
+
+    metrics = {item["id"]: item["value"] for item in collector.metrics}
+    assert metrics["planned_distance"] == 10
+    assert metrics["destination_distance"] == 7
 
 
 def test_one_broken_module_does_not_discard_other_vehicles(result_root):

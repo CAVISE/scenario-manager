@@ -52,22 +52,26 @@ export const CarlaSettingsSection = ({ carla, update }: CarlaSectionProps) => (
         type="number"
         size="small"
         fullWidth
-        inputProps={{ step: 0.01 }}
         value={carla.fixed_delta_seconds}
         onChange={(e) =>
           update({ fixed_delta_seconds: parseNumberInputChange(e.target) })
         }
+        slotProps={{
+          htmlInput: { step: 0.01 },
+        }}
       />
       <TextField
         label="TM Port"
         type="number"
         size="small"
         fullWidth
-        inputProps={{ min: 1, max: 65535, step: 1 }}
         value={carla.traffic_manager_port}
         onChange={(e) =>
           update({ traffic_manager_port: parseNumberInputChange(e.target) })
         }
+        slotProps={{
+          htmlInput: { min: 1, max: 65535, step: 1 },
+        }}
       />
     </Stack>
     <FormControlLabel

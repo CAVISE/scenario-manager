@@ -8,13 +8,11 @@ export function useBuildingLoader() {
   useEffect(() => {
     const loader = new GLTFLoader();
     loader.load(
-      '/nyc_bronx_buildings.glb',
+      '/skyscraper.glb',
       (gltf) => {
         const model = gltf.scene;
-        model.rotation.x = -Math.PI / 2;
-        model.scale.setScalar(0.5);
-        model.position.z = -10000;
-        model.rotation.x += Math.PI;
+        model.rotation.set(Math.PI / 2, 0, 0);
+        model.position.set(0, 0, 0);
         buildingModelRef.current = model;
       },
       undefined,

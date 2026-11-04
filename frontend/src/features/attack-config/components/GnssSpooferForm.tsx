@@ -15,94 +15,24 @@ import {
   GNSS_STEALTH_PARAMS,
 } from '../constants/attackConstants';
 import NumericInput from '@right-panel/components/NumericInput';
+import { DriftLikeFields } from './DriftLikeFields';
 import type {
-  DriftLikeFieldsProps,
   GnssMode,
   GnssParams,
   GnssSpooferFormProps,
 } from '../types/AttackConfigModalTypes';
-
-function DriftLikeFields({ params, updateParam }: DriftLikeFieldsProps) {
-  return (
-    <>
-      <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2}>
-        <Box>
-          <Typography variant="caption" color="text.secondary">
-            Start time
-          </Typography>
-          <NumericInput
-            value={params?.start_time ?? 10}
-            onValueChange={(val) => updateParam('start_time', val)}
-            precision={1}
-            variant="outlined"
-          />
-        </Box>
-        <Box>
-          <Typography variant="caption" color="text.secondary">
-            Ramp duration
-          </Typography>
-          <NumericInput
-            value={params?.ramp_duration ?? 8}
-            onValueChange={(val) => updateParam('ramp_duration', val)}
-            precision={1}
-            variant="outlined"
-          />
-        </Box>
-      </Box>
-
-      <Divider
-        className="attack-config-modal__section-divider"
-        textAlign="left"
-      >
-        Offset parameters
-      </Divider>
-
-      <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2}>
-        <Box>
-          <Typography variant="caption" color="text.secondary">
-            Lateral offset
-          </Typography>
-          <NumericInput
-            value={params?.lateral_offset ?? 1.8}
-            onValueChange={(val) => updateParam('lateral_offset', val)}
-            precision={2}
-            variant="outlined"
-          />
-        </Box>
-        <Box>
-          <Typography variant="caption" color="text.secondary">
-            Longitudinal offset
-          </Typography>
-          <NumericInput
-            value={params?.longitudinal_offset ?? 0.5}
-            onValueChange={(val) => updateParam('longitudinal_offset', val)}
-            precision={2}
-            variant="outlined"
-          />
-        </Box>
-      </Box>
-
-      <Box>
-        <Typography variant="caption" color="text.secondary">
-          Drift rate
-        </Typography>
-        <NumericInput
-          value={params?.drift_rate ?? 0.08}
-          onValueChange={(val) => updateParam('drift_rate', val)}
-          precision={3}
-          variant="outlined"
-        />
-      </Box>
-    </>
-  );
-}
 
 export function GnssSpooferForm({ stage, onUpdate }: GnssSpooferFormProps) {
   const params = stage?.params as GnssParams | undefined;
 
   if (!stage || stage.type !== 'spoofer') {
     return (
-      <Typography color="text.secondary" variant="body2">
+      <Typography
+        variant="body2"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         This attack type does not have a structured form. Use JSON mode below.
       </Typography>
     );
@@ -141,7 +71,12 @@ export function GnssSpooferForm({ stage, onUpdate }: GnssSpooferFormProps) {
   return (
     <Stack spacing={2}>
       <Box onClick={(e) => e.stopPropagation()}>
-        <Typography variant="caption" color="text.secondary">
+        <Typography
+          variant="caption"
+          sx={{
+            color: 'text.secondary',
+          }}
+        >
           Mode
         </Typography>
         <ToggleButtonGroup
@@ -163,7 +98,9 @@ export function GnssSpooferForm({ stage, onUpdate }: GnssSpooferFormProps) {
           <Typography
             className="attack-config-modal__caption"
             variant="caption"
-            color="error.main"
+            sx={{
+              color: 'error.main',
+            }}
           >
             Unlike drift/stealth, noise has no start_time/ramp — it replaces the
             GNSS sensor's base noise for the whole run, active from tick one.
@@ -187,7 +124,12 @@ export function GnssSpooferForm({ stage, onUpdate }: GnssSpooferFormProps) {
             <MenuItem value="high">High</MenuItem>
           </TextField>
           {preview && (
-            <Typography variant="caption" color="text.secondary">
+            <Typography
+              variant="caption"
+              sx={{
+                color: 'text.secondary',
+              }}
+            >
               alt σ {preview.noise_alt_stddev} m · lat σ{' '}
               {preview.noise_lat_stddev} · lon σ {preview.noise_lon_stddev}
             </Typography>
@@ -204,9 +146,20 @@ export function GnssSpooferForm({ stage, onUpdate }: GnssSpooferFormProps) {
           >
             Noise parameters
           </Divider>
-          <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2}>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 2,
+            }}
+          >
             <Box>
-              <Typography variant="caption" color="text.secondary">
+              <Typography
+                variant="caption"
+                sx={{
+                  color: 'text.secondary',
+                }}
+              >
                 Jitter stddev
               </Typography>
               <NumericInput
@@ -217,7 +170,12 @@ export function GnssSpooferForm({ stage, onUpdate }: GnssSpooferFormProps) {
               />
             </Box>
             <Box>
-              <Typography variant="caption" color="text.secondary">
+              <Typography
+                variant="caption"
+                sx={{
+                  color: 'text.secondary',
+                }}
+              >
                 Max offset (m)
               </Typography>
               <NumericInput
@@ -236,7 +194,9 @@ export function GnssSpooferForm({ stage, onUpdate }: GnssSpooferFormProps) {
           <Typography
             className="attack-config-modal__caption"
             variant="caption"
-            color="text.secondary"
+            sx={{
+              color: 'text.secondary',
+            }}
           >
             Caps the induced offset at max_sigma × the target's own GNSS sensor
             stddev, instead of a flat meters value — so the bias stays within
@@ -253,9 +213,20 @@ export function GnssSpooferForm({ stage, onUpdate }: GnssSpooferFormProps) {
           >
             Stealth cap
           </Divider>
-          <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2}>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 2,
+            }}
+          >
             <Box>
-              <Typography variant="caption" color="text.secondary">
+              <Typography
+                variant="caption"
+                sx={{
+                  color: 'text.secondary',
+                }}
+              >
                 Jitter stddev
               </Typography>
               <NumericInput
@@ -266,7 +237,12 @@ export function GnssSpooferForm({ stage, onUpdate }: GnssSpooferFormProps) {
               />
             </Box>
             <Box>
-              <Typography variant="caption" color="text.secondary">
+              <Typography
+                variant="caption"
+                sx={{
+                  color: 'text.secondary',
+                }}
+              >
                 Max sigma
               </Typography>
               <NumericInput

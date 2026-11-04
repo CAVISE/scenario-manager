@@ -1,4 +1,4 @@
-import { HistoryOutlined, PlayCircleOutline } from '@mui/icons-material';
+import { HistoryOutlined, PlayCircleOutlined } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import { useSimulationRuns } from '@/features/simulation-runs';
 
@@ -47,7 +47,7 @@ export default function ReplayPage() {
       ) : !completedRuns.length ? (
         <div className="workspace-empty">
           <span className="workspace-empty__icon" aria-hidden="true">
-            <PlayCircleOutline />
+            <PlayCircleOutlined />
           </span>
           <strong>No completed runs</strong>
           <p>

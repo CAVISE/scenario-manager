@@ -1,16 +1,44 @@
 import { OdrMeshUnion } from '../types/sceneHelpersTypes';
 import * as THREE from 'three';
 import { getStdVecEntries } from '../ui/sceneHelpers';
+import {
+  filterValidPrimitives,
+  sanitizePositionBuffer,
+} from '@/shared/lib/geometryBufferUtils';
+import type { SanitizedPositions } from '@/shared/lib/geometryBufferUtils';
+
+export type { SanitizedPositions } from '@/shared/lib/geometryBufferUtils';
 export const ZOOM_MULTIPLIER = 1.5;
 export const RADIANS_CONVERSION = Math.PI / 180.0;
-export function get_geometry(odrMeshUnion: OdrMeshUnion): THREE.BufferGeometry {
+
+export function sanitizePositions(positions: number[]): SanitizedPositions {
+  const flatPositions = positions.flat();
+  return sanitizePositionBuffer(flatPositions);
+}
+
+export function filterInvalidPrimitives(
+  indices: number[],
+  validVertices: Uint8Array,
+  primitiveSize: number
+): number[] {
+  return Array.from(
+    filterValidPrimitives(indices, validVertices, primitiveSize)
+  );
+}
+
+export function get_geometry(
+  odrMeshUnion: OdrMeshUnion,
+  options: { withVertexNormals?: boolean } = {}
+): THREE.BufferGeometry {
   const geometry = new THREE.BufferGeometry();
 
   const positions = getStdVecEntries(odrMeshUnion.vertices, true);
+  const sanitizedPositions = sanitizePositions(positions);
   geometry.setAttribute(
     'position',
-    new THREE.Float32BufferAttribute(positions.flat(), 3)
+    new THREE.Float32BufferAttribute(sanitizedPositions.values, 3)
   );
+  geometry.userData.validVertices = sanitizedPositions.validVertices;
 
   const uvCoords = getStdVecEntries(odrMeshUnion.st_coordinates, true);
   geometry.setAttribute(
@@ -30,8 +58,12 @@ export function get_geometry(odrMeshUnion: OdrMeshUnion): THREE.BufferGeometry {
   );
 
   const indices = getStdVecEntries(odrMeshUnion.indices, true);
-  geometry.setIndex(indices);
+  geometry.setIndex(
+    filterInvalidPrimitives(indices, sanitizedPositions.validVertices, 3)
+  );
 
-  geometry.computeVertexNormals();
+  if (options.withVertexNormals !== false) geometry.computeVertexNormals();
+  geometry.computeBoundingBox();
+  geometry.computeBoundingSphere();
   return geometry;
 }

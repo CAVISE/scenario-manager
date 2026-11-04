@@ -1,9 +1,7 @@
 import { nanoid } from 'nanoid';
 import type { StateCreator } from 'zustand';
 import type { EditorState } from '../../types/useEditorStoreTypes';
-
 const MAX_HISTORY_SIZE = 100;
-
 type HistorySlice = Pick<
   EditorState,
   | 'deletionHistory'
@@ -20,7 +18,6 @@ type HistorySlice = Pick<
   | 'canRedo'
   | 'clearHistory'
 >;
-
 export const createHistorySlice: StateCreator<
   EditorState,
   [],
@@ -31,7 +28,6 @@ export const createHistorySlice: StateCreator<
   historyStack: [],
   historyCursor: 0,
   isApplyingHistory: false,
-
   pushDeletionSnapshot: (snapshot) => {
     const snapshotId = nanoid();
     set((state) => ({
@@ -42,10 +38,9 @@ export const createHistorySlice: StateCreator<
     }));
     return snapshotId;
   },
-  restoreLastDeletion: (snapshotId) => {
+  restoreLastDeletion: (snapshotId, options) => {
     const state = get();
     if (state.deletionHistory.length === 0) return false;
-
     const targetIndex = snapshotId
       ? state.deletionHistory.findIndex(
           (snapshot) => snapshot.snapshotId === snapshotId
@@ -96,19 +91,19 @@ export const createHistorySlice: StateCreator<
             break;
         }
       }
-
       const historyIndex = current.historyStack.findIndex(
         (entry) => entry.sourceSnapshotId === snapshot.snapshotId
       );
+      const preserveHistoryEntry = options?.preserveHistoryEntry ?? false;
       const historyStack =
-        historyIndex === -1
+        preserveHistoryEntry || historyIndex === -1
           ? current.historyStack
           : [
               ...current.historyStack.slice(0, historyIndex),
               ...current.historyStack.slice(historyIndex + 1),
             ];
       const historyCursor =
-        historyIndex === -1
+        preserveHistoryEntry || historyIndex === -1
           ? current.historyCursor
           : historyIndex < current.historyCursor
             ? current.historyCursor - 1
@@ -121,9 +116,11 @@ export const createHistorySlice: StateCreator<
         pedestrians,
         lidars,
         points,
-        deletionHistory: current.deletionHistory.filter(
-          (item) => item.snapshotId !== snapshot.snapshotId
-        ),
+        deletionHistory: preserveHistoryEntry
+          ? current.deletionHistory
+          : current.deletionHistory.filter(
+              (item) => item.snapshotId !== snapshot.snapshotId
+            ),
         historyStack,
         historyCursor,
       };
@@ -139,7 +136,24 @@ export const createHistorySlice: StateCreator<
       const next = [...base, { ...entry, id, timestamp: Date.now() }];
       const overflow = next.length - MAX_HISTORY_SIZE;
       const trimmed = overflow > 0 ? next.slice(overflow) : next;
-      return { historyStack: trimmed, historyCursor: trimmed.length };
+      const retainedIds = new Set(
+        trimmed.flatMap((item) =>
+          item.sourceSnapshotId ? [item.sourceSnapshotId] : []
+        )
+      );
+      const discardedIds = new Set(
+        state.historyStack
+          .filter((item) => item.sourceSnapshotId)
+          .map((item) => item.sourceSnapshotId!)
+          .filter((snapshotId) => !retainedIds.has(snapshotId))
+      );
+      return {
+        historyStack: trimmed,
+        historyCursor: trimmed.length,
+        deletionHistory: state.deletionHistory.filter(
+          (snapshot) => !discardedIds.has(snapshot.snapshotId)
+        ),
+      };
     });
     return id;
   },

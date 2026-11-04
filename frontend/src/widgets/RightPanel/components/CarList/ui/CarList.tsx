@@ -27,7 +27,13 @@ export default function CarLidarList({ carId, lidars }: CarListProps) {
 
   return (
     <Stack spacing={1}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center">
+      <Stack
+        direction="row"
+        sx={{
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
         <Typography variant="subtitle2">Lidars ({lidars.length})</Typography>
 
         <Button

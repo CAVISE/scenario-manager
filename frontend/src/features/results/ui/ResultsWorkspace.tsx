@@ -19,6 +19,18 @@ const timestamp = (value: number) =>
     timeStyle: 'short',
   });
 
+const outcomeLabel = (run: { is_demo?: boolean; outcome?: string }) =>
+  run.is_demo
+    ? 'Demo data'
+    : run.outcome === 'partial'
+      ? 'Partial run'
+      : run.outcome === 'complete'
+        ? 'Completed'
+        : 'Archived';
+
+const outcomeClass = (run: { is_demo?: boolean; outcome?: string }) =>
+  run.is_demo ? 'demo' : (run.outcome ?? 'archived');
+
 export default function ResultsWorkspace({
   onOpenContext,
   preferredRunId,
@@ -76,6 +88,7 @@ export default function ResultsWorkspace({
               <button
                 key={run.run_id}
                 className="results-run-choice"
+                data-outcome={outcomeClass(run)}
                 type="button"
                 aria-pressed={selected.includes(run.run_id)}
                 onClick={() => toggleRun(run.run_id)}
@@ -83,14 +96,10 @@ export default function ResultsWorkspace({
                 <strong>{run.scenario_name || run.run_id}</strong>
                 <span>{timestamp(run.modified_at)}</span>
                 <small>
-                  {run.is_demo
-                    ? 'Demo data'
-                    : run.outcome === 'partial'
-                      ? 'Partial run'
-                      : run.outcome === 'complete'
-                        ? 'Completed'
-                        : 'Archived'}{' '}
-                  · {run.files_count} files
+                  <span className="results-run-choice__outcome">
+                    {outcomeLabel(run)}
+                  </span>
+                  <span>· {run.files_count} files</span>
                 </small>
               </button>
             ))}
@@ -133,6 +142,13 @@ export default function ResultsWorkspace({
             <div className="results-empty">
               <h3>No completed run selected</h3>
               <p>Select a run from the history to explore its results.</p>
+              <button
+                type="button"
+                className="rp-btn rp-btn-secondary"
+                onClick={onOpenContext}
+              >
+                Open scenario setup
+              </button>
             </div>
           )}
           {!!responses.length && !loading && (

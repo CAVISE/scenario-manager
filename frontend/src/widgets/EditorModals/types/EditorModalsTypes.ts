@@ -6,6 +6,7 @@ declare global {
       openTelemetry: () => void;
       openSimulation: () => void;
       openMapPicker: () => void;
+      selectMap: (mapName: string, onSuccess?: () => void) => void;
     };
   }
 }

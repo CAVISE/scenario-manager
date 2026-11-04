@@ -11,7 +11,7 @@ export const deleteCar = (
   carId: string,
   carMeshesRef: React.MutableRefObject<THREE.Mesh[]>,
   routePointMeshesRef: React.MutableRefObject<THREE.Mesh[][]>,
-  localLineArrRef: React.MutableRefObject<THREE.Line[][]>,
+  localLineArrRef: React.MutableRefObject<THREE.Mesh[][]>,
   transformControls: { detach: () => void },
   syncRoutePointMeshes: () => void
 ): boolean => {

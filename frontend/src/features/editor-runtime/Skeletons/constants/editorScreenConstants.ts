@@ -47,3 +47,6 @@ export const notFoundLogLines: {
     delay: 1100,
   },
 ];
+
+export const HIDE_DELAY_MS = 300;
+export const UNMOUNT_DELAY_MS = 2000;

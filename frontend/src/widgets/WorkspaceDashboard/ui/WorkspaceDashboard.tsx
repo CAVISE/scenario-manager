@@ -1,7 +1,7 @@
 import {
   AssessmentOutlined,
   HubOutlined,
-  PlayCircleOutline,
+  PlayCircleOutlined,
   StorageOutlined,
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
@@ -70,7 +70,7 @@ export function WorkspaceDashboard({
 
         <Link className="workspace-dashboard-card" to="/runs">
           <span className="workspace-dashboard-card__icon" aria-hidden="true">
-            <PlayCircleOutline />
+            <PlayCircleOutlined />
           </span>
           <span className="workspace-dashboard-card__eyebrow">
             SIMULATION CAPACITY

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useWorkspacePreferences } from '@/store/ui/useWorkspacePreferences';
 import SimConfigModal from '@/features/simulation-config';
 import { useEditorStore } from '@/store';
+import { EditorPreferencesCard } from './components/EditorPreferencesCard';
 
 export default function SettingsPage() {
   const preferences = useWorkspacePreferences();
@@ -40,32 +41,7 @@ export default function SettingsPage() {
           </select>
         </label>
       </div>
-      <div className="workspace-settings-card">
-        <h2>Editor</h2>
-        <p className="workspace-settings-card__hint">
-          Control how selections behave while building a scenario.
-        </p>
-        <label className="workspace-setting">
-          <span>Focus the camera when selecting in Scene Graph</span>
-          <input
-            type="checkbox"
-            checked={preferences.focusOnSelection}
-            onChange={(event) =>
-              preferences.update({ focusOnSelection: event.target.checked })
-            }
-          />
-        </label>
-        <label className="workspace-setting">
-          <span>Show selection outlines in 3D</span>
-          <input
-            type="checkbox"
-            checked={preferences.showSelectionOutline}
-            onChange={(event) =>
-              preferences.update({ showSelectionOutline: event.target.checked })
-            }
-          />
-        </label>
-      </div>
+      <EditorPreferencesCard />
       <div className="workspace-settings-card">
         <h2>Current scenario</h2>
         <p className="workspace-settings-card__hint">

@@ -91,6 +91,7 @@ describe('scenario.load.handler (sync preview)', () => {
       canvas.width = 1920;
       canvas.height = 1080;
       canvas.toDataURL = vi.fn(() => 'data:image/png;base64,FULL_RES');
+      vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
       setCanvasReference(canvas);
 
       const result = generatePreviewSync();
@@ -182,6 +183,22 @@ describe('scenario.load.handler (sync preview)', () => {
       const payload = buildScenarioPayload();
 
       expect(payload.preview).toBe('data:image/png;base64,PAYLOAD_PREVIEW');
+    });
+
+    it('captures a fresh preview for each payload', () => {
+      const canvas = document.createElement('canvas');
+      canvas.toDataURL = vi
+        .fn()
+        .mockReturnValueOnce('data:image/png;base64:BEFORE')
+        .mockReturnValueOnce('data:image/png;base64:AFTER');
+      setCanvasReference(canvas);
+
+      expect(buildScenarioPayload().preview).toBe(
+        'data:image/png;base64:BEFORE'
+      );
+      expect(buildScenarioPayload().preview).toBe(
+        'data:image/png;base64:AFTER'
+      );
     });
 
     it('returns null preview when no canvas is set', () => {

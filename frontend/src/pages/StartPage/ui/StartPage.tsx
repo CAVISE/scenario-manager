@@ -4,7 +4,7 @@ import { useWorkspacePreferences } from '@/store/ui/useWorkspacePreferences';
 import { ScenarioCards } from '../../Workspace/ScenarioCards';
 import { WorkspaceDashboard } from '@/widgets/WorkspaceDashboard';
 import {
-  AddCircleOutline,
+  AddCircleOutlined,
   FolderOpenOutlined,
   MapOutlined,
   ViewInArOutlined,
@@ -42,7 +42,7 @@ export default function StartPage() {
       />
       <div className="workspace-action-grid">
         <button type="button" onClick={manager.handleCreateNew}>
-          <AddCircleOutline />
+          <AddCircleOutlined />
           <strong>Create scenario</strong>
           <span>Start with an empty scene</span>
         </button>

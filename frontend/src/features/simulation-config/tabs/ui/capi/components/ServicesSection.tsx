@@ -52,7 +52,12 @@ const ServiceBox = ({
 export const ServicesSection = ({ capi, update }: CapiSectionProps) => (
   <>
     <Divider />
-    <Typography variant="subtitle2" color="text.secondary">
+    <Typography
+      variant="subtitle2"
+      sx={{
+        color: 'text.secondary',
+      }}
+    >
       Services (services.xml)
     </Typography>
 

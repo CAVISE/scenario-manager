@@ -62,7 +62,7 @@ describe('LidarUtils', () => {
       const body = group.children[0] as THREE.Mesh;
       const material = body.material as THREE.MeshStandardMaterial;
 
-      expect(material.color.getHex()).toBe(0x222222);
+      expect(material.color.getHex()).toBe(0x111827);
     });
 
     it('should create cone mesh with cone geometry', () => {
@@ -80,7 +80,7 @@ describe('LidarUtils', () => {
 
       expect(geometry.parameters.radius).toBe(10);
       expect(geometry.parameters.height).toBe(30);
-      expect(geometry.parameters.radialSegments).toBe(32);
+      expect(geometry.parameters.radialSegments).toBe(24);
       expect(geometry.parameters.heightSegments).toBe(1);
       expect(geometry.parameters.openEnded).toBe(true);
     });
@@ -90,10 +90,10 @@ describe('LidarUtils', () => {
       const cone = group.children[1] as THREE.Mesh;
       const material = cone.material as THREE.MeshBasicMaterial;
 
-      expect(material.color.getHex()).toBe(0x00ffff);
-      expect(material.wireframe).toBe(true);
+      expect(material.color.getHex()).toBe(0xa3e635);
+      expect(material.wireframe).toBe(false);
       expect(material.transparent).toBe(true);
-      expect(material.opacity).toBe(0.15);
+      expect(material.opacity).toBe(0.08);
     });
 
     it('should set cone rotation and position', () => {
@@ -145,10 +145,10 @@ describe('LidarUtils', () => {
       expect(cone.position.z).toBe(0);
     });
 
-    it('should have exactly 2 children', () => {
+    it('should add the physical sensor components and range visualisation', () => {
       const group = createLidarMesh(mockLidar);
 
-      expect(group.children).toHaveLength(2);
+      expect(group.children.length).toBeGreaterThan(2);
     });
   });
 

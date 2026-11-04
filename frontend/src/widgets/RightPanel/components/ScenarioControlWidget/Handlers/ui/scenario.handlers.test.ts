@@ -18,6 +18,7 @@ vi.mock(
     return {
       ...mod,
       resolveXodrTextForSimulation: resolveXodrMock,
+      resolveRuntimeXodrTextForSimulation: resolveXodrMock,
       getStoredXodrName: vi.fn(() => 'Town10HD.xodr'),
     };
   }
@@ -106,6 +107,8 @@ const createStoreState = () => {
     addLidarsBatch: vi.fn(),
     setSceneExplicitlyCleared: vi.fn(),
     updateSimulationSession: vi.fn(),
+    clearHistory: vi.fn(),
+    clearDeletionHistory: vi.fn(),
   };
 
   state.addCarsBatch.mockImplementation((carsToAdd: Array<unknown>) => {
@@ -342,6 +345,35 @@ beforeEach(() => {
 });
 
 describe('handleLoad regression', () => {
+  it('keeps the name from the scenario API detail after restoring scene objects', async () => {
+    fetchQueryMock.mockResolvedValue({
+      scenario_id: 'named-1',
+      scenario_name: 'Scenario visible to the user',
+      file_: VALID_XODR,
+      scenario: {
+        scenario_text: [{ vehicle: 'car', path: [{ x: 1, y: 2, z: 0 }] }],
+      },
+    });
+
+    await handleLoad({
+      hasId: true,
+      scenarioIdInput: 'named-1',
+      setNotice: vi.fn(),
+      updateSceneGraph: vi.fn(),
+      loadFile: vi.fn(),
+    });
+
+    expect(storeState.updateScenario).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'named-1',
+        name: 'Scenario visible to the user',
+      })
+    );
+    expect(storeState.updateScenario).not.toHaveBeenCalledWith(
+      expect.objectContaining({ name: '' })
+    );
+  });
+
   it('handles all vehicle types: car, pedestrian, RSU', async () => {
     fetchQueryMock.mockResolvedValue({
       scenario: {
@@ -417,6 +449,33 @@ describe('handleLoad regression', () => {
     expect(storeState.addBuildingsBatch).toHaveBeenCalled();
     expect(setNotice).toHaveBeenCalledWith('The scenario has been uploaded.');
     expect(loadFile).toHaveBeenCalled();
+  });
+
+  it('loads the stored map when opening a mapless scenario from the editor URL', async () => {
+    fetchQueryMock.mockResolvedValue({
+      scenario_id: 'mapless-1',
+      file_: null,
+      scenario: { scenario_text: [] },
+    });
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      text: () => Promise.resolve(VALID_XODR),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const loadFile = vi.fn().mockResolvedValue(true);
+
+    await handleLoad({
+      hasId: true,
+      scenarioIdInput: 'mapless-1',
+      setNotice: vi.fn(),
+      updateSceneGraph: vi.fn(),
+      loadFile,
+      initializeMapWhenMissing: true,
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith('./Town10HD.xodr');
+    expect(loadFile).toHaveBeenCalledWith(VALID_XODR, true, 'Town10HD.xodr');
+    vi.unstubAllGlobals();
   });
 });
 

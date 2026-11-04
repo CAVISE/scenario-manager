@@ -30,12 +30,16 @@ export interface CreateEditorActionsOptions {
   currentCarRef: MutableRefObject<string>;
   currentColorRef: MutableRefObject<string>;
   transformControls: { detach: () => void; parent?: THREE.Object3D | null };
-  localLineArrRef: MutableRefObject<THREE.Line[][]>;
+  localLineArrRef: MutableRefObject<THREE.Mesh[][]>;
   camera: THREE.PerspectiveCamera;
   controls: { update?: () => void };
   getOdrMeshes: () => OdrMapMeshes;
 
   syncRoutePointMeshes: () => void;
-  loadFile: (text: string, clearMap: boolean, sourceName?: string) => void;
+  loadFile: (
+    text: string,
+    clearMap: boolean,
+    sourceName?: string
+  ) => Promise<boolean>;
   reloadOdrMap: () => void;
 }

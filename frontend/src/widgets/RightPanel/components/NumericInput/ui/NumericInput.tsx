@@ -18,6 +18,7 @@ export default function NumericInput({
   const [inputValue, setInputValue] = useState(() =>
     formatValue(value, precision)
   );
+  const [isInvalid, setIsInvalid] = useState(false);
 
   useEffect(() => {
     if (!isFocused.current) {
@@ -34,7 +35,10 @@ export default function NumericInput({
 
     const nextValue = event.target.valueAsNumber;
     if (Number.isFinite(nextValue)) {
+      setIsInvalid(false);
       onValueChange(nextValue);
+    } else {
+      setIsInvalid(event.target.value.trim() !== '');
     }
   };
 
@@ -43,6 +47,7 @@ export default function NumericInput({
 
     const nextValue = event.target.valueAsNumber;
     if (Number.isFinite(nextValue)) {
+      setIsInvalid(false);
       setInputValue(formatValue(nextValue, precision));
       if (nextValue !== value) {
         onValueChange(nextValue);
@@ -50,6 +55,7 @@ export default function NumericInput({
       return;
     }
 
+    setIsInvalid(false);
     setInputValue(formatValue(value, precision));
   };
 
@@ -60,6 +66,10 @@ export default function NumericInput({
     onFocus: handleFocus,
     onChange: handleChange,
     onBlur: handleBlur,
+    error: isInvalid,
+    inputProps: {
+      'aria-invalid': isInvalid || undefined,
+    },
     slotProps: {
       input: {
         step: 1,
@@ -68,9 +78,21 @@ export default function NumericInput({
     },
   } satisfies InputProps & OutlinedInputProps;
 
-  return variant === 'outlined' ? (
-    <OutlinedInput {...sharedProps} />
-  ) : (
-    <Input {...sharedProps} />
+  const input =
+    variant === 'outlined' ? (
+      <OutlinedInput {...sharedProps} />
+    ) : (
+      <Input {...sharedProps} />
+    );
+
+  return (
+    <>
+      {input}
+      {isInvalid && (
+        <span className="numeric-input__error" role="alert">
+          Enter a valid number.
+        </span>
+      )}
+    </>
   );
 }

@@ -1,5 +1,4 @@
 import type { SceneNode } from '@right-panel/types/PanelTypes';
-import type { MutableRefObject } from 'react';
 import * as THREE from 'three';
 import { LOADING_STEPS } from '../../constants/editorConstants';
 
@@ -9,8 +8,9 @@ export interface hooksContextTypes {
   sceneGraph: SceneNode | null;
   loadingProgress: number;
   loadingText: string | null;
+  runtimeReady: boolean;
   setStep: (step: keyof typeof LOADING_STEPS) => void;
-  actionsRef: MutableRefObject<{
+  actionsRef: React.RefObject<{
     addCar: () => void;
     addRSU: () => void;
     startRoutePointPlacement: () => void;
@@ -23,5 +23,10 @@ export interface hooksContextTypes {
   handleStartRoutePointPlacement: () => void;
   detachTransformControls: () => void;
   handleSetBuildingMode: (value: boolean) => void;
-  loadFile: (text: string, clearMap: boolean) => void;
+  cancelMapLoad: () => void;
+  loadFile: (
+    text: string,
+    clearMap: boolean,
+    sourceName?: string
+  ) => Promise<boolean>;
 }

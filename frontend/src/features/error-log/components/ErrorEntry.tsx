@@ -26,14 +26,18 @@ export const ErrorEntry = memo(({ entry }: ErrorEntryProps) => {
         <Stack
           direction="row"
           spacing={1}
-          alignItems="center"
           className="error-log__entry-summary"
+          sx={{
+            alignItems: 'center',
+          }}
         >
           <Chip size="small" color={sourceColor} label={sourceLabel} />
           <Typography
             variant="caption"
-            color="text.secondary"
             className="error-log__time"
+            sx={{
+              color: 'text.secondary',
+            }}
           >
             {time}
           </Typography>
@@ -45,7 +49,12 @@ export const ErrorEntry = memo(({ entry }: ErrorEntryProps) => {
       <AccordionDetails>
         <Stack spacing={0.5}>
           {entry.context && (
-            <Typography variant="caption" color="text.secondary">
+            <Typography
+              variant="caption"
+              sx={{
+                color: 'text.secondary',
+              }}
+            >
               {entry.context}
             </Typography>
           )}
@@ -60,5 +69,11 @@ export const ErrorEntry = memo(({ entry }: ErrorEntryProps) => {
 ErrorEntry.displayName = 'ErrorEntry';
 
 export const EmptyState = () => (
-  <Typography color="text.secondary">{EMPTY_STATE_MESSAGE}</Typography>
+  <Typography
+    sx={{
+      color: 'text.secondary',
+    }}
+  >
+    {EMPTY_STATE_MESSAGE}
+  </Typography>
 );

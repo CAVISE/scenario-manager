@@ -4,17 +4,12 @@ import {
   FormControlLabel,
   Stack,
   Switch,
-  TextField,
-  Tooltip,
   Typography,
 } from '@mui/material';
-import {
-  numInputSlot,
-  parseNumberFromEvent,
-  getChipColor,
-} from '../utils/opencdaFieldUtils';
+import { parseNumberFromEvent } from '../utils/opencdaFieldUtils';
 import { SimulationConfig } from '@/store';
 import type { LocalPlannerSectionProps } from '../types/opencdaSectionTypes';
+import { LocalPlannerNumberField } from './LocalPlannerNumberField';
 
 export const LocalPlannerSection = ({
   bufferSize,
@@ -52,54 +47,6 @@ export const LocalPlannerSection = ({
     });
   };
 
-  const createNumberField = (
-    label: string,
-    field: keyof SimulationConfig['opencda']['local_planner'],
-    value: number,
-    options?: {
-      min?: number;
-      max?: number;
-      step?: number;
-      tooltip?: string;
-      chip?: boolean;
-      chipLabel?: string;
-    }
-  ) => (
-    <Tooltip title={options?.tooltip || ''} arrow placement="top">
-      <Stack
-        className="sim-config-field--grow"
-        direction="row"
-        spacing={1}
-        alignItems="center"
-      >
-        <TextField
-          label={label}
-          type="number"
-          size="small"
-          fullWidth
-          inputProps={{
-            ...numInputSlot.input,
-            min: options?.min,
-            max: options?.max,
-            step: options?.step || 1,
-          }}
-          value={value}
-          onChange={(e) =>
-            handleNumberChange(e, field, options?.min, options?.max)
-          }
-        />
-        {options?.chip && (
-          <Chip
-            label={options.chipLabel || value}
-            size="small"
-            color={getChipColor(value, options?.min, options?.max)}
-            className="sim-config-chip--40"
-          />
-        )}
-      </Stack>
-    </Tooltip>
-  );
-
   const handleSwitchChange = (
     field: keyof SimulationConfig['opencda']['local_planner'],
     checked: boolean
@@ -114,75 +61,121 @@ export const LocalPlannerSection = ({
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="subtitle2" color="text.secondary">
+      <Typography
+        variant="subtitle2"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         Local planner
       </Typography>
 
-      <Typography variant="caption" color="text.secondary">
+      <Typography
+        variant="caption"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         Buffer & update frequencies
       </Typography>
       <Stack direction="row" spacing={2}>
-        {createNumberField('Buffer size', 'buffer_size', bufferSize, {
-          min: 1,
-          max: 1000,
-          tooltip: 'Number of waypoints in buffer',
-          chip: true,
-          chipLabel: `${bufferSize} pts`,
-        })}
-        {createNumberField(
-          'Traj. update freq',
-          'trajectory_update_freq',
-          trajectoryUpdateFreq,
-          {
+        <LocalPlannerNumberField
+          label="Buffer size"
+          field="buffer_size"
+          value={bufferSize}
+          onChange={handleNumberChange}
+          options={{
+            min: 1,
+            max: 1000,
+            tooltip: 'Number of waypoints in buffer',
+            chip: true,
+            chipLabel: `${bufferSize} pts`,
+          }}
+        />
+        <LocalPlannerNumberField
+          label="Traj. update freq"
+          field="trajectory_update_freq"
+          value={trajectoryUpdateFreq}
+          onChange={handleNumberChange}
+          options={{
             min: 0.1,
             max: 100,
             step: 0.1,
             tooltip: 'Trajectory update frequency in Hz',
             chip: true,
             chipLabel: `${trajectoryUpdateFreq} Hz`,
-          }
-        )}
-        {createNumberField(
-          'Waypoint update freq',
-          'waypoint_update_freq',
-          waypointUpdateFreq,
-          {
+          }}
+        />
+        <LocalPlannerNumberField
+          label="Waypoint update freq"
+          field="waypoint_update_freq"
+          value={waypointUpdateFreq}
+          onChange={handleNumberChange}
+          options={{
             min: 0.1,
             max: 100,
             step: 0.1,
             tooltip: 'Waypoint update frequency in Hz',
             chip: true,
             chipLabel: `${waypointUpdateFreq} Hz`,
-          }
-        )}
+          }}
+        />
       </Stack>
 
-      <Typography variant="caption" color="text.secondary">
+      <Typography
+        variant="caption"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         Path parameters
       </Typography>
       <Stack direction="row" spacing={2}>
-        {createNumberField('Min dist (m)', 'min_dist', minDist, {
-          min: 0.01,
-          max: 100,
-          step: 0.01,
-          tooltip: 'Minimum distance between waypoints',
-          chip: true,
-          chipLabel: `${minDist} m`,
-        })}
-        {createNumberField('Trajectory dt (s)', 'trajectory_dt', trajectoryDt, {
-          min: 0.01,
-          max: 10,
-          step: 0.05,
-          tooltip: 'Time step for trajectory generation',
-          chip: true,
-          chipLabel: `${trajectoryDt} s`,
-        })}
+        <LocalPlannerNumberField
+          label="Min dist (m)"
+          field="min_dist"
+          value={minDist}
+          onChange={handleNumberChange}
+          options={{
+            min: 0.01,
+            max: 100,
+            step: 0.01,
+            tooltip: 'Minimum distance between waypoints',
+            chip: true,
+            chipLabel: `${minDist} m`,
+          }}
+        />
+        <LocalPlannerNumberField
+          label="Trajectory dt (s)"
+          field="trajectory_dt"
+          value={trajectoryDt}
+          onChange={handleNumberChange}
+          options={{
+            min: 0.01,
+            max: 10,
+            step: 0.05,
+            tooltip: 'Time step for trajectory generation',
+            chip: true,
+            chipLabel: `${trajectoryDt} s`,
+          }}
+        />
       </Stack>
 
-      <Typography variant="caption" color="text.secondary">
+      <Typography
+        variant="caption"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         Debug options
       </Typography>
-      <Stack direction="row" spacing={2} alignItems="center">
+      <Stack
+        direction="row"
+        spacing={2}
+        sx={{
+          alignItems: 'center',
+        }}
+      >
         <FormControlLabel
           control={
             <Switch
@@ -191,7 +184,13 @@ export const LocalPlannerSection = ({
             />
           }
           label={
-            <Stack direction="row" alignItems="center" spacing={1}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: 'center',
+              }}
+            >
               <span>Debug</span>
               <Chip
                 label={debug ? 'On' : 'Off'}
@@ -211,7 +210,13 @@ export const LocalPlannerSection = ({
             />
           }
           label={
-            <Stack direction="row" alignItems="center" spacing={1}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: 'center',
+              }}
+            >
               <span>Debug traj.</span>
               <Chip
                 label={debugTrajectory ? 'On' : 'Off'}

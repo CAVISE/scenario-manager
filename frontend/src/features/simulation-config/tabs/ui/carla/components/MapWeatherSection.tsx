@@ -15,6 +15,7 @@ export const MapWeatherSection = ({
   carla,
   selectedMap,
   update,
+  onMapLoaded,
 }: MapWeatherSectionProps) => (
   <Stack direction="row" spacing={2}>
     <FormControl size="small" fullWidth>
@@ -22,7 +23,9 @@ export const MapWeatherSection = ({
       <Select
         value={selectedMap}
         label="Map"
-        onChange={(e) => update({ map: e.target.value as string })}
+        onChange={(e) =>
+          window.editorModals?.selectMap(e.target.value as string, onMapLoaded)
+        }
       >
         {CARLA_MAPS.map((m) => (
           <MenuItem key={m} value={m}>

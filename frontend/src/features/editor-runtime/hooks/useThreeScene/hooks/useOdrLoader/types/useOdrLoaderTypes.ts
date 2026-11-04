@@ -4,11 +4,18 @@ import { LOADING_STEPS } from '@editor/constants/editorConstants';
 import type { MutableRefObject } from 'react';
 
 export interface UseOdrLoaderProps {
+  skipInitialMap: boolean;
   setStep: (step: keyof typeof LOADING_STEPS) => void;
   setError: ((err: Error) => void) | undefined;
   moduleRef: MutableRefObject<OpenDriveModule | null>;
   mapRef: MutableRefObject<OpenDriveMapInstance | null>;
+  odrMapRef: MutableRefObject<OpenDriveMapInstance | null>;
   loadOdrMapRef: MutableRefObject<
-    (clearMap?: boolean, fitView?: boolean) => void
+    (
+      clearMap?: boolean,
+      fitView?: boolean,
+      onComplete?: (success: boolean) => void,
+      xodrText?: string
+    ) => void
   >;
 }

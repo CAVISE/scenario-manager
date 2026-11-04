@@ -4,8 +4,10 @@ import type { MutableRefObject } from 'react';
 export interface useThreeSceneProps {
   setStep: (step: keyof typeof LOADING_STEPS) => void;
   updateSceneGraph: () => void;
+  skipInitialMap: boolean;
 }
 export interface UseThreeSceneResult {
+  runtimeReady: boolean;
   actionsRef: MutableRefObject<{
     addCar: () => void;
     addRSU: () => void;
@@ -13,5 +15,10 @@ export interface UseThreeSceneResult {
     deleteCar: () => void;
     addPedestrian: () => void;
   }>;
-  loadFile: (text: string, clearMap: boolean) => void;
+  cancelMapLoad: () => void;
+  loadFile: (
+    text: string,
+    clearMap: boolean,
+    sourceName?: string
+  ) => Promise<boolean>;
 }

@@ -619,6 +619,26 @@ describe('useEditorStore - History', () => {
     });
   });
 
+  it('removes a deletion snapshot when its redo branch is discarded', () => {
+    const state = useEditorStore.getState();
+    const snapshotId = state.pushDeletionSnapshot({
+      origin: 'single-delete',
+      label: 'Deleted vehicle',
+      entities: [],
+    });
+    state.pushHistoryEntry({
+      label: 'Deleted vehicle',
+      sourceSnapshotId: snapshotId,
+      undo: vi.fn(),
+      redo: vi.fn(),
+    });
+
+    state.undo();
+    state.pushHistoryEntry({ label: 'New edit', undo: vi.fn(), redo: vi.fn() });
+
+    expect(useEditorStore.getState().deletionHistory).toEqual([]);
+  });
+
   describe('undo and redo integration', () => {
     it('handles multiple undo/redo operations correctly', () => {
       const undoMock1 = vi.fn();

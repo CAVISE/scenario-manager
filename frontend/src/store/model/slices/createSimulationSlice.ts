@@ -1,6 +1,8 @@
 import { nanoid } from 'nanoid';
 import type { StateCreator } from 'zustand';
-import { defaultSimConfig, mergeSimConfigWithDefaults } from '@scenario-export';
+import { defaultSimConfig } from '@scenario-export/model/constants/defaultSimConfig';
+import { mergeSimConfigWithDefaults } from '@scenario-export/model/utils/configGeneratorUtils';
+import { getScenarioDraftFingerprint } from '@/shared/lib/scenarioDraftFingerprint';
 import type {
   EditorState,
   SimulationSession,
@@ -16,6 +18,26 @@ const initialSimulationSession: SimulationSession = {
   startedAt: null,
 };
 
+const initialScenario: EditorState['Scenario'] = {
+  id: Date.now().toString(),
+  name: 'Default Scenario',
+  weather: 'ClearNoon',
+  description: '',
+  file_: null,
+};
+
+const initialScenarioFingerprint = getScenarioDraftFingerprint({
+  Scenario: initialScenario,
+  simConfig: defaultSimConfig,
+  cars: [],
+  RSUs: [],
+  lidars: [],
+  points: [],
+  buildings: [],
+  pedestrians: [],
+  savedScenarioFingerprint: null,
+});
+
 type SimulationSlice = Pick<
   EditorState,
   | 'error'
@@ -25,6 +47,8 @@ type SimulationSlice = Pick<
   | 'isPanelOpen'
   | 'errorLog'
   | 'sceneExplicitlyCleared'
+  | 'isMapLoading'
+  | 'savedScenarioFingerprint'
   | 'setError'
   | 'logError'
   | 'clearErrorLog'
@@ -42,6 +66,8 @@ type SimulationSlice = Pick<
   | 'updateScenario'
   | 'setChangePanelMode'
   | 'setSceneExplicitlyCleared'
+  | 'setMapLoading'
+  | 'markScenarioClean'
 >;
 
 export const createSimulationSlice: StateCreator<
@@ -55,18 +81,19 @@ export const createSimulationSlice: StateCreator<
   simConfig: defaultSimConfig,
   isPanelOpen: true,
   errorLog: [],
-  Scenario: {
-    id: Date.now().toString(),
-    name: 'Default Scenario',
-    weather: 'ClearNoon',
-    description: '',
-    file_: null,
-  },
+  Scenario: initialScenario,
   sceneExplicitlyCleared: false,
+  isMapLoading: false,
+  savedScenarioFingerprint: initialScenarioFingerprint,
 
   updateScenario: (props) =>
     set((state) => ({ Scenario: { ...state.Scenario, ...props } })),
   setSceneExplicitlyCleared: (value) => set({ sceneExplicitlyCleared: value }),
+  setMapLoading: (value) => set({ isMapLoading: value }),
+  markScenarioClean: () =>
+    set((state) => ({
+      savedScenarioFingerprint: getScenarioDraftFingerprint(state),
+    })),
   updateSimConfig: (props) =>
     set((state) => ({
       simConfig: { ...mergeSimConfigWithDefaults(state.simConfig), ...props },

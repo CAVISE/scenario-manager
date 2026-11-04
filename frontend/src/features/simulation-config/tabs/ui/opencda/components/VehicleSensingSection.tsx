@@ -46,7 +46,12 @@ export const VehicleSensingSection = ({
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="subtitle2" color="text.secondary">
+      <Typography
+        variant="subtitle2"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         Vehicle sensing
       </Typography>
 
@@ -56,25 +61,31 @@ export const VehicleSensingSection = ({
           type="number"
           size="small"
           fullWidth
-          inputProps={{ ...numInputSlot.input, min: 0, max: 1 }}
           value={cameraVisualize}
           onChange={numberField('vehicle_camera_visualize', 0, 1)}
+          slotProps={{
+            htmlInput: { ...numInputSlot.input, min: 0, max: 1 },
+          }}
         />
         <TextField
           label="Onboard cameras (0–4)"
           type="number"
           size="small"
           fullWidth
-          inputProps={{ ...numInputSlot.input, min: 0, max: 4 }}
           value={camNum}
           onChange={numberField('vehicle_cam_num', 0, 4)}
+          slotProps={{
+            htmlInput: { ...numInputSlot.input, min: 0, max: 4 },
+          }}
         />
       </Stack>
 
       <Typography
         className="sim-config-section-label"
         variant="subtitle2"
-        color="text.secondary"
+        sx={{
+          color: 'text.secondary',
+        }}
       >
         Vehicle LiDAR
       </Typography>
@@ -84,18 +95,22 @@ export const VehicleSensingSection = ({
           type="number"
           size="small"
           fullWidth
-          inputProps={{ ...numInputSlot.input, min: 1, max: 128 }}
           value={lidarChannels}
           onChange={numberField('lidar_channels', 1, 128)}
+          slotProps={{
+            htmlInput: { ...numInputSlot.input, min: 1, max: 128 },
+          }}
         />
         <TextField
           label="Range (m)"
           type="number"
           size="small"
           fullWidth
-          inputProps={{ ...numInputSlot.input, min: 1, max: 500 }}
           value={lidarRange}
           onChange={numberField('lidar_range', 1, 500)}
+          slotProps={{
+            htmlInput: { ...numInputSlot.input, min: 1, max: 500 },
+          }}
         />
       </Stack>
       <Stack direction="row" spacing={2}>
@@ -104,18 +119,22 @@ export const VehicleSensingSection = ({
           type="number"
           size="small"
           fullWidth
-          inputProps={{ ...numInputSlot.input, min: 1000, max: 10000000 }}
           value={lidarPointsPerSecond}
           onChange={numberField('lidar_points_per_second', 1000, 10000000)}
+          slotProps={{
+            htmlInput: { ...numInputSlot.input, min: 1000, max: 10000000 },
+          }}
         />
         <TextField
           label="Rotation freq (Hz)"
           type="number"
           size="small"
           fullWidth
-          inputProps={{ ...numInputSlot.input, min: 1, max: 100, step: 0.1 }}
           value={lidarRotationFrequency}
           onChange={numberField('lidar_rotation_frequency', 1, 100)}
+          slotProps={{
+            htmlInput: { ...numInputSlot.input, min: 1, max: 100, step: 0.1 },
+          }}
         />
       </Stack>
       <Stack direction="row" spacing={2}>
@@ -124,26 +143,32 @@ export const VehicleSensingSection = ({
           type="number"
           size="small"
           fullWidth
-          inputProps={{ ...numInputSlot.input, min: -90, max: 90 }}
           value={lidarUpperFov}
           onChange={numberField('lidar_upper_fov', -90, 90)}
+          slotProps={{
+            htmlInput: { ...numInputSlot.input, min: -90, max: 90 },
+          }}
         />
         <TextField
           label="Lower FOV (°)"
           type="number"
           size="small"
           fullWidth
-          inputProps={{ ...numInputSlot.input, min: -90, max: 90 }}
           value={lidarLowerFov}
           onChange={numberField('lidar_lower_fov', -90, 90)}
+          slotProps={{
+            htmlInput: { ...numInputSlot.input, min: -90, max: 90 },
+          }}
         />
       </Stack>
 
       <Stack
         className="sim-config-section-label"
         direction="row"
-        gap={1}
-        flexWrap="wrap"
+        sx={{
+          gap: 1,
+          flexWrap: 'wrap',
+        }}
       >
         <FormControlLabel
           control={

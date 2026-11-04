@@ -27,7 +27,7 @@ describe('useBuildingLoader', () => {
   it('should load GLB model and apply transformations', async () => {
     mockLoad.mockImplementation(
       (url: string, onLoad: (gltf: { scene: THREE.Object3D }) => void) => {
-        expect(url).toBe('/nyc_bronx_buildings.glb');
+        expect(url).toBe('/skyscraper.glb');
         onLoad({ scene: mockScene });
       }
     );
@@ -40,10 +40,10 @@ describe('useBuildingLoader', () => {
 
     expect(result.current.current).toBe(mockScene);
     expect(mockScene.rotation.x).toBe(Math.PI / 2);
-    expect(mockScene.scale.x).toBe(0.5);
-    expect(mockScene.scale.y).toBe(0.5);
-    expect(mockScene.scale.z).toBe(0.5);
-    expect(mockScene.position.z).toBe(-10000);
+    expect(mockScene.scale.x).toBe(1);
+    expect(mockScene.scale.y).toBe(1);
+    expect(mockScene.scale.z).toBe(1);
+    expect(mockScene.position.z).toBe(0);
   });
 
   it('should create fallback mesh on load error', async () => {
@@ -145,9 +145,9 @@ describe('useBuildingLoader', () => {
     });
 
     expect(result.current.current).toBe(customScene);
-    expect(customScene.rotation.x).toBe(-Math.PI / 2 + Math.PI);
-    expect(customScene.scale.x).toBe(0.5);
-    expect(customScene.position.z).toBe(-10000);
+    expect(customScene.rotation.x).toBe(Math.PI / 2);
+    expect(customScene.scale.x).toBe(2);
+    expect(customScene.position.z).toBe(0);
   });
 
   it('should create fallback with correct geometry dimensions', async () => {

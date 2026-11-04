@@ -1,8 +1,57 @@
 const XODR_EXT = '.xodr';
+
+export type MapTarget = 'carla' | 'sumo' | 'artery' | 'omnet' | 'sionna';
+
+export type MapAssetProfile = {
+  id: string;
+  editorXodr: string;
+
+  targets: Partial<Record<MapTarget, { xodr: string }>>;
+};
+
+export const MAP_ASSET_PROFILES: readonly MapAssetProfile[] = [
+  {
+    id: 'osm-area',
+    editorXodr: 'osm-area.viewer.xodr',
+    targets: {
+      carla: { xodr: 'osm-area.xodr' },
+    },
+  },
+  {
+    id: 'osm-area-20261021',
+    editorXodr: 'osm-area-20261021.viewer.xodr',
+    targets: {
+      carla: { xodr: 'osm-area-20261021.xodr' },
+    },
+  },
+  {
+    id: 'osm-area-20261030-certified',
+    editorXodr: 'osm-area-20261030-certified.viewer.xodr',
+    targets: {
+      carla: { xodr: 'osm-area-20261030-certified.xodr' },
+    },
+  },
+  {
+    id: 'strogino-smoke-certified',
+    editorXodr: 'strogino-smoke-certified.viewer.xodr',
+    targets: {
+      carla: { xodr: 'strogino-smoke-certified.xodr' },
+    },
+  },
+  {
+    id: 'strogino',
+    editorXodr: 'strogino_modified_viewer.xodr',
+    targets: {
+      carla: { xodr: 'strogino_modified.xodr' },
+    },
+  },
+];
 import { CACHE_KEY } from '../../../constants/openDriveConstants';
+import { readXodrFromIndexedDb, writeXodrToIndexedDb } from './xodrIndexedDb';
 const MAP_NAME_KEY = 'cached_xodr_name';
 const LEGACY_CONTENT_CACHE_KEY = 'cached_xodr_content';
 export const DEFAULT_XODR = 'data.xodr';
+export const LARGE_XODR = 'osm-area-20261021.viewer.xodr';
 
 const CARLA_MAPS = [
   'Town01',
@@ -15,6 +64,13 @@ const CARLA_MAPS = [
   'Town10HD',
   'Town10HD_Opt',
   'TownBig',
+  'osm-area.viewer',
+  'osm-area-20261021.viewer',
+  'osm-area-valid-20261029',
+  'osm-area-20261030-certified.viewer',
+  'strogino_modified_viewer',
+  'strogino-valid-20261029',
+  'strogino-smoke-certified.viewer',
 ] as const;
 
 function generateMapAliases(): Record<string, string[]> {
@@ -41,56 +97,11 @@ const MAP_ALIASES = generateMapAliases();
 
 let cachedXodrContent: string | null = null;
 
-const IDB_NAME = 'scenario-manager-xodr-cache';
-const IDB_STORE = 'xodr';
-const IDB_VERSION = 1;
-
-function openXodrCacheDb(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(IDB_NAME, IDB_VERSION);
-    request.onupgradeneeded = () => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains(IDB_STORE)) {
-        db.createObjectStore(IDB_STORE);
-      }
-    };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-}
-
-async function idbGetXodrContent(): Promise<string | null> {
-  try {
-    const db = await openXodrCacheDb();
-    return await new Promise<string | null>((resolve, reject) => {
-      const tx = db.transaction(IDB_STORE, 'readonly');
-      const req = tx.objectStore(IDB_STORE).get(CACHE_KEY);
-      req.onsuccess = () => resolve((req.result as string | undefined) ?? null);
-      req.onerror = () => reject(req.error);
-    });
-  } catch (error) {
-    console.warn('Failed to read cached OpenDRIVE map from IndexedDB.', error);
-    return null;
-  }
-}
-
-async function idbSetXodrContent(content: string): Promise<void> {
-  try {
-    const db = await openXodrCacheDb();
-    await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction(IDB_STORE, 'readwrite');
-      tx.objectStore(IDB_STORE).put(content, CACHE_KEY);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-  } catch (error) {
-    console.warn('Failed to persist cached OpenDRIVE map to IndexedDB.', error);
-  }
-}
+const LOCAL_STORAGE_MAX_CHARS = 2 * 1024 * 1024;
 
 export async function initXodrCacheFromIndexedDb(): Promise<void> {
   if (cachedXodrContent) return;
-  const stored = await idbGetXodrContent();
+  const stored = await readXodrFromIndexedDb();
   if (stored && isOpenDrive(stored)) cachedXodrContent = stored;
 }
 
@@ -114,6 +125,23 @@ function stripExt(value: string): string {
   return value.toLowerCase().endsWith(XODR_EXT)
     ? value.slice(0, -XODR_EXT.length)
     : value;
+}
+
+export function getTargetXodrName(
+  editorMapName: string,
+  target: MapTarget
+): string {
+  const normalized = withXodrExtension(editorMapName);
+  const profile = MAP_ASSET_PROFILES.find(
+    (item) =>
+      item.editorXodr.toLowerCase() === normalized.toLowerCase() ||
+      item.id.toLowerCase() === stripExt(normalized).toLowerCase()
+  );
+  return profile?.targets[target]?.xodr ?? normalized;
+}
+
+export function getRuntimeXodrName(editorMapName: string): string {
+  return getTargetXodrName(editorMapName, 'carla');
 }
 
 function normalizeMapName(mapName: string): string {
@@ -180,6 +208,10 @@ export function getStoredXodrName(fallbackMapName?: string): string {
   return withXodrExtension(normalized);
 }
 
+export function isLargeXodrSelected(): boolean {
+  return getStoredXodrName() === LARGE_XODR;
+}
+
 export async function fetchXodrText(mapName: string): Promise<string> {
   const candidates = buildCandidates(mapName);
   for (const candidate of candidates) {
@@ -189,6 +221,20 @@ export async function fetchXodrText(mapName: string): Promise<string> {
     if (isOpenDrive(text)) return text;
   }
   throw new Error(`Failed to load valid OpenDRIVE map for: ${mapName}`);
+}
+
+async function fetchExactXodrText(mapName: string): Promise<string> {
+  const normalized = withXodrExtension(mapName);
+  const response = await fetch(`./${normalized}`);
+  if (!response.ok) {
+    throw new Error(`Failed to load runtime OpenDRIVE map: ${normalized}`);
+  }
+
+  const text = await response.text();
+  if (!isOpenDrive(text)) {
+    throw new Error(`Runtime map is not valid OpenDRIVE: ${normalized}`);
+  }
+  return text;
 }
 
 export function getCachedXodrContent(): string | null {
@@ -204,12 +250,16 @@ export function getCachedXodrContent(): string | null {
 
 export function setCachedCustomXodrContent(content: string): void {
   cachedXodrContent = content;
-  try {
-    localStorage.setItem(CACHE_KEY, content);
-  } catch (error) {
-    console.warn('OpenDRIVE map is too large for localStorage.', error);
+  if (content.length <= LOCAL_STORAGE_MAX_CHARS) {
+    try {
+      localStorage.setItem(CACHE_KEY, content);
+    } catch (error) {
+      console.warn('Failed to cache OpenDRIVE map in localStorage.', error);
+    }
+  } else {
+    localStorage.removeItem(CACHE_KEY);
   }
-  void idbSetXodrContent(content);
+  void writeXodrToIndexedDb(content);
 }
 
 export async function resolveXodrTextForSimulation(
@@ -224,6 +274,24 @@ export async function resolveXodrTextForSimulation(
     console.error(e);
     return undefined;
   }
+}
+
+export async function resolveRuntimeXodrTextForSimulation(
+  editorMapName?: string
+): Promise<string | undefined> {
+  const resolvedEditorMap = getStoredXodrName(editorMapName);
+  const runtimeMap = getRuntimeXodrName(resolvedEditorMap);
+
+  if (runtimeMap !== resolvedEditorMap) {
+    try {
+      return await fetchExactXodrText(runtimeMap);
+    } catch (error) {
+      console.error(error);
+      return undefined;
+    }
+  }
+
+  return resolveXodrTextForSimulation(resolvedEditorMap);
 }
 
 let preloadPromise: Promise<void> | null = null;

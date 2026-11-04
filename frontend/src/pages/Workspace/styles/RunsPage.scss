@@ -32,7 +32,7 @@
 
   span {
     color: var(--workspace-muted);
-    font-size: 13px;
+    font-size: 14px;
   }
 }
 
@@ -70,7 +70,7 @@
   p,
   span {
     color: var(--workspace-muted);
-    font-size: 13px;
+    font-size: 14px;
   }
 
   p {
@@ -85,7 +85,7 @@
   border-radius: 999px;
   background: var(--workspace-bg);
   color: var(--workspace-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
 
   &.is-running,
@@ -115,7 +115,7 @@
   gap: 6px;
   min-width: 0;
   color: var(--workspace-muted);
-  font-size: 12px;
+  font-size: 13px;
 
   > span {
     overflow: hidden;
@@ -260,7 +260,7 @@
 
   dt {
     color: var(--workspace-muted);
-    font-size: 12px;
+    font-size: 13px;
     text-transform: capitalize;
   }
 
@@ -318,7 +318,7 @@
 
   span:not(.workspace-artifact-icon) {
     color: var(--workspace-muted);
-    font-size: 12px;
+    font-size: 13px;
   }
 
   a {

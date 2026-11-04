@@ -4,7 +4,12 @@ import type { CapiSectionProps } from '../types/capiTypes';
 
 export const NetworkSection = ({ capi, update }: CapiSectionProps) => (
   <Stack spacing={2}>
-    <Typography variant="subtitle2" color="text.secondary">
+    <Typography
+      variant="subtitle2"
+      sx={{
+        color: 'text.secondary',
+      }}
+    >
       Network
     </Typography>
     <TextField

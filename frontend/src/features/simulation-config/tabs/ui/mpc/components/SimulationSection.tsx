@@ -5,7 +5,12 @@ import type { MpcSectionProps } from '../types/mpcTypes';
 export const SimulationSection = ({ mpc, update }: MpcSectionProps) => (
   <>
     <Divider />
-    <Typography variant="subtitle2" color="text.secondary">
+    <Typography
+      variant="subtitle2"
+      sx={{
+        color: 'text.secondary',
+      }}
+    >
       Simulation
     </Typography>
     <Stack direction="row" spacing={2}>
@@ -14,22 +19,26 @@ export const SimulationSection = ({ mpc, update }: MpcSectionProps) => (
         type="number"
         size="small"
         fullWidth
-        inputProps={{ step: 0.1 }}
         value={mpc.dist_stop}
         onChange={(e) =>
           update({ dist_stop: parseNumberInputChange(e.target) })
         }
+        slotProps={{
+          htmlInput: { step: 0.1 },
+        }}
       />
       <TextField
         label="speed_stop (m/s)"
         type="number"
         size="small"
         fullWidth
-        inputProps={{ step: 0.1 }}
         value={mpc.speed_stop}
         onChange={(e) =>
           update({ speed_stop: parseNumberInputChange(e.target) })
         }
+        slotProps={{
+          htmlInput: { step: 0.1 },
+        }}
       />
     </Stack>
     <Stack direction="row" spacing={2}>
@@ -56,11 +65,13 @@ export const SimulationSection = ({ mpc, update }: MpcSectionProps) => (
         type="number"
         size="small"
         fullWidth
-        inputProps={{ step: 0.5 }}
         value={mpc.target_speed}
         onChange={(e) =>
           update({ target_speed: parseNumberInputChange(e.target) })
         }
+        slotProps={{
+          htmlInput: { step: 0.5 },
+        }}
       />
       <TextField
         label="n_ind"
@@ -77,18 +88,22 @@ export const SimulationSection = ({ mpc, update }: MpcSectionProps) => (
         type="number"
         size="small"
         fullWidth
-        inputProps={{ step: 0.01 }}
         value={mpc.dt}
         onChange={(e) => update({ dt: parseNumberInputChange(e.target) || 0 })}
+        slotProps={{
+          htmlInput: { step: 0.01 },
+        }}
       />
       <TextField
         label="d_dist (m)"
         type="number"
         size="small"
         fullWidth
-        inputProps={{ step: 0.1 }}
         value={mpc.d_dist}
         onChange={(e) => update({ d_dist: parseNumberInputChange(e.target) })}
+        slotProps={{
+          htmlInput: { step: 0.1 },
+        }}
       />
     </Stack>
     <TextField
@@ -96,9 +111,11 @@ export const SimulationSection = ({ mpc, update }: MpcSectionProps) => (
       type="number"
       size="small"
       className="sim-config-field--half"
-      inputProps={{ step: 0.05 }}
       value={mpc.du_res}
       onChange={(e) => update({ du_res: parseNumberInputChange(e.target) })}
+      slotProps={{
+        htmlInput: { step: 0.05 },
+      }}
     />
   </>
 );

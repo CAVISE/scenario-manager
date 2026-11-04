@@ -6,9 +6,19 @@ import { useClickHandler } from '../handlers/useClickHandler';
 import { useDblClickHandler } from '../handlers/useDblClickHandler';
 import { useKeyDownHandler } from '../handlers/useKeyDownHandler';
 import { useAppToast } from '@/shared/ui/AppToast';
+import { useEditorRefs, useHooks } from '@editor/context';
 
 export function useMouseEvents() {
   const toast = useAppToast();
+  const { sceneGraph } = useHooks();
+  const {
+    carMeshesRef,
+    rsuMeshesRef,
+    routePointMeshesRef,
+    pedestrianMeshesRef,
+    buildingMeshesRef,
+    pickableObjectsRef,
+  } = useEditorRefs();
   const mouseRef = useRef(new THREE.Vector2());
   const raycasterRef = useRef(new THREE.Raycaster());
   const ctx: SharedMouseContext = {
@@ -28,6 +38,24 @@ export function useMouseEvents() {
   const onClick = useClickHandler(ctx);
   const onDblClick = useDblClickHandler(ctx);
   const onKeyDown = useKeyDownHandler({ toast });
+
+  useEffect(() => {
+    pickableObjectsRef.current = [
+      ...carMeshesRef.current,
+      ...rsuMeshesRef.current,
+      ...routePointMeshesRef.current.flat(),
+      ...pedestrianMeshesRef.current,
+      ...buildingMeshesRef.current,
+    ];
+  }, [
+    buildingMeshesRef,
+    carMeshesRef,
+    pedestrianMeshesRef,
+    pickableObjectsRef,
+    routePointMeshesRef,
+    rsuMeshesRef,
+    sceneGraph,
+  ]);
 
   useEffect(() => {
     window.addEventListener('mousemove', onMouseMove);

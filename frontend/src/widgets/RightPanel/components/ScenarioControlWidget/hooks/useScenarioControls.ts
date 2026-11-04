@@ -1,10 +1,12 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getApiErrorMessage } from '@/api/errors';
 import { simulationApi } from '@/api/simulation';
 import type { ScenarioPreflightResult } from '@/api/types/simulationTypes';
 import { useNoticeWithToast } from '@/shared/ui/AppToast';
 import { useEditorStore } from '@/store';
 import { useEditorRefs } from '@editor/context';
+import { getOdrMapOffsets } from '@editor/lib/getOdrMapOffsets';
+import { odrOffsetsToCarlaOffsets } from '@/shared/lib/coordinateTransform';
 import {
   useScenarioCreateMutation,
   useScenarioDeleteMutation,
@@ -31,11 +33,19 @@ export function useScenarioControls(): ScenarioControls {
   const startMutation = useStartSimulationMutation();
   const [operation, setOperation] = useState<ScenarioOperation | null>(null);
   const operationRef = useRef<ScenarioOperation | null>(null);
+  const preflightRequestRef = useRef(0);
   const [notice, setNotice] = useState('');
   const [preflight, setPreflight] = useState<ScenarioPreflightResult | null>(
     null
   );
   const notify = useNoticeWithToast(setNotice);
+
+  useEffect(
+    () => () => {
+      preflightRequestRef.current += 1;
+    },
+    []
+  );
 
   const saveCurrent = () => {
     const id = useEditorStore.getState().Scenario.id.trim();
@@ -48,6 +58,7 @@ export function useScenarioControls(): ScenarioControls {
     if (
       operationRef.current ||
       startMutation.isPending ||
+      useEditorStore.getState().isMapLoading ||
       (next !== 'validate' &&
         useEditorStore.getState().simulationSession.phase === 'running')
     )
@@ -58,13 +69,14 @@ export function useScenarioControls(): ScenarioControls {
     setNotice('');
     try {
       if (next === 'validate') {
+        const requestId = ++preflightRequestRef.current;
+        const mapOffsets = getOdrMapOffsets(odrMapRef.current);
         const payload = await buildStartSimulationPayload(
           useEditorStore.getState().Scenario.id,
-          odrMapRef.current
-            ? { x: odrMapRef.current.x_offs, y: -odrMapRef.current.y_offs }
-            : undefined
+          mapOffsets ? odrOffsetsToCarlaOffsets(mapOffsets) : undefined
         );
-        setPreflight(await simulationApi.preflight(payload));
+        const result = await simulationApi.preflight(payload);
+        if (requestId === preflightRequestRef.current) setPreflight(result);
         return;
       }
       if (next === 'delete') {
@@ -74,13 +86,12 @@ export function useScenarioControls(): ScenarioControls {
         const saved = await saveCurrent();
         if (next !== 'run' || !saved) return;
         const id = useEditorStore.getState().Scenario.id;
+        const mapOffsets = getOdrMapOffsets(odrMapRef.current);
         await handleRunSimulation(
           notify,
           id,
           startMutation,
-          odrMapRef.current
-            ? { x: odrMapRef.current.x_offs, y: -odrMapRef.current.y_offs }
-            : undefined
+          mapOffsets ? odrOffsetsToCarlaOffsets(mapOffsets) : undefined
         );
       }
     } catch (error) {

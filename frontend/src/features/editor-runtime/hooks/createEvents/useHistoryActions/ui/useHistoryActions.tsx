@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useEditorStore } from '@/store';
 import { useHooks, useEditorRefs } from '@editor/context';
 import { flushPendingHistory } from '../../createHistoryTracker/ui/createHistoryTracker';
+import { invalidateEditorScene } from '@editor/lib/invalidateEditorScene';
 
 export function useHistoryActions() {
   const { updateSceneGraph } = useHooks();
@@ -22,6 +23,7 @@ export function useHistoryActions() {
       onSelectObjects([]);
       run();
       updateSceneGraph();
+      invalidateEditorScene();
       return true;
     },
     [transformControlsRef, onSelectObjects, updateSceneGraph]

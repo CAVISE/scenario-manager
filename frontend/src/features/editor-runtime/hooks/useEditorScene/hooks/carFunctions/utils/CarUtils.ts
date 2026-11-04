@@ -1,16 +1,15 @@
 import * as THREE from 'three';
-export function applyColor(object: THREE.Object3D, color: string) {
+export function applyColor(object: THREE.Object3D, color?: string) {
+  const normalizedColor = (color || 'ffffff').replace(/^#/, '');
   object.traverse((child) => {
     if (!(child as THREE.Mesh).isMesh) return;
     const mesh = child as THREE.Mesh;
 
     const setColor = (mat: THREE.Material) => {
-      if (
-        mat instanceof THREE.MeshPhongMaterial ||
-        mat instanceof THREE.MeshBasicMaterial ||
-        mat instanceof THREE.MeshStandardMaterial
-      ) {
-        mat.color.set(`#${color}`);
+      const colorMaterial = mat as THREE.Material & { color?: THREE.Color };
+      if (colorMaterial.color?.isColor) {
+        colorMaterial.color.set(`#${normalizedColor}`);
+        mat.needsUpdate = true;
       }
     };
 

@@ -7,5 +7,13 @@ export const CARLA_MAPS = [
   'Town06',
   'Town07',
   'Town10HD',
+  'Town10HD_Opt',
   'TownBig',
+  'osm-area.viewer',
+  'osm-area-20261021.viewer',
+  'osm-area-valid-20261029',
+  'osm-area-20261030-certified.viewer',
+  'strogino_modified_viewer',
+  'strogino-valid-20261029',
+  'strogino-smoke-certified.viewer',
 ];

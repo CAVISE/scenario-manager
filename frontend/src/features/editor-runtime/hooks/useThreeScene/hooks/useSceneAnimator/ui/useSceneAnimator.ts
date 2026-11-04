@@ -3,9 +3,11 @@ import {
   createSpotlightState,
   startAnimate,
 } from '@editor/hooks/useOpenDriveUtils/useSpotlight';
+import { createScenePerformanceMonitor } from '@editor/hooks/useOpenDriveUtils/useSpotlight/utils/scenePerformanceMonitor';
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { UseSceneAnimatorProps } from '../types/useSceneAnimatorTypes';
+import { editorSceneInvalidationEvent } from '@editor/lib/invalidateEditorScene';
 
 export function useSceneAnimator({
   getOdrMeshes,
@@ -26,8 +28,18 @@ export function useSceneAnimator({
     const three = threeRef.current;
     if (!three) return;
 
-    const { renderer, scene, camera, controls, picking } = three;
+    const { renderer, scene, camera, controls, picking, transformControls } =
+      three;
     const mouse = new THREE.Vector2();
+    const performanceMonitor = import.meta.env.DEV
+      ? createScenePerformanceMonitor()
+      : undefined;
+    const devWindow = window as Window & {
+      __editorPerformanceMetrics?: typeof performanceMonitor;
+    };
+    if (performanceMonitor) {
+      devWindow.__editorPerformanceMetrics = performanceMonitor;
+    }
 
     const handle = startAnimate({
       renderer,
@@ -43,10 +55,22 @@ export function useSceneAnimator({
       getRoadmarksMesh: () =>
         callbacksRef.current.getOdrMeshes().roadmarks_mesh,
       spotlightInfo: document.getElementById('spotlight_info'),
+      performanceMonitor,
     });
+    const invalidate = () => handle.invalidate();
+    transformControls.addEventListener('change' as never, invalidate);
+    window.addEventListener(editorSceneInvalidationEvent, invalidate);
 
     return () => {
-      handle.running = false;
+      transformControls.removeEventListener('change' as never, invalidate);
+      window.removeEventListener(editorSceneInvalidationEvent, invalidate);
+      handle.stop();
+      if (
+        performanceMonitor &&
+        devWindow.__editorPerformanceMetrics === performanceMonitor
+      ) {
+        delete devWindow.__editorPerformanceMetrics;
+      }
     };
   }, [threeRef]);
 }

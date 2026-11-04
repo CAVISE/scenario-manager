@@ -13,6 +13,7 @@ import {
 } from '../utils/opencdaFieldUtils';
 import { SimulationConfig } from '@/store';
 import type { SumoConnectionSectionProps } from '../types/opencdaSectionTypes';
+import { SumoQuickPresets } from './SumoQuickPresets';
 
 export const SUMOSection = ({
   host,
@@ -48,11 +49,21 @@ export const SUMOSection = ({
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="subtitle2" color="text.secondary">
+      <Typography
+        variant="subtitle2"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         SUMO co-simulation
       </Typography>
 
-      <Typography variant="caption" color="text.secondary">
+      <Typography
+        variant="caption"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         Connection settings
       </Typography>
 
@@ -66,7 +77,9 @@ export const SUMOSection = ({
             className="sim-config-field--grow"
             direction="row"
             spacing={1}
-            alignItems="center"
+            sx={{
+              alignItems: 'center',
+            }}
           >
             <TextField
               label="Host"
@@ -94,14 +107,15 @@ export const SUMOSection = ({
             className="sim-config-field--grow"
             direction="row"
             spacing={1}
-            alignItems="center"
+            sx={{
+              alignItems: 'center',
+            }}
           >
             <TextField
               label="Port"
               type="number"
               size="small"
               fullWidth
-              inputProps={{ ...numInputSlot.input, min: 0, max: 65535 }}
               value={port}
               onChange={numberField('sumo_port', 0, 65535)}
               error={!isPortValid}
@@ -114,6 +128,9 @@ export const SUMOSection = ({
                       ? 'Registered port'
                       : 'Dynamic port'
               }
+              slotProps={{
+                htmlInput: { ...numInputSlot.input, min: 0, max: 65535 },
+              }}
             />
             <Chip
               label={port}
@@ -136,26 +153,42 @@ export const SUMOSection = ({
       <Typography
         className="sim-config-section-label--compact"
         variant="caption"
-        color="text.secondary"
+        sx={{
+          color: 'text.secondary',
+        }}
       >
         Client settings
       </Typography>
 
-      <Stack direction="row" spacing={2} alignItems="center">
+      <Stack
+        direction="row"
+        spacing={2}
+        sx={{
+          alignItems: 'center',
+        }}
+      >
         <Tooltip
           title="Client order for SUMO connection (higher = later)"
           arrow
           placement="top"
         >
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              alignItems: 'center',
+            }}
+          >
             <TextField
               label="Client order"
               type="number"
               size="small"
-              inputProps={{ ...numInputSlot.input, min: 0 }}
               value={clientOrder}
               onChange={numberField('sumo_client_order', 0)}
               className="sim-config-field--140"
+              slotProps={{
+                htmlInput: { ...numInputSlot.input, min: 0 },
+              }}
             />
             <Chip
               label={`#${clientOrder}`}
@@ -174,7 +207,13 @@ export const SUMOSection = ({
             />
           }
           label={
-            <Stack direction="row" alignItems="center" spacing={1}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: 'center',
+              }}
+            >
               <span>SUMO GUI</span>
               <Chip
                 label={gui ? 'On' : 'Off'}
@@ -189,48 +228,21 @@ export const SUMOSection = ({
       <Typography
         className="sim-config-summary"
         variant="caption"
-        color="text.secondary"
+        sx={{
+          color: 'text.secondary',
+        }}
       >
         SUMO connection: {isHostValid ? host : 'Invalid'}:
         {isPortValid ? port : 'Invalid'} • Client order: {clientOrder} • GUI:{' '}
         {gui ? '✅ Enabled' : '❌ Disabled'}
       </Typography>
 
-      <Stack className="sim-config-quick-presets" direction="row" spacing={1}>
-        <Typography variant="caption" color="text.secondary">
-          Quick presets:
-        </Typography>
-        <Typography
-          variant="caption"
-          className="sim-config-preset"
-          onClick={() => {
-            updateField('sumo_host', 'localhost');
-            updateField('sumo_port', 8813);
-          }}
-        >
-          localhost:8813
-        </Typography>
-        <Typography
-          variant="caption"
-          className="sim-config-preset"
-          onClick={() => {
-            updateField('sumo_host', '127.0.0.1');
-            updateField('sumo_port', 8813);
-          }}
-        >
-          127.0.0.1:8813
-        </Typography>
-        <Typography
-          variant="caption"
-          className="sim-config-preset"
-          onClick={() => {
-            updateField('sumo_host', 'localhost');
-            updateField('sumo_port', 8814);
-          }}
-        >
-          localhost:8814
-        </Typography>
-      </Stack>
+      <SumoQuickPresets
+        onSelect={(presetHost, presetPort) => {
+          updateField('sumo_host', presetHost);
+          updateField('sumo_port', presetPort);
+        }}
+      />
     </Stack>
   );
 };

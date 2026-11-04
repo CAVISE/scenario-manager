@@ -21,13 +21,38 @@ def series(key, label, xs, ys):
 def metric(key, label, value, unit=""):
     return {"id": key, "label": label, "value": finite(value), "unit": unit}
 
-
 def location(entry):
+    """Return a CARLA location from route and trace entries.
+
+    Entries are ``carla.Transform`` (traces), ``carla.Waypoint`` (routes) or
+    ``(waypoint, option)`` tuples.  ``carla.Transform`` has a ``location``
+    attribute *and* a ``transform(points)`` method, so ``location`` must be
+    checked first; calling ``transform()`` on it fails in Boost.Python.
+    ``Waypoint.transform`` is a property in some CARLA releases and a callable
+    accessor in others, so both forms are supported.
+    """
     if isinstance(entry, (tuple, list)):
         entry = entry[0]
-    if hasattr(entry, "transform"):
-        entry = entry.transform
-    return entry.location
+
+    value = getattr(entry, "location", None)
+    if value is not None:
+        return value() if callable(value) else value
+
+    transform = getattr(entry, "transform", None)
+    if transform is not None:
+        entry = transform() if callable(transform) else transform
+        value = getattr(entry, "location", None)
+        if value is not None:
+            return value() if callable(value) else value
+
+    # A trace may already contain a ``carla.Location`` instead of a transform.
+    if all(hasattr(entry, axis) for axis in ("x", "y", "z")):
+        return entry
+
+    getter = getattr(entry, "get_location", None)
+    if callable(getter):
+        return getter()
+    raise AttributeError(f"Cannot obtain a location from {type(entry).__name__}")
 
 
 def distances(route):

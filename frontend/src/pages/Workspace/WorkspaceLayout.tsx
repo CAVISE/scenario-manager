@@ -4,7 +4,7 @@ import {
   HistoryOutlined,
   FolderOutlined,
   SettingsOutlined,
-  PlayCircleOutline,
+  PlayCircleOutlined,
   ScienceOutlined,
   ViewInArOutlined,
 } from '@mui/icons-material';
@@ -60,7 +60,7 @@ export default function WorkspaceLayout() {
             Experiments
           </NavLink>
           <NavLink to="/runs">
-            <PlayCircleOutline />
+            <PlayCircleOutlined />
             Runs
           </NavLink>
           <NavLink to="/replay">

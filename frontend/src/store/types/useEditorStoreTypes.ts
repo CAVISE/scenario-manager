@@ -31,7 +31,6 @@ export type { Pedestrian } from '@/entities/pedestrian';
 export type { CarlaWeather, Scenario } from '@/entities/scenario';
 
 export type RouteNode = Vec3[][];
-
 export type DeletedEntity =
   | { kind: 'car'; index: number; car: Car; points: Point[]; lidars: Lidar[] }
   | { kind: 'rsu'; index: number; rsu: RSU }
@@ -100,9 +99,12 @@ export type EditorState = {
   routes: RouteNode;
   simConfig: SimulationConfig;
   Scenario: Scenario;
-
   sceneExplicitlyCleared: boolean;
   setSceneExplicitlyCleared: (value: boolean) => void;
+  isMapLoading: boolean;
+  setMapLoading: (value: boolean) => void;
+  savedScenarioFingerprint: string | null;
+  markScenarioClean: () => void;
   pedestrians: Pedestrian[];
   isPanelOpen: boolean;
   setError: (err: Error | null) => void;
@@ -182,7 +184,10 @@ export type EditorState = {
   pushDeletionSnapshot: (
     snapshot: Omit<DeletionSnapshot, 'snapshotId' | 'deletedAt'>
   ) => string;
-  restoreLastDeletion: (snapshotId?: string) => boolean;
+  restoreLastDeletion: (
+    snapshotId?: string,
+    options?: { preserveHistoryEntry?: boolean }
+  ) => boolean;
   clearDeletionHistory: () => void;
 
   historyStack: HistoryEntry[];

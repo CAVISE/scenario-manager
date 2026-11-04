@@ -1,6 +1,6 @@
 .right-panel-property-label {
   margin-bottom: 4px !important;
-  font-size: 12px !important;
+  font-size: 13px !important;
 }
 
 .right-panel-property-heading {
@@ -66,9 +66,17 @@
   padding: 8px;
   resize: vertical;
   color: var(--workspace-on-accent);
-  font-family: monospace;
-  font-size: 12px;
+  font-family: var(--font-mono);
+  font-size: 13px;
   background: var(--workspace-chrome);
   border: 1px solid var(--workspace-border);
   border-radius: 4px;
+}
+
+.numeric-input__error {
+  display: block;
+  margin-top: 4px;
+  color: var(--workspace-danger);
+  font-size: 12px;
+  line-height: 1.35;
 }

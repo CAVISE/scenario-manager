@@ -5,6 +5,7 @@ import {
 } from '@editor/hooks/useOpenDriveUtils/useOdrMap/types/useOdrMapTypes';
 import { ThreeSetup } from '@editor/hooks/useOpenDriveUtils/useThreeSetup/types/useThreeSetupTypes';
 import { OpenDriveMapInstance } from '@editor/types/editorTypes';
+import type { PreparedOdrGeometry } from '@editor/types/odrGeometryTypes';
 import type { MutableRefObject } from 'react';
 
 import * as THREE from 'three';
@@ -24,4 +25,5 @@ export interface BuildMapParams {
   syncRoutePointMeshes: () => void;
   syncRoadMesh: (mesh: THREE.Mesh | null) => void;
   updateSceneGraph: () => void;
+  preparedGeometry?: PreparedOdrGeometry;
 }

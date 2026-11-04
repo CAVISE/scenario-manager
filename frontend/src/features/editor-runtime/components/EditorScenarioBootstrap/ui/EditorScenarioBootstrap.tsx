@@ -1,86 +1,55 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { handleLoad } from '@right-panel/components/ScenarioControlWidget/Handlers';
 import { useAppToast } from '@/shared/ui/AppToast';
-import { useEditorRefs, useHooks } from '@editor/context';
-
-const MAX_SCENE_WAIT_ATTEMPTS = 20;
-const SCENE_WAIT_INTERVAL_MS = 150;
+import { useHooks } from '@editor/context';
 
 export const EditorScenarioBootstrap = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const scenarioId = searchParams.get('scenario');
-  const { sceneRef } = useEditorRefs();
-  const { updateSceneGraph, loadFile, setStep } = useHooks();
-  const loadedIdRef = useRef<string | null>(null);
+  const { updateSceneGraph, loadFile, setStep, runtimeReady } = useHooks();
   const toast = useAppToast();
 
+  const loadedIdRef = useRef<string | null>(null);
+  const aliveRef = useRef(true);
+  const callbacksRef = useRef({ updateSceneGraph, loadFile, setStep, toast });
+  callbacksRef.current = { updateSceneGraph, loadFile, setStep, toast };
+
   useEffect(() => {
+    aliveRef.current = true;
+    return () => {
+      aliveRef.current = false;
+    };
+  }, []);
+  useLayoutEffect(() => {
     if (!scenarioId || loadedIdRef.current === scenarioId) return;
+    if (!runtimeReady) return;
+    loadedIdRef.current = scenarioId;
+    const { updateSceneGraph, loadFile, setStep } = callbacksRef.current;
 
-    let cancelled = false;
-
-    const clearScenarioParam = () => {
+    void handleLoad({
+      hasId: true,
+      scenarioIdInput: scenarioId,
+      setNotice: (message: string) => {
+        if (aliveRef.current && message)
+          callbacksRef.current.toast.error(message);
+      },
+      updateSceneGraph,
+      loadFile,
+      setStep,
+      initializeMapWhenMissing: true,
+    }).finally(() => {
+      if (!aliveRef.current) return;
       setSearchParams(
         (prev) => {
           const next = new URLSearchParams(prev);
-          next.delete('scenario');
+          if (next.get('scenario') === scenarioId) next.delete('scenario');
           return next;
         },
         { replace: true }
       );
-    };
-
-    const giveUp = () => {
-      if (cancelled) return;
-      toast.error(
-        `Couldn't open scenario "${scenarioId}": the editor scene took too long to load. Try reloading the page.`
-      );
-      clearScenarioParam();
-    };
-
-    const tryLoad = (attempts = 0) => {
-      if (cancelled) return;
-      if (!sceneRef.current) {
-        if (attempts < MAX_SCENE_WAIT_ATTEMPTS) {
-          setTimeout(() => tryLoad(attempts + 1), SCENE_WAIT_INTERVAL_MS);
-        } else {
-          giveUp();
-        }
-        return;
-      }
-
-      loadedIdRef.current = scenarioId;
-
-      handleLoad({
-        hasId: true,
-        scenarioIdInput: scenarioId,
-        setNotice: (message: string) => {
-          if (message) toast.error(message);
-        },
-        updateSceneGraph,
-        loadFile,
-        setStep,
-      }).finally(() => {
-        if (cancelled) return;
-        clearScenarioParam();
-      });
-    };
-
-    tryLoad();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    scenarioId,
-    setSearchParams,
-    sceneRef,
-    toast,
-    updateSceneGraph,
-    loadFile,
-    setStep,
-  ]);
+    });
+  }, [scenarioId, runtimeReady, setSearchParams]);
 
   return null;
 };

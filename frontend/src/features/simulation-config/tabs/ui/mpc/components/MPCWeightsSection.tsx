@@ -24,10 +24,20 @@ export const MPCWeightsSection = ({ mpc, update }: MpcSectionProps) => {
   return (
     <>
       <Divider />
-      <Typography variant="subtitle2" color="text.secondary">
+      <Typography
+        variant="subtitle2"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         MPC weights
       </Typography>
-      <Typography variant="caption" color="text.secondary">
+      <Typography
+        variant="caption"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         Qf — end state penalty [x, y, v, phi]
       </Typography>
       <Stack direction="row" spacing={1}>
@@ -38,15 +48,22 @@ export const MPCWeightsSection = ({ mpc, update }: MpcSectionProps) => {
             type="number"
             size="small"
             fullWidth
-            inputProps={{ step: 0.5 }}
             value={mpc.Qf[idx]}
             onChange={(e) =>
               handleQfChange(idx, parseNumberInputChange(e.target))
             }
+            slotProps={{
+              htmlInput: { step: 0.5 },
+            }}
           />
         ))}
       </Stack>
-      <Typography variant="caption" color="text.secondary">
+      <Typography
+        variant="caption"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         R — input penalty [accel, steer]
       </Typography>
       <Stack direction="row" spacing={1}>
@@ -57,15 +74,22 @@ export const MPCWeightsSection = ({ mpc, update }: MpcSectionProps) => {
             type="number"
             size="small"
             fullWidth
-            inputProps={{ step: 0.01 }}
             value={mpc.R[idx]}
             onChange={(e) =>
               handleRChange(idx, parseNumberInputChange(e.target))
             }
+            slotProps={{
+              htmlInput: { step: 0.01 },
+            }}
           />
         ))}
       </Stack>
-      <Typography variant="caption" color="text.secondary">
+      <Typography
+        variant="caption"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         Rd — input change penalty [accel, steer]
       </Typography>
       <Stack direction="row" spacing={1}>
@@ -76,11 +100,13 @@ export const MPCWeightsSection = ({ mpc, update }: MpcSectionProps) => {
             type="number"
             size="small"
             fullWidth
-            inputProps={{ step: 0.01 }}
             value={mpc.Rd[idx]}
             onChange={(e) =>
               handleRdChange(idx, parseNumberInputChange(e.target))
             }
+            slotProps={{
+              htmlInput: { step: 0.01 },
+            }}
           />
         ))}
       </Stack>

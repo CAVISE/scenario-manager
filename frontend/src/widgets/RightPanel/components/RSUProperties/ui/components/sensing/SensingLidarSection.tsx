@@ -60,7 +60,12 @@ export function SensingLidarSection({
 }: SensingLidarSectionProps) {
   return (
     <>
-      <Typography variant="caption" color="text.secondary">
+      <Typography
+        variant="caption"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         Lidar
       </Typography>
       <FormControlLabel
@@ -80,9 +85,9 @@ export function SensingLidarSection({
         }
         label="Visualize lidar points"
       />
-      <Grid item container spacing={1}>
+      <Grid container spacing={1}>
         {LIDAR_FIELDS.map(({ key, label, def }) => (
-          <Grid item xs={6} key={key}>
+          <Grid key={key} size={6}>
             <FormControl>
               <FormLabel className="right-panel-property-label">
                 {label}

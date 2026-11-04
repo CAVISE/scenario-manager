@@ -82,19 +82,15 @@ export const BackgroundTrafficSection = ({
           className="sim-config-field--grow"
           direction="row"
           spacing={1}
-          alignItems="center"
+          sx={{
+            alignItems: 'center',
+          }}
         >
           <TextField
             label={label}
             type="number"
             size="small"
             fullWidth
-            inputProps={{
-              ...numInputSlot.input,
-              min: options?.min,
-              max: options?.max,
-              step: options?.step || 1,
-            }}
             value={value}
             onChange={createNumberFieldOnChange(
               (val) =>
@@ -104,6 +100,14 @@ export const BackgroundTrafficSection = ({
               options?.min,
               options?.max
             )}
+            slotProps={{
+              htmlInput: {
+                ...numInputSlot.input,
+                min: options?.min,
+                max: options?.max,
+                step: options?.step || 1,
+              },
+            }}
           />
           {options?.chip && (
             <Chip
@@ -128,9 +132,11 @@ export const BackgroundTrafficSection = ({
       type="number"
       size="small"
       fullWidth
-      inputProps={numInputSlot.input}
       value={value}
       onChange={(e) => handleSpawnRangeChange(e, field)}
+      slotProps={{
+        htmlInput: numInputSlot.input,
+      }}
     />
   );
 
@@ -142,7 +148,12 @@ export const BackgroundTrafficSection = ({
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="subtitle2" color="text.secondary">
+      <Typography
+        variant="subtitle2"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         Background CARLA traffic
       </Typography>
 
@@ -156,7 +167,13 @@ export const BackgroundTrafficSection = ({
           />
         }
         label={
-          <Stack direction="row" alignItems="center" spacing={1}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              alignItems: 'center',
+            }}
+          >
             <span>Enable background traffic</span>
             <Chip
               label={enabled ? 'Active' : 'Disabled'}
@@ -169,7 +186,12 @@ export const BackgroundTrafficSection = ({
 
       {enabled && (
         <Stack spacing={2}>
-          <Typography variant="caption" color="text.secondary">
+          <Typography
+            variant="caption"
+            sx={{
+              color: 'text.secondary',
+            }}
+          >
             Spawn settings
           </Typography>
 
@@ -183,7 +205,13 @@ export const BackgroundTrafficSection = ({
               />
             }
             label={
-              <Stack direction="row" alignItems="center" spacing={1}>
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{
+                  alignItems: 'center',
+                }}
+              >
                 <span>Random spawn</span>
                 <Chip
                   label={random ? 'On' : 'Off'}
@@ -194,7 +222,12 @@ export const BackgroundTrafficSection = ({
             }
           />
 
-          <Typography variant="caption" color="text.secondary">
+          <Typography
+            variant="caption"
+            sx={{
+              color: 'text.secondary',
+            }}
+          >
             Spawn range [x_min, x_max, y_min, y_max, x_step, y_step]
           </Typography>
 
@@ -223,7 +256,9 @@ export const BackgroundTrafficSection = ({
           <Typography
             className="sim-config-section-label"
             variant="caption"
-            color="text.secondary"
+            sx={{
+              color: 'text.secondary',
+            }}
           >
             Traffic parameters
           </Typography>
@@ -269,7 +304,13 @@ export const BackgroundTrafficSection = ({
                 />
               }
               label={
-                <Stack direction="row" alignItems="center" spacing={1}>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  sx={{
+                    alignItems: 'center',
+                  }}
+                >
                   <span>OSM mode</span>
                   <Chip
                     label={osmMode ? 'On' : 'Off'}
@@ -284,7 +325,9 @@ export const BackgroundTrafficSection = ({
           <Typography
             className="sim-config-section-label"
             variant="caption"
-            color="text.secondary"
+            sx={{
+              color: 'text.secondary',
+            }}
           >
             Behavior
           </Typography>
@@ -316,7 +359,13 @@ export const BackgroundTrafficSection = ({
             )}
           </Stack>
 
-          <Stack direction="row" spacing={2} alignItems="center">
+          <Stack
+            direction="row"
+            spacing={2}
+            sx={{
+              alignItems: 'center',
+            }}
+          >
             {createNumberField(
               'Ignore walkers %',
               'bg_ignore_walkers_percentage',
@@ -339,7 +388,13 @@ export const BackgroundTrafficSection = ({
                 />
               }
               label={
-                <Stack direction="row" alignItems="center" spacing={1}>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  sx={{
+                    alignItems: 'center',
+                  }}
+                >
                   <span>Auto lane change</span>
                   <Chip
                     label={autoLaneChange ? 'On' : 'Off'}
@@ -354,7 +409,9 @@ export const BackgroundTrafficSection = ({
           <Typography
             className="sim-config-summary"
             variant="caption"
-            color="text.secondary"
+            sx={{
+              color: 'text.secondary',
+            }}
           >
             Background traffic: {vehicleNum} vehicles • Random:{' '}
             {random ? '✅' : '❌'} • OSM: {osmMode ? '✅' : '❌'} • Auto lane:{' '}

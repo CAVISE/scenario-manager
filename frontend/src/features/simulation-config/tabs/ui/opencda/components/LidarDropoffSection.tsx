@@ -36,11 +36,21 @@ export const LidarDropoffSection = ({
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="subtitle2" color="text.secondary">
+      <Typography
+        variant="subtitle2"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         Vehicle sensing
       </Typography>
 
-      <Typography variant="caption" color="text.secondary">
+      <Typography
+        variant="caption"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
         LiDAR dropoff &amp; noise (vehicle + RSU)
       </Typography>
 
@@ -50,20 +60,24 @@ export const LidarDropoffSection = ({
           type="number"
           size="small"
           fullWidth
-          inputProps={{ ...numInputSlot.input, step: 0.05, min: 0, max: 1 }}
           value={dropoffGeneralRate}
           onChange={(e) => handleNumberChange(e, 'dropoff_general_rate', 0, 1)}
+          slotProps={{
+            htmlInput: { ...numInputSlot.input, step: 0.05, min: 0, max: 1 },
+          }}
         />
         <TextField
           label="Intensity limit"
           type="number"
           size="small"
           fullWidth
-          inputProps={{ ...numInputSlot.input, step: 0.05, min: 0, max: 1 }}
           value={dropoffIntensityLimit}
           onChange={(e) =>
             handleNumberChange(e, 'dropoff_intensity_limit', 0, 1)
           }
+          slotProps={{
+            htmlInput: { ...numInputSlot.input, step: 0.05, min: 0, max: 1 },
+          }}
         />
       </Stack>
 
@@ -73,20 +87,24 @@ export const LidarDropoffSection = ({
           type="number"
           size="small"
           fullWidth
-          inputProps={{ ...numInputSlot.input, step: 0.05, min: 0, max: 1 }}
           value={dropoffZeroIntensity}
           onChange={(e) =>
             handleNumberChange(e, 'dropoff_zero_intensity', 0, 1)
           }
+          slotProps={{
+            htmlInput: { ...numInputSlot.input, step: 0.05, min: 0, max: 1 },
+          }}
         />
         <TextField
           label="Noise stddev"
           type="number"
           size="small"
           fullWidth
-          inputProps={{ ...numInputSlot.input, step: 0.01, min: 0 }}
           value={noiseStddev}
           onChange={(e) => handleNumberChange(e, 'noise_stddev', 0)}
+          slotProps={{
+            htmlInput: { ...numInputSlot.input, step: 0.01, min: 0 },
+          }}
         />
       </Stack>
     </Stack>

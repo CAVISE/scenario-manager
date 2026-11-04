@@ -214,8 +214,6 @@ describe('UploadScenariosModal', () => {
       expect(screen.getByRole('alert')).toBeInTheDocument();
     });
 
-    // fireEvent.click(screen.getByTitle('Close'));
-
     await waitFor(() => {
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     });

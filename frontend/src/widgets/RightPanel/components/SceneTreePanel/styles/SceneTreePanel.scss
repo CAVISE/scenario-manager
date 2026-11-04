@@ -1,6 +1,6 @@
 .stp-root {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-size: 12px;
+  font-family: var(--font-sans);
+  font-size: 14px;
   background: var(--workspace-surface);
   border-radius: 6px;
   overflow: hidden;
@@ -17,7 +17,7 @@
 }
 
 .stp-header-label {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.8px;
   text-transform: uppercase;
@@ -26,7 +26,7 @@
 
 .stp-header-count {
   margin-left: auto;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--workspace-border);
   font-weight: 500;
 }
@@ -50,7 +50,7 @@
 }
 
 .stp-empty-text {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--workspace-border);
 }
 
@@ -86,7 +86,7 @@
 }
 
 .stp-node-name {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--workspace-text);
   white-space: nowrap;
   overflow: hidden;
@@ -108,7 +108,7 @@
 }
 
 .stp-node-pos {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--workspace-muted);
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   white-space: nowrap;
@@ -210,7 +210,7 @@
   border: none;
   background: transparent;
   color: var(--workspace-muted);
-  font-size: 12px;
+  font-size: 13px;
   cursor: pointer;
   border-radius: 3px;
   padding: 0;

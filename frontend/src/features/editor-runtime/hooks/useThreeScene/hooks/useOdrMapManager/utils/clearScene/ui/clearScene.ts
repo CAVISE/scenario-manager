@@ -32,14 +32,10 @@ export function clearScene({
   rsuObjectMeshesRef.current.forEach(disposeMesh);
 
   localLineArrRef.current.flat().forEach((l) => {
-    l.parent?.remove(l);
-    l.geometry?.dispose();
-    (l.material as THREE.Material)?.dispose();
+    disposeMesh(l);
   });
   routePointMeshesRef.current.flat().forEach((routePointMesh) => {
-    routePointMesh.parent?.remove(routePointMesh);
-    routePointMesh.geometry?.dispose();
-    (routePointMesh.material as THREE.Material)?.dispose();
+    disposeMesh(routePointMesh);
   });
 
   scene.children = scene.children.filter((c) => c.type !== 'Group');
@@ -56,9 +52,10 @@ export function clearScene({
   transformControls.parent?.remove(transformControls);
 
   const s = useEditorStore.getState();
-  useEditorStore.getState().removeAllRSUs();
-  s.points.forEach((p) => s.removePoint(p.id));
-  s.cars.forEach((c) => s.removeCar(c.id.toString()));
+  s.removeAllCars();
+  s.removeAllRSUs();
+  s.removeAllBuildings();
+  s.removeAllPedestrians();
   s.selectObjects([]);
 
   syncRoadMesh(null);

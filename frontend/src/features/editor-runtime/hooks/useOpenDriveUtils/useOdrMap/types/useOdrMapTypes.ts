@@ -9,6 +9,7 @@ import type {
 } from '../../useThreeSetup/types/useThreeSetupTypes';
 import * as THREE from 'three';
 import { MapControls, TransformControls } from 'three-stdlib';
+import type { PreparedOdrGeometry } from '@editor/types/odrGeometryTypes';
 
 export interface NumberVector {
   size(): number;
@@ -85,4 +86,5 @@ export interface LoadOdrMapParams {
   fitView: boolean;
   prevMeshes: OdrMapMeshes;
   onDone: (meshes: OdrMapMeshes) => void;
+  preparedGeometry?: PreparedOdrGeometry;
 }
