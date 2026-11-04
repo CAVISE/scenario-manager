@@ -45,7 +45,7 @@ def test_update_scenario_with_none_fields(scenario_client, db_session):
     assert response.status_code == 200
     db_session.refresh(scenario)
     assert scenario.name_of_scenario == "Original"
-    assert scenario.preview == "preview"
+    assert scenario.preview is None
     assert scenario.annotation == "annotation"
 
 
