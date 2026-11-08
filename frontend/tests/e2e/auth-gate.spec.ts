@@ -12,7 +12,7 @@ test.describe('authentication gate', () => {
         contentType: 'application/json',
         body: signedIn
           ? JSON.stringify({
-              email: 'operator@example.test',
+              login: 'operator',
               role: 'operator',
               authentication_enabled: true,
             })
@@ -21,7 +21,7 @@ test.describe('authentication gate', () => {
     );
     await page.route('**/api/auth/login', async (route) => {
       expect(route.request().postDataJSON()).toEqual({
-        email: 'operator@example.test',
+        login: 'operator',
         password: 'correct-password',
       });
       signedIn = true;
@@ -46,14 +46,14 @@ test.describe('authentication gate', () => {
       page.getByRole('heading', { name: 'Scenario Manager' })
     ).toBeVisible();
 
-    await page.getByLabel('Email').fill('operator@example.test');
+    await page.getByLabel('login').fill('operator');
     await page.getByLabel('Password').fill('correct-password');
     await page.getByRole('button', { name: 'Sign in' }).click();
 
     await expect(
       page.getByRole('heading', { name: 'Dashboard' })
     ).toBeVisible();
-    await expect(page.getByText('operator@example.test')).toBeVisible();
+    await expect(page.getByText('operator', { exact: true })).toBeVisible();
   });
 
   test('shows an actionable error for invalid credentials', async ({
@@ -73,12 +73,12 @@ test.describe('authentication gate', () => {
     );
 
     await page.goto('/');
-    await page.getByLabel('Email').fill('operator@example.test');
+    await page.getByLabel('login').fill('operator');
     await page.getByLabel('Password').fill('wrong-password');
     await page.getByRole('button', { name: 'Sign in' }).click();
 
     await expect(page.getByRole('alert')).toHaveText(
-      'Invalid email or password.'
+      'Invalid login or password.'
     );
   });
 });

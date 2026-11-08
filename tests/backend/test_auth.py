@@ -12,7 +12,7 @@ def test_jwt_protects_http_routes_and_enforces_roles(
 
     try:
         viewer = User(
-            email="viewer@example.test",
+            login="viewer",
             password_hash="not-used",
             role="viewer",
         )
@@ -47,7 +47,7 @@ def test_login_sets_cookie_and_returns_current_user(
     try:
         db_session.add(
             User(
-                email="operator@example.test",
+                login="operator",
                 password_hash=hash_password("correct-password"),
                 role="operator",
             )
@@ -56,13 +56,13 @@ def test_login_sets_cookie_and_returns_current_user(
 
         response = scenario_client.post(
             "/api/auth/login",
-            json={"email": "OPERATOR@example.test", "password": "correct-password"},
+            json={"login": "OPERATOR", "password": "correct-password"},
         )
 
         assert response.status_code == 200
         assert "access_token" in response.cookies
         assert scenario_client.get("/api/auth/me").json() == {
-            "email": "operator@example.test",
+            "login": "operator",
             "role": "operator",
             "authentication_enabled": True,
         }
@@ -75,7 +75,7 @@ def test_new_user_requires_a_strong_password(monkeypatch, scenario_client, db_se
     get_settings.cache_clear()
     try:
         admin = User(
-            email="admin@example.test",
+            login="admin",
             password_hash=hash_password("correct-password"),
             role="admin",
         )
@@ -86,7 +86,7 @@ def test_new_user_requires_a_strong_password(monkeypatch, scenario_client, db_se
         response = scenario_client.post(
             "/api/auth/users",
             headers={"Authorization": f"Bearer {token}"},
-            json={"email": "new@example.test", "password": "too-short"},
+            json={"login": "new", "password": "too-short"},
         )
 
         assert response.status_code == 422

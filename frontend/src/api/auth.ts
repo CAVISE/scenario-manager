@@ -5,9 +5,9 @@ export function getCurrentUser() {
   return api.get('api/auth/me').json<CurrentUser>();
 }
 
-export async function login(email: string, password: string) {
+export async function login(login: string, password: string) {
   await api
-    .post('api/auth/login', { json: { email, password } })
+    .post('api/auth/login', { json: { login, password } })
     .json<LoginResponse>();
 }
 

@@ -15,7 +15,9 @@ load_dotenv(ENV_FILE, override=True)
 class Settings(BaseSettings):
     app_environment: Literal["development", "production"] = "development"
     auth_jwt_secret: SecretStr | None = None
-    auth_bootstrap_admin_email: str | None = None
+    auth_bootstrap_admin_login: str | None = Field(
+        default=None, min_length=3, max_length=320, pattern=r"^[A-Za-z0-9_]+$"
+    )
     auth_bootstrap_admin_password: SecretStr | None = None
     auth_access_token_expire_minutes: int = Field(default=60, ge=5, le=1440)
 
@@ -47,7 +49,12 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(extra="ignore")
 
-    @field_validator("auth_jwt_secret", "auth_bootstrap_admin_password", mode="before")
+    @field_validator(
+        "auth_jwt_secret",
+        "auth_bootstrap_admin_password",
+        "auth_bootstrap_admin_login",
+        mode="before",
+    )
     @classmethod
     def normalize_secret(cls, value: object) -> object:
         if value is None:
@@ -64,9 +71,9 @@ class Settings(BaseSettings):
             and len(self.auth_jwt_secret.get_secret_value()) < 32
         ):
             raise ValueError("AUTH_JWT_SECRET must contain at least 32 characters")
-        if self.app_environment == "production" and not self.auth_bootstrap_admin_email:
+        if self.app_environment == "production" and not self.auth_bootstrap_admin_login:
             raise ValueError(
-                "AUTH_BOOTSTRAP_ADMIN_EMAIL must be configured in production"
+                "AUTH_BOOTSTRAP_ADMIN_LOGIN must be configured in production"
             )
         if (
             self.app_environment == "production"

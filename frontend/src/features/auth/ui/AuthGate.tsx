@@ -11,10 +11,10 @@ interface AuthGateProps {
 }
 
 function LoginForm() {
-  const [email, setEmail] = useState('');
+  const [loginValue, setLogin] = useState('');
   const [password, setPassword] = useState('');
   const mutation = useMutation({
-    mutationFn: () => login(email, password),
+    mutationFn: () => login(loginValue, password),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ['auth', 'me'] }),
   });
@@ -31,13 +31,13 @@ function LoginForm() {
         <h1>Scenario Manager</h1>
         <p>Sign in to access the V2X scenario workspace.</p>
         <label>
-          Email
+          Login
           <input
-            autoComplete="email"
+            autoComplete="username"
             required
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            type="text"
+            value={loginValue}
+            onChange={(event) => setLogin(event.target.value)}
           />
         </label>
         <label>
@@ -66,7 +66,7 @@ function LoginForm() {
 function getLoginErrorMessage(error: unknown): string {
   if (error instanceof HTTPError) {
     return error.response.status === 401
-      ? 'Invalid email or password.'
+      ? 'Invalid login or password.'
       : 'Unable to sign in. Please try again.';
   }
   return 'Unable to sign in. Please try again.';

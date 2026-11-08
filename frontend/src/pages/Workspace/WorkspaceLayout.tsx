@@ -34,7 +34,7 @@ export default function WorkspaceLayout() {
               className="workspace-account"
               onClick={() => void logout()}
             >
-              <span>{user.email}</span>
+              <span>{user.login}</span>
               <small>{user.role} · Sign out</small>
             </button>
           ) : (
