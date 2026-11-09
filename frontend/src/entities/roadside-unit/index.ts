@@ -7,6 +7,7 @@ export type {
   NetworkProtocol,
   Polarization,
   RSU,
+  RsuModel,
   RsuBehaviorService,
   V2XProtocol,
 } from './model/types';

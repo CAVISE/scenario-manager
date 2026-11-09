@@ -1,26 +1,35 @@
 import { GLTFLoader } from 'three-stdlib';
 import * as THREE from 'three';
+import type { RsuModel } from '@/entities/roadside-unit';
 
-export let rsuModel: THREE.Object3D | null = null;
-export const loader = new GLTFLoader();
-export let rsuModelPromise: Promise<boolean> | null = null;
+const loader = new GLTFLoader();
+const models = new Map<RsuModel, THREE.Object3D>();
+const pending = new Map<RsuModel, Promise<boolean>>();
+const paths: Record<RsuModel, string> = {
+  hydrant: '/hydrant.glb',
+  'traffic-light': '/pedestrian_traffic_light.glb',
+};
 
-export function ensureRsuModel(): Promise<boolean> {
-  if (rsuModel) return Promise.resolve(true);
-  if (rsuModelPromise) return rsuModelPromise;
-  rsuModelPromise = new Promise((resolve) => {
+export function getRsuModel(model: RsuModel = 'hydrant') {
+  return models.get(model);
+}
+
+export function ensureRsuModel(model: RsuModel = 'hydrant'): Promise<boolean> {
+  if (models.has(model)) return Promise.resolve(true);
+  const request = pending.get(model);
+  if (request) return request;
+  const promise = new Promise<boolean>((resolve) => {
     loader.load(
-      '/hydrant.glb',
+      paths[model] ?? paths.hydrant,
       (gltf) => {
-        rsuModel = gltf.scene;
+        models.set(model, gltf.scene);
         resolve(true);
       },
       undefined,
-      () => {
-        rsuModel = null;
-        resolve(false);
-      }
+      () => resolve(false)
     );
   });
-  return rsuModelPromise;
+  pending.set(model, promise);
+  void promise.then(() => pending.delete(model));
+  return promise;
 }

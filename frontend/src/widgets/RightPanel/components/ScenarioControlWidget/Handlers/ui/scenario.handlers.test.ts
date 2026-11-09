@@ -872,45 +872,61 @@ describe('handlePatch', () => {
     expect(setNotice).toHaveBeenCalledWith('The scenario has been updated.');
   });
 
-  it('calls updateRSU when RSU is found after addRSU', async () => {
-    fetchQueryMock.mockResolvedValue({
-      scenario: {
-        scenario_id: 'rsu-update',
-        file_: VALID_XODR,
-        scenario_text: [
-          {
+  it.each(['traffic-light', undefined] as const)(
+    'restores RSU model %s and saves it again',
+    async (model) => {
+      fetchQueryMock.mockResolvedValue({
+        scenario: {
+          scenario_id: 'rsu-update',
+          file_: VALID_XODR,
+          scenario_text: [
+            {
+              vehicle: 'RSU',
+              path: [
+                {
+                  x: 1,
+                  y: 2,
+                  z: 3,
+                  tx_power: 30,
+                  frequency: 5.9e9,
+                  range: 300,
+                  protocol: 'ITS-G5',
+                  scenario: 'my-scenario',
+                  model,
+                },
+              ],
+            },
+          ],
+        },
+      });
+
+      const setNotice = vi.fn();
+      const loadFile = vi.fn();
+      const updateSceneGraph = vi.fn();
+
+      await handleLoad({
+        hasId: true,
+        scenarioIdInput: 'rsu-update',
+        setNotice,
+        updateSceneGraph,
+        loadFile,
+      });
+
+      expect(storeState.addRSUsBatch).toHaveBeenCalledWith([
+        expect.objectContaining({ model: model ?? 'hydrant' }),
+      ]);
+      const { buildScenarioPayload } = await import('./scenario.load.handler');
+      const payload = buildScenarioPayload();
+      expect(payload.scenario).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
             vehicle: 'RSU',
-            path: [
-              {
-                x: 1,
-                y: 2,
-                z: 3,
-                tx_power: 30,
-                frequency: 5.9e9,
-                range: 300,
-                protocol: 'ITS-G5',
-                scenario: 'my-scenario',
-              },
-            ],
-          },
-        ],
-      },
-    });
-
-    const setNotice = vi.fn();
-    const loadFile = vi.fn();
-    const updateSceneGraph = vi.fn();
-
-    await handleLoad({
-      hasId: true,
-      scenarioIdInput: 'rsu-update',
-      setNotice,
-      updateSceneGraph,
-      loadFile,
-    });
-
-    expect(storeState.addRSUsBatch).toHaveBeenCalled();
-  });
+            path: [expect.objectContaining({ model: model ?? 'hydrant' })],
+          }),
+        ])
+      );
+    }
+  );
 
   it('skips updateRSU when RSUs is empty after addRSU', async () => {
     fetchQueryMock.mockResolvedValue({

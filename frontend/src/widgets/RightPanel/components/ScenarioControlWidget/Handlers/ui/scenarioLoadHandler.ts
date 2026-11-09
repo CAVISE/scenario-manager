@@ -186,6 +186,7 @@ function restoreRsus(
   state.addRSUsBatch(
     group.path.map((rsu) => ({
       name: '',
+      model: rsu.model === 'traffic-light' ? 'traffic-light' : 'hydrant',
       x: rsu.x,
       y: rsu.y,
       z: rsu.z,

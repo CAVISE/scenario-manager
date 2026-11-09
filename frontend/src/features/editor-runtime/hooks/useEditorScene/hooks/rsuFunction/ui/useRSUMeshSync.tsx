@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { useEditorStore } from '@/store';
 import type { RSU } from '@/entities/roadside-unit';
-import { ensureRsuModel, rsuModel } from '../utils/RsuUtils';
+import { ensureRsuModel, getRsuModel } from '../utils/RsuUtils';
 import { useEditorRefs, useHooks } from '@editor/context';
 import { invalidateEditorScene } from '@editor/lib/invalidateEditorScene';
 
@@ -30,7 +30,7 @@ export function useRSUMeshSync(): void {
           retryTimer = setTimeout(() => trySync(attempts + 1), 300);
         return;
       }
-      ensureRsuModel().then((hasModel) => {
+      const syncMeshes = () => {
         if (cancelled) return;
         const tc = transformControlsRef.current;
         const attached = (tc as unknown as { object?: THREE.Object3D })?.object;
@@ -68,6 +68,8 @@ export function useRSUMeshSync(): void {
         );
 
         currentRSUs.forEach((rsu) => {
+          const rsuModel = getRsuModel(rsu.model ?? 'hydrant');
+          const hasModel = Boolean(rsuModel);
           const existing = meshesById.get(rsu.id);
 
           if (existing) {
@@ -112,6 +114,14 @@ export function useRSUMeshSync(): void {
           let obj: THREE.Object3D;
           if (hasModel && rsuModel) {
             obj = rsuModel.clone(true);
+            obj.traverse((child) => {
+              const mesh = child as THREE.Mesh;
+              if (!mesh.isMesh) return;
+              mesh.geometry = mesh.geometry.clone();
+              mesh.material = Array.isArray(mesh.material)
+                ? mesh.material.map((material) => material.clone())
+                : mesh.material.clone();
+            });
             obj.scale.setScalar(0.01);
             obj.rotation.x += Math.PI / 2;
             obj.userData = { type: 'rsu', id: rsu.id, isFallbackRSU: false };
@@ -134,6 +144,14 @@ export function useRSUMeshSync(): void {
 
         if (structuralChange) updateSceneGraph();
         invalidateEditorScene();
+      };
+
+      syncMeshes();
+      const modelKinds = [
+        ...new Set(RSUs.map((rsu) => rsu.model ?? 'hydrant')),
+      ];
+      modelKinds.forEach((model) => {
+        void ensureRsuModel(model).then(syncMeshes);
       });
     };
 
