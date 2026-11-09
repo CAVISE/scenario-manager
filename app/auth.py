@@ -25,7 +25,7 @@ _TOKEN_ALGORITHM = "HS256"
 @dataclass(frozen=True)
 class AuthenticatedUser:
     id: int | None
-    email: str
+    login: str
     role: Role
 
 
@@ -37,8 +37,8 @@ def _b64decode(value: str) -> bytes:
     return base64.urlsafe_b64decode(value + "=" * (-len(value) % 4))
 
 
-def normalize_email(email: str) -> str:
-    return email.strip().lower()
+def normalize_login(login: str) -> str:
+    return login.strip().lower()
 
 
 def hash_password(password: str) -> str:
@@ -74,7 +74,7 @@ def create_access_token(user: User) -> str:
     now = int(time.time())
     payload = {
         "sub": str(user.id),
-        "email": user.email,
+        "login": user.login,
         "role": user.role,
         "iat": now,
         "exp": now + settings.auth_access_token_expire_minutes * 60,
@@ -133,7 +133,7 @@ def get_current_user(
 ) -> AuthenticatedUser:
     settings = get_settings()
     if settings.auth_jwt_secret is None:
-        return AuthenticatedUser(id=None, email="development@local", role="admin")
+        return AuthenticatedUser(id=None, login="development", role="admin")
     try:
         payload = _decode_access_token(_extract_access_token(connection))
         user_id = int(payload["sub"])
@@ -152,7 +152,7 @@ def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Invalid user role"
         )
-    return AuthenticatedUser(id=user.id, email=user.email, role=user.role)
+    return AuthenticatedUser(id=user.id, login=user.login, role=user.role)
 
 
 def require_roles(*roles: Role):
@@ -170,19 +170,19 @@ def require_roles(*roles: Role):
 
 def bootstrap_admin(session: Session) -> None:
     settings = get_settings()
-    email = settings.auth_bootstrap_admin_email
+    login = settings.auth_bootstrap_admin_login
     password = settings.auth_bootstrap_admin_password
-    if not email or password is None:
+    if not login or password is None:
         return
-    normalized_email = normalize_email(email)
+    normalized_login = normalize_login(login)
     if (
-        session.scalar(select(User.id).where(User.email == normalized_email))
+        session.scalar(select(User.id).where(User.login == normalized_login))
         is not None
     ):
         return
     session.add(
         User(
-            email=normalized_email,
+            login=normalized_login,
             password_hash=hash_password(password.get_secret_value()),
             role="admin",
         )

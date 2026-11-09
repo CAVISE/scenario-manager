@@ -1,7 +1,7 @@
 export type UserRole = 'admin' | 'operator' | 'viewer';
 
 export interface CurrentUser {
-  email: string;
+  login: string;
   role: UserRole;
   authentication_enabled: boolean;
 }

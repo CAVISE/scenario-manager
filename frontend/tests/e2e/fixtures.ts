@@ -6,7 +6,7 @@ export const test = base.extend({
       route.fulfill({
         contentType: 'application/json',
         body: JSON.stringify({
-          email: 'operator@example.test',
+          login: 'operator',
           role: 'operator',
           authentication_enabled: true,
         }),

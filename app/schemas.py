@@ -112,7 +112,7 @@ class StopSimulationResponse(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    email: str = Field(..., min_length=3, max_length=320)
+    login: str = Field(..., min_length=3, max_length=320, pattern=r"^[A-Za-z0-9_]+$")
     password: str = Field(..., min_length=1, max_length=256)
 
 
@@ -128,7 +128,7 @@ class AccessTokenResponse(BaseModel):
 
 
 class CurrentUserResponse(BaseModel):
-    email: str
+    login: str
     role: Literal["admin", "operator", "viewer"]
     authentication_enabled: bool
 

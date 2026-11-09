@@ -203,7 +203,7 @@ Compose defines `RUN_MIGRATIONS=1`. Other values belong in `.env`; do not put
 secrets in `docker-compose.yml`.
 
 In production, set `AUTH_JWT_SECRET` (at least 32 characters),
-`AUTH_BOOTSTRAP_ADMIN_EMAIL`, and `AUTH_BOOTSTRAP_ADMIN_PASSWORD` (at least
+`AUTH_BOOTSTRAP_ADMIN_LOGIN`, and `AUTH_BOOTSTRAP_ADMIN_PASSWORD` (at least
 12 characters). The first startup creates that admin if it does not yet exist.
 Authenticate via `POST /api/auth/login`; the access token is also stored in a
 secure httpOnly cookie. The web interface shows a sign-in screen whenever JWT

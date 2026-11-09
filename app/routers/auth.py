@@ -6,7 +6,7 @@ from app.auth import (
     AuthenticatedUser,
     create_access_token,
     hash_password,
-    normalize_email,
+    normalize_login,
     require_roles,
     verify_password,
 )
@@ -30,14 +30,14 @@ DatabaseSession = Annotated[Session, Depends(get_session)]
 def login(
     request: Request, body: LoginRequest, response: Response, session: DatabaseSession
 ):
-    user = session.scalar(select(User).where(User.email == normalize_email(body.email)))
+    user = session.scalar(select(User).where(User.login == normalize_login(body.login)))
     if (
         user is None
         or not user.is_active
         or not verify_password(body.password, user.password_hash)
     ):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid login or password"
         )
     token = create_access_token(user)
     settings = get_settings()
@@ -64,7 +64,7 @@ def current_user(
     user: AuthenticatedUser = Depends(require_roles("admin", "operator", "viewer")),
 ):
     return CurrentUserResponse(
-        email=user.email,
+        login=user.login,
         role=user.role,
         authentication_enabled=get_settings().auth_jwt_secret is not None,
     )
@@ -78,16 +78,16 @@ def create_user(
     session: DatabaseSession,
     _: AuthenticatedUser = Depends(require_roles("admin")),
 ):
-    email = normalize_email(body.email)
-    if session.scalar(select(User.id).where(User.email == email)) is not None:
+    login = normalize_login(body.login)
+    if session.scalar(select(User.id).where(User.login == login)) is not None:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="User already exists"
         )
-    user = User(email=email, password_hash=hash_password(body.password), role=body.role)
+    user = User(login=login, password_hash=hash_password(body.password), role=body.role)
     session.add(user)
     session.commit()
     return CurrentUserResponse(
-        email=user.email,
+        login=user.login,
         role=user.role,
         authentication_enabled=True,
     )
