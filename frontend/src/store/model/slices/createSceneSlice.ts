@@ -34,6 +34,8 @@ type SceneSlice = Pick<
   EditorState,
   | 'cars'
   | 'RSUs'
+  | 'selectedRsuModel'
+  | 'setSelectedRsuModel'
   | 'lidars'
   | 'points'
   | 'buildings'
@@ -92,6 +94,8 @@ export const createSceneSlice: StateCreator<EditorState, [], [], SceneSlice> = (
   isBuildingMode: false,
   routes: [[]],
   RSUs: [],
+  selectedRsuModel: 'hydrant',
+  setSelectedRsuModel: (selectedRsuModel) => set({ selectedRsuModel }),
 
   clearSelection: () => set({ selectedIds: [], selectedObjects: [] }),
   setBuildingMode: (value) =>
@@ -140,6 +144,7 @@ export const createSceneSlice: StateCreator<EditorState, [], [], SceneSlice> = (
     const rsu = createRsu({
       id: nanoid(),
       name: `rsu_${get().RSUs.length + 1}`,
+      model: get().selectedRsuModel,
       x,
       y,
       z,

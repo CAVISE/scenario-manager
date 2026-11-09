@@ -17,7 +17,10 @@ export type AIMServerService = {
 
 export type RsuBehaviorService = AIMServerService;
 
+export type RsuModel = 'hydrant' | 'traffic-light';
+
 export type RSU = {
+  model?: RsuModel;
   id: string;
   name: string;
   x: number;
@@ -68,4 +71,7 @@ export type RSU = {
   };
 };
 
-export type CreateRsuParams = Pick<RSU, 'id' | 'name' | 'x' | 'y' | 'z'>;
+export type CreateRsuParams = Pick<
+  RSU,
+  'id' | 'name' | 'x' | 'y' | 'z' | 'model'
+>;
