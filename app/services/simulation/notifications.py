@@ -5,10 +5,19 @@ import threading
 from collections.abc import Callable
 from typing import Any
 
-from fastapi import WebSocket, WebSocketDisconnect
+from fastapi import HTTPException, WebSocket, WebSocketDisconnect
+from starlette.websockets import WebSocketState
+
+from app.auth import get_current_user
+from app.database import SessionLocal
 
 PayloadFactory = Callable[[], dict[str, Any]]
 RunPayloadFactory = Callable[[str], dict[str, Any]]
+
+
+def _check_websocket_access(websocket: WebSocket) -> None:
+    with SessionLocal() as session:
+        get_current_user(websocket, session)
 
 
 class SimulationNotifier:
@@ -52,17 +61,32 @@ class SimulationNotifier:
         if self._loop is None or self._loop.is_closed():
             self._loop = asyncio.get_running_loop()
 
+    async def _send_payload(
+        self, websocket: WebSocket, payload: PayloadFactory
+    ) -> None:
+        try:
+            await asyncio.to_thread(_check_websocket_access, websocket)
+        except HTTPException:
+            if websocket.application_state == WebSocketState.CONNECTED:
+                await websocket.close(code=1008)
+            raise WebSocketDisconnect(code=1008) from None
+
+        if websocket.application_state != WebSocketState.CONNECTED:
+            raise WebSocketDisconnect(code=1008)
+
+        await websocket.send_json(payload())
+
     async def serve_state(self, websocket: WebSocket, payload: PayloadFactory) -> None:
         await websocket.accept()
         self._register_loop()
         self.subscribe_state(websocket)
         try:
-            await websocket.send_json(payload())
+            await self._send_payload(websocket, payload)
             while True:
                 try:
                     await asyncio.wait_for(websocket.receive_text(), timeout=1.0)
                 except TimeoutError:
-                    await websocket.send_json(payload())
+                    await self._send_payload(websocket, payload)
         except WebSocketDisconnect:
             pass
         finally:
@@ -75,12 +99,12 @@ class SimulationNotifier:
         self._register_loop()
         self._subscribe_run(run_id, websocket)
         try:
-            await websocket.send_json(payload())
+            await self._send_payload(websocket, payload)
             while True:
                 try:
                     await asyncio.wait_for(websocket.receive_text(), timeout=1.0)
                 except TimeoutError:
-                    await websocket.send_json(payload())
+                    await self._send_payload(websocket, payload)
         except WebSocketDisconnect:
             pass
         finally:
@@ -88,7 +112,7 @@ class SimulationNotifier:
 
     async def _send_state(self, websocket: WebSocket, payload: PayloadFactory) -> None:
         try:
-            await websocket.send_json(payload())
+            await self._send_payload(websocket, payload)
         except Exception:
             self.unsubscribe_state(websocket)
 
@@ -96,7 +120,7 @@ class SimulationNotifier:
         self, websocket: WebSocket, run_id: str, payload: RunPayloadFactory
     ) -> None:
         try:
-            await websocket.send_json(payload(run_id))
+            await self._send_payload(websocket, lambda: payload(run_id))
         except Exception:
             self._unsubscribe_run(run_id, websocket)
 
