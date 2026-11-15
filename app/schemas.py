@@ -136,7 +136,7 @@ class CurrentUserResponse(BaseModel):
 class UserResponse(BaseModel):
     id: int
     login: str
-    role: Literal["admin", "operator", "viewer"]
+    is_admin: bool
     is_active: bool
 
 

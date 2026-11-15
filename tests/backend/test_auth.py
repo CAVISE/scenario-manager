@@ -122,7 +122,7 @@ def test_admin_can_list_users(monkeypatch, scenario_client, db_session):
             {
                 "id": admin.id,
                 "login": "admin",
-                "role": "admin",
+                "is_admin": True,
                 "is_active": True,
             }
         ]
@@ -279,7 +279,7 @@ def test_admin_can_change_user_status(
         assert response.json() == {
             "id": user.id,
             "login": "viewer",
-            "role": "viewer",
+            "is_admin": False,
             "is_active": is_active,
         }
 

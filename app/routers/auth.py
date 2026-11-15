@@ -84,7 +84,7 @@ def list_users(
         UserResponse(
             id=user.id,
             login=user.login,
-            role=user.role,
+            is_admin=user.role == "admin",
             is_active=user.is_active,
         )
         for user in users
@@ -153,7 +153,7 @@ def update_user_status(
     return UserResponse(
         id=user.id,
         login=user.login,
-        role=user.role,
+        is_admin=user.role == "admin",
         is_active=user.is_active,
     )
 
