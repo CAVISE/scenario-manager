@@ -19,6 +19,10 @@ from app.schemas import (
     CreateUserRequest,
     CurrentUserResponse,
     LoginRequest,
+    UserResponse,
+    UpdateUserStatusRequest,
+    ResetPasswordRequest,
+    ChangePasswordRequest,
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -70,6 +74,23 @@ def current_user(
     )
 
 
+@router.get("/users", response_model=list[UserResponse])
+def list_users(
+    session: DatabaseSession,
+    _: AuthenticatedUser = Depends(require_roles("admin")),
+):
+    users = session.scalars(select(User).order_by(User.id)).all()
+    return [
+        UserResponse(
+            id=user.id,
+            login=user.login,
+            is_admin=user.role == "admin",
+            is_active=user.is_active,
+        )
+        for user in users
+    ]
+
+
 @router.post(
     "/users", response_model=CurrentUserResponse, status_code=status.HTTP_201_CREATED
 )
@@ -91,3 +112,108 @@ def create_user(
         role=user.role,
         authentication_enabled=True,
     )
+
+
+@router.patch("/users/{user_id}/status", response_model=UserResponse)
+def update_user_status(
+    user_id: int,
+    body: UpdateUserStatusRequest,
+    session: DatabaseSession,
+    _: AuthenticatedUser = Depends(require_roles("admin")),
+):
+    admins = session.scalars(
+        select(User)
+        .where(User.role == "admin")
+        .order_by(User.id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    ).all()
+
+    user = session.get(User, user_id, with_for_update=True, populate_existing=True)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    if (
+        user.role == "admin"
+        and user.is_active
+        and not body.is_active
+        and sum(admin.is_active for admin in admins) <= 1
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot deactivate the last active administrator",
+        )
+
+    user.is_active = body.is_active
+    session.commit()
+
+    return UserResponse(
+        id=user.id,
+        login=user.login,
+        is_admin=user.role == "admin",
+        is_active=user.is_active,
+    )
+
+
+@router.post(
+    "/users/{user_id}/reset-password",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def reset_user_password(
+    user_id: int,
+    body: ResetPasswordRequest,
+    session: DatabaseSession,
+    _: AuthenticatedUser = Depends(require_roles("admin")),
+):
+    user = session.get(User, user_id)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    user.password_hash = hash_password(body.new_password)
+    session.commit()
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/change-password", status_code=status.HTTP_204_NO_CONTENT)
+def change_password(
+    body: ChangePasswordRequest,
+    session: DatabaseSession,
+    authenticated_user: AuthenticatedUser = Depends(
+        require_roles("admin", "operator", "viewer")
+    ),
+):
+    if authenticated_user.id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+        )
+
+    user = session.get(
+        User,
+        authenticated_user.id,
+        with_for_update=True,
+        populate_existing=True,
+    )
+    if user is None or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+        )
+
+    if not verify_password(body.current_password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect current password",
+        )
+
+    user.password_hash = hash_password(body.new_password)
+    session.commit()
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

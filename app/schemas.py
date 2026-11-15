@@ -133,6 +133,25 @@ class CurrentUserResponse(BaseModel):
     authentication_enabled: bool
 
 
+class UserResponse(BaseModel):
+    id: int
+    login: str
+    is_admin: bool
+    is_active: bool
+
+
+class UpdateUserStatusRequest(BaseModel):
+    is_active: bool
+
+
+class ResetPasswordRequest(BaseModel):
+    new_password: str = Field(..., min_length=12, max_length=256)
+
+
+class ChangePasswordRequest(ResetPasswordRequest):
+    current_password: str = Field(..., min_length=1, max_length=256)
+
+
 class StartSimulationResponse(BaseModel):
     status: Literal["started", "queued"]
     map: str
