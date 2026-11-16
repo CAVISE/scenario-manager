@@ -36,10 +36,20 @@ function LoginForm() {
             autoComplete="username"
             required
             type="text"
+            minLength={3}
+            maxLength={320}
+            pattern="[A-Za-z0-9_]+"
+            title="Use 3–320 Latin letters, digits or underscores."
+            aria-describedby="login-hint"
+            autoCapitalize="none"
+            spellCheck={false}
             value={loginValue}
             onChange={(event) => setLogin(event.target.value)}
           />
         </label>
+        <small id="login-hint">
+          Use 3–320 Latin letters, digits or underscores.
+        </small>
         <label>
           Password
           <input
@@ -65,11 +75,18 @@ function LoginForm() {
 
 function getLoginErrorMessage(error: unknown): string {
   if (error instanceof HTTPError) {
-    return error.response.status === 401
-      ? 'Invalid login or password.'
-      : 'Unable to sign in. Please try again.';
+    switch (error.response.status) {
+      case 401:
+        return 'Invalid login or password, or the account is disabled. Check your credentials or contact an administrator.';
+      case 422:
+        return 'Check your login and password. Login must contain 3–320 Latin letters, digits or underscores.';
+      case 429:
+        return 'Too many sign-in attempts. Please wait a minute and try again.';
+      default:
+        return 'Unable to sign in. Please try again later.';
+    }
   }
-  return 'Unable to sign in. Please try again.';
+  return 'Unable to connect. Check your network connection and try again.';
 }
 
 export function AuthGate({ children }: AuthGateProps) {
@@ -80,12 +97,24 @@ export function AuthGate({ children }: AuthGateProps) {
   });
   const logoutMutation = useMutation({
     mutationFn: logout,
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] }),
+    onSuccess: async () => {
+      await queryClient.cancelQueries();
+      // Do not leave the previous user visible while /me is being rechecked.
+      queryClient.setQueryData(['auth', 'me'], null);
+      queryClient.removeQueries({
+        predicate: (cachedQuery) => cachedQuery.queryKey[0] !== 'auth',
+      });
+    },
   });
 
   if (query.isPending) {
     return <main className="auth-page">Checking access…</main>;
+  }
+  if (
+    (query.isSuccess && !query.data) ||
+    (query.error instanceof HTTPError && query.error.response.status === 401)
+  ) {
+    return <LoginForm />;
   }
   if (query.data) {
     return (
@@ -95,9 +124,6 @@ export function AuthGate({ children }: AuthGateProps) {
         {children}
       </AuthContext.Provider>
     );
-  }
-  if (query.error instanceof HTTPError && query.error.response.status === 401) {
-    return <LoginForm />;
   }
   return (
     <main className="auth-page">
