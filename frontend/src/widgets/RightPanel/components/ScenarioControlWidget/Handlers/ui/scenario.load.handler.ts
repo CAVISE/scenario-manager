@@ -95,6 +95,7 @@ export function buildScenarioPayload(): ScenarioPayload {
         {
           vehicle: 'RSU' as const,
           path: s.RSUs.map((r: RSU) => ({
+            model: r.model ?? 'hydrant',
             x: r.x,
             y: r.y,
             z: r.z,

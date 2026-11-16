@@ -2,7 +2,7 @@ import type { SimulationConfig } from '@scenario-export';
 import type { SelectedObject, Vec3 } from '@/shared/types/sceneTypes';
 import type { Car, Lidar, Point } from '@/entities/vehicle';
 import type { Building } from '@/entities/building';
-import type { RSU } from '@/entities/roadside-unit';
+import type { RSU, RsuModel } from '@/entities/roadside-unit';
 import type { Pedestrian } from '@/entities/pedestrian';
 import type { Scenario } from '@/entities/scenario';
 export type {
@@ -89,6 +89,8 @@ export type SimulationSession = {
 export type EditorState = {
   cars: Car[];
   RSUs: RSU[];
+  selectedRsuModel: RsuModel;
+  setSelectedRsuModel: (model: RsuModel) => void;
   lidars: Lidar[];
   points: Point[];
   buildings: Building[];

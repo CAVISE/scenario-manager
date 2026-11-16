@@ -34,6 +34,9 @@ export const EditorTransformControls = ({
   readOnly = false,
 }: EditorTransformControlsProps) => {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const [choosingRsu, setChoosingRsu] = useState(false);
+  const selectedRsuModel = useEditorStore((s) => s.selectedRsuModel);
+  const setSelectedRsuModel = useEditorStore((s) => s.setSelectedRsuModel);
   const { transformControlsRef, threeRef } = useEditorRefs();
   const {
     handleAddCar,
@@ -66,7 +69,12 @@ export const EditorTransformControls = ({
       icon: <CarIcon fontSize="small" />,
       action: handleAddCar,
     },
-    { label: 'RSU', icon: <RsuIcon fontSize="small" />, action: handleAddRSU },
+    {
+      label: 'RSU',
+      icon: <RsuIcon fontSize="small" />,
+      action: () => setChoosingRsu(true),
+      submenu: true,
+    },
     {
       label: 'Building',
       icon: <BuildingIcon fontSize="small" />,
@@ -169,7 +177,10 @@ export const EditorTransformControls = ({
           disabled={readOnly}
           aria-haspopup="menu"
           aria-expanded={Boolean(anchor)}
-          onClick={(event) => setAnchor(event.currentTarget)}
+          onClick={(event) => {
+            setChoosingRsu(false);
+            setAnchor(event.currentTarget);
+          }}
         >
           Add object
         </Button>
@@ -179,19 +190,39 @@ export const EditorTransformControls = ({
         open={Boolean(anchor) && !readOnly}
         onClose={() => setAnchor(null)}
       >
-        {addActions.map(({ label, icon, action, disabled }) => (
-          <MenuItem
-            key={label}
-            disabled={disabled || readOnly}
-            onClick={() => {
-              setAnchor(null);
-              action();
-            }}
-          >
-            <ListItemIcon>{icon}</ListItemIcon>
-            {label}
-          </MenuItem>
-        ))}
+        {choosingRsu
+          ? (
+              [
+                { model: 'hydrant', label: 'Hydrant' },
+                { model: 'traffic-light', label: 'Traffic light' },
+              ] as const
+            ).map(({ model, label }) => (
+              <MenuItem
+                key={model}
+                selected={selectedRsuModel === model}
+                onClick={() => {
+                  setSelectedRsuModel(model);
+                  setAnchor(null);
+                  handleAddRSU();
+                }}
+              >
+                {label}
+              </MenuItem>
+            ))
+          : addActions.map(({ label, icon, action, disabled, submenu }) => (
+              <MenuItem
+                key={label}
+                disabled={disabled || readOnly}
+                aria-haspopup={submenu ? 'menu' : undefined}
+                onClick={() => {
+                  if (!submenu) setAnchor(null);
+                  action();
+                }}
+              >
+                <ListItemIcon>{icon}</ListItemIcon>
+                {label}
+              </MenuItem>
+            ))}
       </Menu>
     </div>
   );

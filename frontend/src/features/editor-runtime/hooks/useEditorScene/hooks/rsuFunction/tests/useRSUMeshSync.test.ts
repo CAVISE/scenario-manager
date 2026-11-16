@@ -80,9 +80,7 @@ vi.mock('@editor/context', () => ({
 vi.mock('../utils/RsuUtils', () => ({
   ensureRsuModel: mockEnsureRsuModel,
 
-  get rsuModel() {
-    return mockRsuModelBox.current;
-  },
+  getRsuModel: () => mockRsuModelBox.current,
 }));
 
 import { useRSUMeshSync } from '../ui/useRSUMeshSync';
@@ -736,6 +734,7 @@ describe('useRSUMeshSync', () => {
   describe('unmount cancellation', () => {
     it('does not update the scene after the hook is unmounted', async () => {
       let resolveModel: ((value: boolean) => void) | undefined;
+      mockRsuModelBox.current = null;
 
       mockEnsureRsuModel.mockReturnValue(
         new Promise<boolean>((resolve) => {
@@ -758,15 +757,19 @@ describe('useRSUMeshSync', () => {
         expect(mockEnsureRsuModel).toHaveBeenCalledTimes(1);
       });
 
+      const fallback = getSceneRSUs(scene)[0];
+      expect(fallback.userData.isFallbackRSU).toBe(true);
+      mockUpdateSceneGraph.mockClear();
       unmount();
 
-      resolveModel?.(false);
+      mockRsuModelBox.current = createRsuModel();
+      resolveModel?.(true);
 
       await Promise.resolve();
 
       expect(mockUpdateSceneGraph).not.toHaveBeenCalled();
-
-      expect(getSceneRSUs(scene)).toHaveLength(0);
+      expect(getSceneRSUs(scene)).toEqual([fallback]);
+      expect(fallback.userData.isFallbackRSU).toBe(true);
     });
   });
 

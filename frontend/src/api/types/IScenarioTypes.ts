@@ -1,4 +1,5 @@
 import type { Lidar, SumoStop } from '@/entities/vehicle';
+import type { RsuModel } from '@/entities/roadside-unit';
 
 export interface CarScenarioPath {
   x: number;
@@ -22,6 +23,7 @@ export interface CarScenarioPath {
 }
 
 export interface RSUScenarioPath {
+  model?: RsuModel;
   id?: string;
   name?: string;
   x: number;

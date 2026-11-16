@@ -1,5 +1,5 @@
 import type { Lidar, Point, SumoStop } from '@/entities/vehicle';
-import type { RsuBehaviorService } from '@/entities/roadside-unit';
+import type { RsuBehaviorService, RsuModel } from '@/entities/roadside-unit';
 import type { ScenarioPreflightResult } from '@/api/types/simulationTypes';
 
 export type ScenarioOperation = 'save' | 'delete' | 'run' | 'validate';
@@ -44,6 +44,7 @@ export interface CarPath {
 }
 
 export interface RSUPath {
+  model?: RsuModel;
   x: number;
   y: number;
   z: number;
