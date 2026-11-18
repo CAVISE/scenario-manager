@@ -4,6 +4,7 @@ import {
   HistoryOutlined,
   FolderOutlined,
   SettingsOutlined,
+  PeopleOutlined,
   PlayCircleOutlined,
   ScienceOutlined,
   ViewInArOutlined,
@@ -67,6 +68,12 @@ export default function WorkspaceLayout() {
             <HistoryOutlined />
             Replay
           </NavLink>
+          {user.role === 'admin' && (
+            <NavLink to="/users">
+              <PeopleOutlined />
+              Users
+            </NavLink>
+          )}
           <NavLink to="/settings">
             <SettingsOutlined />
             Settings

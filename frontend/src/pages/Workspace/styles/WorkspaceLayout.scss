@@ -202,7 +202,8 @@
   gap: 4px;
   margin-top: auto;
   padding: 16px;
-  border-top: 1px solid color-mix(in srgb, var(--workspace-chrome-text) 18%, transparent);
+  border-top: 1px solid
+    color-mix(in srgb, var(--workspace-chrome-text) 18%, transparent);
 
   span {
     color: var(--workspace-accent);
@@ -266,7 +267,7 @@
   }
 
   .workspace-sidebar nav {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
   }
 
   .workspace-sidebar a {

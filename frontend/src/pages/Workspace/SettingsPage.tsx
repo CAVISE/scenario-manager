@@ -3,6 +3,7 @@ import { useWorkspacePreferences } from '@/store/ui/useWorkspacePreferences';
 import SimConfigModal from '@/features/simulation-config';
 import { useEditorStore } from '@/store';
 import { EditorPreferencesCard } from './components/EditorPreferencesCard';
+import { ChangePasswordCard } from './components/ChangePasswordCard';
 
 export default function SettingsPage() {
   const preferences = useWorkspacePreferences();
@@ -41,6 +42,7 @@ export default function SettingsPage() {
           </select>
         </label>
       </div>
+      <ChangePasswordCard />
       <EditorPreferencesCard />
       <div className="workspace-settings-card">
         <h2>Current scenario</h2>
