@@ -119,6 +119,7 @@ export function AuthGate({ children }: AuthGateProps) {
   if (query.data) {
     return (
       <AuthContext.Provider
+        key={`${query.data.login}:${query.data.role}:${query.data.authentication_enabled}`}
         value={{ user: query.data, logout: () => logoutMutation.mutateAsync() }}
       >
         {children}

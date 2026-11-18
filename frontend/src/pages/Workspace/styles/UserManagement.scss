@@ -1,0 +1,156 @@
+.user-management-card {
+  max-width: none;
+}
+
+.user-management-form {
+  label {
+    display: grid;
+    gap: 8px;
+    margin: 16px 0;
+    font-weight: 500;
+  }
+
+  input,
+  select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 11px 12px;
+    border: 1px solid var(--workspace-border, #8b9995);
+    border-radius: 6px;
+    color: inherit;
+    background: transparent;
+    font: inherit;
+  }
+
+  input:focus-visible,
+  select:focus-visible {
+    outline: 2px solid var(--workspace-accent, #17755c);
+    outline-offset: 2px;
+  }
+}
+
+.user-management-password {
+  max-width: 460px;
+
+  button {
+    cursor: pointer;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font: inherit;
+  }
+
+  button:disabled {
+    cursor: wait;
+    opacity: 0.6;
+  }
+}
+
+.user-management-form .user-management-dialog-actions {
+  gap: 8px;
+  padding: 16px 24px 24px;
+  border-top: 1px solid var(--workspace-border);
+
+  .user-management-dialog-action {
+    min-height: 42px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: none;
+  }
+
+  .user-management-dialog-action--danger:not(:disabled) {
+    background-color: var(--workspace-danger);
+    color: var(--workspace-surface);
+
+    &:hover {
+      background-color: color-mix(
+        in srgb,
+        var(--workspace-danger) 88%,
+        var(--workspace-text)
+      );
+    }
+  }
+
+  .user-management-dialog-action:focus-visible {
+    outline: 2px solid var(--workspace-accent);
+    outline-offset: 3px;
+  }
+}
+
+.user-management-error {
+  color: var(--workspace-danger, #b42318);
+  overflow-wrap: anywhere;
+}
+
+.user-management-hint {
+  color: var(--workspace-muted, #60716b);
+  font-size: 13px;
+}
+
+.user-management-notice {
+  padding: 14px 18px;
+  border: 1px solid var(--workspace-border);
+  border-radius: 8px;
+  background: var(--workspace-accent-soft);
+}
+
+.user-management-table-scroll {
+  overflow-x: auto;
+}
+
+.user-management-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  text-align: left;
+
+  caption {
+    text-align: left;
+    color: var(--workspace-muted);
+    padding: 12px 0;
+    font-size: 13px;
+    caption-side: bottom;
+  }
+
+  th,
+  td {
+    padding: 16px 12px;
+    border-bottom: 1px solid var(--workspace-border);
+  }
+
+  thead th {
+    color: var(--workspace-muted);
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  tbody th {
+    max-width: 240px;
+    overflow-wrap: anywhere;
+  }
+
+  small {
+    font-weight: normal;
+  }
+}
+
+.user-management-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.user-management-status {
+  display: inline-block;
+  border-radius: 20px;
+  padding: 4px 12px;
+  background: var(--workspace-accent-soft);
+  color: var(--workspace-accent);
+  font-size: 13px;
+}
+
+.user-management-status--disabled {
+  background: var(--workspace-hover);
+  color: var(--workspace-muted);
+}
