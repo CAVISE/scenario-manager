@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from starlette.requests import HTTPConnection
 
 from app.config import get_settings
-from app.database import get_session
+from app.dependencies import get_auth_service
 from app.security import (
     AuthenticatedUser,
     Role,
@@ -49,7 +49,7 @@ def _extract_access_token(connection: HTTPConnection) -> str:
 
 def get_current_user(
     connection: HTTPConnection,
-    session: Session = Depends(get_session),
+    auth_service: AuthService = Depends(get_auth_service),
 ) -> AuthenticatedUser:
     settings = get_settings()
 
@@ -69,9 +69,6 @@ def get_current_user(
             detail="Authentication required",
             headers={"WWW-Authenticate": "Bearer"},
         ) from None
-
-    repository = UserRepository(session)
-    auth_service = AuthService(repository)
 
     try:
         return auth_service.get_current_user(user_id)

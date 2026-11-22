@@ -12,7 +12,7 @@ from app.schemas import (
     ResetPasswordRequest,
     ChangePasswordRequest,
 )
-from app.routers.dependencies import get_auth_service, get_user_service
+from app.dependencies import get_auth_service, get_user_service
 from app.services.auth_service import AuthService, InvalidCredentialsError
 from app.services.user_service import (
     AuthenticationRequiredError,
