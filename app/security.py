@@ -1,0 +1,112 @@
+import base64
+import hashlib
+import hmac
+import json
+import secrets
+import time
+from dataclasses import dataclass
+from typing import Literal
+
+from app.config import get_settings
+from app.models import User
+
+Role = Literal["admin", "operator", "viewer"]
+_PASSWORD_ITERATIONS = 600_000
+_TOKEN_ALGORITHM = "HS256"
+
+
+@dataclass(frozen=True)
+class AuthenticatedUser:
+    id: int | None
+    login: str
+    role: Role
+
+
+def _b64encode(value: bytes) -> str:
+    return base64.urlsafe_b64encode(value).rstrip(b"=").decode("ascii")
+
+
+def _b64decode(value: str) -> bytes:
+    return base64.urlsafe_b64decode(value + "=" * (-len(value) % 4))
+
+
+def normalize_login(login: str) -> str:
+    return login.strip().lower()
+
+
+def hash_password(password: str) -> str:
+    salt = secrets.token_bytes(16)
+    digest = hashlib.pbkdf2_hmac(
+        "sha256", password.encode("utf-8"), salt, _PASSWORD_ITERATIONS
+    )
+    return (
+        f"pbkdf2_sha256${_PASSWORD_ITERATIONS}${_b64encode(salt)}${_b64encode(digest)}"
+    )
+
+
+def verify_password(password: str, stored_hash: str) -> bool:
+    try:
+        algorithm, iterations, encoded_salt, encoded_digest = stored_hash.split("$", 3)
+        if algorithm != "pbkdf2_sha256":
+            return False
+        digest = hashlib.pbkdf2_hmac(
+            "sha256",
+            password.encode("utf-8"),
+            _b64decode(encoded_salt),
+            int(iterations),
+        )
+        return hmac.compare_digest(_b64encode(digest), encoded_digest)
+    except (TypeError, ValueError):
+        return False
+
+
+def create_access_token(user: User) -> str:
+    settings = get_settings()
+    if settings.auth_jwt_secret is None:
+        raise RuntimeError("JWT authentication is not configured")
+    now = int(time.time())
+    payload = {
+        "sub": str(user.id),
+        "login": user.login,
+        "role": user.role,
+        "iat": now,
+        "exp": now + settings.auth_access_token_expire_minutes * 60,
+    }
+    header = {"alg": _TOKEN_ALGORITHM, "typ": "JWT"}
+    signing_input = ".".join(
+        (
+            _b64encode(json.dumps(header, separators=(",", ":")).encode("utf-8")),
+            _b64encode(json.dumps(payload, separators=(",", ":")).encode("utf-8")),
+        )
+    )
+    signature = hmac.digest(
+        settings.auth_jwt_secret.get_secret_value().encode("utf-8"),
+        signing_input.encode("ascii"),
+        "sha256",
+    )
+    return f"{signing_input}.{_b64encode(signature)}"
+
+
+def decode_access_token(token: str) -> dict[str, object]:
+    settings = get_settings()
+    if settings.auth_jwt_secret is None:
+        raise ValueError("JWT authentication is not configured")
+    try:
+        encoded_header, encoded_payload, encoded_signature = token.split(".")
+        header = json.loads(_b64decode(encoded_header))
+        payload = json.loads(_b64decode(encoded_payload))
+        if header.get("alg") != _TOKEN_ALGORITHM:
+            raise ValueError("unexpected JWT algorithm")
+        signing_input = f"{encoded_header}.{encoded_payload}".encode("ascii")
+        expected_signature = hmac.digest(
+            settings.auth_jwt_secret.get_secret_value().encode("utf-8"),
+            signing_input,
+            "sha256",
+        )
+        if not hmac.compare_digest(expected_signature, _b64decode(encoded_signature)):
+            raise ValueError("invalid JWT signature")
+        if not isinstance(payload, dict) or int(payload["exp"]) <= int(time.time()):
+            raise ValueError("expired JWT")
+        return payload
+    except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
+        raise ValueError("invalid access token") from exc

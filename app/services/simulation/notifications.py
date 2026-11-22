@@ -10,6 +10,8 @@ from starlette.websockets import WebSocketState
 
 from app.auth import get_current_user
 from app.database import SessionLocal
+from app.repositories.user_repository import UserRepository
+from app.services.auth_service import AuthService
 
 PayloadFactory = Callable[[], dict[str, Any]]
 RunPayloadFactory = Callable[[str], dict[str, Any]]
@@ -17,7 +19,10 @@ RunPayloadFactory = Callable[[str], dict[str, Any]]
 
 def _check_websocket_access(websocket: WebSocket) -> None:
     with SessionLocal() as session:
-        get_current_user(websocket, session)
+        repository = UserRepository(session)
+        auth_service = AuthService(repository)
+
+        get_current_user(websocket, auth_service=auth_service)
 
 
 class SimulationNotifier:

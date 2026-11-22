@@ -1,7 +1,13 @@
 import pytest
-from app.auth import create_access_token, hash_password, verify_password
+from app.auth import (
+    bootstrap_admin,
+    create_access_token,
+    hash_password,
+    verify_password,
+)
 from app.config import get_settings
 from app.models import User
+from sqlalchemy import select
 
 
 def test_jwt_protects_http_routes_and_enforces_roles(
@@ -478,4 +484,101 @@ def test_disabled_user_loses_websocket_access(
             assert closed.value.code == 1008
     finally:
         simulation._notifier.clear()
+        get_settings.cache_clear()
+
+
+def test_bootstrap_admin_creates_user_only_once(monkeypatch, db_session):
+    monkeypatch.setenv("APP_ENVIRONMENT", "development")
+    monkeypatch.setenv("AUTH_BOOTSTRAP_ADMIN_LOGIN", "InitialAdmin")
+    monkeypatch.setenv(
+        "AUTH_BOOTSTRAP_ADMIN_PASSWORD",
+        "bootstrap-password-123",
+    )
+    get_settings.cache_clear()
+
+    try:
+        bootstrap_admin(db_session)
+
+        users = db_session.scalars(select(User)).all()
+        assert len(users) == 1
+
+        admin = users[0]
+        assert admin.login == "initialadmin"
+        assert admin.role == "admin"
+        assert admin.is_active is True
+        assert verify_password(
+            "bootstrap-password-123",
+            admin.password_hash,
+        )
+
+        original_hash = admin.password_hash
+
+        bootstrap_admin(db_session)
+
+        db_session.refresh(admin)
+        assert len(db_session.scalars(select(User)).all()) == 1
+        assert admin.password_hash == original_hash
+    finally:
+        get_settings.cache_clear()
+
+
+def test_admin_can_create_user_and_duplicate_is_rejected(
+    monkeypatch, scenario_client, db_session
+):
+    monkeypatch.setenv("APP_ENVIRONMENT", "development")
+    monkeypatch.setenv("AUTH_JWT_SECRET", "a" * 32)
+    get_settings.cache_clear()
+
+    try:
+        admin = User(
+            login="admin",
+            password_hash="not-used",
+            role="admin",
+        )
+        db_session.add(admin)
+        db_session.commit()
+
+        headers = {
+            "Authorization": f"Bearer {create_access_token(admin)}",
+        }
+
+        response = scenario_client.post(
+            "/api/auth/users",
+            headers=headers,
+            json={
+                "login": "NEW_USER",
+                "password": "new-user-password-123",
+            },
+        )
+
+        assert response.status_code == 201
+        assert response.json() == {
+            "login": "new_user",
+            "role": "viewer",
+            "authentication_enabled": True,
+        }
+
+        user = db_session.scalar(select(User).where(User.login == "new_user"))
+        assert user is not None
+        assert user.is_active is True
+        assert verify_password("new-user-password-123", user.password_hash)
+
+        original_hash = user.password_hash
+
+        duplicate = scenario_client.post(
+            "/api/auth/users",
+            headers=headers,
+            json={
+                "login": "new_user",
+                "password": "another-password-123",
+            },
+        )
+
+        assert duplicate.status_code == 409
+        assert duplicate.json() == {"detail": "User already exists"}
+
+        db_session.refresh(user)
+        assert user.password_hash == original_hash
+        assert len(db_session.scalars(select(User)).all()) == 2
+    finally:
         get_settings.cache_clear()
