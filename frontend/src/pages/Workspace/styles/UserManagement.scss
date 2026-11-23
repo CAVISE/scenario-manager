@@ -18,14 +18,54 @@
     border: 1px solid var(--workspace-border, #8b9995);
     border-radius: 6px;
     color: inherit;
-    background: transparent;
+    background: var(--workspace-surface, #fff);
     font: inherit;
+  }
+
+  select {
+    color-scheme: dark;
+
+    option {
+      background: var(--workspace-surface, #fff);
+      color: var(--workspace-text, #18201d);
+    }
   }
 
   input:focus-visible,
   select:focus-visible {
-    outline: 2px solid var(--workspace-accent, #17755c);
-    outline-offset: 2px;
+    border-color: var(--workspace-accent, #17755c);
+    outline: 0;
+    box-shadow: 0 0 0 3px var(--workspace-focus-ring);
+  }
+}
+
+.user-management-password-field {
+  position: relative;
+  display: flex;
+
+  input {
+    padding-right: 72px !important;
+  }
+}
+
+.user-management-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  min-height: auto !important;
+  padding: 4px 8px !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--workspace-accent) !important;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transform: translateY(-50%);
+
+  &:focus-visible {
+    outline: 2px solid var(--workspace-accent);
+    outline-offset: 1px;
   }
 }
 
@@ -93,6 +133,42 @@
   border: 1px solid var(--workspace-border);
   border-radius: 8px;
   background: var(--workspace-accent-soft);
+}
+
+.user-management-notice-wrap {
+  position: relative;
+}
+
+.user-management-notice-wrap .user-management-notice {
+  padding-right: 52px;
+}
+
+.user-management-notice-close {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  display: grid;
+  width: 28px;
+  min-height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  place-items: center;
+  background: transparent;
+  color: var(--workspace-text);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  transform: translateY(-50%);
+
+  &:hover {
+    background: var(--workspace-hover);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--workspace-accent);
+    outline-offset: 2px;
+  }
 }
 
 .user-management-table-scroll {

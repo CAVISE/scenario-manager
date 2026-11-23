@@ -13,6 +13,7 @@ interface AuthGateProps {
 function LoginForm() {
   const [loginValue, setLogin] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const mutation = useMutation({
     mutationFn: () => login(loginValue, password),
     onSuccess: () =>
@@ -50,16 +51,26 @@ function LoginForm() {
         <small id="login-hint">
           Use 3–320 Latin letters, digits or underscores.
         </small>
-        <label>
-          Password
+        <label htmlFor="login-password">Password</label>
+        <span className="auth-card__password-field">
           <input
+            id="login-password"
             autoComplete="current-password"
             required
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
           />
-        </label>
+          <button
+            type="button"
+            className="auth-card__password-toggle"
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            aria-pressed={showPassword}
+            onClick={() => setShowPassword((visible) => !visible)}
+          >
+            {showPassword ? 'Hide' : 'Show'}
+          </button>
+        </span>
         {mutation.isError && (
           <p className="auth-card__error" role="alert">
             {getLoginErrorMessage(mutation.error)}

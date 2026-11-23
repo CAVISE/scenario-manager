@@ -10,9 +10,79 @@ async function session(
   );
 }
 const accounts = [
-  { id: 1, login: 'admin', is_admin: true, is_active: true },
-  { id: 2, login: 'researcher', is_admin: false, is_active: true },
+  {
+    id: 1,
+    login: 'admin',
+    role: 'admin',
+    is_admin: true,
+    is_active: true,
+  },
+  {
+    id: 2,
+    login: 'researcher',
+    role: 'viewer',
+    is_admin: false,
+    is_active: true,
+  },
 ];
+
+test('edits a user and toggles password visibility', async ({ page }) => {
+  await session(page);
+  let edited = false;
+  await page.route('**/api/auth/users', (route) =>
+    route.fulfill({
+      json: edited
+        ? [
+            accounts[0],
+            {
+              ...accounts[1],
+              login: 'renamed_researcher',
+              role: 'operator',
+            },
+          ]
+        : accounts,
+    })
+  );
+  await page.route('**/api/auth/users/2', (route) => {
+    expect(route.request().method()).toBe('PATCH');
+    expect(route.request().postDataJSON()).toEqual({
+      login: 'renamed_researcher',
+      role: 'operator',
+    });
+    edited = true;
+    return route.fulfill({
+      json: {
+        ...accounts[1],
+        login: 'renamed_researcher',
+        role: 'operator',
+      },
+    });
+  });
+
+  await page.goto('/users');
+  await page.getByRole('button', { name: 'Edit researcher' }).click();
+  const editDialog = page.getByRole('dialog');
+  await editDialog
+    .getByLabel('Login', { exact: true })
+    .fill('renamed_researcher');
+  await editDialog.locator('select').selectOption('operator');
+  await editDialog.getByRole('button', { name: 'Save changes' }).click();
+  await expect(page.getByRole('status')).toHaveText('User updated.');
+  await page.getByRole('button', { name: 'Dismiss notification' }).click();
+  await expect(page.getByRole('status')).toHaveCount(0);
+  await expect(
+    page.getByRole('rowheader', { name: 'renamed_researcher' })
+  ).toBeVisible();
+
+  await page.getByRole('button', { name: 'Create user', exact: true }).click();
+  const createDialog = page.getByRole('dialog');
+  const password = createDialog.getByLabel('New password', { exact: true });
+  await expect(password).toHaveAttribute('type', 'password');
+  await createDialog.getByRole('button', { name: 'Show new password' }).click();
+  await expect(password).toHaveAttribute('type', 'text');
+  await createDialog.getByRole('button', { name: 'Hide new password' }).click();
+  await expect(password).toHaveAttribute('type', 'password');
+});
 
 test('restricts direct user-management access and hides navigation for non-admins', async ({
   page,

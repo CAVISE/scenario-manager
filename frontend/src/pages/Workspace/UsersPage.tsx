@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { HTTPError } from 'ky';
 import { listUsers } from '@/api/users';
@@ -16,6 +16,11 @@ export default function UsersPage() {
   const [action, setAction] = useState<UserAction | null>(null);
   const [message, setMessage] = useState('');
   const allowed = user.role === 'admin';
+  useEffect(() => {
+    if (!message) return;
+    const timeout = window.setTimeout(() => setMessage(''), 5000);
+    return () => window.clearTimeout(timeout);
+  }, [message]);
   const users = useQuery({
     queryKey: ['users', user.login],
     enabled: allowed,
@@ -47,6 +52,12 @@ export default function UsersPage() {
   const activeAdmins =
     users.data?.filter((entry) => entry.is_admin && entry.is_active).length ??
     0;
+  const roleLabel = (role: string) =>
+    role === 'admin'
+      ? 'Administrator'
+      : role === 'operator'
+        ? 'Operator'
+        : 'Viewer';
   return (
     <section>
       <div className="workspace-page-heading">
@@ -72,9 +83,19 @@ export default function UsersPage() {
         </p>
       )}
       {message && (
-        <p className="user-management-notice" role="status">
-          {message}
-        </p>
+        <div className="user-management-notice-wrap">
+          <p className="user-management-notice" role="status">
+            {message}
+          </p>
+          <button
+            type="button"
+            className="user-management-notice-close"
+            onClick={() => setMessage('')}
+            aria-label="Dismiss notification"
+          >
+            ×
+          </button>
+        </div>
       )}
       <div className="workspace-settings-card user-management-card">
         <div className="workspace-section-heading">
@@ -103,8 +124,8 @@ export default function UsersPage() {
           >
             <table className="user-management-table">
               <caption>
-                {users.data.length} workspace accounts. Non-administrator roles
-                are not returned by the server.
+                {users.data.length} workspace accounts. Update access,
+                passwords, and availability from one place.
               </caption>
               <thead>
                 <tr>
@@ -126,9 +147,7 @@ export default function UsersPage() {
                         {entry.login}
                         {self && <small> (you)</small>}
                       </th>
-                      <td>
-                        {entry.is_admin ? 'Administrator' : 'Standard user'}
-                      </td>
+                      <td>{roleLabel(entry.role)}</td>
                       <td>
                         <span
                           className={`user-management-status${entry.is_active ? '' : ' user-management-status--disabled'}`}
@@ -138,6 +157,22 @@ export default function UsersPage() {
                       </td>
                       <td>
                         <div className="user-management-actions">
+                          <button
+                            type="button"
+                            className="workspace-secondary"
+                            onClick={() => {
+                              setMessage('');
+                              setAction({
+                                kind: 'edit',
+                                user: entry,
+                                isSelf: self,
+                                keepAdmin: lastAdmin,
+                              });
+                            }}
+                            aria-label={`Edit ${entry.login}`}
+                          >
+                            Edit
+                          </button>
                           <button
                             type="button"
                             className="workspace-secondary"
@@ -192,10 +227,14 @@ export default function UsersPage() {
         <UserActionDialog
           action={action}
           onClose={() => setAction(null)}
-          onSuccess={(text) => {
+          onSuccess={(text, sessionChanged) => {
             setAction(null);
             setMessage(text);
-            void users.refetch();
+            if (sessionChanged) {
+              void queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+            } else {
+              void users.refetch();
+            }
           }}
         />
       )}

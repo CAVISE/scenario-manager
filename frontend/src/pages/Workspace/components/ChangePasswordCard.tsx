@@ -13,6 +13,9 @@ export function ChangePasswordCard() {
   const [current, setCurrent] = useState('');
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
   const mutation = useMutation({
@@ -77,33 +80,79 @@ export function ChangePasswordCard() {
           >
             <label>
               Current password
-              <input
-                required
-                type="password"
-                autoComplete="current-password"
-                value={current}
-                onChange={(event) => setCurrent(event.target.value)}
-              />
+              <span className="user-management-password-field">
+                <input
+                  aria-label="Current password"
+                  required
+                  type={showCurrent ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  value={current}
+                  onChange={(event) => setCurrent(event.target.value)}
+                />
+                <button
+                  type="button"
+                  className="user-management-password-toggle"
+                  aria-label={
+                    showCurrent
+                      ? 'Hide current password'
+                      : 'Show current password'
+                  }
+                  aria-pressed={showCurrent}
+                  onClick={() => setShowCurrent((visible) => !visible)}
+                >
+                  {showCurrent ? 'Hide' : 'Show'}
+                </button>
+              </span>
             </label>
             <label>
               New password
-              <input
-                required
-                type="password"
-                autoComplete="new-password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-              />
+              <span className="user-management-password-field">
+                <input
+                  aria-label="New password"
+                  required
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                />
+                <button
+                  type="button"
+                  className="user-management-password-toggle"
+                  aria-label={
+                    showPassword ? 'Hide new password' : 'Show new password'
+                  }
+                  aria-pressed={showPassword}
+                  onClick={() => setShowPassword((visible) => !visible)}
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </span>
             </label>
             <label>
               Confirm new password
-              <input
-                required
-                type="password"
-                autoComplete="new-password"
-                value={confirmation}
-                onChange={(event) => setConfirmation(event.target.value)}
-              />
+              <span className="user-management-password-field">
+                <input
+                  aria-label="Confirm new password"
+                  required
+                  type={showConfirmation ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  value={confirmation}
+                  onChange={(event) => setConfirmation(event.target.value)}
+                />
+                <button
+                  type="button"
+                  className="user-management-password-toggle"
+                  aria-label={
+                    showConfirmation
+                      ? 'Hide password confirmation'
+                      : 'Show password confirmation'
+                  }
+                  aria-pressed={showConfirmation}
+                  onClick={() => setShowConfirmation((visible) => !visible)}
+                >
+                  {showConfirmation ? 'Hide' : 'Show'}
+                </button>
+              </span>
             </label>
             {error && (
               <p className="user-management-error" role="alert">
