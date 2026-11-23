@@ -51,7 +51,7 @@ test.describe('authentication gate', () => {
     ).toBeVisible();
 
     await page.getByLabel('login').fill('operator');
-    await page.getByLabel('Password').fill('correct-password');
+    await page.getByLabel('Password', { exact: true }).fill('correct-password');
     await page.getByRole('button', { name: 'Sign in' }).click();
 
     await expect(
@@ -90,7 +90,7 @@ test.describe('authentication gate', () => {
 
     await page.goto('/');
     await page.getByLabel('login').fill('operator');
-    await page.getByLabel('Password').fill('wrong-password');
+    await page.getByLabel('Password', { exact: true }).fill('wrong-password');
     await page.getByRole('button', { name: 'Sign in' }).click();
 
     await expect(page.getByRole('alert')).toHaveText(
@@ -118,7 +118,7 @@ test.describe('authentication gate', () => {
 
     await page.goto('/');
     await page.getByLabel('Login', { exact: true }).fill('Operator_42');
-    await page.getByLabel('Password').fill('correct-password');
+    await page.getByLabel('Password', { exact: true }).fill('correct-password');
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await expect(page.getByRole('alert')).toHaveText(
       'Unable to connect. Check your network connection and try again.'
@@ -146,7 +146,7 @@ test.describe('authentication gate', () => {
     );
     await page.goto('/');
     await page.getByLabel('Login', { exact: true }).fill('operator');
-    await page.getByLabel('Password').fill(password);
+    await page.getByLabel('Password', { exact: true }).fill(password);
     const request = page.waitForRequest('**/api/auth/login');
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     expect((await request).postDataJSON()).toEqual({
@@ -168,7 +168,7 @@ test.describe('authentication gate', () => {
     });
 
     await page.goto('/');
-    await page.getByLabel('Password').fill('correct-password');
+    await page.getByLabel('Password', { exact: true }).fill('correct-password');
     const loginInput = page.getByLabel('Login', { exact: true });
     for (const invalidLogin of ['operator@example.com', 'ab']) {
       await loginInput.fill(invalidLogin);

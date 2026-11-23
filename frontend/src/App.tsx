@@ -8,6 +8,7 @@ import { AppLoader } from './features/editor-runtime/Skeletons/EditorLoader.tsx'
 import WorkspaceLayout from './pages/Workspace/WorkspaceLayout';
 import ScenariosPage from './pages/Workspace/ScenariosPage';
 import SettingsPage from './pages/Workspace/SettingsPage';
+import UsersPage from './pages/Workspace/UsersPage';
 import RunsPage from './pages/Workspace/RunsPage';
 import ExperimentCenterPage from './pages/Workspace/ExperimentCenterPage';
 import ReplayPage from './pages/Workspace/ReplayPage';
@@ -23,6 +24,7 @@ function App() {
             <Route path="/" element={<StartPage />} />
             <Route path="/scenarios" element={<ScenariosPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/users" element={<UsersPage />} />
             <Route path="/runs" element={<RunsPage />} />
             <Route path="/runs/:runId" element={<RunDetailsPage />} />
             <Route path="/experiments" element={<ExperimentCenterPage />} />

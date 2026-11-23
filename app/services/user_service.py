@@ -76,6 +76,36 @@ class UserService:
         user.is_active = is_active
         return self.repository.save(user)
 
+    def update_user(
+        self,
+        user_id: int,
+        login: str,
+        role: Role,
+    ) -> User:
+        admins = self.repository.list_admins_for_update()
+        user = self.repository.get_by_id(user_id, for_update=True)
+        if user is None:
+            raise UserNotFoundError("User not found")
+
+        normalized_login = normalize_login(login)
+        existing_user = self.repository.get_by_login(normalized_login)
+        if existing_user is not None and existing_user.id != user.id:
+            raise UserAlreadyExistsError("User already exists")
+
+        if (
+            user.role == "admin"
+            and user.is_active
+            and role != "admin"
+            and sum(admin.is_active for admin in admins) <= 1
+        ):
+            raise LastActiveAdminError(
+                "Cannot change the role of the last active administrator"
+            )
+
+        user.login = normalized_login
+        user.role = role
+        return self.repository.save(user)
+
     def reset_user_password(
         self,
         user_id: int,

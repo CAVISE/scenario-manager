@@ -8,6 +8,7 @@ from app.schemas import (
     CurrentUserResponse,
     LoginRequest,
     UserResponse,
+    UpdateUserRequest,
     UpdateUserStatusRequest,
     ResetPasswordRequest,
     ChangePasswordRequest,
@@ -111,11 +112,54 @@ def list_users(
         UserResponse(
             id=user.id,
             login=user.login,
+            role=user.role,
             is_admin=user.role == "admin",
             is_active=user.is_active,
         )
         for user in users
     ]
+
+
+@router.patch("/users/{user_id}", response_model=UserResponse)
+def update_user(
+    user_id: int,
+    body: UpdateUserRequest,
+    response: Response,
+    user_service: UserService = Depends(get_user_service),
+    authenticated_user: AuthenticatedUser = Depends(require_roles("admin")),
+):
+    try:
+        user = user_service.update_user(
+            user_id=user_id,
+            login=body.login,
+            role=body.role,
+        )
+    except UserNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
+    except UserAlreadyExistsError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except LastActiveAdminError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+
+    if authenticated_user.id == user.id:
+        response.delete_cookie("access_token", httponly=True, samesite="lax")
+
+    return UserResponse(
+        id=user.id,
+        login=user.login,
+        role=user.role,
+        is_admin=user.role == "admin",
+        is_active=user.is_active,
+    )
 
 
 @router.patch("/users/{user_id}/status", response_model=UserResponse)
@@ -144,6 +188,7 @@ def update_user_status(
     return UserResponse(
         id=user.id,
         login=user.login,
+        role=user.role,
         is_admin=user.role == "admin",
         is_active=user.is_active,
     )

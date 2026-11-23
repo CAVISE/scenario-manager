@@ -136,12 +136,20 @@ class CurrentUserResponse(BaseModel):
 class UserResponse(BaseModel):
     id: int
     login: str
+    role: Literal["admin", "operator", "viewer"]
     is_admin: bool
     is_active: bool
 
 
 class UpdateUserStatusRequest(BaseModel):
     is_active: bool
+
+
+class UpdateUserRequest(BaseModel):
+    login: str = Field(
+        ..., min_length=3, max_length=320, pattern=r"^[A-Za-z0-9_]+$"
+    )
+    role: Literal["admin", "operator", "viewer"]
 
 
 class ResetPasswordRequest(BaseModel):
