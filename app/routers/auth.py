@@ -1,18 +1,6 @@
-from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from sqlalchemy import select
-from sqlalchemy.orm import Session
-from app.auth import (
-    AuthenticatedUser,
-    create_access_token,
-    hash_password,
-    normalize_login,
-    require_roles,
-    verify_password,
-)
+from app.auth import AuthenticatedUser, require_roles
 from app.config import get_settings
-from app.database import get_session
-from app.models import User
 from app.rate_limit import limiter
 from app.schemas import (
     AccessTokenResponse,
@@ -25,26 +13,36 @@ from app.schemas import (
     ResetPasswordRequest,
     ChangePasswordRequest,
 )
+from app.dependencies import get_auth_service, get_user_service
+from app.services.auth_service import AuthService, InvalidCredentialsError
+from app.services.user_service import (
+    AuthenticationRequiredError,
+    IncorrectPasswordError,
+    LastActiveAdminError,
+    UserAlreadyExistsError,
+    UserNotFoundError,
+    UserService,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-DatabaseSession = Annotated[Session, Depends(get_session)]
 
 
 @router.post("/login", response_model=AccessTokenResponse)
 @limiter.limit("5/minute")
 def login(
-    request: Request, body: LoginRequest, response: Response, session: DatabaseSession
+    request: Request,
+    body: LoginRequest,
+    response: Response,
+    auth_service: AuthService = Depends(get_auth_service),
 ):
-    user = session.scalar(select(User).where(User.login == normalize_login(body.login)))
-    if (
-        user is None
-        or not user.is_active
-        or not verify_password(body.password, user.password_hash)
-    ):
+    try:
+        token = auth_service.login(body.login, body.password)
+    except InvalidCredentialsError as exc:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid login or password"
-        )
-    token = create_access_token(user)
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(exc),
+        ) from exc
+
     settings = get_settings()
     response.set_cookie(
         key="access_token",
@@ -55,7 +53,8 @@ def login(
         max_age=settings.auth_access_token_expire_minutes * 60,
     )
     return AccessTokenResponse(
-        access_token=token, expires_in=settings.auth_access_token_expire_minutes * 60
+        access_token=token,
+        expires_in=settings.auth_access_token_expire_minutes * 60,
     )
 
 
@@ -75,12 +74,40 @@ def current_user(
     )
 
 
-@router.get("/users", response_model=list[UserResponse])
-def list_users(
-    session: DatabaseSession,
+@router.post(
+    "/users", response_model=CurrentUserResponse, status_code=status.HTTP_201_CREATED
+)
+def create_user(
+    body: CreateUserRequest,
+    user_service: UserService = Depends(get_user_service),
     _: AuthenticatedUser = Depends(require_roles("admin")),
 ):
-    users = session.scalars(select(User).order_by(User.id)).all()
+    try:
+        user = user_service.create_user(
+            login=body.login,
+            password=body.password,
+            role=body.role,
+        )
+    except UserAlreadyExistsError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+
+    return CurrentUserResponse(
+        login=user.login,
+        role=user.role,
+        authentication_enabled=True,
+    )
+
+
+@router.get("/users", response_model=list[UserResponse])
+def list_users(
+    user_service: UserService = Depends(get_user_service),
+    _: AuthenticatedUser = Depends(require_roles("admin")),
+):
+    users = user_service.list_users()
+
     return [
         UserResponse(
             id=user.id,
@@ -93,67 +120,35 @@ def list_users(
     ]
 
 
-@router.post(
-    "/users", response_model=CurrentUserResponse, status_code=status.HTTP_201_CREATED
-)
-def create_user(
-    body: CreateUserRequest,
-    session: DatabaseSession,
-    _: AuthenticatedUser = Depends(require_roles("admin")),
-):
-    login = normalize_login(body.login)
-    if session.scalar(select(User.id).where(User.login == login)) is not None:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="User already exists"
-        )
-    user = User(login=login, password_hash=hash_password(body.password), role=body.role)
-    session.add(user)
-    session.commit()
-    return CurrentUserResponse(
-        login=user.login,
-        role=user.role,
-        authentication_enabled=True,
-    )
-
-
 @router.patch("/users/{user_id}", response_model=UserResponse)
 def update_user(
     user_id: int,
     body: UpdateUserRequest,
     response: Response,
-    session: DatabaseSession,
+    user_service: UserService = Depends(get_user_service),
     authenticated_user: AuthenticatedUser = Depends(require_roles("admin")),
 ):
-    admins = session.scalars(
-        select(User)
-        .where(User.role == "admin")
-        .order_by(User.id)
-        .with_for_update()
-        .execution_options(populate_existing=True)
-    ).all()
-    user = session.get(User, user_id, with_for_update=True, populate_existing=True)
-    if user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-
-    login = normalize_login(body.login)
-    existing_id = session.scalar(select(User.id).where(User.login == login))
-    if existing_id is not None and existing_id != user.id:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User already exists")
-
-    if (
-        user.role == "admin"
-        and user.is_active
-        and body.role != "admin"
-        and sum(admin.is_active for admin in admins) <= 1
-    ):
+    try:
+        user = user_service.update_user(
+            user_id=user_id,
+            login=body.login,
+            role=body.role,
+        )
+    except UserNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
+    except UserAlreadyExistsError as exc:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Cannot change the role of the last active administrator",
-        )
-
-    user.login = login
-    user.role = body.role
-    session.commit()
+            detail=str(exc),
+        ) from exc
+    except LastActiveAdminError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
 
     if authenticated_user.id == user.id:
         response.delete_cookie("access_token", httponly=True, samesite="lax")
@@ -171,37 +166,24 @@ def update_user(
 def update_user_status(
     user_id: int,
     body: UpdateUserStatusRequest,
-    session: DatabaseSession,
+    user_service: UserService = Depends(get_user_service),
     _: AuthenticatedUser = Depends(require_roles("admin")),
 ):
-    admins = session.scalars(
-        select(User)
-        .where(User.role == "admin")
-        .order_by(User.id)
-        .with_for_update()
-        .execution_options(populate_existing=True)
-    ).all()
-
-    user = session.get(User, user_id, with_for_update=True, populate_existing=True)
-    if user is None:
+    try:
+        user = user_service.update_user_status(
+            user_id=user_id,
+            is_active=body.is_active,
+        )
+    except UserNotFoundError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
-
-    if (
-        user.role == "admin"
-        and user.is_active
-        and not body.is_active
-        and sum(admin.is_active for admin in admins) <= 1
-    ):
+            detail=str(exc),
+        ) from exc
+    except LastActiveAdminError as exc:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Cannot deactivate the last active administrator",
-        )
-
-    user.is_active = body.is_active
-    session.commit()
+            detail=str(exc),
+        ) from exc
 
     return UserResponse(
         id=user.id,
@@ -219,18 +201,19 @@ def update_user_status(
 def reset_user_password(
     user_id: int,
     body: ResetPasswordRequest,
-    session: DatabaseSession,
+    user_service: UserService = Depends(get_user_service),
     _: AuthenticatedUser = Depends(require_roles("admin")),
 ):
-    user = session.get(User, user_id)
-    if user is None:
+    try:
+        user_service.reset_user_password(
+            user_id=user_id,
+            new_password=body.new_password,
+        )
+    except UserNotFoundError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
-
-    user.password_hash = hash_password(body.new_password)
-    session.commit()
+            detail=str(exc),
+        ) from exc
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
@@ -238,36 +221,26 @@ def reset_user_password(
 @router.post("/change-password", status_code=status.HTTP_204_NO_CONTENT)
 def change_password(
     body: ChangePasswordRequest,
-    session: DatabaseSession,
+    user_service: UserService = Depends(get_user_service),
     authenticated_user: AuthenticatedUser = Depends(
         require_roles("admin", "operator", "viewer")
     ),
 ):
-    if authenticated_user.id is None:
+    try:
+        user_service.change_password(
+            user_id=authenticated_user.id,
+            current_password=body.current_password,
+            new_password=body.new_password,
+        )
+    except AuthenticationRequiredError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication required",
-        )
-
-    user = session.get(
-        User,
-        authenticated_user.id,
-        with_for_update=True,
-        populate_existing=True,
-    )
-    if user is None or not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication required",
-        )
-
-    if not verify_password(body.current_password, user.password_hash):
+            detail=str(exc),
+        ) from exc
+    except IncorrectPasswordError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Incorrect current password",
-        )
-
-    user.password_hash = hash_password(body.new_password)
-    session.commit()
+            detail=str(exc),
+        ) from exc
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
