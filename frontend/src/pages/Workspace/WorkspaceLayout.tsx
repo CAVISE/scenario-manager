@@ -8,6 +8,8 @@ import {
   PlayCircleOutlined,
   ScienceOutlined,
   ViewInArOutlined,
+  ArrowOutward,
+  LogoutOutlined,
 } from '@mui/icons-material';
 import { useEditorStore } from '@/store';
 import { useSimulationSocket } from '@editor/hooks/useApiHooks/useSimulationSocket';
@@ -18,6 +20,12 @@ export default function WorkspaceLayout() {
   useSimulationSocket();
   const { user, logout } = useAuth();
   const name = useEditorStore((state) => state.Scenario.name);
+  const roleLabel =
+    user.role === 'admin'
+      ? 'Administrator'
+      : user.role === 'operator'
+        ? 'Operator'
+        : 'Viewer';
   return (
     <div className="workspace-shell">
       <header className="workspace-topbar">
@@ -27,7 +35,11 @@ export default function WorkspaceLayout() {
         </Link>
         <div className="workspace-topbar-actions">
           <Link to="/editor" className="workspace-current">
-            {name || 'Untitled scenario'} <span>Open editor →</span>
+            <span className="workspace-current__label">Current scenario</span>
+            <strong>{name || 'Untitled scenario'}</strong>
+            <span className="workspace-current__action">
+              Open editor <ArrowOutward fontSize="inherit" />
+            </span>
           </Link>
           {user.authentication_enabled ? (
             <button
@@ -35,49 +47,67 @@ export default function WorkspaceLayout() {
               className="workspace-account"
               onClick={() => void logout()}
             >
-              <span>{user.login}</span>
-              <small>{user.role} · Sign out</small>
+              <span className="workspace-account__identity">
+                <strong>{user.login}</strong>
+                <small>{roleLabel}</small>
+              </span>
+              <span className="workspace-account__signout">
+                Sign out <LogoutOutlined fontSize="inherit" />
+              </span>
             </button>
           ) : (
             <span className="workspace-account workspace-account--development">
-              <span>Development access</span>
-              <small>Authentication is disabled</small>
+              <span className="workspace-account__identity">
+                <strong>Development access</strong>
+                <small>Authentication is disabled</small>
+              </span>
             </span>
           )}
         </div>
       </header>
       <aside className="workspace-sidebar">
         <nav aria-label="Main navigation">
-          <NavLink to="/" end>
-            <DashboardOutlined />
-            Dashboard
-          </NavLink>
-          <NavLink to="/scenarios">
-            <FolderOutlined />
-            Scenarios
-          </NavLink>
-          <NavLink to="/experiments">
-            <ScienceOutlined />
-            Experiments
-          </NavLink>
-          <NavLink to="/runs">
-            <PlayCircleOutlined />
-            Runs
-          </NavLink>
-          <NavLink to="/replay">
-            <HistoryOutlined />
-            Replay
-          </NavLink>
-          {user.role === 'admin' && (
-            <NavLink to="/users">
-              <PeopleOutlined />
-              Users
+          <div className="workspace-nav-group workspace-nav-group--overview">
+            <NavLink to="/" end>
+              <DashboardOutlined />
+              Dashboard
             </NavLink>
-          )}
-          <NavLink to="/settings">
-            <SettingsOutlined />
-            Settings
-          </NavLink>
+          </div>
+          <div className="workspace-nav-group">
+            <p className="workspace-nav-group__title">Scenarios</p>
+            <NavLink to="/scenarios">
+              <FolderOutlined />
+              Scenarios
+            </NavLink>
+          </div>
+          <div className="workspace-nav-group">
+            <p className="workspace-nav-group__title">Simulation</p>
+            <NavLink to="/experiments">
+              <ScienceOutlined />
+              Experiments
+            </NavLink>
+            <NavLink to="/runs">
+              <PlayCircleOutlined />
+              Runs
+            </NavLink>
+            <NavLink to="/replay">
+              <HistoryOutlined />
+              Replay
+            </NavLink>
+          </div>
+          <div className="workspace-nav-group">
+            <p className="workspace-nav-group__title">Account &amp; access</p>
+            {user.role === 'admin' && (
+              <NavLink to="/users">
+                <PeopleOutlined />
+                Users
+              </NavLink>
+            )}
+            <NavLink to="/settings">
+              <SettingsOutlined />
+              Settings
+            </NavLink>
+          </div>
         </nav>
         <div className="workspace-sidebar-footer">
           <span>RESEARCH WORKSPACE</span>
