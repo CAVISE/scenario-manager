@@ -122,6 +122,7 @@ def test_admin_can_list_users(monkeypatch, scenario_client, db_session):
             {
                 "id": admin.id,
                 "login": "admin",
+                "role": "admin",
                 "is_admin": True,
                 "is_active": True,
             }
@@ -165,6 +166,14 @@ def test_non_admin_cannot_list_or_disable_users(
         db_session.refresh(user)
         assert user.is_active is True
 
+        update_response = scenario_client.patch(
+            f"/api/auth/users/{user.id}",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"login": "renamed", "role": "operator"},
+        )
+
+        assert update_response.status_code == 403
+
         reset_response = scenario_client.post(
             f"/api/auth/users/{user.id}/reset-password",
             headers={"Authorization": f"Bearer {token}"},
@@ -196,6 +205,13 @@ def test_listing_or_disabling_users_requires_authentication(
         )
 
         assert status_response.status_code == 401
+
+        update_response = scenario_client.patch(
+            "/api/auth/users/1",
+            json={"login": "renamed", "role": "viewer"},
+        )
+
+        assert update_response.status_code == 401
 
         reset_response = scenario_client.post(
             "/api/auth/users/1/reset-password",
@@ -279,6 +295,7 @@ def test_admin_can_change_user_status(
         assert response.json() == {
             "id": user.id,
             "login": "viewer",
+            "role": "viewer",
             "is_admin": False,
             "is_active": is_active,
         }
@@ -291,6 +308,63 @@ def test_admin_can_change_user_status(
             headers={"Authorization": f"Bearer {user_token}"},
         )
         assert access_response.status_code == (200 if is_active else 401)
+    finally:
+        get_settings.cache_clear()
+
+
+def test_admin_can_update_a_users_login_and_role(monkeypatch, scenario_client, db_session):
+    monkeypatch.setenv("APP_ENVIRONMENT", "development")
+    monkeypatch.setenv("AUTH_JWT_SECRET", "a" * 32)
+    get_settings.cache_clear()
+
+    try:
+        admin = User(login="admin", password_hash="not-used", role="admin")
+        user = User(login="viewer", password_hash="not-used", role="viewer")
+        db_session.add_all([admin, user])
+        db_session.commit()
+
+        response = scenario_client.patch(
+            f"/api/auth/users/{user.id}",
+            headers={"Authorization": f"Bearer {create_access_token(admin)}"},
+            json={"login": "Renamed_User", "role": "operator"},
+        )
+
+        assert response.status_code == 200
+        assert response.json() == {
+            "id": user.id,
+            "login": "renamed_user",
+            "role": "operator",
+            "is_admin": False,
+            "is_active": True,
+        }
+        db_session.refresh(user)
+        assert user.login == "renamed_user"
+        assert user.role == "operator"
+    finally:
+        get_settings.cache_clear()
+
+
+def test_cannot_change_the_last_active_administrator_role(
+    monkeypatch, scenario_client, db_session
+):
+    monkeypatch.setenv("APP_ENVIRONMENT", "development")
+    monkeypatch.setenv("AUTH_JWT_SECRET", "a" * 32)
+    get_settings.cache_clear()
+
+    try:
+        admin = User(login="admin", password_hash="not-used", role="admin")
+        db_session.add(admin)
+        db_session.commit()
+
+        response = scenario_client.patch(
+            f"/api/auth/users/{admin.id}",
+            headers={"Authorization": f"Bearer {create_access_token(admin)}"},
+            json={"login": "admin", "role": "viewer"},
+        )
+
+        assert response.status_code == 409
+        db_session.refresh(admin)
+        assert admin.role == "admin"
     finally:
         get_settings.cache_clear()
 

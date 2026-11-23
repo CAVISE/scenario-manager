@@ -20,6 +20,7 @@ from app.schemas import (
     CurrentUserResponse,
     LoginRequest,
     UserResponse,
+    UpdateUserRequest,
     UpdateUserStatusRequest,
     ResetPasswordRequest,
     ChangePasswordRequest,
@@ -84,6 +85,7 @@ def list_users(
         UserResponse(
             id=user.id,
             login=user.login,
+            role=user.role,
             is_admin=user.role == "admin",
             is_active=user.is_active,
         )
@@ -111,6 +113,57 @@ def create_user(
         login=user.login,
         role=user.role,
         authentication_enabled=True,
+    )
+
+
+@router.patch("/users/{user_id}", response_model=UserResponse)
+def update_user(
+    user_id: int,
+    body: UpdateUserRequest,
+    response: Response,
+    session: DatabaseSession,
+    authenticated_user: AuthenticatedUser = Depends(require_roles("admin")),
+):
+    admins = session.scalars(
+        select(User)
+        .where(User.role == "admin")
+        .order_by(User.id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    ).all()
+    user = session.get(User, user_id, with_for_update=True, populate_existing=True)
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    login = normalize_login(body.login)
+    existing_id = session.scalar(select(User.id).where(User.login == login))
+    if existing_id is not None and existing_id != user.id:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User already exists")
+
+    if (
+        user.role == "admin"
+        and user.is_active
+        and body.role != "admin"
+        and sum(admin.is_active for admin in admins) <= 1
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot change the role of the last active administrator",
+        )
+
+    user.login = login
+    user.role = body.role
+    session.commit()
+
+    if authenticated_user.id == user.id:
+        response.delete_cookie("access_token", httponly=True, samesite="lax")
+
+    return UserResponse(
+        id=user.id,
+        login=user.login,
+        role=user.role,
+        is_admin=user.role == "admin",
+        is_active=user.is_active,
     )
 
 
@@ -153,6 +206,7 @@ def update_user_status(
     return UserResponse(
         id=user.id,
         login=user.login,
+        role=user.role,
         is_admin=user.role == "admin",
         is_active=user.is_active,
     )
