@@ -1,0 +1,68 @@
+# What the CAVISE/OpenCDA fork accepts in a scenario config, taken from the
+# commit below. default.yaml next to this file is copied from the same commit.
+# Update both files together.
+source:
+  repository: CAVISE/OpenCDA
+  commit: 1ee39adb155754ebe16c3aeb008594f26a22cc5c
+
+# opencda/core/application/behavior/services/<name>/service.py
+services:
+  self_informer:
+    params: [priority]
+  default_movement_request:
+    params: [priority]
+  movement_controller:
+    params: [priority]
+  aim_client:
+    params: [priority, debug]
+    requires: [self_informer, movement_controller]
+  aim_server:
+    # model, underling_model, hidden_channels and weights are passed to the
+    # AIM model, which ignores any other key.
+    params:
+      - priority
+      - control_radius
+      - control_center_location
+      - debug
+      - model
+      - underling_model
+      - hidden_channels
+      - weights
+    ignores_unknown_params: true
+    # Models registered in AIM/models.
+    choices:
+      model: [MTP]
+    requires_unless:
+      control_center_location: [self_informer]
+
+# opencda/core/attack/adversary_framework/attacks/<name>/config.yaml
+attacks:
+  aim_client_identity_spoofing: &aim_attack
+    requires:
+      - {node_type: rsu, service: aim_server}
+      - {node_type: vehicle, service: aim_client}
+  aim_client_request_position_spoofing: *aim_attack
+  aim_client_request_speed_spoofing: *aim_attack
+  aim_client_reservation_stealing: *aim_attack
+  aim_client_response_sniffer: *aim_attack
+  aim_server_request_ddos: *aim_attack
+  aim_server_request_replay: *aim_attack
+  aim_server_response_jamming: *aim_attack
+  aim_server_response_replay: *aim_attack
+  aim_server_trajectory_spoofing: *aim_attack
+
+# Keys that Scenario Manager writes and the fork never reads. Root keys are
+# relative to the config root, agent keys to vehicle_base, rsu_base,
+# agent_base and every agent entry.
+ignored_keys:
+  root:
+    world.client_host: the CARLA host is set with the --carla-host flag
+    traffic_manager: use carla_traffic_manager
+    carla_traffic_manager.port: the Traffic Manager always uses port 8000
+    cooperative_perception_visualization: use the coperception section
+  agent:
+    v2x: V2X settings are not configurable
+    sensing.localization.navigation_source: use sensing.localization.provider
+    sensing.perception.detection_range: perception range is not configurable
+    behavior.static_obstacle_avoidance_enabled: not supported
+    behavior.color: not supported
