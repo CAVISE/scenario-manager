@@ -42,6 +42,8 @@ class AgentConfig:
 
 @dataclass(frozen=True)
 class EffectiveConfig:
+    # The scenario as written, before default.yaml is merged in.
+    source: Mapping[str, Any]
     root: Mapping[str, Any]
     agents: tuple[AgentConfig, ...]
 
@@ -163,11 +165,12 @@ def build_effective_config(
     Raises ``InvalidConfigError`` when the fork could not even load it.
     """
     conflicts: list[ConfigPath] = []
-    root = _merge(defaults, _mapping(scenario, (), "The config"), (), conflicts)
+    source = _mapping(scenario, (), "The config")
+    root = _merge(defaults, source, (), conflicts)
     _check_conflicts(conflicts)
     root = _resolve(root)
     agents = tuple(
         agent for kind in AgentKind for agent in _agents(root, kind, conflicts)
     )
     _check_conflicts(conflicts)
-    return EffectiveConfig(root=root, agents=agents)
+    return EffectiveConfig(source=source, root=root, agents=agents)

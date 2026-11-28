@@ -14,7 +14,10 @@ from app.integrations.opencda.fork.rules.agents import (
 )
 from app.integrations.opencda.fork.rules.attacks import AttackRule
 from app.integrations.opencda.fork.rules.base import ConfigRule
+from app.integrations.opencda.fork.rules.blueprint import BlueprintRule
 from app.integrations.opencda.fork.rules.ignored import IgnoredKeyRule
+from app.integrations.opencda.fork.rules.metrics import MetricsRule
+from app.integrations.opencda.fork.rules.schema import SchemaRule
 from app.integrations.opencda.fork.rules.sensing import (
     LocalizationRule,
     MapManagerRule,
@@ -48,6 +51,7 @@ def create_fork_validator(catalog: ForkCatalog | None = None) -> ForkConfigValid
     return ForkConfigValidator(
         catalog.defaults,
         [
+            SchemaRule(),
             WorldRule(),
             AgentIdRule(),
             AgentPlacementRule(),
@@ -57,6 +61,10 @@ def create_fork_validator(catalog: ForkCatalog | None = None) -> ForkConfigValid
             MapManagerRule(),
             BehaviorServiceRule(catalog.services),
             AttackRule(catalog.attacks),
+            MetricsRule(
+                catalog.metrics, catalog.root_metric_blocks, catalog.cav_metric_blocks
+            ),
+            BlueprintRule(catalog.blueprint_meta),
             TrafficManagerRule(),
             IgnoredKeyRule(catalog.ignored_root_keys, catalog.ignored_agent_keys),
         ],

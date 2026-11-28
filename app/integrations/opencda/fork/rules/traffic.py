@@ -14,19 +14,11 @@ class TrafficManagerRule:
 
     def check(self, config: EffectiveConfig) -> Iterator[ConfigIssue]:
         traffic = config.root.get("carla_traffic_manager")
-        if traffic is None:
+        if not isinstance(traffic, Mapping) or isinstance(
+            traffic.get("vehicle_list"), list
+        ):
             return
         path = ("carla_traffic_manager",)
-        if not isinstance(traffic, Mapping):
-            yield error(
-                "carla_traffic_manager.type",
-                "carla_traffic_manager must be a mapping.",
-                path,
-            )
-            return
-        if isinstance(traffic.get("vehicle_list"), list):
-            return
-
         if not isinstance(traffic.get("range"), list):
             yield error(
                 "carla_traffic_manager.range",

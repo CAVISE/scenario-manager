@@ -9,6 +9,8 @@ from app.integrations.opencda.fork.effective import (
 from app.integrations.opencda.fork.issues import ConfigIssue, error, warning
 from app.integrations.opencda.fork.rules.base import is_number, lookup, origin
 
+_TRAFFIC_MANAGER_PORT = 8000
+
 
 class AgentIdRule:
     """The fork replaces a missing, negative or repeated id with its own.
@@ -100,6 +102,35 @@ class AgentPlacementRule:
                 "agent.destination",
                 "destination must contain 3 numbers unless carla_autopilot is true.",
                 (*agent.path, "destination"),
+            )
+        elif autopilot:
+            yield from AgentPlacementRule._autopilot_port(config, agent)
+
+    @staticmethod
+    def _autopilot_port(
+        config: EffectiveConfig, agent: AgentConfig
+    ) -> Iterator[ConfigIssue]:
+        keys = (
+            ("carla_autopilot_port",)
+            if "carla_autopilot_port" in agent.config
+            else ("behavior", "carla_autopilot_port")
+        )
+        port = lookup(agent.config, keys, _TRAFFIC_MANAGER_PORT)
+        # Other types are reported by SchemaRule.
+        if not isinstance(port, int) or isinstance(port, bool):
+            return
+        if port <= 0:
+            yield error(
+                "agent.carla_autopilot_port",
+                "carla_autopilot_port must be positive.",
+                origin(config, agent, keys),
+            )
+        elif port != _TRAFFIC_MANAGER_PORT:
+            yield warning(
+                "agent.carla_autopilot_port",
+                f"The fork configures only the Traffic Manager on port "
+                f"{_TRAFFIC_MANAGER_PORT}; this CAV gets none of its settings.",
+                origin(config, agent, keys),
             )
 
 

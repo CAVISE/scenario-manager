@@ -8,16 +8,20 @@ _AGENT_BASES = ("agent_base", *(kind.base_key for kind in AgentKind))
 
 
 class IgnoredKeyRule:
-    """Keys the fork never reads, so the setting has no effect."""
+    """Keys the fork never reads, so the setting has no effect.
+
+    Only the scenario as written is searched: some of these keys also sit in
+    the fork's own default.yaml and are not the scenario author's choice.
+    """
 
     def __init__(self, root_keys: Mapping[str, str], agent_keys: Mapping[str, str]):
         self._root_keys = root_keys
         self._agent_keys = agent_keys
 
     def check(self, config: EffectiveConfig) -> Iterator[ConfigIssue]:
-        yield from self._find(config.root, (), self._root_keys)
+        yield from self._find(config.source, (), self._root_keys)
         for base in _AGENT_BASES:
-            yield from self._find(config.root.get(base), (base,), self._agent_keys)
+            yield from self._find(config.source.get(base), (base,), self._agent_keys)
         for agent in config.agents:
             yield from self._find(agent.source, agent.path, self._agent_keys)
 

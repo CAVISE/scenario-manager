@@ -169,15 +169,37 @@ def test_minimal_scenario_is_valid(validate):
     ("world", "code"),
     [
         ({"sync_mode": False}, "world.sync_mode"),
-        ({"max_substeps": 17}, "world.max_substeps"),
-        ({"fixed_delta_seconds": 0}, "world.fixed_delta_seconds"),
         ({"fixed_delta_seconds": 0.2}, "world.physics"),
         ({"tile_stream_distance": 100}, "world.actor_active_distance"),
-        ({"spectator_as_ego": "yes"}, "world.spectator_as_ego"),
     ],
 )
-def test_world_rules(validate, world, code):
+def test_world_relations(validate, world, code):
     assert [issue.code for issue in validate(_scenario(world=world))] == [code]
+
+
+@pytest.mark.parametrize(
+    ("world", "path"),
+    [
+        ({"max_substeps": 17}, ("max_substeps",)),
+        ({"max_substeps": "10"}, ("max_substeps",)),
+        ({"spectator_as_ego": "yes"}, ("spectator_as_ego",)),
+        ({"tile_stream_distance": "3000"}, ("tile_stream_distance",)),
+        ({"seed": -1}, ("seed",)),
+        ({"weather": {"cloudiness": "a lot"}}, ("weather", "cloudiness")),
+    ],
+)
+def test_world_field_values(validate, world, path):
+    assert _found(validate(_scenario(world=world))) == {
+        ("config.value", ("world", *path))
+    }
+
+
+def test_zero_time_step_breaks_every_dt_that_refers_to_it(validate):
+    assert _found(validate(_scenario(world={"fixed_delta_seconds": 0}))) == {
+        ("config.value", ("world", "fixed_delta_seconds")),
+        ("config.value", ("vehicle_base", "sensing", "localization", "dt")),
+        ("config.value", ("vehicle_base", "controller", "args", "dt")),
+    }
 
 
 def test_physics_limit_is_skipped_without_substepping(validate):
@@ -424,3 +446,160 @@ def test_ignored_keys_are_reported_where_they_are_set(validate):
         ("config.ignored", ("world", "client_host")),
         ("config.ignored", ("scenario", "single_cav_list", 0, "v2x")),
     }
+
+
+@pytest.mark.parametrize(
+    ("sections", "path"),
+    [
+        (
+            {"vehicle_base": {"behavior": {"local_planner": {"buffer_size": -1}}}},
+            ("vehicle_base", "behavior", "local_planner", "buffer_size"),
+        ),
+        (
+            {"vehicle_base": {"controller": {"type": "mpc_controller"}}},
+            ("vehicle_base", "controller", "type"),
+        ),
+        (
+            {"vehicle_base": {"map_manager": {"raster_size": [224]}}},
+            ("vehicle_base", "map_manager", "raster_size"),
+        ),
+        (
+            {
+                "vehicle_base": {
+                    "sensing": {"perception": {"camera": {"positions": [[1]]}}}
+                }
+            },
+            ("vehicle_base", "sensing", "perception", "camera", "positions", 0),
+        ),
+        (
+            {"carla_traffic_manager": {"auto_lane_change": "no"}},
+            ("carla_traffic_manager", "auto_lane_change"),
+        ),
+        ({"sumo": {"port": 0}}, ("sumo", "port")),
+        (
+            {"coperception": {"visualization": {"image_dpi": "high"}}},
+            ("coperception", "visualization", "image_dpi"),
+        ),
+        (
+            {"blueprint": {"bp_meta_path": "a.json"}},
+            ("blueprint", "use_multi_class_bp"),
+        ),
+    ],
+)
+def test_field_values_are_checked_where_they_are_set(validate, sections, path):
+    assert _found(validate(_scenario(**sections))) == {("config.value", path)}
+
+
+def test_agent_field_is_reported_on_the_agent(validate):
+    config = _scenario(cavs=[_cav(role_name="")])
+
+    assert _found(validate(config)) == {
+        ("config.value", ("scenario", "single_cav_list", 0, "role_name"))
+    }
+
+
+def test_truthy_flag_is_a_warning(validate):
+    config = _scenario(vehicle_base={"behavior": {"ignore_traffic_light": "ture"}})
+
+    assert [(issue.message, issue.severity) for issue in validate(config)] == [
+        (
+            "vehicle_base.behavior.ignore_traffic_light: Input should be a "
+            "boolean; the fork reads it as True.",
+            Severity.WARNING,
+        )
+    ]
+
+
+def test_custom_actor_needs_a_spawn_point(validate):
+    config = _scenario()
+    config["scenario"]["custom_actor_list"] = [{"model": "static.prop.box01"}]
+
+    assert _found(validate(config)) == {
+        ("config.value", ("scenario", "custom_actor_list", 0))
+    }
+
+
+def test_metrics(validate):
+    metric_configs = {
+        "speed": {"warmup_steps": 1},
+        "jerk": {},
+        "ap_at_iou": {},
+        "ttc": {"window": 3},
+    }
+    config = _scenario(
+        vehicle_base={"behavior": {"metrics": {"metric_configs": metric_configs}}},
+        coperception={"metrics": {"enabled_metrics": ["ap_at_iou"]}},
+    )
+    configs = ("vehicle_base", "behavior", "metrics", "metric_configs")
+
+    assert _found(validate(config)) == {
+        ("metrics.unknown", (*configs, "jerk")),
+        ("metrics.unused", (*configs, "ap_at_iou")),
+        ("metrics.param_unknown", (*configs, "ttc", "window")),
+        ("metrics.legacy", ("coperception", "metrics", "enabled_metrics")),
+    }
+
+
+def test_metric_configs_must_be_a_mapping(validate):
+    config = _scenario(coperception={"metrics": {"metric_configs": None}})
+
+    assert _found(validate(config)) == {
+        ("metrics.type", ("coperception", "metrics", "metric_configs"))
+    }
+
+
+def test_blueprint_meta_and_classes(validate):
+    unknown_file = _scenario(
+        blueprint={"use_multi_class_bp": True, "bp_meta_path": "bbx_stats_0912.json"}
+    )
+    bad_weights = _scenario(
+        blueprint={
+            "use_multi_class_bp": True,
+            "bp_meta_path": "opencda/assets/blueprint_meta/bbx_stats_0915.json",
+            "bp_class_sample_prob": {"car": 0, "tank": 0},
+        }
+    )
+
+    assert {issue.code for issue in validate(unknown_file)} == {
+        "blueprint.bp_meta_path",
+        "blueprint.bp_class_sample_prob",
+    }
+    assert _found(validate(bad_weights)) == {
+        ("blueprint.class", ("blueprint", "bp_class_sample_prob", "tank")),
+        ("blueprint.bp_class_sample_prob", ("blueprint", "bp_class_sample_prob")),
+    }
+
+
+def test_disabled_perception_cannot_show_sensors(validate):
+    config = _scenario(cavs=[_cav(sensing={"perception": {"enabled": False}})])
+
+    assert _found(validate(config)) == {
+        (
+            "sensing.perception.enabled",
+            ("scenario", "single_cav_list", 0, "sensing", "perception", "enabled"),
+        )
+    }
+
+
+def test_shown_cameras_need_matching_positions(validate):
+    camera = ("rsu_base", "sensing", "perception", "camera")
+    config = _scenario(
+        rsus=[_rsu()],
+        rsu_base={"sensing": {"perception": {"camera": {"visualize": 5, "num": 5}}}},
+    )
+
+    assert _found(validate(config)) == {
+        ("sensing.perception.camera.num", (*camera, "num")),
+        ("sensing.perception.camera.visualize", (*camera, "visualize")),
+    }
+
+
+@pytest.mark.parametrize(
+    ("port", "severity"), [(0, Severity.ERROR), (8001, Severity.WARNING)]
+)
+def test_autopilot_port(validate, port, severity):
+    config = _scenario(cavs=[_cav(carla_autopilot=True, carla_autopilot_port=port)])
+
+    assert [(issue.code, issue.severity) for issue in validate(config)] == [
+        ("agent.carla_autopilot_port", severity)
+    ]
