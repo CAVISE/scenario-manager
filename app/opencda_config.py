@@ -420,7 +420,8 @@ def _validate_complete_config(config: dict[str, Any]) -> None:
         raise OpenCDAConfigError("carla_traffic_manager.range must be a list")
 
 
-def parse_open_cda_yaml(config_yaml: str) -> dict[str, Any]:
+def load_open_cda_yaml(config_yaml: str) -> dict[str, Any]:
+    """Parse the YAML without checking it against any OpenCDA version."""
     if not isinstance(config_yaml, str) or not config_yaml.strip():
         raise OpenCDAConfigError("OpenCDA YAML cannot be empty")
     if len(config_yaml) > MAX_OPEN_CDA_CONFIG_LENGTH:
@@ -435,6 +436,11 @@ def parse_open_cda_yaml(config_yaml: str) -> dict[str, Any]:
 
     if not isinstance(parsed, dict):
         raise OpenCDAConfigError("OpenCDA YAML root must be an object")
+    return parsed
+
+
+def parse_open_cda_yaml(config_yaml: str) -> dict[str, Any]:
+    parsed = load_open_cda_yaml(config_yaml)
     _validate_complete_config(parsed)
     scenario = parsed["scenario"]
     if not isinstance(scenario.get("single_cav_list"), list):
@@ -486,7 +492,9 @@ def parse_open_cda_yaml(config_yaml: str) -> dict[str, Any]:
 def validate_config_object_counts(
     config: dict[str, Any], scenario_groups: list[dict]
 ) -> None:
-    scenario = config["scenario"]
+    scenario = config.get("scenario")
+    if not isinstance(scenario, dict):
+        scenario = {}
     yaml_cavs = scenario.get("single_cav_list") or []
     yaml_rsus = scenario.get("rsu_list") or []
     request_cavs = sum(

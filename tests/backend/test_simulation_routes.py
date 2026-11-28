@@ -227,6 +227,67 @@ def test_preflight_accepts_valid_run_payload(client, open_cda_yaml):
     }
 
 
+FORK_YAML = """
+scenario:
+  single_cav_list:
+    - id: 1
+      spawn_position: [0, 0, 0.3, 0, 0, 0]
+      destination: [10, 0, 0.3]
+"""
+
+
+def _validate(client, yaml_text, target):
+    return client.post(
+        f"/api/v1/scenarios/validate?target={target}",
+        json={
+            "map": "Town01",
+            "opencda_config_yaml": yaml_text,
+            "scenario": VALID_SIM_SCENARIO,
+        },
+    ).json()
+
+
+def test_fork_preflight_accepts_config_without_sm_only_fields(client):
+    assert _validate(client, FORK_YAML, "bundled")["valid"] is False
+    assert _validate(client, FORK_YAML, "fork")["valid"] is True
+
+
+def test_fork_preflight_reports_fork_errors_inside_the_yaml(client):
+    result = _validate(client, FORK_YAML + "attacks: [gnss_spoofing]\n", "fork")
+
+    assert result["valid"] is False
+    assert {
+        "code": "attacks.unknown",
+        "message": "Unknown attack 'gnss_spoofing'.",
+        "path": ["opencda_config_yaml", "attacks", 0],
+        "severity": "error",
+        "entity_id": None,
+    } in result["issues"]
+
+
+def test_fork_preflight_warns_about_settings_the_fork_ignores(client, open_cda_yaml):
+    result = _validate(client, open_cda_yaml, "fork")
+
+    found = {
+        (issue["code"], tuple(issue["path"]), issue["severity"])
+        for issue in result["issues"]
+    }
+
+    assert result["valid"] is True
+    assert (
+        "config.ignored",
+        ("opencda_config_yaml", "vehicle_base", "v2x"),
+        "warning",
+    ) in found
+
+
+def test_fork_preflight_still_checks_object_counts(client):
+    result = _validate(client, "scenario: {single_cav_list: []}\n", "fork")
+
+    assert result["valid"] is False
+    assert "CAV count does not match" in result["issues"][0]["message"]
+
+
 def test_v1_run_exposes_stable_run_id_and_active_status(client, open_cda_yaml):
     response = client.post(
         "/api/v1/runs",

@@ -1,6 +1,33 @@
+from collections.abc import Mapping
+from functools import cache
 from typing import Any
 
+from app.integrations.opencda.fork.validator import (
+    ForkConfigValidator,
+    create_fork_validator,
+)
 from app.schemas import ScenarioValidationIssue
+
+# Fork issues point inside the YAML sent in this request field.
+_FORK_ISSUE_ROOT = "opencda_config_yaml"
+
+
+@cache
+def _fork_validator() -> ForkConfigValidator:
+    return create_fork_validator()
+
+
+def fork_config_issues(config: Mapping[str, Any]) -> list[ScenarioValidationIssue]:
+    """Check an OpenCDA config against the rules of the CAVISE/OpenCDA fork."""
+    return [
+        ScenarioValidationIssue(
+            code=issue.code,
+            message=issue.message,
+            path=[_FORK_ISSUE_ROOT, *issue.path],
+            severity=issue.severity.value,
+        )
+        for issue in _fork_validator().validate(config)
+    ]
 
 
 def preflight_entity_issues(body: dict[str, Any]) -> list[ScenarioValidationIssue]:
