@@ -33,10 +33,15 @@ from app.services.simulation.results import (
     result_directory,
     result_file_path,
 )
-from app.services.simulation.validation import preflight_entity_issues
+from app.services.simulation.validation import (
+    fork_config_issues,
+    preflight_entity_issues,
+)
 from app.services.simulation.worker import launch_worker, stop_worker
 from app.routers.simulation_results import add_result_routes
 from app.schemas import (
+    ForkSimulationRequest,
+    OpenCDATarget,
     ResultRun,
     RunDetailResponse,
     ScenarioValidationIssue,
@@ -382,10 +387,17 @@ async def create_run(request: Request, body: StartSimulationRequest):
     dependencies=[Depends(require_roles("admin", "operator"))],
 )
 @limiter.limit("30/minute")
-async def validate_scenario(request: Request, body: dict[str, Any]):
-    """Validate a run payload without reserving CARLA or creating a run."""
+async def validate_scenario(
+    request: Request, body: dict[str, Any], target: OpenCDATarget = "bundled"
+):
+    """Validate a run payload without reserving CARLA or creating a run.
+
+    ``target=fork`` checks the YAML against the CAVISE/OpenCDA fork instead of
+    the bundled OpenCDA.
+    """
+    model = ForkSimulationRequest if target == "fork" else StartSimulationRequest
     try:
-        StartSimulationRequest.model_validate(body)
+        payload = model.model_validate(body)
     except ValidationError as error:
         detailed_issues = preflight_entity_issues(body)
         return ScenarioValidationResponse(
@@ -400,13 +412,14 @@ async def validate_scenario(request: Request, body: dict[str, Any]):
             ]
             + detailed_issues,
         )
+    issues = [
+        issue for issue in preflight_entity_issues(body) if issue.severity == "warning"
+    ]
+    if isinstance(payload, ForkSimulationRequest):
+        issues += fork_config_issues(payload.opencda_config)
     return ScenarioValidationResponse(
-        valid=True,
-        issues=[
-            issue
-            for issue in preflight_entity_issues(body)
-            if issue.severity == "warning"
-        ],
+        valid=all(issue.severity == "warning" for issue in issues),
+        issues=issues,
     )
 
 

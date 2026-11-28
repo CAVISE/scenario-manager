@@ -1,11 +1,18 @@
 from typing import Any, Literal, Optional, Union
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    PrivateAttr,
+    field_validator,
+    model_validator,
+)
 
 from app.chart_schema import ChartDocument
 
 from app.integrations.opencda.config import (
     MAX_OPEN_CDA_CONFIG_LENGTH,
+    load_open_cda_yaml,
     parse_open_cda_yaml,
     validate_config_object_counts,
 )
@@ -95,6 +102,29 @@ class StartSimulationRequest(BaseModel):
         return self
 
 
+OpenCDATarget = Literal["bundled", "fork"]
+
+
+class ForkSimulationRequest(StartSimulationRequest):
+    """A run payload for the CAVISE/OpenCDA fork.
+
+    Only the YAML syntax is checked here; the fork rules return structured
+    issues instead of a validation error.
+    """
+
+    _opencda_config: dict[str, Any] = PrivateAttr(default_factory=dict)
+
+    @model_validator(mode="after")
+    def validate_open_cda_config(self):
+        self._opencda_config = load_open_cda_yaml(self.opencda_config_yaml)
+        validate_config_object_counts(self._opencda_config, self.scenario)
+        return self
+
+    @property
+    def opencda_config(self) -> dict[str, Any]:
+        return self._opencda_config
+
+
 class SimulationStatusResponse(BaseModel):
     running: bool
     status: str
@@ -146,9 +176,7 @@ class UpdateUserStatusRequest(BaseModel):
 
 
 class UpdateUserRequest(BaseModel):
-    login: str = Field(
-        ..., min_length=3, max_length=320, pattern=r"^[A-Za-z0-9_]+$"
-    )
+    login: str = Field(..., min_length=3, max_length=320, pattern=r"^[A-Za-z0-9_]+$")
     role: Literal["admin", "operator", "viewer"]
 
 

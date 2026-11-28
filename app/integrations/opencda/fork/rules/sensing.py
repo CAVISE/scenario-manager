@@ -1,28 +1,85 @@
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 
 from app.integrations.opencda.fork.effective import AgentKind, EffectiveConfig
-from app.integrations.opencda.fork.issues import ConfigIssue, error, warning
+from app.integrations.opencda.fork.issues import (
+    ConfigIssue,
+    ConfigPath,
+    error,
+    warning,
+)
 from app.integrations.opencda.fork.rules.base import lookup, origin
 
+_PERCEPTION = ("sensing", "perception")
 _LOCALIZATION = ("sensing", "localization")
+# The fork has window names for four cameras.
+_MAX_SHOWN_CAMERAS = 4
 _LOCALIZATION_PROVIDERS = frozenset({"gt", "sensor"})
 _LOCALIZATION_ESTIMATORS = frozenset({"kf", "ekf"})
 _MAP_MANAGER_MODES = frozenset({"disabled", "offroad_only", "full_bev"})
 
 
 class PerceptionRule:
-    """The fork always runs with apply_ml off, so active perception aborts the run."""
+    """Perception settings the fork rejects when it creates the sensors."""
 
     def check(self, config: EffectiveConfig) -> Iterator[ConfigIssue]:
-        keys = ("sensing", "perception", "activate")
         for agent in config.agents:
-            if lookup(agent.config, keys) is True:
+            perception = lookup(agent.config, _PERCEPTION)
+            if not isinstance(perception, Mapping):
+                continue
+
+            def at(*keys: str) -> ConfigPath:
+                return origin(config, agent, (*_PERCEPTION, *keys))
+
+            camera = _mapping(perception.get("camera"))
+            lidar = _mapping(perception.get("lidar"))
+            # The fork only tests truthiness, so any truthy value counts.
+            activate = bool(perception.get("activate"))
+            # The fork forces apply_ml off, and active perception needs it.
+            if activate:
                 yield error(
                     "sensing.perception.activate",
                     "perception.activate: true aborts the run in the fork; use "
                     "lidar.visualize or cooperative perception instead.",
-                    origin(config, agent, keys),
+                    at("activate"),
                 )
+            if perception.get("enabled") is False and (
+                activate or camera.get("visualize") or lidar.get("visualize")
+            ):
+                yield error(
+                    "sensing.perception.enabled",
+                    "perception.enabled: false cannot be combined with activate, "
+                    "camera.visualize or lidar.visualize.",
+                    at("enabled"),
+                )
+            yield from _cameras(camera, activate, at)
+
+
+def _cameras(
+    camera: Mapping, activate: bool, at: Callable[..., ConfigPath]
+) -> Iterator[ConfigIssue]:
+    """Cameras are spawned when shown or used by perception."""
+    visualize = camera.get("visualize")
+    num = camera.get("num")
+    positions = camera.get("positions")
+    if not (visualize or activate) or not isinstance(num, int):
+        return
+    if isinstance(positions, list) and num != len(positions):
+        yield error(
+            "sensing.perception.camera.num",
+            "camera.num must equal the number of camera.positions.",
+            at("camera", "num"),
+        )
+    shown = visualize if isinstance(visualize, (int, float)) else 0
+    if shown > _MAX_SHOWN_CAMERAS and num > _MAX_SHOWN_CAMERAS:
+        yield error(
+            "sensing.perception.camera.visualize",
+            f"At most {_MAX_SHOWN_CAMERAS} cameras can be shown.",
+            at("camera", "visualize"),
+        )
+
+
+def _mapping(value: object) -> Mapping:
+    return value if isinstance(value, Mapping) else {}
 
 
 class LocalizationRule:
@@ -31,12 +88,8 @@ class LocalizationRule:
     def check(self, config: EffectiveConfig) -> Iterator[ConfigIssue]:
         for agent in config.agents:
             localization = lookup(agent.config, _LOCALIZATION)
+            # A missing or invalid section is reported by SchemaRule.
             if not isinstance(localization, Mapping):
-                yield error(
-                    "sensing.localization",
-                    "sensing.localization must be a mapping.",
-                    origin(config, agent, _LOCALIZATION),
-                )
                 continue
 
             provider = localization.get("provider")

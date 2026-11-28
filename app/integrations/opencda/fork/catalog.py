@@ -45,8 +45,19 @@ class ForkCatalog:
     defaults: Mapping[str, Any]
     services: Mapping[str, ServiceSpec]
     attacks: Mapping[str, AttackSpec]
+    # Metric name -> its parameters.
+    metrics: Mapping[str, frozenset[str]]
+    # Metric block path -> metrics that record data there.
+    root_metric_blocks: Mapping[str, frozenset[str]]
+    cav_metric_blocks: Mapping[str, frozenset[str]]
+    # Blueprint metadata file -> vehicle classes in it.
+    blueprint_meta: Mapping[str, frozenset[str]]
     ignored_root_keys: Mapping[str, str]
     ignored_agent_keys: Mapping[str, str]
+
+
+def _sets(raw: Mapping[str, Any] | None) -> dict[str, frozenset[str]]:
+    return {key: frozenset(values) for key, values in (raw or {}).items()}
 
 
 def _service(name: str, raw: Mapping[str, Any]) -> ServiceSpec:
@@ -58,10 +69,7 @@ def _service(name: str, raw: Mapping[str, Any]) -> ServiceSpec:
             param: tuple(values) for param, values in (raw.get("choices") or {}).items()
         },
         requires=frozenset(raw.get("requires", ())),
-        requires_unless={
-            param: frozenset(services)
-            for param, services in (raw.get("requires_unless") or {}).items()
-        },
+        requires_unless=_sets(raw.get("requires_unless")),
     )
 
 
@@ -79,6 +87,7 @@ def load_fork_catalog(data_dir: Path = DATA_DIR) -> ForkCatalog:
     catalog = yaml.safe_load((data_dir / "catalog.yaml").read_text(encoding="utf-8"))
     defaults = yaml.safe_load((data_dir / "default.yaml").read_text(encoding="utf-8"))
     ignored = catalog.get("ignored_keys") or {}
+    metric_blocks = catalog.get("metric_blocks") or {}
     return ForkCatalog(
         commit=catalog["source"]["commit"],
         defaults=defaults,
@@ -86,6 +95,10 @@ def load_fork_catalog(data_dir: Path = DATA_DIR) -> ForkCatalog:
             name: _service(name, raw) for name, raw in catalog["services"].items()
         },
         attacks={name: _attack(name, raw) for name, raw in catalog["attacks"].items()},
+        metrics=_sets(catalog.get("metrics")),
+        root_metric_blocks=_sets(metric_blocks.get("root")),
+        cav_metric_blocks=_sets(metric_blocks.get("cav")),
+        blueprint_meta=_sets(catalog.get("blueprint_meta")),
         ignored_root_keys=ignored.get("root") or {},
         ignored_agent_keys=ignored.get("agent") or {},
     )

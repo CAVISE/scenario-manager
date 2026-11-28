@@ -51,18 +51,63 @@ attacks:
   aim_server_response_replay: *aim_attack
   aim_server_trajectory_spoofing: *aim_attack
 
+# opencda/metrics_tools: every registered metric and its parameters.
+metrics:
+  speed: [warmup_steps, dt]
+  acceleration: [warmup_steps, dt]
+  ttc: [warmup_steps]
+  hard_brake_count: [warmup_steps, dt, deceleration_threshold, reset_threshold]
+  time_gap: [warmup_steps]
+  distance_gap: [warmup_steps]
+  trace: [warmup_steps]
+  collision_count: [warmup_steps]
+  identity_conflict_count: [warmup_steps]
+  near_miss_count: [warmup_steps, distance_threshold]
+  ap_at_iou: [warmup_steps, global_sort_detections, confidence_threshold]
+  mean_recall_at_iou: [warmup_steps, global_sort_detections]
+  mean_precision_at_iou: [warmup_steps, global_sort_detections]
+  attack_success_rate: [warmup_steps, iou_threshold]
+  attacker_target_confidence: [warmup_steps, iou_threshold]
+  attacker_benign_visibility_ratio: [warmup_steps, epsilon]
+
+# Metric blocks the fork collects, and the metrics that record data there.
+metric_blocks:
+  root:
+    coperception.metrics:
+      - ap_at_iou
+      - mean_recall_at_iou
+      - mean_precision_at_iou
+      - attack_success_rate
+      - attacker_benign_visibility_ratio
+      - attacker_target_confidence
+  cav:
+    behavior.metrics: [speed, acceleration, ttc, hard_brake_count]
+
+# opencda/assets/blueprint_meta: metadata files and their vehicle classes.
+blueprint_meta:
+  opencda/assets/blueprint_meta/bbx_stats_0915.json:
+    [car, suv, bicycle, motorcycle, truck, bus]
+
 # Keys that Scenario Manager writes and the fork never reads. Root keys are
 # relative to the config root, agent keys to vehicle_base, rsu_base,
-# agent_base and every agent entry.
+# agent_base and every agent entry. Only keys set in the scenario count, so
+# the ones that also sit in default.yaml are reported too.
 ignored_keys:
   root:
     world.client_host: the CARLA host is set with the --carla-host flag
     traffic_manager: use carla_traffic_manager
     carla_traffic_manager.port: the Traffic Manager always uses port 8000
     cooperative_perception_visualization: use the coperception section
+    platoon_base: platoons are not supported
   agent:
     v2x: V2X settings are not configurable
     sensing.localization.navigation_source: use sensing.localization.provider
+    sensing.localization.metrics: no localization metrics are collected
+    sensing.localization.debug_helper: not supported
+    sensing.localization.gnss.heading_direction_stddev: not used by the GNSS sensor
+    sensing.localization.gnss.speed_stddev: not used by the GNSS sensor
     sensing.perception.detection_range: perception range is not configurable
+    sensing.perception.traffic_light_thresh: not used
     behavior.static_obstacle_avoidance_enabled: not supported
+    behavior.overtake_counter_recover: fixed at 100 in the fork
     behavior.color: not supported

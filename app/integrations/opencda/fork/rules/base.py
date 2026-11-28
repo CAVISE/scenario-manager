@@ -38,9 +38,12 @@ def split_key(dotted: str) -> ConfigPath:
 def lookup(mapping: Any, keys: ConfigPath, default: Any = None) -> Any:
     value = mapping
     for key in keys:
-        if not isinstance(value, Mapping) or key not in value:
+        if isinstance(value, Mapping) and key in value:
+            value = value[key]
+        elif isinstance(value, list) and isinstance(key, int) and key < len(value):
+            value = value[key]
+        else:
             return default
-        value = value[key]
     return value
 
 
