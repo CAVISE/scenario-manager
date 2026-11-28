@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, Literal, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -248,6 +249,30 @@ class ScenarioPage(BaseModel):
     limit: int
 
 
+class ScenarioVersionSummary(BaseModel):
+    id: int
+    number: int
+    author_id: int | None
+    previous_version_id: int | None
+    created_at: datetime
+    map: str | None
+
+
+class ScenarioVersionDetail(ScenarioVersionSummary):
+    content: Any
+    file_: str | None
+    preview: str | None
+    latest_revision: int
+
+
+class ScenarioVersionPage(BaseModel):
+    items: list[ScenarioVersionSummary]
+    total: int
+    offset: int
+    limit: int
+    latest_revision: int | None
+
+
 class UploadScenarioRequest(BaseModel):
     name_of_scenario: str = Field(..., min_length=1, max_length=200)
     scenario: Optional[Union[dict, list]] = None
@@ -297,6 +322,11 @@ class UploadScenarioRequest(BaseModel):
 class UpdateScenarioRequest(BaseModel):
     scenario_id: str = Field(..., min_length=1, max_length=128)
     expected_revision: int | None = Field(default=None, ge=1)
+    source_version_number: int | None = Field(
+        default=None,
+        ge=1,
+        description="Use this saved version as the base for the update.",
+    )
     scenario_name: Optional[str] = Field(default=None, max_length=200)
     scenario: Optional[Union[dict, list]] = None
     preview: Optional[str] = None
@@ -349,6 +379,12 @@ class UpdateScenarioRequest(BaseModel):
             extract_scenario_groups(value)
         return value
 
+    @model_validator(mode="after")
+    def require_expected_revision_for_restore(self):
+        if self.source_version_number is not None and self.expected_revision is None:
+            raise ValueError("expected_revision is required when restoring a version")
+        return self
+
 
 class ScenarioMutationResponse(BaseModel):
     status: str
@@ -356,3 +392,7 @@ class ScenarioMutationResponse(BaseModel):
     scenario_id: Optional[str] = None
     revision: Optional[int] = None
     warning: Optional[str] = None
+
+
+class ScenarioVersionMutationResponse(ScenarioMutationResponse):
+    version_id: int

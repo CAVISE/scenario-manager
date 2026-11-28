@@ -22,15 +22,17 @@ def test_create_scenario_without_scenario_id(scenario_client, db_session):
     assert scenario_client.get(f"/api/v1/scenarios/{generated_id}").status_code == 200
 
 
-def test_update_scenario_with_none_fields(scenario_client, db_session):
-    scenario = Scenario(
-        scenario_id="sc-1",
-        name_of_scenario="Original",
-        preview="preview",
-        annotation="annotation",
+def test_update_scenario_with_none_fields(scenario_client):
+    created = scenario_client.post(
+        "/api/v1/scenarios",
+        json={
+            "scenario_id": "sc-1",
+            "name_of_scenario": "Original",
+            "preview": "preview",
+            "description": "annotation",
+        },
     )
-    db_session.add(scenario)
-    db_session.commit()
+    assert created.status_code == 201
 
     response = scenario_client.patch(
         "/api/v1/scenarios/sc-1",
@@ -43,10 +45,10 @@ def test_update_scenario_with_none_fields(scenario_client, db_session):
     )
 
     assert response.status_code == 200
-    db_session.refresh(scenario)
-    assert scenario.name_of_scenario == "Original"
-    assert scenario.preview is None
-    assert scenario.annotation == "annotation"
+    scenario = scenario_client.get("/api/v1/scenarios/sc-1").json()
+    assert scenario["name_of_scenario"] == "Original"
+    assert scenario["preview"] is None
+    assert scenario["annotation"] == "annotation"
 
 
 def test_spawn_yaw_is_zero_when_coords_identical(open_cda_config_factory):

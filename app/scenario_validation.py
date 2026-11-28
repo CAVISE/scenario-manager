@@ -18,6 +18,22 @@ MAX_SCENARIO_GROUPS = 50
 MAX_PATH_ITEMS_PER_GROUP = 500
 
 OPENDRIVE_RE = re.compile(r"<\s*OpenDRIVE(?:\s|>)", re.IGNORECASE)
+INVALID_JSONB_CHAR = re.compile(r"[\x00\ud800-\udfff]")
+
+
+def validate_scenario_jsonb(scenario: Any) -> None:
+    pending = [scenario]
+    while pending:
+        value = pending.pop()
+        if isinstance(value, dict):
+            pending.extend(value)
+            pending.extend(value.values())
+        elif isinstance(value, list):
+            pending.extend(value)
+        elif isinstance(value, str) and INVALID_JSONB_CHAR.search(value):
+            raise ValueError("scenario contains a null character or invalid Unicode")
+        elif isinstance(value, float) and not math.isfinite(value):
+            raise ValueError("scenario numbers must be finite")
 
 
 def normalize_optional_str(value: Any) -> str | None:

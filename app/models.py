@@ -1,6 +1,21 @@
 from datetime import datetime
+from typing import Any
+from uuid import UUID
 
-from sqlalchemy import DateTime, String, Text, func
+from sqlalchemy import (
+    JSON,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    ForeignKeyConstraint,
+    String,
+    Text,
+    UniqueConstraint,
+    Uuid,
+    false,
+    func,
+)
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -25,20 +40,97 @@ class Scenario(Base):
     __tablename__ = "scenarios"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    revision: Mapped[int] = mapped_column(default=1, nullable=False)
     scenario_id: Mapped[str | None] = mapped_column(String, unique=True)
     name_of_scenario: Mapped[str] = mapped_column(String, nullable=False)
-    map: Mapped[str | None] = mapped_column(String)
-    scenario_text: Mapped[str | None] = mapped_column(Text)
-    preview: Mapped[str | None] = mapped_column(Text)
+    owner_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id"),
+        nullable=True,
+    )
+    tags: Mapped[list[str]] = mapped_column(
+        JSON().with_variant(JSONB(), "postgresql"),
+        default=list,
+        server_default="[]",
+        nullable=False,
+    )
+    is_archived: Mapped[bool] = mapped_column(
+        default=False,
+        server_default=false(),
+        nullable=False,
+    )
     annotation: Mapped[str | None] = mapped_column(Text)
-    file_: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+
+
+class ScenarioVersion(Base):
+    __tablename__ = "scenario_versions"
+
+    __table_args__ = (
+        UniqueConstraint(
+            "scenario_id",
+            "number",
+            name="uq_scenario_versions_scenario_number",
+        ),
+        UniqueConstraint(
+            "scenario_id",
+            "id",
+            name="uq_scenario_versions_scenario_id",
+        ),
+        UniqueConstraint(
+            "scenario_id",
+            "idempotency_key",
+            name="uq_scenario_versions_idempotency_key",
+        ),
+        ForeignKeyConstraint(
+            ["scenario_id", "previous_version_id"],
+            ["scenario_versions.scenario_id", "scenario_versions.id"],
+            name="fk_scenario_versions_previous",
+        ),
+        CheckConstraint(
+            "number > 0",
+            name="ck_scenario_versions_number_positive",
+        ),
+        CheckConstraint(
+            "previous_version_id IS NULL OR previous_version_id <> id",
+            name="ck_scenario_versions_previous_not_self",
+        ),
+        CheckConstraint(
+            "(idempotency_key IS NULL) = (request_hash IS NULL)",
+            name="ck_scenario_versions_idempotency_pair",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    scenario_id: Mapped[int] = mapped_column(
+        ForeignKey("scenarios.id"),
+        nullable=False,
+    )
+    number: Mapped[int] = mapped_column(nullable=False)
+    content: Mapped[Any] = mapped_column(
+        JSON().with_variant(JSONB(), "postgresql"),
+        nullable=False,
+    )
+    # Original text when conversion to JSONB loses duplicate keys.
+    legacy_scenario_text: Mapped[str | None] = mapped_column(Text)
+    previous_version_id: Mapped[int | None] = mapped_column(nullable=True)
+    author_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id"),
+        nullable=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+    map: Mapped[str | None] = mapped_column(String)
+    file_: Mapped[str | None] = mapped_column(Text)
+    preview: Mapped[str | None] = mapped_column(Text)
+    idempotency_key: Mapped[UUID | None] = mapped_column(Uuid())
+    request_hash: Mapped[str | None] = mapped_column(String(64))
 
 
 class SimulationRun(Base):
