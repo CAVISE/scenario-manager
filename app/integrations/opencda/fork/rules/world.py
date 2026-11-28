@@ -4,13 +4,13 @@ from typing import Any
 
 from app.integrations.opencda.fork.effective import EffectiveConfig
 from app.integrations.opencda.fork.issues import ConfigIssue, error
-from app.integrations.opencda.fork.rules.base import is_number
+from app.integrations.opencda.fork.rules.base import as_float, is_number
 
 _STREAMING_KEYS = ("tile_stream_distance", "actor_active_distance")
 
 
-def _positive(value: Any) -> float | None:
-    return float(value) if is_number(value) and value > 0 else None
+def _positive(value: float | None) -> float | None:
+    return value if value is not None and value > 0 else None
 
 
 class WorldRule:
@@ -35,8 +35,9 @@ class WorldRule:
     def _physics(world: Mapping[str, Any]) -> Iterator[ConfigIssue]:
         substepping = world.get("substepping", True)
         substeps = world.get("max_substeps", 10)
+        # The fork passes both durations through float().
         durations = {
-            key: _positive(world.get(key, default))
+            key: _positive(as_float(world.get(key, default)))
             for key, default in (
                 ("fixed_delta_seconds", None),
                 ("max_substep_delta_time", 0.01),
@@ -95,7 +96,7 @@ class WorldRule:
         for key in _STREAMING_KEYS:
             if world.get(key) is None:
                 continue
-            distance = _positive(world[key])
+            distance = _positive(world[key] if is_number(world[key]) else None)
             if distance is None:
                 yield error(f"world.{key}", f"{key} must be positive.", ("world", key))
             else:

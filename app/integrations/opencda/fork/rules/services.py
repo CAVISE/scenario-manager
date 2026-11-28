@@ -59,11 +59,12 @@ class BehaviorServiceRule:
                     origin(config, agent, keys),
                 )
             else:
-                for param in params:
-                    if param not in spec.params:
-                        yield self._unknown_param(
-                            spec, param, origin(config, agent, (*keys, param))
-                        )
+                for param, value in params.items():
+                    issue = self._param_issue(
+                        spec, param, value, origin(config, agent, (*keys, param))
+                    )
+                    if issue is not None:
+                        yield issue
                 for missing in self._missing_dependencies(spec, params, services):
                     yield error(
                         "behavior_services.requires",
@@ -72,7 +73,19 @@ class BehaviorServiceRule:
                     )
 
     @staticmethod
-    def _unknown_param(spec: ServiceSpec, param: str, path: ConfigPath) -> ConfigIssue:
+    def _param_issue(
+        spec: ServiceSpec, param: str, value: Any, path: ConfigPath
+    ) -> ConfigIssue | None:
+        if param in spec.params:
+            choices = spec.choices.get(param)
+            if choices is None or value in choices:
+                return None
+            allowed = ", ".join(sorted(map(str, choices)))
+            return error(
+                "behavior_services.param_value",
+                f"'{spec.name}' {param} must be one of: {allowed}.",
+                path,
+            )
         if spec.ignores_unknown_params:
             return warning(
                 "behavior_services.param_ignored",

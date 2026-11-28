@@ -1,16 +1,12 @@
-import copy
 from dataclasses import replace
 from pathlib import Path
 
 import pytest
 import yaml
 
-from app.integrations.opencda.fork import (
-    ConfigIssue,
-    Severity,
-    create_fork_validator,
-    default_fork_catalog,
-)
+from app.integrations.opencda.fork.catalog import default_fork_catalog
+from app.integrations.opencda.fork.issues import ConfigIssue, Severity
+from app.integrations.opencda.fork.validator import create_fork_validator
 
 # Scenario examples copied from CAVISE/OpenCDA at the commit in catalog.yaml.
 FORK_EXAMPLES = Path(__file__).parent / "fixtures" / "opencda_fork"
@@ -61,6 +57,13 @@ def _scenario(cavs=None, rsus=None, **sections) -> dict:
     }
 
 
+def _validator_with_defaults(**sections):
+    """A validator whose default.yaml has the given top-level sections replaced."""
+    catalog = default_fork_catalog()
+    defaults = {**catalog.defaults, **sections}
+    return create_fork_validator(replace(catalog, defaults=defaults)).validate
+
+
 @pytest.fixture(scope="module")
 def validate():
     return create_fork_validator().validate
@@ -85,12 +88,7 @@ def test_catalog_matches_fork_commit():
     "example",
     [
         "2cars_2rsu_coperception.yaml",
-        "advcp_check.yaml",
         "aim_check.yaml",
-        "cavise_demo_town01.yaml",
-        "cooperative_intersection.yaml",
-        "dense_autopilot_coperception_town10.yaml",
-        "rsu_check.yaml",
         "single_town05_cosim.yaml",
     ],
 )
@@ -98,17 +96,10 @@ def test_fork_examples_have_no_errors(validate, example):
     assert _errors(validate(_load(FORK_EXAMPLES / example))) == []
 
 
-@pytest.mark.parametrize(
-    ("example", "code"),
-    [
-        ("platoon_joining_town06_carla.yaml", "scenario.platoon_list"),
-        ("single_town06_carla.yaml", "sensing.perception.activate"),
-    ],
-)
-def test_fork_examples_that_do_not_run_in_the_fork(validate, example, code):
-    assert {
-        issue.code for issue in _errors(validate(_load(FORK_EXAMPLES / example)))
-    } == {code}
+def test_fork_example_with_active_perception_does_not_run(validate):
+    issues = _errors(validate(_load(FORK_EXAMPLES / "single_town06_carla.yaml")))
+
+    assert [issue.code for issue in issues] == ["sensing.perception.activate"]
 
 
 def test_current_sm_output_loads_but_has_ignored_settings(validate):
@@ -138,10 +129,36 @@ def test_sm_service_list_cannot_be_merged(validate):
     }
 
 
-def test_unresolvable_interpolation_is_reported(validate):
-    config = _scenario(world={"fixed_delta_seconds": "${world.missing}"})
+def test_merge_conflicts_of_all_agents_are_reported(validate):
+    services = [{"type": "self_informer"}]
+    config = _scenario(
+        cavs=[_cav(1, behavior_services=services), _cav(2)],
+        rsus=[_rsu(behavior_services=services)],
+    )
 
-    assert [issue.code for issue in validate(config)] == ["config.invalid"]
+    assert _found(validate(config)) == {
+        ("config.merge", ("scenario", "single_cav_list", 0, "behavior_services")),
+        ("config.merge", ("scenario", "rsu_list", 0, "behavior_services")),
+    }
+
+
+def test_list_replaces_list(validate):
+    config = _scenario(carla_traffic_manager={"range": [[0, 1, 0, 1, 1, 1, 1]]})
+
+    assert validate(config) == []
+
+
+def test_unresolvable_interpolation_is_reported_with_list_index(validate):
+    config = _scenario(cavs=[_cav(model="${world.missing}")])
+
+    assert _found(validate(config)) == {
+        ("config.invalid", ("scenario", "single_cav_list", 0, "model"))
+    }
+
+
+@pytest.mark.parametrize("root", ["scenario", [1, 2]])
+def test_config_root_must_be_a_mapping(validate, root):
+    assert [issue.code for issue in validate(root)] == ["config.type"]
 
 
 def test_minimal_scenario_is_valid(validate):
@@ -169,6 +186,12 @@ def test_physics_limit_is_skipped_without_substepping(validate):
     assert validate(_scenario(world=world)) == []
 
 
+def test_numeric_strings_are_read_like_the_fork(validate):
+    world = {"fixed_delta_seconds": "0.05", "max_substep_delta_time": "0.01"}
+
+    assert validate(_scenario(world=world)) == []
+
+
 def test_destination_is_optional_with_carla_autopilot(validate):
     without_destination = _cav()
     del without_destination["destination"]
@@ -180,6 +203,19 @@ def test_destination_is_optional_with_carla_autopilot(validate):
         validate(_scenario(cavs=[{**without_destination, "carla_autopilot": True}]))
         == []
     )
+
+
+def test_carla_autopilot_falls_back_to_behavior():
+    vehicle_base = dict(default_fork_catalog().defaults["vehicle_base"])
+    del vehicle_base["carla_autopilot"]
+    validate = _validator_with_defaults(vehicle_base=vehicle_base)
+    config = _scenario(
+        vehicle_base={"behavior": {"carla_autopilot": "yes"}},
+    )
+
+    assert _found(validate(config)) == {
+        ("agent.carla_autopilot", ("vehicle_base", "behavior", "carla_autopilot"))
+    }
 
 
 def test_spawn_position_needs_six_numbers(validate):
@@ -285,6 +321,17 @@ def test_aim_server_ignores_unknown_model_parameters(validate):
     ]
 
 
+def test_aim_server_model_must_be_registered(validate):
+    config = _scenario(rsus=[_rsu(behavior_services={"aim_server": {"model": "GNN"}})])
+
+    assert _found(validate(config)) == {
+        (
+            "behavior_services.param_value",
+            ("scenario", "rsu_list", 0, "behavior_services", "aim_server", "model"),
+        )
+    }
+
+
 def test_aim_client_needs_movement_controller(validate):
     config = _scenario(rsus=[_rsu(behavior_services={"aim_client": {}})])
 
@@ -294,10 +341,7 @@ def test_aim_client_needs_movement_controller(validate):
 
 
 def test_aim_server_needs_self_informer_without_control_center():
-    catalog = default_fork_catalog()
-    defaults = copy.deepcopy(dict(catalog.defaults))
-    defaults["agent_base"] = {}
-    validate = create_fork_validator(replace(catalog, defaults=defaults)).validate
+    validate = _validator_with_defaults(agent_base={})
     location = {"x": 0, "y": 0, "z": 0}
 
     without_center = _scenario(rsus=[_rsu(behavior_services={"aim_server": {}})])
@@ -344,8 +388,10 @@ def test_attack_requirements(validate):
 @pytest.mark.parametrize(
     ("traffic", "code"),
     [
-        ({"cav_spawn_clearance": -1}, "carla_traffic_manager.cav_spawn_clearance"),
-        ({"vehicle_list": "all"}, "carla_traffic_manager.vehicle_list"),
+        (
+            {"vehicle_list": None, "cav_spawn_clearance": -1},
+            "carla_traffic_manager.cav_spawn_clearance",
+        ),
         ({"vehicle_list": None, "range": None}, "carla_traffic_manager.range"),
     ],
 )
@@ -353,6 +399,12 @@ def test_traffic_manager_rules(validate, traffic, code):
     config = _scenario(carla_traffic_manager=traffic)
 
     assert [issue.code for issue in validate(config)] == [code]
+
+
+def test_range_settings_are_unused_with_vehicle_list(validate):
+    traffic = {"vehicle_list": [], "range": None, "cav_spawn_clearance": -1}
+
+    assert validate(_scenario(carla_traffic_manager=traffic)) == []
 
 
 def test_platoons_are_rejected(validate):

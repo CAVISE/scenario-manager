@@ -20,6 +20,17 @@ def is_number(value: Any) -> bool:
     )
 
 
+def as_float(value: Any) -> float | None:
+    """A number or numeric string, as the fork reads it with float()."""
+    if isinstance(value, bool):
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return number if math.isfinite(number) else None
+
+
 def split_key(dotted: str) -> ConfigPath:
     return tuple(dotted.split("."))
 

@@ -7,20 +7,22 @@ from app.integrations.opencda.fork.effective import (
     build_effective_config,
 )
 from app.integrations.opencda.fork.issues import ConfigIssue
-from app.integrations.opencda.fork.rules import (
+from app.integrations.opencda.fork.rules.agents import (
     AgentIdRule,
     AgentPlacementRule,
-    AttackRule,
-    BehaviorServiceRule,
-    ConfigRule,
-    IgnoredKeyRule,
+    PlatoonRule,
+)
+from app.integrations.opencda.fork.rules.attacks import AttackRule
+from app.integrations.opencda.fork.rules.base import ConfigRule
+from app.integrations.opencda.fork.rules.ignored import IgnoredKeyRule
+from app.integrations.opencda.fork.rules.sensing import (
     LocalizationRule,
     MapManagerRule,
     PerceptionRule,
-    PlatoonRule,
-    TrafficManagerRule,
-    WorldRule,
 )
+from app.integrations.opencda.fork.rules.services import BehaviorServiceRule
+from app.integrations.opencda.fork.rules.traffic import TrafficManagerRule
+from app.integrations.opencda.fork.rules.world import WorldRule
 
 
 class ForkConfigValidator:
@@ -30,7 +32,7 @@ class ForkConfigValidator:
         self._defaults = defaults
         self._rules = tuple(rules)
 
-    def validate(self, scenario: Mapping[str, Any]) -> list[ConfigIssue]:
+    def validate(self, scenario: Any) -> list[ConfigIssue]:
         try:
             config = build_effective_config(scenario, self._defaults)
         except InvalidConfigError as exc:

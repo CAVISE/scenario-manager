@@ -82,14 +82,18 @@ class AgentPlacementRule:
                 (*agent.path, "spawn_position"),
             )
 
-        autopilot = cav.get(
-            "carla_autopilot", lookup(cav, ("behavior", "carla_autopilot"), False)
+        # Like the fork, fall back to behavior.carla_autopilot.
+        keys = (
+            ("carla_autopilot",)
+            if "carla_autopilot" in cav
+            else ("behavior", "carla_autopilot")
         )
+        autopilot = lookup(cav, keys, False)
         if not isinstance(autopilot, bool):
             yield error(
                 "agent.carla_autopilot",
                 "carla_autopilot must be a boolean.",
-                origin(config, agent, ("carla_autopilot",)),
+                origin(config, agent, keys),
             )
         elif not autopilot and not _is_position(cav.get("destination"), 3):
             yield error(

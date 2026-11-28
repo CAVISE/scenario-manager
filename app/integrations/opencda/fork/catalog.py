@@ -20,6 +20,8 @@ class ServiceSpec:
     name: str
     params: frozenset[str]
     ignores_unknown_params: bool = False
+    # Allowed values of parameters that accept only a fixed set.
+    choices: Mapping[str, tuple[Any, ...]] = field(default_factory=dict)
     requires: frozenset[str] = frozenset()
     # Services required only when the named parameter is not set.
     requires_unless: Mapping[str, frozenset[str]] = field(default_factory=dict)
@@ -52,6 +54,9 @@ def _service(name: str, raw: Mapping[str, Any]) -> ServiceSpec:
         name=name,
         params=frozenset(raw.get("params", ())),
         ignores_unknown_params=bool(raw.get("ignores_unknown_params", False)),
+        choices={
+            param: tuple(values) for param, values in (raw.get("choices") or {}).items()
+        },
         requires=frozenset(raw.get("requires", ())),
         requires_unless={
             param: frozenset(services)

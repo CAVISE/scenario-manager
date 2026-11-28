@@ -29,6 +29,9 @@ services:
       - hidden_channels
       - weights
     ignores_unknown_params: true
+    # Models registered in AIM/models.
+    choices:
+      model: [MTP]
     requires_unless:
       control_center_location: [self_informer]
 

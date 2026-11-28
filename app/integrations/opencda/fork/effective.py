@@ -5,15 +5,18 @@ from ``agent_base``, ``vehicle_base`` or ``rsu_base`` and the agent entry.
 Rules check this merged result, so inherited values are taken into account.
 """
 
+import re
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-from omegaconf import DictConfig, ListConfig, OmegaConf
+from omegaconf import OmegaConf
 from omegaconf.errors import OmegaConfBaseException
 
 from app.integrations.opencda.fork.issues import ConfigIssue, ConfigPath, error
+
+_FULL_KEY_PART = re.compile(r"([^.\[\]]+)|\[(\d+)\]")
 
 
 class AgentKind(Enum):
@@ -54,49 +57,59 @@ class InvalidConfigError(Exception):
         self.issues = issues
 
 
-def _merge_conflicts(
-    base: Any, override: Any, path: ConfigPath
-) -> Iterator[ConfigPath]:
-    """Paths where OmegaConf refuses to merge a mapping with a list."""
+def _merge(
+    base: Any, override: Any, path: ConfigPath, conflicts: list[ConfigPath]
+) -> Any:
+    """Merge like OmegaConf.merge: mappings key by key, anything else replaced.
+
+    OmegaConf refuses to merge a mapping with a list; those paths go to
+    ``conflicts`` and the base value is kept.
+    """
     if isinstance(base, Mapping) and isinstance(override, Mapping):
+        merged = dict(base)
         for key, value in override.items():
-            if key in base:
-                yield from _merge_conflicts(base[key], value, (*path, key))
-    elif isinstance(base, Mapping) and isinstance(override, list):
-        yield path
-    elif isinstance(base, list) and isinstance(override, Mapping):
-        yield path
+            merged[key] = (
+                _merge(base[key], value, (*path, key), conflicts)
+                if key in base
+                else value
+            )
+        return merged
+    if (isinstance(base, Mapping) and isinstance(override, list)) or (
+        isinstance(base, list) and isinstance(override, Mapping)
+    ):
+        conflicts.append(path)
+        return base
+    return override
 
 
-def _merge(layers: list[tuple[Mapping[str, Any], ConfigPath]]) -> dict[str, Any]:
-    """Merge layers in order, reporting every layer that OmegaConf would reject."""
-    conflicts: list[ConfigIssue] = []
-    try:
-        merged: DictConfig | ListConfig = OmegaConf.create(dict(layers[0][0]))
-        for override, path in layers[1:]:
-            current = OmegaConf.to_container(merged, resolve=False)
-            found = [
+def _check_conflicts(conflicts: list[ConfigPath]) -> None:
+    if conflicts:
+        raise InvalidConfigError(
+            [
                 error(
                     "config.merge",
-                    "Cannot merge a mapping with a list; use the same type "
-                    "as in default.yaml.",
-                    conflict,
+                    "Cannot merge a mapping with a list; use the same type as "
+                    "in default.yaml.",
+                    path,
                 )
-                for conflict in _merge_conflicts(current, override, path)
+                for path in conflicts
             ]
-            if found:
-                conflicts.extend(found)
-                continue
-            merged = OmegaConf.merge(merged, override)
-        if conflicts:
-            raise InvalidConfigError(conflicts)
-        return OmegaConf.to_container(merged, resolve=True)  # type: ignore[return-value]
+        )
+
+
+def _resolve(config: Mapping[str, Any]) -> dict[str, Any]:
+    """Resolve ``${...}`` interpolations as OmegaConf does when the fork reads them."""
+    try:
+        resolved = OmegaConf.to_container(OmegaConf.create(dict(config)), resolve=True)
     except OmegaConfBaseException as exc:
         full_key = str(getattr(exc, "full_key", "") or "")
-        error_path: ConfigPath = tuple(full_key.split(".")) if full_key else ()
+        path = tuple(
+            name or int(index) for name, index in _FULL_KEY_PART.findall(full_key)
+        )
         raise InvalidConfigError(
-            [error("config.invalid", str(exc).splitlines()[0], error_path)]
+            [error("config.invalid", str(exc).splitlines()[0], path)]
         ) from exc
+    return resolved  # type: ignore[return-value]
 
 
 def _mapping(value: Any, path: ConfigPath, name: str) -> Mapping[str, Any]:
@@ -109,57 +122,52 @@ def _mapping(value: Any, path: ConfigPath, name: str) -> Mapping[str, Any]:
     return value
 
 
-def _agents(root: Mapping[str, Any], kind: AgentKind) -> Iterator[AgentConfig]:
-    scenario = _mapping(root.get("scenario"), ("scenario",), "scenario")
-    entries = scenario.get(kind.list_key)
+def _section(root: Mapping[str, Any], key: str) -> Mapping[str, Any]:
+    return _mapping(root.get(key), (key,), key)
+
+
+def _agents(
+    root: Mapping[str, Any], kind: AgentKind, conflicts: list[ConfigPath]
+) -> list[AgentConfig]:
+    entries = _section(root, "scenario").get(kind.list_key)
     if entries is None:
-        return
+        return []
     list_path: ConfigPath = ("scenario", kind.list_key)
     if not isinstance(entries, list):
         raise InvalidConfigError(
-            [
-                error(
-                    "config.type",
-                    f"scenario.{kind.list_key} must be a list.",
-                    list_path,
-                )
-            ]
+            [error("config.type", f"{kind.list_key} must be a list.", list_path)]
         )
 
-    layers: list[tuple[Mapping[str, Any], ConfigPath]] = [
-        (
-            _mapping(root.get("agent_base"), ("agent_base",), "agent_base"),
-            ("agent_base",),
-        ),
-        (
-            _mapping(root.get(kind.base_key), (kind.base_key,), kind.base_key),
-            (kind.base_key,),
-        ),
-    ]
-    if kind is AgentKind.CAV:
-        platoon_base = _mapping(
-            root.get("platoon_base"), ("platoon_base",), "platoon_base"
-        )
-        layers.append(({"platoon": platoon_base}, ("platoon_base",)))
-
+    # The fork also merges {"platoon": platoon_base} into every CAV. Only
+    # platoons read it and PlatoonRule rejects them, so it is left out here.
+    base = _merge(
+        _section(root, "agent_base"),
+        _section(root, kind.base_key),
+        (kind.base_key,),
+        conflicts,
+    )
+    agents = []
     for index, entry in enumerate(entries):
         path = (*list_path, index)
-        source = _mapping(entry, path, f"scenario.{kind.list_key}[{index}]")
-        yield AgentConfig(
-            kind=kind,
-            path=path,
-            source=source,
-            config=_merge([*layers, (source, path)]),
-        )
+        source = _mapping(entry, path, f"{kind.list_key}[{index}]")
+        config = _merge(base, source, path, conflicts)
+        agents.append(AgentConfig(kind, path, source, config))
+    return agents
 
 
 def build_effective_config(
-    scenario: Mapping[str, Any], defaults: Mapping[str, Any]
+    scenario: Any, defaults: Mapping[str, Any]
 ) -> EffectiveConfig:
     """Merge ``scenario`` the way the fork does.
 
     Raises ``InvalidConfigError`` when the fork could not even load it.
     """
-    root = _merge([(defaults, ()), (scenario, ())])
-    agents = (*_agents(root, AgentKind.CAV), *_agents(root, AgentKind.RSU))
+    conflicts: list[ConfigPath] = []
+    root = _merge(defaults, _mapping(scenario, (), "The config"), (), conflicts)
+    _check_conflicts(conflicts)
+    root = _resolve(root)
+    agents = tuple(
+        agent for kind in AgentKind for agent in _agents(root, kind, conflicts)
+    )
+    _check_conflicts(conflicts)
     return EffectiveConfig(root=root, agents=agents)
